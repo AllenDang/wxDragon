@@ -554,8 +554,15 @@ fn link_linux_libraries() {
     println!("cargo:rustc-link-lib=xkbcommon");
 
     // GTK and system libraries via pkg-config
-    let lib = pkg_config::Config::new().probe("gtk+-3.0").unwrap();
-    for l in lib.libs {
+    let libgtk = pkg_config::Config::new().probe("gtk+-3.0").unwrap();
+    let libnotify = pkg_config::Config::new().probe("libnotify").unwrap();
+
+    let mut libs = vec![];
+    libs.extend(libgtk.libs.iter());
+    libs.extend(libnotify.libs.iter());
+    libs.dedup();
+
+    for l in libs {
         println!("cargo:rustc-link-lib={}", l);
     }
 
