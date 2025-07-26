@@ -84,6 +84,9 @@ pub struct NotificationMessage {
     ptr: *mut ffi::wxd_NotificationMessage_t,
 }
 
+unsafe impl Send for NotificationMessage {}
+unsafe impl Sync for NotificationMessage {}
+
 impl NotificationMessage {
     /// Creates a new `NotificationMessageBuilder`.
     pub fn builder() -> NotificationMessageBuilder {
@@ -180,6 +183,13 @@ impl NotificationMessage {
         Ok(result)
     }
 
+    pub fn destroy(&mut self) {
+        if !self.ptr.is_null() {
+            unsafe { ffi::wxd_NotificationMessage_Destroy(self.ptr) };
+            self.ptr = std::ptr::null_mut();
+        }
+    }
+
     /// Gets the raw pointer to the notification message
     #[allow(dead_code)]
     pub(crate) fn get_ptr(&self) -> *mut ffi::wxd_NotificationMessage_t {
@@ -209,12 +219,7 @@ impl crate::event::WxEvtHandler for NotificationMessage {
 
 impl Drop for NotificationMessage {
     fn drop(&mut self) {
-        if !self.ptr.is_null() {
-            unsafe {
-                ffi::wxd_NotificationMessage_Destroy(self.ptr);
-            }
-            // self.ptr = std::ptr::null_mut(); // Not strictly necessary as it's being dropped
-        }
+        self.destroy();
     }
 }
 

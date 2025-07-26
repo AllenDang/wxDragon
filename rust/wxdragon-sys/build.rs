@@ -1,5 +1,4 @@
 use std::env;
-use std::fs::File;
 use std::path::{Path, PathBuf};
 
 fn main() {
@@ -97,7 +96,7 @@ fn main() {
     // --- 2. Download and Setup Pre-built Libraries ---
     let wx_version = "3.3.1";
 
-    download_prebuilt_libraries(wx_version, &out_dir, &target_os, &target_env)
+    download_prebuilt_libraries(wx_version, &out_dir)
         .expect("Failed to download pre-built wxWidgets libraries");
 
     // --- 3. Add wxWidgets Include Paths to Bindgen ---
@@ -208,22 +207,20 @@ pub fn extract_matching_parent_dir<P: AsRef<std::path::Path>>(
 
 fn download_prebuilt_libraries(
     wx_version: &str,
-    out_dir: &Path,
-    _target_os: &str,
-    _target_env: &str,
-) -> Result<(), Box<dyn std::error::Error>> {
-    let profile = env::var("PROFILE").unwrap_or_else(|_| "release".to_string());
+    target_dir: &std::path::Path,
+) -> std::io::Result<()> {
+    let profile = std::env::var("PROFILE").unwrap_or_else(|_| "release".to_string());
 
     // Check for official Windows 7 targets first
-    let target_triple = env::var("TARGET").unwrap_or_default();
+    let target_triple = std::env::var("TARGET").unwrap_or_default();
     let artifact_name = format!("wxwidgets-{wx_version}-{target_triple}-{profile}");
 
     let download_url = format!(
         "https://github.com/AllenDang/wxDragon/releases/download/wxwidgets-{wx_version}/{artifact_name}.tar.gz"
     );
 
-    let tarball_dest_path = out_dir.join(format!("{artifact_name}.tar.gz"));
-    let extracted_path = out_dir.join(&artifact_name);
+    let tarball_dest_path = target_dir.join(format!("{artifact_name}.tar.gz"));
+    let extracted_path = target_dir.join(&artifact_name);
 
     // Skip download if already extracted
     if extracted_path.exists() {
@@ -242,58 +239,44 @@ fn download_prebuilt_libraries(
     let resp = client
         .get(&download_url)
         .send()
-        .map_err(|e| format!("Failed to download {download_url}: {e}"))?;
+        .map_err(|e| std::io::Error::other(format!("Failed to download {download_url}: {e}")))?;
 
     if !resp.status().is_success() {
-        return Err(format!(
-            "Failed to download {}: HTTP {}",
-            download_url,
+        return Err(std::io::Error::other(format!(
+            "Failed to download {download_url}: HTTP {}",
             resp.status()
-        )
-        .into());
+        )));
     }
 
     // Save the tarball
     let content = resp
         .bytes()
-        .map_err(|e| format!("Failed to read response content: {e}"))?;
+        .map_err(|e| std::io::Error::other(format!("Failed to read response content: {e}")))?;
     // create the destination file after downloading successfully to avoid creating an empty file
-    let mut out_file = File::create(&tarball_dest_path)
-        .map_err(|e| format!("Failed to create destination file {tarball_dest_path:?}: {e}"))?;
-    std::io::copy(&mut content.as_ref(), &mut out_file)
-        .map_err(|e| format!("Failed to write downloaded content: {e}"))?;
+    let mut out_file = std::fs::File::create(&tarball_dest_path)?;
+    std::io::copy(&mut content.as_ref(), &mut out_file)?;
 
     println!("info: Downloaded pre-built libraries to {tarball_dest_path:?}");
 
+    if extracted_path.exists() {
+        println!("info: Using cached pre-built libraries at {extracted_path:?}");
+        return Ok(());
+    }
+
     // Extract the tarball
-    let tarball_file = File::open(&tarball_dest_path)
-        .map_err(|e| format!("Failed to open tarball {tarball_dest_path:?}: {e}"))?;
+    let tarball_file = std::fs::File::open(&tarball_dest_path).map_err(|e| {
+        std::io::Error::other(format!("Failed to open tarball {tarball_dest_path:?}: {e}"))
+    })?;
     let gz_decoder = flate2::read::GzDecoder::new(tarball_file);
     let mut archive = tar::Archive::new(gz_decoder);
 
-    archive
-        .unpack(out_dir)
-        .map_err(|e| format!("Failed to extract {artifact_name} to {out_dir:?}: {e}"))?;
+    archive.unpack(target_dir)?;
 
     if !extracted_path.exists() {
-        return Err(format!(
-            "Extraction did not result in expected directory: {extracted_path:?}. Check tarball structure."
-        )
-        .into());
+        return Err(std::io::Error::other(format!("Extraction did not result in expected directory: {extracted_path:?}. Check tarball structure.")));
     }
 
     println!("info: Successfully extracted pre-built libraries to {extracted_path:?}");
-
-    // Debug: List what was actually extracted
-    if let Ok(entries) = std::fs::read_dir(&extracted_path) {
-        let mut files: Vec<String> = Vec::new();
-        for entry in entries.flatten() {
-            let file_name = entry.file_name().to_string_lossy().to_string();
-            files.push(file_name);
-        }
-        files.sort();
-        println!("info: Extracted files: {files:?}");
-    }
 
     Ok(())
 }

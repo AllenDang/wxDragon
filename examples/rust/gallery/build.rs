@@ -7,6 +7,8 @@ fn main() {
     let target = std::env::var("TARGET").unwrap_or_default();
 
     if target.contains("windows") {
+        let wx_version = "3.3.1";
+
         // Create a comprehensive manifest for Windows theming and modern features
         let manifest = new_manifest("wxDragon.Gallery")
             // Enable modern Windows Common Controls (v6) for theming
@@ -29,14 +31,14 @@ fn main() {
         }
 
         // Compile and embed wx.rc resources for wxWidgets
-        embed_wx_resources(&target);
+        embed_wx_resources(wx_version, &target);
 
         // Tell Cargo to rerun this build script if the build script changes
         println!("cargo:rerun-if-changed=build.rs");
     }
 }
 
-fn embed_wx_resources(target: &str) {
+fn embed_wx_resources(wx_version: &str, target: &str) {
     // Find the wxWidgets directory with wx.rc
     let out_dir = std::env::var("OUT_DIR").unwrap();
     let target_dir = std::path::Path::new(&out_dir)
@@ -44,13 +46,33 @@ fn embed_wx_resources(target: &str) {
         .find(|p| p.file_name().map(|n| n == "target").unwrap_or(false))
         .expect("Could not find target directory");
 
-    // Look for wxWidgets directory
-    let wxwidgets_pattern = format!("wxwidgets-3.3.1-{target}-debug");
+    // Look for wxWidgets directory - try both debug and release profiles
+    let profile = std::env::var("PROFILE").unwrap_or_else(|_| "debug".to_string());
+    let wxwidgets_pattern = format!("wxwidgets-{wx_version}-{target}-{profile}");
     let wxwidgets_dir = target_dir.join(&wxwidgets_pattern);
     let wx_rc_path = wxwidgets_dir.join("include/wx/msw/wx.rc");
 
+    // Retry logic: Check if wx.rc exists, retry up to 10 times with a 5-second delay
+    let mut retry_count = 0;
+    const MAX_RETRIES: u32 = 10;
+    const RETRY_DELAY_SECS: u64 = 5;
+
+    while !wx_rc_path.exists() && retry_count < MAX_RETRIES {
+        if retry_count == 0 {
+            println!("cargo:warning=wx.rc not found at {wx_rc_path:?}, waiting and retrying...");
+        }
+
+        println!(
+            "cargo:warning=Retry {}/{MAX_RETRIES}: Waiting {RETRY_DELAY_SECS} seconds before checking again...",
+            retry_count + 1
+        );
+
+        std::thread::sleep(std::time::Duration::from_secs(RETRY_DELAY_SECS));
+        retry_count += 1;
+    }
+
     if !wx_rc_path.exists() {
-        println!("cargo:warning=wx.rc not found at {wx_rc_path:?}, skipping resource embedding");
+        println!("cargo:warning=wx.rc not found at {wx_rc_path:?} after {MAX_RETRIES} retries, skipping resource embedding");
         return;
     }
 
@@ -72,6 +94,12 @@ fn embed_wx_resources(target: &str) {
         .arg("coff") // Output format
         .arg("--include-dir")
         .arg(wxwidgets_dir.join("include"));
+
+    if target.contains("i686") || target.contains("i586") {
+        cmd.arg("--target").arg("pe-i386");
+    } else if target.contains("x86_64") {
+        cmd.arg("--target").arg("pe-x86-64");
+    }
 
     match cmd.output() {
         Ok(output) => {

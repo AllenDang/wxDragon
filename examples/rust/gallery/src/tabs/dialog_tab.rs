@@ -1,7 +1,7 @@
 use wxdragon::prelude::*;
 
-use std::thread;
 use std::time::Duration;
+use std::{sync::Mutex, thread};
 
 #[allow(dead_code)]
 pub struct DialogTabControls {
@@ -41,6 +41,9 @@ pub struct DialogTabControls {
     pub multi_choice_dialog_status_label: StaticText,
     pub dlg_dir_button: Button,
 }
+
+// Just make NotificationMessage alive long enough to show it
+static NOTIFICATION_MESSAGE: Mutex<Option<NotificationMessage>> = Mutex::new(None);
 
 pub fn create_dialog_tab(notebook: &Notebook, _frame: &Frame) -> DialogTabControls {
     let dialog_panel = Panel::builder(notebook)
@@ -681,6 +684,7 @@ impl DialogTabControls {
                     notification.show(wxdragon::widgets::notification_message::TIMEOUT_AUTO);
                     status_label_clone_notify.set_label("Notification shown.");
                     println!("NotificationMessage: Shown.");
+                    NOTIFICATION_MESSAGE.lock().unwrap().replace(notification);
                 }
                 Err(e) => {
                     status_label_clone_notify.set_label(&format!("Notify Err: {e:?}"));
@@ -821,6 +825,10 @@ impl DialogTabControls {
             } else {
                 println!("Directory Dialog canceled");
             }
+        });
+
+        frame.on_destroy(move |_| {
+            let _ = NOTIFICATION_MESSAGE.lock().unwrap().take();
         });
     }
 }

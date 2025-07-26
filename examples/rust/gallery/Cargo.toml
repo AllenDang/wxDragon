@@ -13,3 +13,17 @@ wxdragon = { path = "../../../rust/wxdragon", features = ["aui", "richtext"] }
 
 [build-dependencies]
 embed-manifest = "1.4"
+
+[package.metadata.bundle]
+# Install cargo-bundle: cargo install cargo-bundle
+# macOS Usage: cargo bundle --bin gallery --format osx --target x86_64-apple-darwin
+name = "gallery"
+identifier = "com.github.AllenDang.wxDragon.gallery"
+icon = ["asset/simple.png"]
+category = "Utility"
+short_description = "A gallery application for wxDragon"
+long_description = """
+A gallery application for wxDragon that showcases the capabilities of the wxDragon framework.
+It allows users to view images in various formats, demonstrating the integration of the wxDragon framework with
+the Rust programming language.
+"""

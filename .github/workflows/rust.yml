@@ -2,9 +2,7 @@ name: Rust
 
 on:
   push:
-    branches: [ "main" ]
   pull_request:
-    branches: [ "main" ]
 
 env:
   CARGO_TERM_COLOR: always
@@ -44,7 +42,7 @@ jobs:
     - uses: actions/checkout@v4
     - name: Install i686 target
       run: rustup target add i686-pc-windows-msvc
-    - name: Build for Windows x86 (32-bit)
+    - name: Build for i686-pc-windows-msvc (32-bit)
       run: |
         SET LIBCLANG_PATH="C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\Llvm\x64\bin"
         cargo build --target i686-pc-windows-msvc
