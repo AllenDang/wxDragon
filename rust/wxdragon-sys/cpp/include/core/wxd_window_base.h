@@ -112,4 +112,8 @@ WXD_EXPORTED int64_t wxd_Window_GetLastPosition(wxd_Window_t* window);
 // Widget type identification using wxWidgets' built-in RTTI
 WXD_EXPORTED const char* wxd_Window_GetClassName(wxd_Window_t* window);
 
+// --- Platform-specific Functions ---
+/// Gets the native handle of the window (platform-specific)
+WXD_EXPORTED void* wxd_Window_GetHandle(wxd_Window_t* window);
+
 #endif // WXD_WINDOW_BASE_H 

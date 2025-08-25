@@ -29,6 +29,7 @@ WXD_EXPORTED int wxd_CommandEvent_GetString(wxd_Event_t* event, char* buffer, in
 WXD_EXPORTED bool wxd_CommandEvent_IsChecked(wxd_Event_t* event);
 WXD_EXPORTED wxd_Point wxd_MouseEvent_GetPosition(wxd_Event_t* event);
 WXD_EXPORTED int wxd_KeyEvent_GetKeyCode(wxd_Event_t* event);
+WXD_EXPORTED int wxd_KeyEvent_GetUnicodeKey(wxd_Event_t* event);
 WXD_EXPORTED int wxd_CommandEvent_GetInt(wxd_Event_t* event);
 
 WXD_EXPORTED int wxd_ScrollEvent_GetPosition(wxd_Event_t* event);

@@ -82,6 +82,10 @@ impl KeyEventData {
         self.event.get_key_code()
     }
 
+    pub fn get_unicode_key(&self) -> Option<i32> {
+        self.event.get_unicode_key()
+    }
+
     pub fn skip(&self, skip: bool) {
         self.event.skip(skip);
     }

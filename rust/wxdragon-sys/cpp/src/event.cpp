@@ -609,6 +609,15 @@ WXD_EXPORTED int wxd_KeyEvent_GetKeyCode(wxd_Event_t* event) {
     return keyEvent->GetKeyCode();
 }
 
+WXD_EXPORTED int wxd_KeyEvent_GetUnicodeKey(wxd_Event_t* event) {
+    if (!event) return 0; 
+    wxEvent* baseEvent = static_cast<wxEvent*>(static_cast<void*>(event)); // Cast via void*
+    wxKeyEvent* keyEvent = dynamic_cast<wxKeyEvent*>(baseEvent);
+    if (!keyEvent) return 0; // Not a key event or derived
+
+    return keyEvent->GetUnicodeKey();
+}
+
 // ADDED: Implementation for wxd_CommandEvent_GetInt
 WXD_EXPORTED int wxd_CommandEvent_GetInt(wxd_Event_t* event) {
     if (!event) return 0;

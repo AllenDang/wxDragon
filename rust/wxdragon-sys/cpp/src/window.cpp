@@ -764,6 +764,15 @@ WXD_EXPORTED int64_t wxd_Window_GetLastPosition(wxd_Window_t* window) {
     return 0;
 }
 
+// --- Platform-specific Functions ---
+
+WXD_EXPORTED void* wxd_Window_GetHandle(wxd_Window_t* self) {
+    if (!self) {
+        return nullptr;
+    }
+    wxWindow* wx_window = reinterpret_cast<wxWindow*>(self);
+    return reinterpret_cast<void*>(wx_window->GetHandle());
+}
 
 
 // Get wxWidgets class name using built-in RTTI

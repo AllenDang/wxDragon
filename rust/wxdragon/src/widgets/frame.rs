@@ -188,6 +188,11 @@ impl Frame {
         FrameBuilder::default()
     }
 
+    /// Return internal window
+    pub fn get_window(&self) -> Window {
+        return self.window;
+    }
+
     /// Sets the frame's title.
     pub fn set_title(&self, title: &str) {
         let title_c = CString::new(title).expect("CString::new failed");

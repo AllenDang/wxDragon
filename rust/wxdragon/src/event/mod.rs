@@ -738,6 +738,20 @@ impl Event {
         }
     }
 
+    /// Gets the key unicode value associated with a key event.
+    pub fn get_unicode_key(&self) -> Option<i32> {
+        if self.0.is_null() {
+            return None;
+        }
+        let key_code = unsafe { ffi::wxd_KeyEvent_GetUnicodeKey(self.0) };
+        if key_code == 0 {
+            None
+        } else {
+            Some(key_code)
+        }
+    }
+
+
     /// Gets the integer value associated with a command event.
     pub fn get_int(&self) -> Option<i32> {
         if self.0.is_null() {
