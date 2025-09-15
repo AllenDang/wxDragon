@@ -519,9 +519,281 @@ impl EventType {
     pub const TASKBAR_BALLOON_CLICK: EventType =
         EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TASKBAR_BALLOON_CLICK);
 
-    /// Get the underlying stable C enum value.
-    pub(crate) fn as_c_enum(&self) -> ffi::WXDEventTypeCEnum {
-        self.0
+    /// Returns all supported event types (cross-platform and feature-compatible)
+    pub fn all_supported() -> &'static [EventType] {
+        &[
+            EventType::COMMAND_BUTTON_CLICKED,
+            EventType::CLOSE_WINDOW,
+            EventType::CHECKBOX,
+            EventType::TEXT,
+            EventType::TEXT_ENTER,
+            EventType::SIZE,
+            EventType::MENU,
+            EventType::LEFT_DOWN,
+            EventType::LEFT_UP,
+            EventType::RIGHT_DOWN,
+            EventType::RIGHT_UP,
+            EventType::MIDDLE_DOWN,
+            EventType::MIDDLE_UP,
+            EventType::MOTION,
+            EventType::MOUSEWHEEL,
+            EventType::ENTER_WINDOW,
+            EventType::LEAVE_WINDOW,
+            EventType::KEY_DOWN,
+            EventType::KEY_UP,
+            EventType::CHAR,
+            EventType::COMMAND_RADIOBUTTON_SELECTED,
+            EventType::COMMAND_RADIOBOX_SELECTED,
+            EventType::COMMAND_LISTBOX_SELECTED,
+            EventType::COMMAND_CHOICE_SELECTED,
+            EventType::COMMAND_COMBOBOX_SELECTED,
+            EventType::COMMAND_CHECKLISTBOX_SELECTED,
+            EventType::COMMAND_LISTBOX_DOUBLECLICKED,
+            EventType::COMMAND_TOGGLEBUTTON_CLICKED,
+            EventType::COMMAND_REARRANGE_LIST,
+            EventType::COLLAPSIBLEPANE_CHANGED,
+            EventType::TREE_BEGIN_LABEL_EDIT,
+            EventType::TREE_END_LABEL_EDIT,
+            EventType::TREE_SEL_CHANGED,
+            EventType::TREE_ITEM_ACTIVATED,
+            EventType::SLIDER,
+            EventType::SPINCTRL,
+            EventType::SPIN_UP,
+            EventType::SPIN_DOWN,
+            EventType::SPIN,
+            EventType::NOTEBOOK_PAGE_CHANGED,
+            EventType::SPLITTER_SASH_POS_CHANGED,
+            EventType::SPLITTER_SASH_POS_CHANGING,
+            EventType::SPLITTER_DOUBLECLICKED,
+            EventType::SPLITTER_UNSPLIT,
+            EventType::LIST_ITEM_SELECTED,
+            EventType::LIST_ITEM_ACTIVATED,
+            EventType::LIST_COL_CLICK,
+            EventType::LIST_BEGIN_LABEL_EDIT,
+            EventType::LIST_END_LABEL_EDIT,
+            EventType::LIST_BEGIN_DRAG,
+            EventType::LIST_BEGIN_RDRAG,
+            EventType::LIST_DELETE_ITEM,
+            EventType::LIST_DELETE_ALL_ITEMS,
+            EventType::LIST_ITEM_DESELECTED,
+            EventType::LIST_ITEM_FOCUSED,
+            EventType::LIST_ITEM_MIDDLE_CLICK,
+            EventType::LIST_ITEM_RIGHT_CLICK,
+            EventType::LIST_KEY_DOWN,
+            EventType::LIST_INSERT_ITEM,
+            EventType::LIST_COL_RIGHT_CLICK,
+            EventType::LIST_COL_BEGIN_DRAG,
+            EventType::COLOURPICKER_CHANGED,
+            EventType::DATE_CHANGED,
+            EventType::TIME_CHANGED,
+            EventType::TREEBOOK_PAGE_CHANGED,
+            EventType::TREEBOOK_PAGE_CHANGING,
+            EventType::TREEBOOK_NODE_EXPANDED,
+            EventType::TREEBOOK_NODE_COLLAPSED,
+            EventType::COMMAND_SEARCHCTRL_SEARCH_BTN,
+            EventType::COMMAND_SEARCHCTRL_CANCEL_BTN,
+            EventType::COMMAND_HYPERLINK,
+            EventType::SPINCTRLDOUBLE,
+            EventType::CALENDAR_SEL_CHANGED,
+            EventType::CALENDAR_DOUBLECLICKED,
+            EventType::CALENDAR_MONTH_CHANGED,
+            EventType::CALENDAR_YEAR_CHANGED,
+            EventType::CALENDAR_WEEKDAY_CLICKED,
+            EventType::SCROLL_TOP,
+            EventType::SCROLL_BOTTOM,
+            EventType::SCROLL_LINEUP,
+            EventType::SCROLL_LINEDOWN,
+            EventType::SCROLL_PAGEUP,
+            EventType::SCROLL_PAGEDOWN,
+            EventType::SCROLL_THUMBTRACK,
+            EventType::SCROLL_THUMBRELEASE,
+            EventType::SCROLL_CHANGED,
+            EventType::FILE_PICKER_CHANGED,
+            EventType::DIR_PICKER_CHANGED,
+            EventType::FONT_PICKER_CHANGED,
+            EventType::NOTIFICATION_MESSAGE_CLICK,
+            EventType::NOTIFICATION_MESSAGE_DISMISSED,
+            EventType::NOTIFICATION_MESSAGE_ACTION,
+            #[cfg(feature = "media-ctrl")]
+            EventType::MEDIA_LOADED,
+            #[cfg(feature = "media-ctrl")]
+            EventType::MEDIA_STOP,
+            #[cfg(feature = "media-ctrl")]
+            EventType::MEDIA_FINISHED,
+            #[cfg(feature = "media-ctrl")]
+            EventType::MEDIA_STATECHANGED,
+            #[cfg(feature = "media-ctrl")]
+            EventType::MEDIA_PLAY,
+            #[cfg(feature = "media-ctrl")]
+            EventType::MEDIA_PAUSE,
+            EventType::EVT_DATE_CHANGED,
+            EventType::IDLE,
+            EventType::DROP_FILES,
+            EventType::PAINT,
+            EventType::DESTROY,
+            EventType::MOVE,
+            EventType::ERASE,
+            EventType::SET_FOCUS,
+            EventType::KILL_FOCUS,
+            EventType::DATAVIEW_SELECTION_CHANGED,
+            EventType::DATAVIEW_ITEM_ACTIVATED,
+            EventType::DATAVIEW_ITEM_EDITING_STARTED,
+            EventType::DATAVIEW_ITEM_EDITING_DONE,
+            EventType::DATAVIEW_ITEM_COLLAPSING,
+            EventType::DATAVIEW_ITEM_COLLAPSED,
+            EventType::DATAVIEW_ITEM_EXPANDING,
+            EventType::DATAVIEW_ITEM_EXPANDED,
+            EventType::DATAVIEW_COLUMN_HEADER_CLICK,
+            EventType::DATAVIEW_COLUMN_HEADER_RIGHT_CLICK,
+            EventType::DATAVIEW_COLUMN_SORTED,
+            EventType::DATAVIEW_COLUMN_REORDERED,
+            EventType::TREE_SEL_CHANGING,
+            EventType::TREE_ITEM_COLLAPSING,
+            EventType::TREE_ITEM_COLLAPSED,
+            EventType::TREE_ITEM_EXPANDING,
+            EventType::TREE_ITEM_EXPANDED,
+            EventType::TREE_ITEM_RIGHT_CLICK,
+            EventType::TREE_ITEM_MIDDLE_CLICK,
+            EventType::TREE_KEY_DOWN,
+            EventType::TREE_DELETE_ITEM,
+            EventType::TREE_ITEM_MENU,
+            EventType::TREE_BEGIN_DRAG,
+            EventType::TREE_BEGIN_RDRAG,
+            EventType::TREE_END_DRAG,
+            EventType::TREE_STATE_IMAGE_CLICK,
+            EventType::TOOL,
+            EventType::TOOL_ENTER,
+            EventType::TREE_ITEM_GETTOOLTIP,
+            EventType::ANY,
+            EventType::NONE,
+            #[cfg(feature = "aui")]
+            EventType::AUI_PANE_BUTTON,
+            #[cfg(feature = "aui")]
+            EventType::AUI_PANE_CLOSE,
+            #[cfg(feature = "aui")]
+            EventType::AUI_PANE_MAXIMIZE,
+            #[cfg(feature = "aui")]
+            EventType::AUI_PANE_RESTORE,
+            #[cfg(feature = "aui")]
+            EventType::AUI_PANE_ACTIVATED,
+            #[cfg(feature = "aui")]
+            EventType::AUI_RENDER,
+            EventType::TIMER,
+            #[cfg(feature = "stc")]
+            EventType::STC_CHANGE,
+            #[cfg(feature = "stc")]
+            EventType::STC_STYLENEEDED,
+            #[cfg(feature = "stc")]
+            EventType::STC_CHARADDED,
+            #[cfg(feature = "stc")]
+            EventType::STC_SAVEPOINTREACHED,
+            #[cfg(feature = "stc")]
+            EventType::STC_SAVEPOINTLEFT,
+            #[cfg(feature = "stc")]
+            EventType::STC_ROMODIFYATTEMPT,
+            #[cfg(feature = "stc")]
+            EventType::STC_DOUBLECLICK,
+            #[cfg(feature = "stc")]
+            EventType::STC_UPDATEUI,
+            #[cfg(feature = "stc")]
+            EventType::STC_MODIFIED,
+            #[cfg(feature = "stc")]
+            EventType::STC_MACRORECORD,
+            #[cfg(feature = "stc")]
+            EventType::STC_MARGINCLICK,
+            #[cfg(feature = "stc")]
+            EventType::STC_NEEDSHOWN,
+            #[cfg(feature = "stc")]
+            EventType::STC_PAINTED,
+            #[cfg(feature = "stc")]
+            EventType::STC_USERLISTSELECTION,
+            #[cfg(feature = "stc")]
+            EventType::STC_DWELLSTART,
+            #[cfg(feature = "stc")]
+            EventType::STC_DWELLEND,
+            #[cfg(feature = "stc")]
+            EventType::STC_START_DRAG,
+            #[cfg(feature = "stc")]
+            EventType::STC_DRAG_OVER,
+            #[cfg(feature = "stc")]
+            EventType::STC_DO_DROP,
+            #[cfg(feature = "stc")]
+            EventType::STC_ZOOM,
+            #[cfg(feature = "stc")]
+            EventType::STC_HOTSPOT_CLICK,
+            #[cfg(feature = "stc")]
+            EventType::STC_HOTSPOT_DCLICK,
+            #[cfg(feature = "stc")]
+            EventType::STC_CALLTIP_CLICK,
+            #[cfg(feature = "stc")]
+            EventType::STC_AUTOCOMP_SELECTION,
+            #[cfg(feature = "stc")]
+            EventType::STC_INDICATOR_CLICK,
+            #[cfg(feature = "stc")]
+            EventType::STC_INDICATOR_RELEASE,
+            #[cfg(feature = "stc")]
+            EventType::STC_AUTOCOMP_CANCELLED,
+            #[cfg(feature = "stc")]
+            EventType::STC_AUTOCOMP_CHAR_DELETED,
+            #[cfg(feature = "richtext")]
+            EventType::RICHTEXT_LEFT_CLICK,
+            #[cfg(feature = "richtext")]
+            EventType::RICHTEXT_RIGHT_CLICK,
+            #[cfg(feature = "richtext")]
+            EventType::RICHTEXT_MIDDLE_CLICK,
+            #[cfg(feature = "richtext")]
+            EventType::RICHTEXT_LEFT_DCLICK,
+            #[cfg(feature = "richtext")]
+            EventType::RICHTEXT_RETURN,
+            #[cfg(feature = "richtext")]
+            EventType::RICHTEXT_CHARACTER,
+            #[cfg(feature = "richtext")]
+            EventType::RICHTEXT_DELETE,
+            #[cfg(feature = "richtext")]
+            EventType::RICHTEXT_CONTENT_INSERTED,
+            #[cfg(feature = "richtext")]
+            EventType::RICHTEXT_CONTENT_DELETED,
+            #[cfg(feature = "richtext")]
+            EventType::RICHTEXT_STYLE_CHANGED,
+            #[cfg(feature = "richtext")]
+            EventType::RICHTEXT_SELECTION_CHANGED,
+            #[cfg(feature = "richtext")]
+            EventType::RICHTEXT_STYLESHEET_CHANGING,
+            #[cfg(feature = "richtext")]
+            EventType::RICHTEXT_STYLESHEET_CHANGED,
+            #[cfg(feature = "richtext")]
+            EventType::RICHTEXT_STYLESHEET_REPLACING,
+            #[cfg(feature = "richtext")]
+            EventType::RICHTEXT_STYLESHEET_REPLACED,
+            EventType::TASKBAR_LEFT_DOWN,
+            EventType::TASKBAR_LEFT_DCLICK,
+            #[cfg(target_os = "windows")]
+            EventType::TASKBAR_MOVE,
+            #[cfg(target_os = "windows")]
+            EventType::TASKBAR_LEFT_UP,
+            #[cfg(target_os = "windows")]
+            EventType::TASKBAR_RIGHT_DOWN,
+            #[cfg(target_os = "windows")]
+            EventType::TASKBAR_RIGHT_UP,
+            #[cfg(target_os = "windows")]
+            EventType::TASKBAR_RIGHT_DCLICK,
+            #[cfg(target_os = "windows")]
+            EventType::TASKBAR_BALLOON_TIMEOUT,
+            #[cfg(target_os = "windows")]
+            EventType::TASKBAR_BALLOON_CLICK,
+        ]
+    }
+}
+
+impl From<ffi::WXDEventTypeCEnum> for EventType {
+    fn from(value: ffi::WXDEventTypeCEnum) -> Self {
+        EventType(value)
+    }
+}
+
+impl From<EventType> for ffi::WXDEventTypeCEnum {
+    fn from(event_type: EventType) -> Self {
+        event_type.0
     }
 }
 
@@ -618,21 +890,15 @@ impl Event {
         if self.0.is_null() {
             return None;
         }
-        let event_type_c = unsafe { ffi::wxd_Event_GetEventType(self.0) };
+        #[allow(clippy::useless_conversion)]
+        let event_type_c: ffi::WXDEventTypeCEnum = unsafe { ffi::wxd_Event_GetEventType(self.0) }
+            .try_into()
+            .unwrap_or(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_NULL);
         // If event_type_c is WXD_EVENT_TYPE_NULL or an invalid value, return None
-        if event_type_c
-            == ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_NULL
-                .try_into()
-                .unwrap()
-        {
-            None
-        } else {
-            // Convert i32 to the C enum type
-            let c_enum_val = event_type_c
-                .try_into()
-                .unwrap_or(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_NULL);
-            Some(EventType(c_enum_val))
-        }
+        EventType::all_supported()
+            .iter()
+            .find(|et| **et == EventType::from(event_type_c))
+            .copied()
     }
 
     /// Controls whether the event is processed further.
@@ -866,12 +1132,7 @@ pub trait WxEvtHandler {
         let trampoline_c_void = trampoline_ptr as *mut c_void;
 
         unsafe {
-            ffi::wxd_EvtHandler_Bind(
-                handler_ptr,
-                event_type.as_c_enum(),
-                trampoline_c_void,
-                user_data,
-            );
+            ffi::wxd_EvtHandler_Bind(handler_ptr, event_type.into(), trampoline_c_void, user_data);
         }
     }
 
@@ -899,7 +1160,7 @@ pub trait WxEvtHandler {
         unsafe {
             ffi::wxd_EvtHandler_BindWithId(
                 handler_ptr,
-                event_type.as_c_enum(),
+                event_type.into(),
                 id,
                 trampoline_c_void,
                 user_data,

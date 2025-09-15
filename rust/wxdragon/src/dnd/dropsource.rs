@@ -41,8 +41,9 @@ impl DropSource {
     ///
     /// The result of the drag and drop operation.
     pub fn do_drag_drop(&self, allow_move: bool) -> DragResult {
-        let result = unsafe { ffi::wxd_DropSource_DoDragDrop(self.ptr, allow_move) };
-        DragResult::from(result as i32)
+        let result: ffi::WXDEventTypeCEnum =
+            unsafe { ffi::wxd_DropSource_DoDragDrop(self.ptr, allow_move) };
+        DragResult::from(result)
     }
 }
 

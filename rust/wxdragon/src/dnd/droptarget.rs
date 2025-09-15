@@ -311,8 +311,7 @@ extern "C" fn text_on_enter_trampoline(
     let callbacks = unsafe { &mut *(data_ptr as *mut TextDropTargetCallbacks) };
 
     if let Some(ref mut callback) = callbacks.on_enter {
-        let rust_result = callback(x, y, DragResult::from(def_result as i32));
-        rust_result as i32 as ffi::wxd_DragResult
+        callback(x, y, DragResult::from(def_result)).into()
     } else {
         def_result
     }
@@ -331,8 +330,7 @@ extern "C" fn text_on_drag_over_trampoline(
     let callbacks = unsafe { &mut *(data_ptr as *mut TextDropTargetCallbacks) };
 
     if let Some(ref mut callback) = callbacks.on_drag_over {
-        let rust_result = callback(x, y, DragResult::from(def_result as i32));
-        rust_result as i32 as ffi::wxd_DragResult
+        callback(x, y, DragResult::from(def_result)).into()
     } else {
         def_result
     }
@@ -377,8 +375,7 @@ extern "C" fn text_on_data_trampoline(
     let callbacks = unsafe { &mut *(data_ptr as *mut TextDropTargetCallbacks) };
 
     if let Some(ref mut callback) = callbacks.on_data {
-        let rust_result = callback(x, y, DragResult::from(def_result as i32));
-        rust_result as i32 as ffi::wxd_DragResult
+        callback(x, y, DragResult::from(def_result)).into()
     } else {
         def_result
     }
@@ -415,8 +412,7 @@ extern "C" fn file_on_enter_trampoline(
     let callbacks = unsafe { &mut *(data_ptr as *mut FileDropTargetCallbacks) };
 
     if let Some(ref mut callback) = callbacks.on_enter {
-        let rust_result = callback(x, y, DragResult::from(def_result as i32));
-        rust_result as i32 as ffi::wxd_DragResult
+        callback(x, y, DragResult::from(def_result)).into()
     } else {
         def_result
     }
@@ -435,8 +431,7 @@ extern "C" fn file_on_drag_over_trampoline(
     let callbacks = unsafe { &mut *(data_ptr as *mut FileDropTargetCallbacks) };
 
     if let Some(ref mut callback) = callbacks.on_drag_over {
-        let rust_result = callback(x, y, DragResult::from(def_result as i32));
-        rust_result as i32 as ffi::wxd_DragResult
+        callback(x, y, DragResult::from(def_result)).into()
     } else {
         def_result
     }
@@ -481,8 +476,7 @@ extern "C" fn file_on_data_trampoline(
     let callbacks = unsafe { &mut *(data_ptr as *mut FileDropTargetCallbacks) };
 
     if let Some(ref mut callback) = callbacks.on_data {
-        let rust_result = callback(x, y, DragResult::from(def_result as i32));
-        rust_result as i32 as ffi::wxd_DragResult
+        callback(x, y, DragResult::from(def_result)).into()
     } else {
         def_result
     }
