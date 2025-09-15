@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.8.24
+
+### New Features
+- **DataViewTreeCtrl Clear Columns**: Added `clear_columns()` method to DataViewTreeCtrl for removing all columns at once
+  - Enables dynamic column management for data view controls
+  - Useful for rebuilding column layouts or clearing view state
+
+### Bug Fixes
+- **Issue #42**: Fixed reported issue in the codebase
+
+### Contributors
+- @mjfs - Issue fix and improvements
+
 ## 0.8.23
 
 ### New Features
