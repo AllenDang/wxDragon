@@ -110,14 +110,22 @@ jobs:
           C:\mingw64\mingw64\bin\g++.exe --version
           echo %PATH%
 
+      - name: Set MinGW-w64 as the default toolchain
+        run: |
+          rustup toolchain install stable-x86_64-pc-windows-gnu
+          rustup default stable-x86_64-pc-windows-gnu
+
+      - name: Install x86_64-pc-windows-gnu target
+        run: rustup target add x86_64-pc-windows-gnu
+
       - name: Build default features
         shell: cmd
-        run: cargo build
-        
+        run: cargo build --target x86_64-pc-windows-gnu --release
+
       - name: Clean before feature test
         shell: cmd
         run: cargo clean
-        
+
       - name: Test all features
         shell: cmd
-        run: cargo build --package=wxdragon-sys --features="aui,xrc,richtext,stc"
+        run: cargo build --package=wxdragon-sys --features="aui,xrc,richtext,stc" --target x86_64-pc-windows-gnu --release

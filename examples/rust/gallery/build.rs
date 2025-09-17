@@ -1,16 +1,26 @@
 use embed_manifest::manifest::{ActiveCodePage, Setting, SupportedOS::*};
 use embed_manifest::{embed_manifest, new_manifest};
-use std::process::Command;
 
 fn main() {
+    // Tell Cargo to rerun this build script if the build script changes
+    println!("cargo:rerun-if-changed=build.rs");
+
     // Check if we're building for Windows (either natively or cross-compiling)
     let target = std::env::var("TARGET").unwrap_or_default();
 
     if target.contains("windows") {
-        let wx_version = "3.3.1";
+        embed_windows_manifest("wxDragon.Gallery");
 
+        let wx_version = "3.3.1";
+        // Compile and embed wx.rc resources for wxWidgets
+        embed_wx_resources(wx_version, &target);
+    }
+}
+
+fn embed_windows_manifest(name: &str) {
+    {
         // Create a comprehensive manifest for Windows theming and modern features
-        let manifest = new_manifest("wxDragon.Gallery")
+        let manifest = new_manifest(name)
             // Enable modern Windows Common Controls (v6) for theming
             // Windows10 is the latest supported in the enum
             .supported_os(Windows7..=Windows10)
@@ -29,12 +39,6 @@ fn main() {
             println!("cargo:warning=Failed to embed manifest: {e}");
             println!("cargo:warning=The application will still work but may lack optimal Windows theming");
         }
-
-        // Compile and embed wx.rc resources for wxWidgets
-        embed_wx_resources(wx_version, &target);
-
-        // Tell Cargo to rerun this build script if the build script changes
-        println!("cargo:rerun-if-changed=build.rs");
     }
 }
 
@@ -80,16 +84,34 @@ fn embed_wx_resources(wx_version: &str, target: &str) {
         return;
     }
 
+    //*
+    let wx_include_path = wxwidgets_dir.join("include");
+
+    let res = embed_resource::compile(&wx_rc_path, [&wx_include_path]);
+    if res != embed_resource::CompilationResult::Ok {
+        println!("cargo:warning=Compile resources with embed_resource: {res:?}");
+    }
+    // */
+
+    /*
+
     // Choose the appropriate resource compiler
-    let windres = if target.contains("gnu") {
-        "x86_64-w64-mingw32-windres" // For MinGW cross-compilation
-    } else {
-        "windres" // For native Windows or MSVC
+    let windres = match which::which("windres") {
+        // For native Windows or MSVC
+        Ok(path) => path,
+        Err(_) => match which::which("x86_64-w64-mingw32-windres") {
+            // For MinGW cross-compilation
+            Ok(path) => path,
+            Err(_) => {
+                println!("cargo:warning=windres not found in PATH");
+                return;
+            }
+        },
     };
 
     // Compile the .rc file to .res
     let res_path = std::path::Path::new(&out_dir).join("wx.res");
-    let mut cmd = Command::new(windres);
+    let mut cmd = std::process::Command::new(windres);
     cmd.arg("-i")
         .arg(&wx_rc_path)
         .arg("-o")
@@ -125,4 +147,5 @@ fn embed_wx_resources(wx_version: &str, target: &str) {
     if res_path.exists() {
         println!("cargo:rustc-link-arg={}", res_path.display());
     }
+    // */
 }

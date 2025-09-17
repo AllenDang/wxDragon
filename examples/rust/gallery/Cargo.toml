@@ -13,6 +13,8 @@ wxdragon = { path = "../../../rust/wxdragon", features = ["aui", "richtext"] }
 
 [build-dependencies]
 embed-manifest = "1.4"
+embed-resource = { version = "3.0.6", git = "https://github.com/nabijaczleweli/rust-embed-resource.git", rev = "d3f5d6e" }
+which = "8"
 
 [package.metadata.bundle]
 # Install cargo-bundle: cargo install cargo-bundle
