@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.8.25
+
+### New Features
+- **Dialog Builder**: Added Dialog builder to support creating generic dialog directly
+  - Enables creating custom dialogs with builder pattern
+  - Provides direct access to generic dialog functionality
+  - Simplifies custom dialog creation workflow
+
+### Enhancements
+- **Virtual List Refinements**: Refined virtual list implementation
+  - Improved virtual list performance and stability
+  - Enhanced virtual list behavior consistency
+  - Better handling of edge cases in virtual list operations
+
 ## 0.8.24
 
 ### New Features

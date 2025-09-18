@@ -1,0 +1,7 @@
+[package]
+name = "generic_dialog_test"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+wxdragon = { path = "../../../rust/wxdragon" }

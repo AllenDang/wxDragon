@@ -3,6 +3,7 @@ use crate::prelude::*;
 use std::time::{Duration, Instant};
 
 /// PHASE 2B: Enhanced adaptive item pool with intelligent optimization
+#[derive(Clone)]
 pub struct AdaptiveItemPool {
     available_panels: Vec<Panel>,
     target_pool_size: usize,

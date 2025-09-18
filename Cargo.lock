@@ -399,6 +399,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "generic_dialog_test"
+version = "0.1.0"
+dependencies = [
+ "wxdragon",
+]
+
+[[package]]
 name = "getrandom"
 version = "0.2.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1826,7 +1833,7 @@ checksum = "a751b3277700db47d3e574514de2eced5e54dc8a5436a3bf7a0b248b2cee16f3"
 
 [[package]]
 name = "window_features_test"
-version = "0.8.23"
+version = "0.8.25"
 dependencies = [
  "wxdragon",
 ]
@@ -2045,7 +2052,7 @@ checksum = "ea2f10b9bb0928dfb1b42b65e1f9e36f7f54dbdf08457afefb38afcdec4fa2bb"
 
 [[package]]
 name = "wxdragon"
-version = "0.8.23"
+version = "0.8.25"
 dependencies = [
  "bitflags 2.9.1",
  "lazy_static",
@@ -2056,7 +2063,7 @@ dependencies = [
 
 [[package]]
 name = "wxdragon-macros"
-version = "0.8.23"
+version = "0.8.25"
 dependencies = [
  "proc-macro2",
  "quick-xml",
@@ -2066,7 +2073,7 @@ dependencies = [
 
 [[package]]
 name = "wxdragon-sys"
-version = "0.8.23"
+version = "0.8.25"
 dependencies = [
  "bindgen",
  "flate2",

@@ -4,6 +4,7 @@
 #include "../wxd_types.h"
 
 // --- Dialog (Base) ---
+WXD_EXPORTED wxd_Dialog_t* wxd_Dialog_Create(wxd_Window_t* parent, const char* title, wxd_Style_t style, int x, int y, int width, int height);
 WXD_EXPORTED int wxd_Dialog_ShowModal(wxd_Dialog_t* self);
 WXD_EXPORTED void wxd_Dialog_EndModal(wxd_Dialog_t* self, int retCode);
 

@@ -129,7 +129,7 @@ struct EnhancedCacheEntry {
 }
 
 /// PHASE 1.3: LRU-managed size cache with automatic eviction
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct SizeCache {
     /// Cache entries keyed by item index
     entries: HashMap<usize, EnhancedCacheEntry>,
@@ -445,6 +445,7 @@ struct BatchExecutionContext<'a> {
 }
 
 /// Internal state for the virtual list
+#[derive(Clone)]
 pub struct VirtualListState {
     // Configuration
     layout_mode: VirtualListLayoutMode,
@@ -1392,10 +1393,9 @@ custom_widget!(
 
         // Initialize the state with the actual layout mode and content area
         {
-            let mut state = config.state.borrow_mut();
-            state.layout_mode = config.layout_mode;
+            config.state.borrow_mut().layout_mode = config.layout_mode;
             // Use content area (excluding scrollbar) as viewport
-            state.viewport_size = content_area;
+            config.state.borrow_mut().viewport_size = content_area;
         }
 
         // Function to update scrollbar properties
@@ -1404,21 +1404,21 @@ custom_widget!(
         let layout_mode_update = config.layout_mode;
         let state_update = config.state.clone();
         let update_scrollbars = move || {
-            let state = state_update.borrow();
+            let state = state_update.clone();
             match layout_mode_update {
                 VirtualListLayoutMode::Vertical => {
                     if let Some(ref vscrollbar) = v_scrollbar_update {
-                        let max_scroll = (state.total_content_size.height - state.viewport_size.height).max(1);
+                        let max_scroll = (state.borrow().total_content_size.height - state.borrow().viewport_size.height).max(1);
                         let current_pos = if max_scroll > 0 {
-                            (state.scroll_position.y * 100 / max_scroll).min(100)
+                            (state.borrow().scroll_position.y * 100 / max_scroll).min(100)
                         } else {
                             0
                         };
 
                         // Set scrollbar: position, thumb_size, range, page_size, refresh
                         // thumb_size represents visible portion, page_size is for page up/down
-                        let thumb_size = if state.total_content_size.height > 0 {
-                            ((state.viewport_size.height * 100) / state.total_content_size.height).clamp(1, 99)
+                        let thumb_size = if state.borrow().total_content_size.height > 0 {
+                            ((state.borrow().viewport_size.height * 100) / state.borrow().total_content_size.height).clamp(1, 99)
                         } else {
                             95
                         };
@@ -1429,9 +1429,9 @@ custom_widget!(
                 VirtualListLayoutMode::Horizontal => {
                     if let Some(ref hscrollbar) = h_scrollbar_update {
                         // Calculate actual content scroll range without artificial buffer
-                        let max_scroll = (state.total_content_size.width - state.viewport_size.width).max(1);
+                        let max_scroll = (state.borrow().total_content_size.width - state.borrow().viewport_size.width).max(1);
                         let current_pos = if max_scroll > 0 {
-                            (state.scroll_position.x * 100 / max_scroll).min(100)
+                            (state.borrow().scroll_position.x * 100 / max_scroll).min(100)
                         } else {
                             0
                         };
@@ -1440,8 +1440,8 @@ custom_widget!(
 
                         // Set scrollbar: position, thumb_size, range, page_size, refresh
                         // Use smaller thumb size to ensure full range accessibility
-                        let thumb_size = if state.total_content_size.width > 0 {
-                            ((state.viewport_size.width * 100) / state.total_content_size.width).clamp(1, 95)
+                        let thumb_size = if state.borrow().total_content_size.width > 0 {
+                            ((state.borrow().viewport_size.width * 100) / state.borrow().total_content_size.width).clamp(1, 95)
                         } else {
                             90
                         };
@@ -1490,14 +1490,14 @@ custom_widget!(
                 }
             };
 
-            let mut state_mut = state_resize.borrow_mut();
-            let old_viewport_size = state_mut.viewport_size;
-            state_mut.viewport_size = content_area;
+            let state = state_resize.clone();
+            let old_viewport_size = state.borrow().viewport_size;
+            state.borrow_mut().viewport_size = content_area;
 
             // Auto-reconfigure internal parameters when viewport size changes significantly
             if (old_viewport_size.width - content_area.width).abs() > 50 ||
                (old_viewport_size.height - content_area.height).abs() > 50 {
-                state_mut.internal_params.auto_configure(
+                state.borrow_mut().internal_params.auto_configure(
                     (content_area.width, content_area.height),
                     config.scrollbar_size,
                     config.keyboard_scroll_amount,
@@ -1505,8 +1505,9 @@ custom_widget!(
                 );
             }
 
-            state_mut.update_visible_items(&panel_resize);
-            drop(state_mut); // Release borrow before calling update_scrollbars
+            let mut cloned_state = state.borrow().clone();
+            cloned_state.update_visible_items(&panel_resize);
+            *state.borrow_mut() = cloned_state;
 
             // Update scrollbars after viewport size change
             update_scrollbars_resize();
@@ -1543,33 +1544,34 @@ custom_widget!(
                 return;
             }
 
-            let mut state_mut = state_scroll_wheel.borrow_mut();
+            let state = state_scroll_wheel.clone();
 
-            match state_mut.layout_mode {
+            let layout_mode = state.borrow().layout_mode;
+            match layout_mode {
                 VirtualListLayoutMode::Vertical => {
-                    let max_scroll = (state_mut.total_content_size.height - state_mut.viewport_size.height).max(0);
-                    let tentative_scroll_y = (state_mut.scroll_position.y + scroll_amount)
+                    let max_scroll = (state.borrow().total_content_size.height - state.borrow().viewport_size.height).max(0);
+                    let tentative_scroll_y = (state.borrow().scroll_position.y + scroll_amount)
                         .max(0)
                         .min(max_scroll);
 
                     // CRITICAL FIX: Mouse wheel end-of-list handling to prevent clipping
                     let new_scroll_y = if max_scroll > 0 {
                         // Calculate base content size (without padding) to determine when end-of-list logic is needed
-                        let data_source_opt = state_mut.data_source.clone();
+                        let data_source_opt = state.borrow().data_source.clone();
                         let base_max_scroll = if let Some(ref data_source) = data_source_opt {
                             let total_items = data_source.get_item_count();
                             if total_items > 0 {
                                 // Calculate base content height (same logic as calculate_total_content_size_progressive)
                                 let mut base_total_height = 0;
                                 for i in 0..total_items {
-                                    let item_height = if let Some(cached_size) = state_mut.item_size_cache.peek(i) {
+                                    let item_height = if let Some(cached_size) = state.borrow().item_size_cache.peek(i) {
                                         cached_size.size.height
                                     } else {
-                                        state_mut.internal_params.estimated_item_height
+                                        state.borrow().internal_params.estimated_item_height
                                     };
                                     base_total_height += item_height;
                                 }
-                                (base_total_height - state_mut.viewport_size.height).max(0)
+                                (base_total_height - state.borrow().viewport_size.height).max(0)
                             } else {
                                 max_scroll
                             }
@@ -1581,8 +1583,8 @@ custom_widget!(
                         // This eliminates false triggers from ratio-based detection
                         let scrolling_down = scroll_amount > 0;
                         if tentative_scroll_y >= base_max_scroll && scrolling_down {
-                            let data_source_opt = state_mut.data_source.clone();
-                            let item_renderer_opt = state_mut.item_renderer.clone();
+                            let data_source_opt = state.borrow().data_source.clone();
+                            let item_renderer_opt = state.borrow().item_renderer.clone();
 
                             if let (Some(data_source), Some(item_renderer)) = (data_source_opt, item_renderer_opt) {
                                 let total_items = data_source.get_item_count();
@@ -1590,36 +1592,38 @@ custom_widget!(
                                     let last_item_index = total_items - 1;
 
                                     // Force measurement of the last item to get its actual size
-                                    let last_item_size = state_mut.measure_item_size(
+                                    let mut cloned_state = state.borrow().clone();
+                                    let last_item_size = cloned_state.measure_item_size(
                                         last_item_index,
                                         data_source.as_ref(),
                                         item_renderer.as_ref(),
                                         &panel_scroll_wheel,
                                     );
+                                    *state.borrow_mut() = cloned_state;
 
                                     // Calculate total content size up to and including the last item
                                     let mut total_height = 0;
                                     for i in 0..total_items {
-                                        let item_height = if let Some(cached_size) = state_mut.item_size_cache.peek(i) {
+                                        let item_height = if let Some(cached_size) = state.borrow().item_size_cache.peek(i) {
                                             cached_size.size.height
                                         } else if i == last_item_index {
                                             last_item_size.height
                                         } else {
-                                            state_mut.internal_params.estimated_item_height
+                                            state.borrow().internal_params.estimated_item_height
                                         };
                                         total_height += item_height;
                                     }
 
                                                                          // Add safety padding to ensure last item is fully visible
-                                     let safety_padding = state_mut.internal_params.safety_padding;
+                                     let safety_padding = state.borrow().internal_params.safety_padding;
                                      let padded_total_height = total_height + safety_padding;
 
                                      // CRITICAL FIX: Update total_content_size to match the padded calculation
                                      // This ensures consistency between scrollbar and mouse wheel scrolling
-                                     state_mut.total_content_size.height = padded_total_height;
+                                     state.borrow_mut().total_content_size.height = padded_total_height;
 
                                      // Calculate scroll position to show the end with safety padding
-                                     (padded_total_height - state_mut.viewport_size.height).max(0)
+                                     (padded_total_height - state.borrow().viewport_size.height).max(0)
                                 } else {
                                     tentative_scroll_y
                                 }
@@ -1634,10 +1638,13 @@ custom_widget!(
                         tentative_scroll_y
                     };
 
-                    if new_scroll_y != state_mut.scroll_position.y {
-                        state_mut.scroll_position.y = new_scroll_y;
-                        state_mut.update_visible_items(&panel_scroll_wheel);
-                        drop(state_mut); // Release borrow before calling update_scrollbars
+                    let old_y = state.borrow().scroll_position.y;
+                    if new_scroll_y != old_y {
+                        state.borrow_mut().scroll_position.y = new_scroll_y;
+
+                        let mut cloned_state = state.borrow().clone();
+                        cloned_state.update_visible_items(&panel_scroll_wheel);
+                        *state.borrow_mut() = cloned_state;
 
                         // Use central scrollbar update function for consistent behavior
                         update_scrollbars_wheel();
@@ -1646,15 +1653,18 @@ custom_widget!(
                 }
                 VirtualListLayoutMode::Horizontal => {
                     // Calculate actual content scroll range without artificial buffer
-                    let max_scroll = (state_mut.total_content_size.width - state_mut.viewport_size.width).max(0);
-                    let new_scroll_x = (state_mut.scroll_position.x + scroll_amount)
+                    let max_scroll = (state.borrow().total_content_size.width - state.borrow().viewport_size.width).max(0);
+                    let new_scroll_x = (state.borrow().scroll_position.x + scroll_amount)
                         .max(0)
                         .min(max_scroll);
 
-                    if new_scroll_x != state_mut.scroll_position.x {
-                        state_mut.scroll_position.x = new_scroll_x;
-                        state_mut.update_visible_items(&panel_scroll_wheel);
-                        drop(state_mut); // Release borrow before calling update_scrollbars
+                    let old_x = state.borrow().scroll_position.x;
+                    if new_scroll_x != old_x {
+                        state.borrow_mut().scroll_position.x = new_scroll_x;
+
+                        let mut cloned_state = state.borrow().clone();
+                        cloned_state.update_visible_items(&panel_scroll_wheel);
+                        *state.borrow_mut() = cloned_state;
 
                         // Use central scrollbar update function for consistent behavior
                         update_scrollbars_wheel();
@@ -1684,19 +1694,23 @@ custom_widget!(
             };
 
             if let Some(delta) = scroll_delta {
-                let mut state_mut = state_scroll.borrow_mut();
+                let state = state_scroll.clone();
 
-                match state_mut.layout_mode {
+                let layout_mode = state.borrow().layout_mode;
+                match layout_mode {
                     VirtualListLayoutMode::Vertical => {
-                        let max_scroll = (state_mut.total_content_size.height - state_mut.viewport_size.height).max(0);
-                        let new_scroll_y = (state_mut.scroll_position.y + delta)
+                        let max_scroll = (state.borrow().total_content_size.height - state.borrow().viewport_size.height).max(0);
+                        let new_scroll_y = (state.borrow().scroll_position.y + delta)
                             .max(0)
                             .min(max_scroll);
 
-                        if new_scroll_y != state_mut.scroll_position.y {
-                            state_mut.scroll_position.y = new_scroll_y;
-                            state_mut.update_visible_items(&panel_scroll);
-                            drop(state_mut); // Release borrow before calling update_scrollbars
+                        let old_y = state.borrow().scroll_position.y;
+                        if new_scroll_y != old_y {
+                            state.borrow_mut().scroll_position.y = new_scroll_y;
+
+                            let mut cloned_state = state.borrow().clone();
+                            cloned_state.update_visible_items(&panel_scroll);
+                            *state.borrow_mut() = cloned_state;
 
                             // Use central scrollbar update function for consistent behavior
                             update_scrollbars_key();
@@ -1705,22 +1719,25 @@ custom_widget!(
                     }
                     VirtualListLayoutMode::Horizontal => {
                         // Calculate actual content scroll range without artificial buffer
-                        let max_scroll = (state_mut.total_content_size.width - state_mut.viewport_size.width).max(0);
-                        let new_scroll_x = (state_mut.scroll_position.x + delta)
+                        let max_scroll = (state.borrow().total_content_size.width - state.borrow().viewport_size.width).max(0);
+                        let new_scroll_x = (state.borrow().scroll_position.x + delta)
                             .max(0)
                             .min(max_scroll);
 
-                    if new_scroll_x != state_mut.scroll_position.x {
-                        state_mut.scroll_position.x = new_scroll_x;
-                        state_mut.update_visible_items(&panel_scroll);
-                            drop(state_mut); // Release borrow before calling update_scrollbars
+                        let old_x = state.borrow().scroll_position.x;
+                        if new_scroll_x != old_x {
+                            state.borrow_mut().scroll_position.x = new_scroll_x;
+
+                            let mut cloned_state = state.borrow().clone();
+                            cloned_state.update_visible_items(&panel_scroll);
+                            *state.borrow_mut() = cloned_state;
 
                             // Use central scrollbar update function for consistent behavior
                             update_scrollbars_key();
-                        panel_scroll.refresh(false, None);
+                            panel_scroll.refresh(false, None);
                         }
                     }
-                }
+                };
             }
 
             event.skip(true);
@@ -1735,7 +1752,7 @@ custom_widget!(
             // Only handle thumb track for smooth drag scrolling
             vscrollbar.on_thumb_track(move |event| {
                 if let Some(position) = event.get_position() {
-                    let mut state_mut = state_vscroll.borrow_mut();
+                    let state = state_vscroll.clone();
 
                     // CRITICAL FIX: Store the desired scroll RATIO instead of absolute position
                     // This prevents mismatch when total_content_size changes during update_visible_items
@@ -1745,8 +1762,8 @@ custom_widget!(
                     // CRITICAL FIX: Last-item-aware scrolling for end-of-list positioning
                     if scroll_ratio >= 0.95 {
                         // User is dragging near the end - ensure last item is fully visible
-                        let data_source_opt = state_mut.data_source.clone();
-                        let item_renderer_opt = state_mut.item_renderer.clone();
+                        let data_source_opt = state.borrow().data_source.clone();
+                        let item_renderer_opt = state.borrow().item_renderer.clone();
 
                         if let (Some(data_source), Some(item_renderer)) = (data_source_opt, item_renderer_opt) {
                             let total_items = data_source.get_item_count();
@@ -1754,66 +1771,72 @@ custom_widget!(
                                 let last_item_index = total_items - 1;
 
                                 // Force measurement of the last item to get its actual size
-                                let last_item_size = state_mut.measure_item_size(
+                                let mut cloned_state = state.borrow().clone();
+                                let last_item_size = cloned_state.measure_item_size(
                                     last_item_index,
                                     data_source.as_ref(),
                                     item_renderer.as_ref(),
                                     &panel_vscroll,
                                 );
+                                *state.borrow_mut() = cloned_state;
 
                                 // Calculate total content size up to and including the last item
                                 let mut total_height = 0;
                                 for i in 0..total_items {
-                                    let item_height = if let Some(cached_size) = state_mut.item_size_cache.peek(i) {
+                                    let item_height = if let Some(cached_size) = state.borrow().item_size_cache.peek(i) {
                                         cached_size.size.height
                                     } else if i == last_item_index {
                                         last_item_size.height
                                     } else {
-                                        state_mut.internal_params.estimated_item_height
+                                        state.borrow().internal_params.estimated_item_height
                                     };
                                     total_height += item_height;
                                 }
 
                                 // CRITICAL FIX: Add safety padding to total height to ensure last item has space
-                                let safety_padding = state_mut.internal_params.safety_padding;
+                                let safety_padding = state.borrow().internal_params.safety_padding;
                                 let padded_total_height = total_height + safety_padding;
 
                                 // Calculate scroll position to show the end with the safety padding
-                                let target_scroll_y = (padded_total_height - state_mut.viewport_size.height).max(0);
+                                let target_scroll_y = (padded_total_height - state.borrow().viewport_size.height).max(0);
 
-                                state_mut.scroll_position.y = target_scroll_y;
+                                state.borrow_mut().scroll_position.y = target_scroll_y;
 
                                 // CRITICAL FIX: Update total_content_size to match the padded calculation
                                 // This ensures mouse wheel scrolling uses the same bounds as scrollbar dragging
-                                state_mut.total_content_size.height = padded_total_height;
+                                state.borrow_mut().total_content_size.height = padded_total_height;
 
-                                state_mut.update_visible_items(&panel_vscroll);
+                                let mut cloned_state = state.borrow().clone();
+                                cloned_state.update_visible_items(&panel_vscroll);
+                                *state.borrow_mut() = cloned_state;
                             }
                         }
                     } else {
                         // Normal scrolling for non-end positions
-                        let old_max_scroll = (state_mut.total_content_size.height - state_mut.viewport_size.height).max(0);
+                        let old_max_scroll = (state.borrow().total_content_size.height - state.borrow().viewport_size.height).max(0);
                         let target_scroll_y = if old_max_scroll > 0 {
                             (scroll_ratio * old_max_scroll as f32).round() as i32
                         } else {
                             0
                         };
 
-                        if target_scroll_y != state_mut.scroll_position.y {
-                            state_mut.scroll_position.y = target_scroll_y;
-                            state_mut.update_visible_items(&panel_vscroll);
+                        let old_y = state.borrow().scroll_position.y;
+                        if target_scroll_y != old_y {
+                            state.borrow_mut().scroll_position.y = target_scroll_y;
+
+                            let mut cloned_state = state.borrow().clone();
+                            cloned_state.update_visible_items(&panel_vscroll);
+                            *state.borrow_mut() = cloned_state;
                         }
                     }
 
                     // For DynamicSize mode, ensure a final layout pass after rapid scrolling
-                    if state_mut.item_sizing_mode == ItemSizingMode::DynamicSize {
+                    if state.borrow().item_sizing_mode == ItemSizingMode::DynamicSize {
                         // Force layout on all visible panels to ensure proper text wrapping
-                        for panel in state_mut.item_to_panel.values() {
+                        for panel in state.borrow().item_to_panel.values() {
                             panel.layout();
                         }
                     }
-
-                    drop(state_mut); // Release borrow before calling update_scrollbars
 
                     // Use central scrollbar update function for consistent behavior
                     update_scrollbars_vscroll();
@@ -1824,13 +1847,12 @@ custom_widget!(
 
         if let Some(ref hscrollbar) = h_scrollbar {
             let panel_hscroll = panel.clone();
-            let state_hscroll = config.state.clone();
+            let state = config.state.clone();
             let update_scrollbars_hscroll = update_scrollbars.clone();
 
             // Only handle thumb track for horizontal scrollbar drag
             hscrollbar.on_thumb_track(move |event| {
                 if let Some(position) = event.get_position() {
-                    let mut state_mut = state_hscroll.borrow_mut();
 
                     // CRITICAL FIX: Store the desired scroll RATIO instead of absolute position
                     // This prevents mismatch when total_content_size changes during update_visible_items
@@ -1838,27 +1860,31 @@ custom_widget!(
                     let scroll_ratio = (position as f32 / effective_scrollbar_range).clamp(0.0, 1.0);
 
                     // Calculate initial scroll position
-                    let old_max_scroll = (state_mut.total_content_size.width - state_mut.viewport_size.width).max(0);
+                    let old_max_scroll = (state.borrow().total_content_size.width - state.borrow().viewport_size.width).max(0);
                     let initial_scroll_x = if old_max_scroll > 0 {
                         (scroll_ratio * old_max_scroll as f32).round() as i32
                     } else {
                         0
                     };
 
-                    if initial_scroll_x != state_mut.scroll_position.x {
-                        state_mut.scroll_position.x = initial_scroll_x;
-                        state_mut.update_visible_items(&panel_hscroll);
+                    let old_x = state.borrow().scroll_position.x;
+                    if initial_scroll_x != old_x {
+                        state.borrow_mut().scroll_position.x = initial_scroll_x;
+
+                        let mut cloned_state = state.borrow().clone();
+                        cloned_state.update_visible_items(&panel_hscroll);
+                        *state.borrow_mut() = cloned_state;
 
                         // CRITICAL FIX: Force immediate content size recalculation with fresh measurements
                         // The issue was that update_visible_items measures items but cache update happens later
-                        if let Some(ref data_source) = &state_mut.data_source {
-                            let total_items = data_source.get_item_count();
-                            let estimated_item_size = state_mut.internal_params.estimated_item_width;
-                            state_mut.total_content_size = state_mut.calculate_total_content_size_progressive(total_items, estimated_item_size);
+                        let total_items =  state.borrow().data_source.as_ref().map(|data_source| data_source.get_item_count());
+                        let estimated_item_size = state.borrow().internal_params.estimated_item_width;
+                        if let Some(total_items) = total_items {
+                            let new_content_size = state.borrow().calculate_total_content_size_progressive(total_items, estimated_item_size);
+                            state.borrow_mut().total_content_size = new_content_size;
                         }
-
                         // Now recalculate scroll position with the corrected content size
-                        let new_max_scroll = (state_mut.total_content_size.width - state_mut.viewport_size.width).max(0);
+                        let new_max_scroll = (state.borrow().total_content_size.width - state.borrow().viewport_size.width).max(0);
                         let final_scroll_x = if new_max_scroll > 0 {
                             (scroll_ratio * new_max_scroll as f32).round() as i32
                         } else {
@@ -1866,17 +1892,15 @@ custom_widget!(
                         }.max(0).min(new_max_scroll);
 
                         // Update scroll position to account for content size changes
-                        state_mut.scroll_position.x = final_scroll_x;
+                        state.borrow_mut().scroll_position.x = final_scroll_x;
 
                         // For DynamicSize mode, ensure a final layout pass after rapid scrolling
-                        if state_mut.item_sizing_mode == ItemSizingMode::DynamicSize {
+                        if state.borrow().item_sizing_mode == ItemSizingMode::DynamicSize {
                             // Force layout on all visible panels to ensure proper text wrapping
-                            for panel in state_mut.item_to_panel.values() {
+                            for panel in state.borrow().item_to_panel.values() {
                                 panel.layout();
                             }
                         }
-
-                        drop(state_mut); // Release borrow before calling update_scrollbars
 
                         // Use central scrollbar update function for consistent behavior
                         update_scrollbars_hscroll();
@@ -1898,12 +1922,12 @@ impl VirtualList {
     pub fn set_data_source<T: VirtualListDataSource + 'static>(&self, data_source: T) {
         // Setting data source
 
-        {
-            let mut state = self.config().state.borrow_mut();
-            state.set_data_source(Rc::new(data_source));
+        self.config()
+            .state
+            .borrow_mut()
+            .set_data_source(Rc::new(data_source));
 
-            // Total content size will be recalculated on next update
-        }
+        // Total content size will be recalculated on next update
 
         self.refresh(false, None);
 
@@ -1915,12 +1939,12 @@ impl VirtualList {
     pub fn set_item_renderer<T: VirtualListItemRenderer + 'static>(&self, item_renderer: T) {
         // Setting item renderer
 
-        {
-            let mut state = self.config().state.borrow_mut();
-            state.set_item_renderer(Rc::new(item_renderer));
+        self.config()
+            .state
+            .borrow_mut()
+            .set_item_renderer(Rc::new(item_renderer));
 
-            // Total content size will be recalculated on next update
-        }
+        // Total content size will be recalculated on next update
 
         self.refresh(false, None);
 
@@ -1936,17 +1960,15 @@ impl VirtualList {
     /// - `ItemSizingMode::DynamicSize`: Use for items that resize based on container width
     ///   (text wrapping, responsive layouts). Cache entries are invalidated when width changes
     pub fn set_item_sizing_mode(&self, sizing_mode: ItemSizingMode) {
-        let mut state = self.config().state.borrow_mut();
-        state.item_sizing_mode = sizing_mode;
+        self.config().state.borrow_mut().item_sizing_mode = sizing_mode;
     }
 
     /// Manually trigger an initial update to ensure items become visible
     fn trigger_initial_update(&self) {
         // Force item creation without changing the viewport size (it's already set to content area)
-        {
-            let mut state = self.config().state.borrow_mut();
-            state.update_visible_items(self);
-        }
+        let mut cloned_state = self.config().state.borrow().clone();
+        cloned_state.update_visible_items(self);
+        *self.config().state.borrow_mut() = cloned_state;
 
         // Force a redraw
         self.refresh(false, None);
@@ -1954,47 +1976,50 @@ impl VirtualList {
 
     /// PHASE 3: Scroll to show a specific item with error handling
     pub fn scroll_to_item(&self, index: usize) -> VirtualListResult<()> {
-        let mut state = self.config().state.borrow_mut();
-        if let Some(ref data_source) = &state.data_source {
-            let total_items = data_source.get_item_count();
+        let state = self.config().state.clone();
 
-            // Validate index bounds
-            if index >= total_items {
-                return Err(VirtualListError::invalid_index(index, total_items));
-            }
+        let total_items = state
+            .borrow()
+            .data_source
+            .clone()
+            .map(|ds| ds.get_item_count());
+        let Some(total_items) = total_items else {
+            return Err(VirtualListError::data_source_error("No data source set"));
+        };
 
-            // Calculate position using mix of actual measurements and estimates
-            let estimated_item_height = 80; // Same estimate as in update_visible_items
-            let mut y_position = 0;
+        // Validate index bounds
+        if index >= total_items {
+            return Err(VirtualListError::invalid_index(index, total_items));
+        }
 
-            for i in 0..index {
-                let item_height = if let Some(cached_size) = state.item_size_cache.peek(i) {
-                    // Use actual measurement if available
-                    match state.layout_mode {
-                        VirtualListLayoutMode::Vertical => cached_size.size.height,
-                        VirtualListLayoutMode::Horizontal => cached_size.size.width,
-                    }
-                } else {
-                    // Use estimate for unmeasured items
-                    estimated_item_height
-                };
+        // Calculate position using mix of actual measurements and estimates
+        let estimated_item_height = 80; // Same estimate as in update_visible_items
+        let mut y_position = 0;
 
-                y_position += item_height;
-            }
-
-            let new_scroll_position = match state.layout_mode {
-                VirtualListLayoutMode::Vertical => Point::new(0, y_position),
-                VirtualListLayoutMode::Horizontal => Point::new(y_position, 0),
+        for i in 0..index {
+            let item_height = if let Some(size) = state.borrow().item_size_cache.peek(i) {
+                // Use actual measurement if available
+                match state.borrow().layout_mode {
+                    VirtualListLayoutMode::Vertical => size.size.height,
+                    VirtualListLayoutMode::Horizontal => size.size.width,
+                }
+            } else {
+                // Use estimate for unmeasured items
+                estimated_item_height
             };
 
-            state.scroll_position = new_scroll_position;
-            drop(state); // Release the borrow before calling refresh
-            self.refresh(false, None);
-
-            Ok(())
-        } else {
-            Err(VirtualListError::data_source_error("No data source set"))
+            y_position += item_height;
         }
+
+        let new_scroll_position = match state.borrow().layout_mode {
+            VirtualListLayoutMode::Vertical => Point::new(0, y_position),
+            VirtualListLayoutMode::Horizontal => Point::new(y_position, 0),
+        };
+
+        state.borrow_mut().scroll_position = new_scroll_position;
+        self.refresh(false, None);
+
+        Ok(())
     }
 
     /// Refresh the virtual list (recalculate everything)
@@ -2036,8 +2061,7 @@ impl VirtualList {
     /// Get the total content size
     pub fn get_total_content_size(&self) -> Size {
         // Return the cached total content size or a default
-        let state = self.config().state.borrow();
-        state.total_content_size
+        self.config().state.borrow().total_content_size
     }
 
     /// PHASE 3: Get item context for a panel with error handling (replaces global registry access)

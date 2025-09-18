@@ -227,7 +227,7 @@ pub use crate::dialogs::single_choice_dialog::{SingleChoiceDialog, SingleChoiceD
 pub use crate::dialogs::text_entry_dialog::{
     TextEntryDialog, TextEntryDialogBuilder, TextEntryDialogStyle,
 };
-pub use crate::dialogs::Dialog; // Base Dialog struct
+pub use crate::dialogs::{Dialog, DialogBuilder, DialogStyle}; // Base Dialog struct and builder
 
 // --- Fonts ---
 pub use crate::font::{Font, FontBuilder, FontFamily, FontStyle, FontWeight}; // Added FontBuilder

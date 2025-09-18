@@ -5,6 +5,24 @@
 
 extern "C" {
 
+wxd_Dialog_t* wxd_Dialog_Create(wxd_Window_t* parent, const char* title, wxd_Style_t style, int x, int y, int width, int height) {
+    wxWindow* wx_parent = (wxWindow*)parent;
+    wxString wx_title = wxString::FromUTF8(title ? title : "");
+
+    // Use wxDefaultPosition and wxDefaultSize if coordinates are -1 (default)
+    wxPoint pos = (x == -1 && y == -1) ? wxDefaultPosition : wxPoint(x, y);
+    wxSize size = (width == -1 && height == -1) ? wxDefaultSize : wxSize(width, height);
+
+    // Create the dialog with the provided parameters
+    wxDialog* dialog = new wxDialog();
+    if (!dialog->Create(wx_parent, wxID_ANY, wx_title, pos, size, style)) {
+        delete dialog;
+        return nullptr;
+    }
+
+    return (wxd_Dialog_t*)dialog;
+}
+
 int wxd_Dialog_ShowModal(wxd_Dialog* self) {
     if (!self) return wxID_NONE; // Or some other error indicator, wxDialog::ShowModal returns int
     return ((wxDialog*)self)->ShowModal();

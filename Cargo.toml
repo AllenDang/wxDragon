@@ -7,6 +7,7 @@ members = [
     "examples/rust/dnd_advanced",
     "examples/rust/events_test",
     "examples/rust/gallery",
+    "examples/rust/generic_dialog_test",
     "examples/rust/gridbagsizer_test",
     "examples/rust/gridsizer_test",
     "examples/rust/simple",
@@ -29,7 +30,7 @@ resolver = "2" # Keep resolver = "2"
 
 [workspace.package]
 authors = ["Allen Dang <allengnr@gmail.com>"]
-version = "0.8.23"
+version = "0.8.25"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/AllenDang/wxDragon"
