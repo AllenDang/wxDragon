@@ -5,3 +5,6 @@ edition = "2024"
 
 [dependencies]
 wxdragon = { path = "../../../rust/wxdragon" }
+
+[build-dependencies]
+embed-manifest = "1.4"
