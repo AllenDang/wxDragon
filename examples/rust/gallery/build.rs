@@ -87,7 +87,7 @@ fn embed_wx_resources(wx_version: &str, target: &str) {
     //*
     let wx_include_path = wxwidgets_dir.join("include");
 
-    let res = embed_resource::compile(&wx_rc_path, [&wx_include_path]);
+    let res = embed_resource::compile(&wx_rc_path, embed_resource::ParamsIncludeDirs([&wx_include_path]));
     if res != embed_resource::CompilationResult::Ok {
         println!("cargo::warning=Compile resources with embed_resource: {res:?}");
     }
