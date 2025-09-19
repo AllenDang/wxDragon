@@ -131,7 +131,7 @@ fn main() {
 
         if msw_setup.exists() && !target_setup.exists() {
             if let Err(e) = std::fs::copy(&msw_setup, &target_setup) {
-                println!("cargo:warning=Failed to copy setup.h: {e}");
+                println!("cargo::warning=Failed to copy setup.h: {e}");
             } else {
                 println!("info: Copied Windows setup.h from msw to wx directory");
             }
@@ -353,7 +353,7 @@ fn setup_linking(wx_version: &str, target_os: &str, target_env: &str, out_dir: &
         }
     } else {
         println!(
-            "cargo:warning=Library directory does not exist: {}",
+            "cargo::warning=Library directory does not exist: {}",
             actual_lib_dir.display()
         );
     }
@@ -607,23 +607,23 @@ fn link_windows_libraries(target_env: &str) {
                             }
                         } else {
                             println!(
-                                "cargo:warning=Could not get parent directory from libgcc path: {libgcc_path_str}"
+                                "cargo::warning=Could not get parent directory from libgcc path: {libgcc_path_str}"
                             );
                         }
                     } else {
                         println!(
-                            "cargo:warning=Command -print-libgcc-file-name returned empty output."
+                            "cargo::warning=Command -print-libgcc-file-name returned empty output."
                         );
                     }
                 } else {
                     let stderr = String::from_utf8_lossy(&output.stderr);
                     println!(
-                        "cargo:warning=Failed to run '{gcc_path} -print-libgcc-file-name': {stderr}"
+                        "cargo::warning=Failed to run '{gcc_path} -print-libgcc-file-name': {stderr}"
                     );
-                    println!("cargo:warning=Static linking for stdc++/gcc might fail. Falling back to hoping they are in default paths.");
+                    println!("cargo::warning=Static linking for stdc++/gcc might fail. Falling back to hoping they are in default paths.");
                 }
             } else {
-                println!("cargo:warning=Could not execute x86_64-w64-mingw32-gcc. Static linking for stdc++/gcc might fail.");
+                println!("cargo::warning=Could not execute x86_64-w64-mingw32-gcc. Static linking for stdc++/gcc might fail.");
             }
             // --- End dynamic path finding ---
 
@@ -992,8 +992,8 @@ fn build_wxdragon_wrapper(
                         cmake_cmd.arg(format!("-DCMAKE_C_COMPILER={target_arch}-w64-mingw32-gcc"));
                         println!("info: Using MinGW-w64 cross compiler: {cross_compiler}");
                     } else {
-                        println!("cargo:warning=MinGW-w64 cross compiler not found. Cross-compilation to Windows GNU may fail.");
-                        println!("cargo:warning=Consider installing mingw-w64 with: brew install mingw-w64");
+                        println!("cargo::warning=MinGW-w64 cross compiler not found. Cross-compilation to Windows GNU may fail.");
+                        println!("cargo::warning=Consider installing mingw-w64 with: brew install mingw-w64");
                     }
                 }
             }

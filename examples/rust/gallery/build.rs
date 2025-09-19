@@ -36,8 +36,8 @@ fn embed_windows_manifest(name: &str) {
         // Embed the manifest - this works even when cross-compiling!
         if let Err(e) = embed_manifest(manifest) {
             // This should not happen with embed-manifest as it supports cross-compilation
-            println!("cargo:warning=Failed to embed manifest: {e}");
-            println!("cargo:warning=The application will still work but may lack optimal Windows theming");
+            println!("cargo::warning=Failed to embed manifest: {e}");
+            println!("cargo::warning=The application will still work but may lack optimal Windows theming");
         }
     }
 }
@@ -67,11 +67,11 @@ fn embed_wx_resources(wx_version: &str, target: &str) {
 
     while !wx_rc_path.exists() && retry_count < MAX_RETRIES {
         if retry_count == 0 {
-            println!("cargo:warning=wx.rc not found at {wx_rc_path:?}, waiting and retrying...");
+            println!("cargo::warning=wx.rc not found at {wx_rc_path:?}, waiting and retrying...");
         }
 
         println!(
-            "cargo:warning=Retry {}/{MAX_RETRIES}: Waiting {RETRY_DELAY_SECS} seconds before checking again...",
+            "cargo::warning=Retry {}/{MAX_RETRIES}: Waiting {RETRY_DELAY_SECS} seconds before checking again...",
             retry_count + 1
         );
 
@@ -80,7 +80,7 @@ fn embed_wx_resources(wx_version: &str, target: &str) {
     }
 
     if !wx_rc_path.exists() {
-        println!("cargo:warning=wx.rc not found at {wx_rc_path:?} after {MAX_RETRIES} retries, skipping resource embedding");
+        println!("cargo::warning=wx.rc not found at {wx_rc_path:?} after {MAX_RETRIES} retries, skipping resource embedding");
         return;
     }
 
@@ -89,7 +89,7 @@ fn embed_wx_resources(wx_version: &str, target: &str) {
 
     let res = embed_resource::compile(&wx_rc_path, [&wx_include_path]);
     if res != embed_resource::CompilationResult::Ok {
-        println!("cargo:warning=Compile resources with embed_resource: {res:?}");
+        println!("cargo::warning=Compile resources with embed_resource: {res:?}");
     }
     // */
 
@@ -103,7 +103,7 @@ fn embed_wx_resources(wx_version: &str, target: &str) {
             // For MinGW cross-compilation
             Ok(path) => path,
             Err(_) => {
-                println!("cargo:warning=windres not found in PATH");
+                println!("cargo::warning=windres not found in PATH");
                 return;
             }
         },
@@ -131,14 +131,14 @@ fn embed_wx_resources(wx_version: &str, target: &str) {
         Ok(output) => {
             if !output.status.success() {
                 println!(
-                    "cargo:warning=windres failed: {}",
+                    "cargo::warning=windres failed: {}",
                     String::from_utf8_lossy(&output.stderr)
                 );
                 return;
             }
         }
         Err(e) => {
-            println!("cargo:warning=Failed to run windres: {e}");
+            println!("cargo::warning=Failed to run windres: {e}");
             return;
         }
     }

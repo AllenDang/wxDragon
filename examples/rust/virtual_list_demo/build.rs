@@ -31,9 +31,9 @@ fn embed_windows_manifest(name: &str) {
     // Embed the manifest - this works even when cross-compiling!
     if let Err(e) = embed_manifest(manifest) {
         // This should not happen with embed-manifest as it supports cross-compilation
-        println!("cargo:warning=Failed to embed manifest: {e}");
+        println!("cargo::warning=Failed to embed manifest: {e}");
         println!(
-            "cargo:warning=The application will still work but may lack optimal Windows theming"
+            "cargo::warning=The application will still work but may lack optimal Windows theming"
         );
     }
 }

@@ -245,8 +245,8 @@ fn main() {
 
         // Embed the manifest - this works even when cross-compiling!
         if let Err(e) = embed_manifest(manifest) {
-            println!("cargo:warning=Failed to embed manifest: {}", e);
-            println!("cargo:warning=The application will still work but may lack optimal Windows theming");
+            println!("cargo::warning=Failed to embed manifest: {}", e);
+            println!("cargo::warning=The application will still work but may lack optimal Windows theming");
         }
 
         // Tell Cargo to rerun this build script if the build script changes
