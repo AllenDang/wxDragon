@@ -132,7 +132,7 @@ impl TreeItemId {
             let ptr_value = ptr as usize;
 
             // Basic sanity check on the pointer before accepting it
-            if ptr_value % std::mem::align_of::<*mut std::ffi::c_void>() == 0  // Properly aligned
+            if ptr_value.is_multiple_of(std::mem::align_of::<*mut std::ffi::c_void>())  // Properly aligned
                 && ptr_value > 0x1000  // Not in null/low memory range
                 && ptr_value < (usize::MAX / 2)
             // Not in kernel space
@@ -202,7 +202,7 @@ impl Drop for TreeItemId {
 
                 // Basic sanity check: pointer should be aligned and in a reasonable memory range
                 // On macOS ARM64, user space addresses are typically in a specific range
-                if ptr_value % std::mem::align_of::<*mut std::ffi::c_void>() == 0  // Properly aligned
+                if ptr_value.is_multiple_of(std::mem::align_of::<*mut std::ffi::c_void>())  // Properly aligned
                     && ptr_value > 0x1000  // Not in null/low memory range
                     && ptr_value < (usize::MAX / 2)
                 // Not in kernel space
@@ -710,7 +710,7 @@ impl TreeCtrl {
             if !ptr.is_null() {
                 // Check if the pointer looks reasonable (aligned and in valid memory range)
                 let ptr_value = ptr as usize;
-                if ptr_value % std::mem::align_of::<TreeItemId>() == 0  // Properly aligned
+                if ptr_value.is_multiple_of(std::mem::align_of::<TreeItemId>())  // Properly aligned
                     && ptr_value > 0x1000  // Not in null/low memory range
                     && ptr_value < (usize::MAX / 2)
                 // Not in kernel space (macOS ARM64)
@@ -722,7 +722,8 @@ impl TreeCtrl {
                         // Validate that the TreeItemId's internal pointer looks reasonable
                         let internal_ptr = possible_tree_item.ptr as usize;
                         if !possible_tree_item.ptr.is_null()
-                            && internal_ptr % std::mem::align_of::<*mut std::ffi::c_void>() == 0
+                            && internal_ptr
+                                .is_multiple_of(std::mem::align_of::<*mut std::ffi::c_void>())
                             && internal_ptr > 0x1000
                             && internal_ptr < (usize::MAX / 2)
                         {

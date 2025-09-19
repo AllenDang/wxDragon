@@ -620,6 +620,7 @@ impl Event {
         }
         let event_type_c = unsafe { ffi::wxd_Event_GetEventType(self.0) };
         // If event_type_c is WXD_EVENT_TYPE_NULL or an invalid value, return None
+        #[allow(clippy::useless_conversion)]
         if event_type_c
             == ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_NULL
                 .try_into()

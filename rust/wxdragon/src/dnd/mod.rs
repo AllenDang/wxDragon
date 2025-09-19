@@ -38,28 +38,28 @@ pub enum DragResult {
     Error = 5,
 }
 
-impl From<i32> for DragResult {
-    fn from(value: i32) -> Self {
+impl From<wxdragon_sys::wxd_DragResult> for DragResult {
+    fn from(value: wxdragon_sys::wxd_DragResult) -> Self {
         match value {
-            0 => DragResult::None,
-            1 => DragResult::Copy,
-            2 => DragResult::Move,
-            3 => DragResult::Link,
-            4 => DragResult::Cancel,
+            wxdragon_sys::wxd_DragResult_WXD_DRAG_NONE => DragResult::None,
+            wxdragon_sys::wxd_DragResult_WXD_DRAG_COPY => DragResult::Copy,
+            wxdragon_sys::wxd_DragResult_WXD_DRAG_MOVE => DragResult::Move,
+            wxdragon_sys::wxd_DragResult_WXD_DRAG_LINK => DragResult::Link,
+            wxdragon_sys::wxd_DragResult_WXD_DRAG_CANCEL => DragResult::Cancel,
             _ => DragResult::Error,
         }
     }
 }
 
-impl From<DragResult> for i32 {
+impl From<DragResult> for wxdragon_sys::wxd_DragResult {
     fn from(val: DragResult) -> Self {
         match val {
-            DragResult::None => 0,
-            DragResult::Copy => 1,
-            DragResult::Move => 2,
-            DragResult::Link => 3,
-            DragResult::Cancel => 4,
-            DragResult::Error => 5,
+            DragResult::None => wxdragon_sys::wxd_DragResult_WXD_DRAG_NONE,
+            DragResult::Copy => wxdragon_sys::wxd_DragResult_WXD_DRAG_COPY,
+            DragResult::Move => wxdragon_sys::wxd_DragResult_WXD_DRAG_MOVE,
+            DragResult::Link => wxdragon_sys::wxd_DragResult_WXD_DRAG_LINK,
+            DragResult::Cancel => wxdragon_sys::wxd_DragResult_WXD_DRAG_CANCEL,
+            DragResult::Error => wxdragon_sys::wxd_DragResult_WXD_DRAG_ERROR,
         }
     }
 }

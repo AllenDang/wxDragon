@@ -1019,7 +1019,7 @@ impl VirtualListState {
 
             // Keep cache but mark as potentially stale for future validation
             // In a more sophisticated implementation, we'd track cache entry ages
-            if current_generation % 10 == 0 {
+            if current_generation.is_multiple_of(10) {
                 // Every 10 generations, use LRU cache's built-in cleanup
                 self.item_size_cache.clean_stale_entries(10);
             }
