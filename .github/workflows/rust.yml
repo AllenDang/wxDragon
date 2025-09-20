@@ -22,7 +22,7 @@ jobs:
     - run: rustup component add rustfmt clippy
 
     - run: cargo fmt --check
-    - run: cargo clippy --all-targets -- -D warnings
+    - run: cargo clippy --features "aui,xrc,richtext,stc" -- -D warnings
 
     - name: Build default features
       run: cargo build
@@ -52,7 +52,7 @@ jobs:
     - run: rustup component add rustfmt clippy
 
     - run: cargo fmt --check
-    - run: cargo clippy --all-targets -- -D warnings
+    - run: cargo clippy --features "aui,xrc,richtext,stc" -- -D warnings
 
     - name: Build default features
       run: cargo build
@@ -82,7 +82,7 @@ jobs:
     - run: rustup component add rustfmt clippy
 
     - run: cargo fmt --check
-    - run: cargo clippy -- -D warnings
+    - run: cargo clippy --features "aui,xrc,richtext,stc" -- -D warnings
 
     - name: Build default features
       run: |
@@ -112,7 +112,7 @@ jobs:
     - run: rustup component add rustfmt clippy
 
     - run: cargo fmt --check
-    - run: cargo clippy --target i686-pc-windows-msvc -- -D warnings
+    - run: cargo clippy --features "aui,xrc,richtext,stc" --release --target i686-pc-windows-msvc -- -D warnings
 
     - name: Build for i686-pc-windows-msvc (32-bit)
       run: |
@@ -158,7 +158,7 @@ jobs:
       - run: rustup component add rustfmt clippy
 
       - run: cargo fmt --check
-      - run: cargo clippy --target x86_64-pc-windows-gnu --release -- -D warnings
+      - run: cargo clippy --features "aui,xrc,richtext,stc" --target x86_64-pc-windows-gnu --release -- -D warnings
 
       - name: Build default features
         shell: cmd

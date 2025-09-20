@@ -245,7 +245,13 @@ fn build_wxdragon_wrapper(
 ) -> std::io::Result<()> {
     // --- 3. Configure and Build libwxdragon (and wxWidgets) using CMake ---
     let libwxdragon_cmake_source_dir = PathBuf::from("cpp");
-    let wxwidgets_build_dir = wxwidgets_source_path.join("wxwidgets_build");
+    let wxwidgets_build_dir = wxwidgets_source_path
+        .parent()
+        .unwrap()
+        .parent()
+        .unwrap()
+        .join("target")
+        .join("wxwidgets_cmake_build");
 
     let mut cmake_config = cmake::Config::new(libwxdragon_cmake_source_dir);
     cmake_config.out_dir(&wxwidgets_build_dir);

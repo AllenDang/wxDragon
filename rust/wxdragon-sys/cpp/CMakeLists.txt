@@ -30,8 +30,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(wxUSE_AUI ${wxdUSE_AUI} CACHE BOOL "Use AUI (Advanced User Interface)")
 set(wxUSE_MEDIACTRL ${wxdUSE_MEDIACTRL} CACHE BOOL "Use Media Ctrl widgets")
 set(wxUSE_STC ${wxdUSE_STC} CACHE BOOL "Use Styled Text Control widget")
-# set(wxUSE_XRC ${wxdUSE_XRC} CACHE BOOL "Use XML Resource (XRC) support")
-set(wxUSE_XRC ON CACHE BOOL "Use XML Resource (XRC) support")
+set(wxUSE_XRC ON CACHE BOOL "Use XML Resource (XRC) support, always enabled, cannot reuse from wxdUSE_XRC. We cannot know the reason why.")
 set(wxUSE_WEBVIEW ${wxdUSE_WEBVIEW} CACHE BOOL "Use the Webview widget")
 set(wxUSE_RICHTEXT ${wxdUSE_RICHTEXT} CACHE BOOL "Use Rich Text Control widget")
 
@@ -44,12 +43,8 @@ set(wxUSE_SOCKETS ON CACHE BOOL "Use wxWidgets sockets")
 set(wxUSE_PROPGRID ON CACHE BOOL "Use wxWidgets property grid")
 set(wxUSE_DEBUGREPORT ON CACHE BOOL "Use wxWidgets debug report features")
 set(wxUSE_RIBBON ON CACHE BOOL "Use wxWidgets ribbon control")
-
-if(wxUSE_XRC)
-set(wxUSE_XML ON CACHE BOOL "Use XML support for XRC")
-else()
-set(wxUSE_XML OFF CACHE BOOL "Use XML support for XRC")
-endif()
+set(wxUSE_XML ON CACHE BOOL "Use XML support for XRC. Since wxUSE_XRC is always ON, wxUSE_XML must also be ON.")
+set(wxUSE_LIBWEBP OFF CACHE BOOL "Disable WebP support to avoid extra dependencies")
 
 # If WXWIDGETS_LIB_DIR is not set or does not exist
 if(NOT DEFINED WXWIDGETS_LIB_DIR OR NOT EXISTS "${WXWIDGETS_LIB_DIR}")
@@ -77,7 +72,7 @@ endif()
 message(STATUS "Using wxWidgets libraries from: ${WXWIDGETS_LIB_DIR}")
 
 # wxWidgets build directory
-set(WXWIDGETS_BUILD_DIR ${WXWIDGETS_LIB_DIR}/wxwidgets_build)
+set(WXWIDGETS_BUILD_DIR ${WXWIDGETS_LIB_DIR}/../../target/wxwidgets_cmake_build)
 message(STATUS "Using wxWidgets binaries from: ${WXWIDGETS_BUILD_DIR}")
 
 set(wxBUILD_SHARED OFF CACHE BOOL "Build wxWidgets as static libraries")
