@@ -15,7 +15,7 @@ endfunction()
 
 # --- Feature Flags (from Rust build.rs) ---
 set(wxdUSE_AUI ON CACHE BOOL "Use AUI (Advanced User Interface)")
-set(wxdUSE_MEDIACTRL ON CACHE BOOL "Use Media Ctrl widgets")
+set(wxdUSE_MEDIACTRL OFF CACHE BOOL "Use Media Ctrl widgets, not completed yet, so default to OFF")
 set(wxdUSE_STC ON CACHE BOOL "Use Styled Text Control widget")
 set(wxdUSE_XRC ON CACHE BOOL "Use XML Resource (XRC) support")
 set(wxdUSE_WEBVIEW ON CACHE BOOL "Use the Webview widget")
@@ -30,7 +30,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(wxUSE_AUI ${wxdUSE_AUI} CACHE BOOL "Use AUI (Advanced User Interface)")
 set(wxUSE_MEDIACTRL ${wxdUSE_MEDIACTRL} CACHE BOOL "Use Media Ctrl widgets")
 set(wxUSE_STC ${wxdUSE_STC} CACHE BOOL "Use Styled Text Control widget")
-set(wxUSE_XRC ON CACHE BOOL "Use XML Resource (XRC) support, always enabled, cannot reuse from wxdUSE_XRC. We cannot know the reason why.")
+set(wxUSE_XRC ON CACHE BOOL "Use XML Resource (XRC) support, always enabled, cannot reuse from wxdUSE_XRC. We don't know the reason why.")
 set(wxUSE_WEBVIEW ${wxdUSE_WEBVIEW} CACHE BOOL "Use the Webview widget")
 set(wxUSE_RICHTEXT ${wxdUSE_RICHTEXT} CACHE BOOL "Use Rich Text Control widget")
 

@@ -245,16 +245,16 @@ fn build_wxdragon_wrapper(
 ) -> std::io::Result<()> {
     // --- 3. Configure and Build libwxdragon (and wxWidgets) using CMake ---
     let libwxdragon_cmake_source_dir = PathBuf::from("cpp");
-    let wxwidgets_build_dir = wxwidgets_source_path
+    let wxdragon_sys_build_dir = wxwidgets_source_path
         .parent()
         .unwrap()
         .parent()
         .unwrap()
         .join("target")
-        .join("wxwidgets_cmake_build");
+        .join("wxdragon_sys_cmake_build");
 
     let mut cmake_config = cmake::Config::new(libwxdragon_cmake_source_dir);
-    cmake_config.out_dir(&wxwidgets_build_dir);
+    cmake_config.out_dir(&wxdragon_sys_build_dir);
     cmake_config.define("WXWIDGETS_LIB_DIR", wxwidgets_source_path);
 
     // Disable WebP support since we'll use the image crate for image decoding
@@ -325,18 +325,18 @@ fn build_wxdragon_wrapper(
 
     println!("info: CMake build completed. Build directory: {build_dir:?}");
     println!("info: libwxdragon should be in: {lib_search_path:?}");
-    println!("info: wxWidgets build subdirectory: {wxwidgets_build_dir:?}");
+    println!("info: wxDragon-sys build directory: {wxdragon_sys_build_dir:?}");
 
     // --- 4. Linker Instructions ---
     println!("cargo:rustc-link-search=native={lib_search_path}");
 
-    let wx_lib = wxwidgets_build_dir.join("lib").display().to_string();
+    let wx_lib = wxdragon_sys_build_dir.join("lib").display().to_string();
     println!("cargo:rustc-link-search=native={wx_lib}");
 
     // For Windows, wxWidgets libs might be in a subdirectory like gcc_x64_lib for MinGW
     if target_os == "windows" {
         if target_env == "gnu" {
-            let wx_lib2 = wxwidgets_build_dir
+            let wx_lib2 = wxdragon_sys_build_dir
                 .join("lib/gcc_x64_lib")
                 .display()
                 .to_string();
@@ -410,13 +410,13 @@ fn build_wxdragon_wrapper(
             } else {
                 "lib/vc_x64_lib"
             };
-            let wx_lib2 = wxwidgets_build_dir.join(lib_dir).display().to_string();
+            let wx_lib2 = wxdragon_sys_build_dir.join(lib_dir).display().to_string();
             println!("cargo:rustc-link-search=native={wx_lib2}");
 
             if target == "i686-pc-windows-msvc" {
                 // build/lib/Debug
                 let sub_dir = format!("build/lib/{profile}");
-                let wx_lib3 = wxwidgets_build_dir.join(sub_dir).display().to_string();
+                let wx_lib3 = wxdragon_sys_build_dir.join(sub_dir).display().to_string();
                 println!("cargo:rustc-link-search=native={wx_lib3}");
             }
         }
@@ -492,6 +492,8 @@ fn build_wxdragon_wrapper(
             println!("cargo:rustc-link-lib=framework=AVKit");
             println!("cargo:rustc-link-lib=framework=CoreMedia");
         }
+
+        fix_isPlatformVersionAtLeast()?;
     } else if target_os == "windows" {
         // Detect cross-compilation from macOS to Windows
         let host_os = std::env::consts::OS;
@@ -669,4 +671,53 @@ fn build_wxdragon_wrapper(
     }
 
     Ok(())
+}
+
+#[allow(non_snake_case)]
+fn fix_isPlatformVersionAtLeast() -> std::io::Result<()> {
+    use std::io::{Error, ErrorKind::NotFound};
+    // Fix for ___isPlatformVersionAtLeast undefined symbol on macOS
+    let target_os = std::env::var("CARGO_CFG_TARGET_OS").unwrap_or_default();
+    if target_os != "macos" {
+        return Ok(());
+    }
+    // Use xcrun to find the toolchain path
+    use std::process::Command;
+    let output = Command::new("xcrun").args(["--find", "clang"]).output()?;
+    if !output.status.success() {
+        return Err(Error::other("xcrun failed to find clang"));
+    }
+    let clang_path_str = String::from_utf8_lossy(&output.stdout);
+    let clang_path = clang_path_str.trim();
+
+    // Construct the clang runtime library path from the clang path
+    // /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang
+    // -> /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang
+    let clang_dir = std::path::Path::new(clang_path)
+        .parent()
+        .ok_or_else(|| Error::new(NotFound, "Failed to get clang parent directory"))?;
+    let usr_dir = clang_dir
+        .parent()
+        .ok_or_else(|| Error::new(NotFound, "Failed to get clang usr directory"))?;
+    let clang_rt_path = usr_dir.join("lib").join("clang");
+
+    // Try to find the clang runtime library
+    let entries = std::fs::read_dir(&clang_rt_path)?;
+    for entry in entries.flatten() {
+        if !entry.file_type().is_ok_and(|ft| ft.is_dir()) {
+            continue;
+        }
+        let version_dir = entry.path();
+        let lib_dir = version_dir.join("lib").join("darwin");
+        let clang_rt_lib = lib_dir.join("libclang_rt.osx.a");
+
+        if clang_rt_lib.exists() {
+            println!("cargo:rustc-link-search=native={}", lib_dir.display());
+            println!("cargo:rustc-link-lib=static=clang_rt.osx");
+            println!("info: Added clang runtime library for macOS arm64: {clang_rt_lib:?}");
+            return Ok(());
+        }
+    }
+
+    Err(Error::new(NotFound, "Could not find clang runtime library"))
 }
