@@ -1,6 +1,5 @@
 use embed_manifest::manifest::{ActiveCodePage, Setting, SupportedOS::*};
 use embed_manifest::{embed_manifest, new_manifest};
-use std::process::Command;
 
 fn main() {
     // Tell Cargo to rerun this build script if the build script changes
@@ -13,8 +12,7 @@ fn main() {
         let pkg_name = std::env::var("CARGO_PKG_NAME").unwrap();
         embed_windows_manifest(&pkg_name);
 
-        // Compile and embed wx.rc resources for wxWidgets
-        embed_wx_resources(&target);
+        embed_wx_resources();
     }
 }
 
@@ -43,7 +41,8 @@ fn embed_windows_manifest(name: &str) {
     }
 }
 
-fn embed_wx_resources(target: &str) {
+/// Compile and embed wx.rc resources for wxWidgets
+fn embed_wx_resources() {
     // Find the wxWidgets directory with wx.rc
     let out_dir = std::env::var("OUT_DIR").unwrap();
     let target_dir = std::path::Path::new(&out_dir)
@@ -52,84 +51,14 @@ fn embed_wx_resources(target: &str) {
         .expect("Could not find target directory");
 
     // Look for wxWidgets directory
-    let wxwidgets_dir = target_dir.parent().unwrap().join("wxWidgets");
-    let wx_rc_path = wxwidgets_dir
-        .join("include")
-        .join("wx")
-        .join("msw")
-        .join("wx.rc");
+    let wx_dir = target_dir.parent().unwrap().join("wxWidgets");
+    let wx_rc_path = wx_dir.join("include").join("wx").join("msw").join("wx.rc");
 
-    // Retry logic: Check if wx.rc exists, retry up to 10 times with a 5-second delay
-    let mut retry_count = 0;
-    const MAX_RETRIES: u32 = 10;
-    const RETRY_DELAY_SECS: u64 = 5;
+    let wx_include_path = wx_dir.join("include");
 
-    while !wx_rc_path.exists() && retry_count < MAX_RETRIES {
-        if retry_count == 0 {
-            println!("cargo:warning=wx.rc not found at {wx_rc_path:?}, waiting and retrying...");
-        }
-
-        println!(
-            "cargo:warning=Retry {}/{MAX_RETRIES}: Waiting {RETRY_DELAY_SECS} seconds before checking again...",
-            retry_count + 1
-        );
-
-        std::thread::sleep(std::time::Duration::from_secs(RETRY_DELAY_SECS));
-        retry_count += 1;
-    }
-
-    if !wx_rc_path.exists() {
-        println!("cargo:warning=wx.rc not found at {wx_rc_path:?} after {MAX_RETRIES} retries, skipping resource embedding");
-        return;
-    }
-
-    let windres = match which::which("windres") {
-        Ok(path) => path,
-        Err(_) => match which::which("x86_64-w64-mingw32-windres") {
-            Ok(path) => path,
-            Err(_) => {
-                println!("cargo:warning=windres not found in PATH");
-                return;
-            }
-        },
-    };
-
-    // Compile the .rc file to .res
-    let res_path = std::path::Path::new(&out_dir).join("wx.res");
-    let mut cmd = Command::new(windres);
-    cmd.arg("-i")
-        .arg(&wx_rc_path)
-        .arg("-o")
-        .arg(&res_path)
-        .arg("-O")
-        .arg("coff") // Output format
-        .arg("--include-dir")
-        .arg(wxwidgets_dir.join("include"));
-
-    if target.contains("i686") || target.contains("i586") {
-        cmd.arg("--target").arg("pe-i386");
-    } else if target.contains("x86_64") {
-        cmd.arg("--target").arg("pe-x86-64");
-    }
-
-    match cmd.output() {
-        Ok(output) => {
-            if !output.status.success() {
-                println!(
-                    "cargo:warning=windres failed: {}",
-                    String::from_utf8_lossy(&output.stderr)
-                );
-                return;
-            }
-        }
-        Err(e) => {
-            println!("cargo:warning=Failed to run windres: {e}");
-            return;
-        }
-    }
-
-    // Tell the linker to include the compiled resource
-    if res_path.exists() {
-        println!("cargo:rustc-link-arg={}", res_path.display());
+    use embed_resource::{compile, CompilationResult, ParamsIncludeDirs};
+    let res = compile(&wx_rc_path, ParamsIncludeDirs([&wx_include_path]));
+    if res != CompilationResult::Ok {
+        println!("cargo::warning=Compile resources with embed_resource: {res:?}");
     }
 }
