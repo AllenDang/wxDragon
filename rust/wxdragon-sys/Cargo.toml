@@ -27,7 +27,5 @@ richtext = []
 
 [build-dependencies]
 bindgen = "0.72"    # For generating Rust bindings from C/C++ headers
-flate2 = "1.0"      # For decompressing .gz archives (used by pre-built libraries)
+cmake = "0.1"
 pkg-config = "0.3"  # For finding libgtk and its dependencies (Linux only)
-reqwest = { version = "0.12", features = ["blocking"] } # For downloading pre-built libraries
-tar = "0.4"         # For extracting .tar archives
