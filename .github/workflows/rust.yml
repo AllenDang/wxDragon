@@ -3,148 +3,127 @@ name: Rust
 on:
   push:
   pull_request:
+  workflow_dispatch:
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build-linux:
-    runs-on: ubuntu-latest
+  default-build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
+    - uses: dtolnay/rust-toolchain@stable
     - uses: actions/checkout@v4
+      with:
+        submodules: recursive
     - name: Install deps
+      if: runner.os == 'Linux'
       run: sudo apt-get update && sudo apt-get install -y libgtk-3-dev libpng-dev libjpeg-dev libgl1-mesa-dev libglu1-mesa-dev libxkbcommon-dev libexpat1-dev libtiff-dev
 
     - run: rustup component add rustfmt clippy
 
-    - run: cargo fmt --check
-    - run: cargo clippy --all-targets -- -D warnings
+    - name: rustfmt
+      if: ${{ !cancelled() }}
+      run: cargo fmt --check
+
+    - name: clippy
+      if: ${{ !cancelled() }}
+      run: cargo clippy --features "aui,xrc,richtext,stc" -- -D warnings
 
     - name: Build default features
+      if: ${{ !cancelled() }}
       run: cargo build
-    - name: Clean before feature test
-      run: cargo clean
-    - name: Test all features
-      run: cargo build --package=wxdragon-sys --features="aui,xrc,richtext,stc"
-    - name: Clean before example builds
-      run: cargo clean
-    - name: Build and test examples with features
+
+    - name: Build simple_xrc_test example
+      if: ${{ !cancelled() }}
+      shell: bash
       run: |
-        echo "Building examples to test actual symbol usage..."
-        cd examples/rust/simple_xrc_test && cargo build
-    - name: Test feature examples
+        cargo clean
+        cargo build --package simple_xrc_test
+
+    - name: Build simple_stc_test example
+      if: ${{ !cancelled() }}
+      shell: bash
       run: |
-        echo "Testing XRC example..."
-        cd examples/rust/simple_xrc_test && cargo clean && cargo build
-        echo "Testing STC example..."  
-        cd ../simple_stc_test && cargo clean && cargo build
+        cargo clean
+        cargo build --package simple_stc_test
 
-  build-macos:
-    runs-on: macos-latest
-    steps:
-    - uses: dtolnay/rust-toolchain@stable
-    - uses: actions/checkout@v4
-
-    - run: rustup component add rustfmt clippy
-
-    - run: cargo fmt --check
-    - run: cargo clippy --all-targets -- -D warnings
-
-    - name: Build default features
-      run: cargo build
-    - name: Clean before feature test
-      run: cargo clean
-    - name: Test all features
-      run: cargo build --package=wxdragon-sys --features="aui,xrc,richtext,stc"
-    - name: Clean before example builds  
-      run: cargo clean
-    - name: Test feature examples
+    - name: Build feature example gallery
+      if: ${{ !cancelled() }}
+      shell: bash
       run: |
-        echo "Testing XRC example..."
-        cd examples/rust/simple_xrc_test && cargo clean && cargo build
+        cargo clean
+        cargo build --package gallery
 
-  build-windows-msvc:
-    runs-on: windows-latest
-    steps:
-    - uses: actions/checkout@v4
-
-    - run: rustup component add rustfmt clippy
-
-    - run: cargo fmt --check
-    - run: cargo clippy -- -D warnings
-
-    - name: Build default features
-      run: |
-        SET LIBCLANG_PATH="C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\Llvm\x64\bin"
-        cargo build
-    - name: Clean before feature test
-      run: cargo clean
-    - name: Test all features
-      run: |
-        SET LIBCLANG_PATH="C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\Llvm\x64\bin"
-        cargo build --package=wxdragon-sys --features="aui,xrc,richtext,stc"
-    - name: Clean before example builds
-      run: cargo clean
-    - name: Test feature examples
-      run: |
-        SET LIBCLANG_PATH="C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\Llvm\x64\bin"
-        cd examples\rust\simple_xrc_test && cargo clean && cargo build
+    - name: Abort on error
+      if: ${{ failure() }}
+      run: echo "Some of jobs failed" && false
 
   build-i686-pc-windows-msvc:
     runs-on: windows-latest
     steps:
+    - uses: dtolnay/rust-toolchain@stable
     - uses: actions/checkout@v4
+      with:
+        submodules: recursive
     - name: Install i686 target
       run: rustup target add i686-pc-windows-msvc
 
     - run: rustup component add rustfmt clippy
 
     - run: cargo fmt --check
-    - run: cargo clippy --target i686-pc-windows-msvc -- -D warnings
+    - run: cargo clippy --features "aui,xrc,richtext,stc" --release --target i686-pc-windows-msvc -- -D warnings
 
     - name: Build for i686-pc-windows-msvc (32-bit)
       run: |
         SET LIBCLANG_PATH="C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\Llvm\x64\bin"
-        cargo build --target i686-pc-windows-msvc
+        cargo build --target i686-pc-windows-msvc --release
 
   build-msys-mingw64:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+    - uses: dtolnay/rust-toolchain@stable
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
 
-      - name: Install 7zip
-        run: choco install 7zip
+    - name: Install 7zip
+      run: choco install 7zip
 
-      - name: Download and extract WinLibs GCC 15.1.0
-        shell: cmd
-        run: |
-          curl -L -o winlibs-x86_64.zip "https://github.com/brechtsanders/winlibs_mingw/releases/download/15.1.0posix-13.0.0-ucrt-r2/winlibs-x86_64-posix-seh-gcc-15.1.0-mingw-w64ucrt-13.0.0-r2.zip"
-          7z x winlibs-x86_64.zip -oC:\mingw64 -y
-          echo C:\mingw64\mingw64\bin>>%GITHUB_PATH%
-          echo CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER=C:\mingw64\mingw64\bin\gcc.exe>>%GITHUB_ENV%
-          echo CC=C:\mingw64\mingw64\bin\gcc.exe>>%GITHUB_ENV%
-          echo CXX=C:\mingw64\mingw64\bin\g++.exe>>%GITHUB_ENV%
+    - name: Download and extract WinLibs GCC 15.1.0
+      shell: cmd
+      run: |
+        curl -L -o winlibs-x86_64.zip "https://github.com/brechtsanders/winlibs_mingw/releases/download/15.1.0posix-13.0.0-ucrt-r2/winlibs-x86_64-posix-seh-gcc-15.1.0-mingw-w64ucrt-13.0.0-r2.zip"
+        7z x winlibs-x86_64.zip -oC:\mingw64 -y
+        echo C:\mingw64\mingw64\bin>>%GITHUB_PATH%
+        echo CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER=C:\mingw64\mingw64\bin\gcc.exe>>%GITHUB_ENV%
+        echo CC=C:\mingw64\mingw64\bin\gcc.exe>>%GITHUB_ENV%
+        echo CXX=C:\mingw64\mingw64\bin\g++.exe>>%GITHUB_ENV%
 
-      - name: Print GCC version and path
-        shell: cmd
-        run: |
-          C:\mingw64\mingw64\bin\gcc.exe --version
-          C:\mingw64\mingw64\bin\g++.exe --version
-          echo %PATH%
+    - name: Print GCC version and path
+      shell: cmd
+      run: |
+        C:\mingw64\mingw64\bin\gcc.exe --version
+        C:\mingw64\mingw64\bin\g++.exe --version
+        echo %PATH%
 
-      - run: rustup component add rustfmt clippy
+    - name: Set MinGW-w64 as the default toolchain
+      run: |
+        rustup toolchain install stable-x86_64-pc-windows-gnu
+        rustup default stable-x86_64-pc-windows-gnu
 
-      - run: cargo fmt --check
-      - run: cargo clippy -- -D warnings
+    - name: Install x86_64-pc-windows-gnu target
+      run: rustup target add x86_64-pc-windows-gnu
 
-      - name: Build default features
-        shell: cmd
-        run: cargo build
-        
-      - name: Clean before feature test
-        shell: cmd
-        run: cargo clean
-        
-      - name: Test all features
-        shell: cmd
-        run: cargo build --package=wxdragon-sys --features="aui,xrc,richtext,stc"
+    - run: rustup component add rustfmt clippy
+
+    - run: cargo fmt --check
+    - run: cargo clippy --features "aui,xrc,richtext,stc" --target x86_64-pc-windows-gnu --release -- -D warnings
+
+    - name: Build default features
+      shell: bash
+      run: cargo build --target x86_64-pc-windows-gnu --release
