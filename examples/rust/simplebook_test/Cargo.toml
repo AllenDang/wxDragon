@@ -6,3 +6,6 @@ edition = "2021"
 [dependencies]
 wxdragon = { path = "../../../rust/wxdragon", features = ["xrc"] }
 wxdragon-macros = { path = "../../../rust/wxdragon-macros" }
+
+[build-dependencies]
+embed-manifest = "1.4"

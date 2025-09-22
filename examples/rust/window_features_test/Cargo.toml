@@ -5,3 +5,6 @@ edition.workspace = true
 
 [dependencies]
 wxdragon = { version = "0.8.0", path = "../../../rust/wxdragon" }
+
+[build-dependencies]
+embed-manifest = "1.4"
