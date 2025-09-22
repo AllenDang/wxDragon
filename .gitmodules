@@ -1,0 +1,3 @@
+[submodule "rust/wxdragon-sys/wxWidgets"]
+	path = rust/wxdragon-sys/wxWidgets
+	url = https://github.com/wxWidgets/wxWidgets.git
