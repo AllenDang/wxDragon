@@ -15,12 +15,10 @@ fn main() {
             println!("Button clicked");
         });
 
-        sizer.add(
-            &button,
-            1,
-            SizerFlag::AlignCenterHorizontal | SizerFlag::AlignCenterVertical,
-            0,
-        );
+        sizer.add_stretch_spacer(1);
+        let flag = SizerFlag::AlignCenterHorizontal | SizerFlag::AlignCenterVertical;
+        sizer.add(&button, 0, flag, 0);
+        sizer.add_stretch_spacer(1);
 
         frame.set_sizer(sizer, true);
 
