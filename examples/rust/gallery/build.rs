@@ -1,128 +1,87 @@
 use embed_manifest::manifest::{ActiveCodePage, Setting, SupportedOS::*};
 use embed_manifest::{embed_manifest, new_manifest};
-use std::process::Command;
 
 fn main() {
+    // Tell Cargo to rerun this build script if the build script changes
+    println!("cargo::rerun-if-changed=build.rs");
+
     // Check if we're building for Windows (either natively or cross-compiling)
     let target = std::env::var("TARGET").unwrap_or_default();
 
     if target.contains("windows") {
-        let wx_version = "3.3.1";
+        let pkg_name = std::env::var("CARGO_PKG_NAME").unwrap();
+        embed_windows_manifest(&pkg_name);
 
-        // Create a comprehensive manifest for Windows theming and modern features
-        let manifest = new_manifest("wxDragon.Gallery")
-            // Enable modern Windows Common Controls (v6) for theming
-            // Windows10 is the latest supported in the enum
-            .supported_os(Windows7..=Windows10)
-            // Set UTF-8 as active code page for better Unicode support
-            .active_code_page(ActiveCodePage::Utf8)
-            // Enable heap type optimization for better performance (if available)
-            .heap_type(embed_manifest::manifest::HeapType::SegmentHeap)
-            // Enable high-DPI awareness for crisp displays
-            .dpi_awareness(embed_manifest::manifest::DpiAwareness::PerMonitorV2)
-            // Enable long path support (if configured in Windows)
-            .long_path_aware(Setting::Enabled);
-
-        // Embed the manifest - this works even when cross-compiling!
-        if let Err(e) = embed_manifest(manifest) {
-            // This should not happen with embed-manifest as it supports cross-compilation
-            println!("cargo:warning=Failed to embed manifest: {e}");
-            println!("cargo:warning=The application will still work but may lack optimal Windows theming");
-        }
-
-        // Compile and embed wx.rc resources for wxWidgets
-        embed_wx_resources(wx_version, &target);
-
-        // Tell Cargo to rerun this build script if the build script changes
-        println!("cargo:rerun-if-changed=build.rs");
+        embed_wx_resources();
     }
 }
 
-fn embed_wx_resources(wx_version: &str, target: &str) {
-    // Find the wxWidgets directory with wx.rc
-    let out_dir = std::env::var("OUT_DIR").unwrap();
-    let target_dir = std::path::Path::new(&out_dir)
-        .ancestors()
-        .find(|p| p.file_name().map(|n| n == "target").unwrap_or(false))
-        .expect("Could not find target directory");
+fn embed_windows_manifest(name: &str) {
+    // Create a comprehensive manifest for Windows theming and modern features
+    let manifest = new_manifest(name)
+        // Enable modern Windows Common Controls (v6) for theming
+        // Windows10 is the latest supported in the enum
+        .supported_os(Windows7..=Windows10)
+        // Set UTF-8 as active code page for better Unicode support
+        .active_code_page(ActiveCodePage::Utf8)
+        // Enable heap type optimization for better performance (if available)
+        .heap_type(embed_manifest::manifest::HeapType::SegmentHeap)
+        // Enable high-DPI awareness for crisp displays
+        .dpi_awareness(embed_manifest::manifest::DpiAwareness::PerMonitorV2)
+        // Enable long path support (if configured in Windows)
+        .long_path_aware(Setting::Enabled);
 
-    // Look for wxWidgets directory - try both debug and release profiles
-    let profile = std::env::var("PROFILE").unwrap_or_else(|_| "debug".to_string());
-    let wxwidgets_pattern = format!("wxwidgets-{wx_version}-{target}-{profile}");
-    let wxwidgets_dir = target_dir.join(&wxwidgets_pattern);
-    let wx_rc_path = wxwidgets_dir
-        .join("include")
-        .join("wx")
-        .join("msw")
-        .join("wx.rc");
-
-    // Retry logic: Check if wx.rc exists, retry up to 10 times with a 5-second delay
-    let mut retry_count = 0;
-    const MAX_RETRIES: u32 = 10;
-    const RETRY_DELAY_SECS: u64 = 5;
-
-    while !wx_rc_path.exists() && retry_count < MAX_RETRIES {
-        if retry_count == 0 {
-            println!("cargo:warning=wx.rc not found at {wx_rc_path:?}, waiting and retrying...");
-        }
-
+    // Embed the manifest - this works even when cross-compiling!
+    if let Err(e) = embed_manifest(manifest) {
+        // This should not happen with embed-manifest as it supports cross-compilation
+        println!("cargo::warning=Failed to embed manifest: {e}");
         println!(
-            "cargo:warning=Retry {}/{MAX_RETRIES}: Waiting {RETRY_DELAY_SECS} seconds before checking again...",
-            retry_count + 1
+            "cargo::warning=The application will still work but may lack optimal Windows theming"
         );
-
-        std::thread::sleep(std::time::Duration::from_secs(RETRY_DELAY_SECS));
-        retry_count += 1;
     }
+}
 
-    if !wx_rc_path.exists() {
-        println!("cargo:warning=wx.rc not found at {wx_rc_path:?} after {MAX_RETRIES} retries, skipping resource embedding");
-        return;
+/// Compile and embed wx.rc resources for wxWidgets
+fn embed_wx_resources() {
+    // Find the wxWidgets directory with wx.rc
+
+    // The wxdragon-sys crate's root directory
+    let crate_dir = get_crate_dir("wxdragon-sys").expect("Could not get wxdragon-sys crate dir");
+
+    // Look for wxWidgets directory
+    let wx_dir = crate_dir.join("wxWidgets");
+    let wx_rc_path = wx_dir.join("include").join("wx").join("msw").join("wx.rc");
+
+    let wx_include_path = wx_dir.join("include");
+
+    use embed_resource::{compile, CompilationResult, ParamsIncludeDirs};
+    let res = compile(&wx_rc_path, ParamsIncludeDirs([&wx_include_path]));
+    if res != CompilationResult::Ok {
+        println!("cargo::warning=Compile resources with embed_resource: {res:?}");
     }
+}
 
-    // Choose the appropriate resource compiler
-    let windres = if target.contains("gnu") {
-        "x86_64-w64-mingw32-windres" // For MinGW cross-compilation
-    } else {
-        "windres" // For native Windows or MSVC
-    };
+fn get_crate_dir(crate_name: &str) -> std::io::Result<std::path::PathBuf> {
+    let output = std::process::Command::new("cargo")
+        .arg("metadata")
+        .arg("--format-version=1")
+        .output()?;
 
-    // Compile the .rc file to .res
-    let res_path = std::path::Path::new(&out_dir).join("wx.res");
-    let mut cmd = Command::new(windres);
-    cmd.arg("-i")
-        .arg(&wx_rc_path)
-        .arg("-o")
-        .arg(&res_path)
-        .arg("-O")
-        .arg("coff") // Output format
-        .arg("--include-dir")
-        .arg(wxwidgets_dir.join("include"));
+    let metadata: serde_json::Value = serde_json::from_slice(&output.stdout)?;
+    let packages = metadata["packages"]
+        .as_array()
+        .ok_or(std::io::Error::other("packages"))?;
 
-    if target.contains("i686") || target.contains("i586") {
-        cmd.arg("--target").arg("pe-i386");
-    } else if target.contains("x86_64") {
-        cmd.arg("--target").arg("pe-x86-64");
-    }
-
-    match cmd.output() {
-        Ok(output) => {
-            if !output.status.success() {
-                println!(
-                    "cargo:warning=windres failed: {}",
-                    String::from_utf8_lossy(&output.stderr)
-                );
-                return;
-            }
-        }
-        Err(e) => {
-            println!("cargo:warning=Failed to run windres: {e}");
-            return;
+    for package in packages {
+        if package["name"] == crate_name {
+            let manifest_path = package["manifest_path"]
+                .as_str()
+                .ok_or(std::io::Error::other("manifest_path"))?;
+            return Ok(std::path::PathBuf::from(manifest_path)
+                .parent()
+                .ok_or(std::io::Error::other("parent"))?
+                .to_path_buf());
         }
     }
-
-    // Tell the linker to include the compiled resource
-    if res_path.exists() {
-        println!("cargo:rustc-link-arg={}", res_path.display());
-    }
+    Err(std::io::Error::other("crate_dir not found"))
 }
