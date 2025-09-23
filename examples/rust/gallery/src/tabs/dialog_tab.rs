@@ -813,7 +813,7 @@ impl DialogTabControls {
         let frame_clone_dir = frame.clone();
         self.dlg_dir_button.on_click(move |_| {
             let dialog = DirDialog::builder(&frame_clone_dir, "Choose a directory", "")
-                .with_style(DirDialogStyle::Default as i64 | DirDialogStyle::MustExist as i64)
+                .with_style(DirDialogStyle::default().bits() | DirDialogStyle::MustExist.bits())
                 .build();
 
             if dialog.show_modal() == wxdragon::id::ID_OK {

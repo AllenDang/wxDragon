@@ -71,7 +71,7 @@ macro_rules! widget_builder {
                         id: $crate::id::ID_ANY as Id,
                         pos: $crate::geometry::DEFAULT_POSITION,
                         size: $crate::geometry::DEFAULT_SIZE,
-                        style: <$style_type>::Default,
+                        style: <$style_type>::default(),
                         $(
                             $field_name: $crate::__widget_builder_default!($($field_default)?),
                         )*
@@ -275,46 +275,21 @@ macro_rules! widget_style_enum {
         },
         default_variant: $default:ident
     ) => {
-        #[doc = $doc]
-        #[doc = "\n\nThese flags can be combined using the bitwise OR operator (`|`)."]
-        #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-        #[repr(i64)]
-        pub enum $name {
-            $(
-                #[doc = $variant_doc]
-                $variant = $value,
-            )+
-        }
-
-        impl $name {
-            /// Returns the raw integer value of the style.
-            pub fn bits(self) -> i64 {
-                self as i64
+        bitflags::bitflags! {
+            #[doc = $doc]
+            #[doc = "\n\nThese flags can be combined using the bitwise OR operator (`|`)."]
+            #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+            pub struct $name : i64 {
+                $(
+                    #[doc = $variant_doc]
+                    const $variant = $value;
+                )+
             }
-
-            // Add constant for compatibility with existing code
-            #[allow(non_upper_case_globals)]
-            pub const Default: $name = $name::$default;
         }
 
         impl Default for $name {
             fn default() -> Self {
                 $name::$default
-            }
-        }
-
-        impl std::ops::BitOr for $name {
-            type Output = Self;
-            fn bitor(self, rhs: Self) -> Self::Output {
-                unsafe { std::mem::transmute(self.bits() | rhs.bits()) }
-            }
-        }
-
-        impl std::ops::BitOrAssign for $name {
-            fn bitor_assign(&mut self, rhs: Self) {
-                unsafe {
-                    *self = std::mem::transmute::<i64, $name>(self.bits() | rhs.bits());
-                }
             }
         }
     };

@@ -122,17 +122,17 @@ fn main() {
             if let wxdragon::WindowEventData::General(event) = &evt
                 && event.can_veto()
             {
-                use MessageDialogStyle::{Cancel, IconInformation, YesNo};
+                use MessageDialogStyle as MDS;
                 let res = MessageDialog::builder(
                     &frame_clone,
                     "Are you sure you want to close the application?",
                     "Confirm Close",
                 )
-                .with_style(YesNo | Cancel | IconInformation)
+                .with_style(MDS::OK | MDS::Cancel | MDS::IconInformation)
                 .build()
                 .show_modal();
 
-                if res != wxdragon::ID_YES {
+                if res != wxdragon::ID_OK {
                     // User cancelled (clicked No or Cancel), prevent the close
                     event.veto();
                 }

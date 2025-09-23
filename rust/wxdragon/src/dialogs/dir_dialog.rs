@@ -120,7 +120,7 @@ impl<'a> DirDialogBuilder<'a> {
             parent,
             message: message.to_string(),
             default_path: default_path.to_string(),
-            style: DirDialogStyle::Default as i64,
+            style: DirDialogStyle::default().bits(),
             pos: DEFAULT_POSITION,
             size: DEFAULT_SIZE,
         }

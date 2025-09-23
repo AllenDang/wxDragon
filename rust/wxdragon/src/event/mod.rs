@@ -43,486 +43,327 @@ pub use ffi::WXDEventTypeCEnum;
 
 // --- EventType Enum ---
 
+bitflags::bitflags! {
 /// Represents a wxDragon event type using stable C enum values.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[repr(transparent)] // Ensures memory layout matches the underlying C enum integer type
-pub struct EventType(ffi::WXDEventTypeCEnum); // Use the generated C enum type
-
-impl EventType {
+pub struct EventType: ffi::WXDEventTypeCEnum { // Use the generated C enum type
     // Constants map directly to the stable C enum values
-    pub const COMMAND_BUTTON_CLICKED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_COMMAND_BUTTON_CLICKED);
-    pub const CLOSE_WINDOW: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_CLOSE_WINDOW);
-    pub const CHECKBOX: EventType = EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_CHECKBOX);
-    pub const TEXT: EventType = EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TEXT);
-    pub const TEXT_ENTER: EventType = EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TEXT_ENTER);
-    pub const SIZE: EventType = EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_SIZE);
-    pub const MENU: EventType = EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_MENU);
-    pub const LEFT_DOWN: EventType = EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_LEFT_DOWN);
-    pub const LEFT_UP: EventType = EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_LEFT_UP);
-    pub const RIGHT_DOWN: EventType = EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_RIGHT_DOWN);
-    pub const RIGHT_UP: EventType = EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_RIGHT_UP);
-    pub const MIDDLE_DOWN: EventType = EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_MIDDLE_DOWN);
-    pub const MIDDLE_UP: EventType = EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_MIDDLE_UP);
-    pub const MOTION: EventType = EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_MOTION);
-    pub const MOUSEWHEEL: EventType = EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_MOUSEWHEEL);
-    pub const ENTER_WINDOW: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_ENTER_WINDOW);
-    pub const LEAVE_WINDOW: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_LEAVE_WINDOW);
-    pub const KEY_DOWN: EventType = EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_KEY_DOWN);
-    pub const KEY_UP: EventType = EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_KEY_UP);
-    pub const CHAR: EventType = EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_CHAR);
-    pub const COMMAND_RADIOBUTTON_SELECTED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_COMMAND_RADIOBUTTON_SELECTED);
-    pub const COMMAND_RADIOBOX_SELECTED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_COMMAND_RADIOBOX_SELECTED);
-    pub const COMMAND_LISTBOX_SELECTED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_COMMAND_LISTBOX_SELECTED);
-    pub const COMMAND_CHOICE_SELECTED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_COMMAND_CHOICE_SELECTED);
-    pub const COMMAND_COMBOBOX_SELECTED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_COMMAND_COMBOBOX_SELECTED);
-    pub const COMMAND_CHECKLISTBOX_SELECTED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_COMMAND_CHECKLISTBOX_SELECTED);
-    pub const COMMAND_LISTBOX_DOUBLECLICKED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_COMMAND_LISTBOX_DOUBLECLICKED);
-    pub const COMMAND_TOGGLEBUTTON_CLICKED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_COMMAND_TOGGLEBUTTON_CLICKED);
+    const COMMAND_BUTTON_CLICKED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_COMMAND_BUTTON_CLICKED;
+    const CLOSE_WINDOW = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_CLOSE_WINDOW;
+    const CHECKBOX = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_CHECKBOX;
+    const TEXT = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TEXT;
+    const TEXT_ENTER = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TEXT_ENTER;
+    const SIZE = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_SIZE;
+    const MENU = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_MENU;
+    const LEFT_DOWN = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_LEFT_DOWN;
+    const LEFT_UP = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_LEFT_UP;
+    const RIGHT_DOWN = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_RIGHT_DOWN;
+    const RIGHT_UP = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_RIGHT_UP;
+    const MIDDLE_DOWN = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_MIDDLE_DOWN;
+    const MIDDLE_UP = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_MIDDLE_UP;
+    const MOTION = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_MOTION;
+    const MOUSEWHEEL = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_MOUSEWHEEL;
+    const ENTER_WINDOW = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_ENTER_WINDOW;
+    const LEAVE_WINDOW = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_LEAVE_WINDOW;
+    const KEY_DOWN = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_KEY_DOWN;
+    const KEY_UP = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_KEY_UP;
+    const CHAR = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_CHAR;
+    const COMMAND_RADIOBUTTON_SELECTED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_COMMAND_RADIOBUTTON_SELECTED;
+    const COMMAND_RADIOBOX_SELECTED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_COMMAND_RADIOBOX_SELECTED;
+    const COMMAND_LISTBOX_SELECTED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_COMMAND_LISTBOX_SELECTED;
+    const COMMAND_CHOICE_SELECTED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_COMMAND_CHOICE_SELECTED;
+    const COMMAND_COMBOBOX_SELECTED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_COMMAND_COMBOBOX_SELECTED;
+    const COMMAND_CHECKLISTBOX_SELECTED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_COMMAND_CHECKLISTBOX_SELECTED;
+    const COMMAND_LISTBOX_DOUBLECLICKED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_COMMAND_LISTBOX_DOUBLECLICKED;
+    const COMMAND_TOGGLEBUTTON_CLICKED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_COMMAND_TOGGLEBUTTON_CLICKED;
     // ADDED: RearrangeList event type
-    pub const COMMAND_REARRANGE_LIST: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_COMMAND_REARRANGE_LIST);
+    const COMMAND_REARRANGE_LIST = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_COMMAND_REARRANGE_LIST;
     // ADDED: CollapsiblePane event type
-    pub const COLLAPSIBLEPANE_CHANGED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_COLLAPSIBLEPANE_CHANGED);
+    const COLLAPSIBLEPANE_CHANGED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_COLLAPSIBLEPANE_CHANGED;
     // ADDED: TreeCtrl event types
-    pub const TREE_BEGIN_LABEL_EDIT: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TREE_BEGIN_LABEL_EDIT);
-    pub const TREE_END_LABEL_EDIT: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TREE_END_LABEL_EDIT);
-    pub const TREE_SEL_CHANGED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TREE_SEL_CHANGED);
-    pub const TREE_ITEM_ACTIVATED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TREE_ITEM_ACTIVATED);
+    const TREE_BEGIN_LABEL_EDIT = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TREE_BEGIN_LABEL_EDIT;
+    const TREE_END_LABEL_EDIT = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TREE_END_LABEL_EDIT;
+    const TREE_SEL_CHANGED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TREE_SEL_CHANGED;
+    const TREE_ITEM_ACTIVATED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TREE_ITEM_ACTIVATED;
     // ADDED: Slider event type
-    pub const SLIDER: EventType = EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_SLIDER);
+    const SLIDER = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_SLIDER;
     // ADDED: SpinCtrl event type
-    pub const SPINCTRL: EventType = EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_SPINCTRL);
+    const SPINCTRL = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_SPINCTRL;
     // ADDED: SpinButton event types
-    pub const SPIN_UP: EventType = EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_SPIN_UP);
-    pub const SPIN_DOWN: EventType = EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_SPIN_DOWN);
-    pub const SPIN: EventType = EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_SPIN);
+    const SPIN_UP = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_SPIN_UP;
+    const SPIN_DOWN = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_SPIN_DOWN;
+    const SPIN = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_SPIN;
     // ADDED: Notebook event type
-    pub const NOTEBOOK_PAGE_CHANGED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_NOTEBOOK_PAGE_CHANGED);
+    const NOTEBOOK_PAGE_CHANGED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_NOTEBOOK_PAGE_CHANGED;
     // ADDED: Splitter event types
-    pub const SPLITTER_SASH_POS_CHANGED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_SPLITTER_SASH_POS_CHANGED);
-    pub const SPLITTER_SASH_POS_CHANGING: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_SPLITTER_SASH_POS_CHANGING);
-    pub const SPLITTER_DOUBLECLICKED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_SPLITTER_DOUBLECLICKED);
-    pub const SPLITTER_UNSPLIT: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_SPLITTER_UNSPLIT);
+    const SPLITTER_SASH_POS_CHANGED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_SPLITTER_SASH_POS_CHANGED;
+    const SPLITTER_SASH_POS_CHANGING = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_SPLITTER_SASH_POS_CHANGING;
+    const SPLITTER_DOUBLECLICKED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_SPLITTER_DOUBLECLICKED;
+    const SPLITTER_UNSPLIT = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_SPLITTER_UNSPLIT;
     // ADDED: ListCtrl event types
-    pub const LIST_ITEM_SELECTED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_LIST_ITEM_SELECTED);
-    pub const LIST_ITEM_ACTIVATED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_LIST_ITEM_ACTIVATED);
-    pub const LIST_COL_CLICK: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_LIST_COL_CLICK);
-    pub const LIST_BEGIN_LABEL_EDIT: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_LIST_BEGIN_LABEL_EDIT);
-    pub const LIST_END_LABEL_EDIT: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_LIST_END_LABEL_EDIT);
+    const LIST_ITEM_SELECTED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_LIST_ITEM_SELECTED;
+    const LIST_ITEM_ACTIVATED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_LIST_ITEM_ACTIVATED;
+    const LIST_COL_CLICK = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_LIST_COL_CLICK;
+    const LIST_BEGIN_LABEL_EDIT = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_LIST_BEGIN_LABEL_EDIT;
+    const LIST_END_LABEL_EDIT = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_LIST_END_LABEL_EDIT;
     // ADDED: Additional ListCtrl event types
-    pub const LIST_BEGIN_DRAG: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_LIST_BEGIN_DRAG);
-    pub const LIST_BEGIN_RDRAG: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_LIST_BEGIN_RDRAG);
-    pub const LIST_DELETE_ITEM: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_LIST_DELETE_ITEM);
-    pub const LIST_DELETE_ALL_ITEMS: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_LIST_DELETE_ALL_ITEMS);
-    pub const LIST_ITEM_DESELECTED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_LIST_ITEM_DESELECTED);
-    pub const LIST_ITEM_FOCUSED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_LIST_ITEM_FOCUSED);
-    pub const LIST_ITEM_MIDDLE_CLICK: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_LIST_ITEM_MIDDLE_CLICK);
-    pub const LIST_ITEM_RIGHT_CLICK: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_LIST_ITEM_RIGHT_CLICK);
-    pub const LIST_KEY_DOWN: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_LIST_KEY_DOWN);
-    pub const LIST_INSERT_ITEM: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_LIST_INSERT_ITEM);
-    pub const LIST_COL_RIGHT_CLICK: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_LIST_COL_RIGHT_CLICK);
-    pub const LIST_COL_BEGIN_DRAG: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_LIST_COL_BEGIN_DRAG);
+    const LIST_BEGIN_DRAG = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_LIST_BEGIN_DRAG;
+    const LIST_BEGIN_RDRAG = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_LIST_BEGIN_RDRAG;
+    const LIST_DELETE_ITEM = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_LIST_DELETE_ITEM;
+    const LIST_DELETE_ALL_ITEMS = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_LIST_DELETE_ALL_ITEMS;
+    const LIST_ITEM_DESELECTED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_LIST_ITEM_DESELECTED;
+    const LIST_ITEM_FOCUSED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_LIST_ITEM_FOCUSED;
+    const LIST_ITEM_MIDDLE_CLICK = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_LIST_ITEM_MIDDLE_CLICK;
+    const LIST_ITEM_RIGHT_CLICK = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_LIST_ITEM_RIGHT_CLICK;
+    const LIST_KEY_DOWN = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_LIST_KEY_DOWN;
+    const LIST_INSERT_ITEM = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_LIST_INSERT_ITEM;
+    const LIST_COL_RIGHT_CLICK = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_LIST_COL_RIGHT_CLICK;
+    const LIST_COL_BEGIN_DRAG = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_LIST_COL_BEGIN_DRAG;
     // ADDED: ColourPickerCtrl event type
-    pub const COLOURPICKER_CHANGED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_COLOURPICKER_CHANGED);
+    const COLOURPICKER_CHANGED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_COLOURPICKER_CHANGED;
     // DatePicker Event
-    pub const DATE_CHANGED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_DATE_CHANGED);
+    const DATE_CHANGED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_DATE_CHANGED;
     // TimePicker Event
-    pub const TIME_CHANGED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TIME_CHANGED);
+    const TIME_CHANGED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TIME_CHANGED;
     // Treebook Events (match WXDEventTypeCEnum values)
-    pub const TREEBOOK_PAGE_CHANGED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TREEBOOK_PAGE_CHANGED);
-    pub const TREEBOOK_PAGE_CHANGING: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TREEBOOK_PAGE_CHANGING);
-    pub const TREEBOOK_NODE_EXPANDED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TREEBOOK_NODE_EXPANDED);
-    pub const TREEBOOK_NODE_COLLAPSED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TREEBOOK_NODE_COLLAPSED);
+    const TREEBOOK_PAGE_CHANGED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TREEBOOK_PAGE_CHANGED;
+    const TREEBOOK_PAGE_CHANGING = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TREEBOOK_PAGE_CHANGING;
+    const TREEBOOK_NODE_EXPANDED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TREEBOOK_NODE_EXPANDED;
+    const TREEBOOK_NODE_COLLAPSED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TREEBOOK_NODE_COLLAPSED;
     // ADDED: SearchCtrl Event Types
-    pub const COMMAND_SEARCHCTRL_SEARCH_BTN: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_COMMAND_SEARCHCTRL_SEARCH_BTN);
-    pub const COMMAND_SEARCHCTRL_CANCEL_BTN: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_COMMAND_SEARCHCTRL_CANCEL_BTN);
-    pub const COMMAND_HYPERLINK: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_COMMAND_HYPERLINK);
-    pub const SPINCTRLDOUBLE: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_SPINCTRLDOUBLE);
+    const COMMAND_SEARCHCTRL_SEARCH_BTN = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_COMMAND_SEARCHCTRL_SEARCH_BTN;
+    const COMMAND_SEARCHCTRL_CANCEL_BTN = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_COMMAND_SEARCHCTRL_CANCEL_BTN;
+    const COMMAND_HYPERLINK = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_COMMAND_HYPERLINK;
+    const SPINCTRLDOUBLE = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_SPINCTRLDOUBLE;
     // ADDED: Calendar Control Event Type
-    pub const CALENDAR_SEL_CHANGED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_CALENDAR_SEL_CHANGED);
+    const CALENDAR_SEL_CHANGED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_CALENDAR_SEL_CHANGED;
     // ADDED: Missing Calendar Control Event Types
-    pub const CALENDAR_DOUBLECLICKED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_CALENDAR_DOUBLECLICKED);
-    pub const CALENDAR_MONTH_CHANGED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_CALENDAR_MONTH_CHANGED);
-    pub const CALENDAR_YEAR_CHANGED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_CALENDAR_YEAR_CHANGED);
-    pub const CALENDAR_WEEKDAY_CLICKED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_CALENDAR_WEEKDAY_CLICKED);
+    const CALENDAR_DOUBLECLICKED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_CALENDAR_DOUBLECLICKED;
+    const CALENDAR_MONTH_CHANGED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_CALENDAR_MONTH_CHANGED;
+    const CALENDAR_YEAR_CHANGED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_CALENDAR_YEAR_CHANGED;
+    const CALENDAR_WEEKDAY_CLICKED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_CALENDAR_WEEKDAY_CLICKED;
     // ADDED: ScrollBar Events
-    pub const SCROLL_TOP: EventType = EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_SCROLL_TOP);
-    pub const SCROLL_BOTTOM: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_SCROLL_BOTTOM);
-    pub const SCROLL_LINEUP: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_SCROLL_LINEUP);
-    pub const SCROLL_LINEDOWN: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_SCROLL_LINEDOWN);
-    pub const SCROLL_PAGEUP: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_SCROLL_PAGEUP);
-    pub const SCROLL_PAGEDOWN: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_SCROLL_PAGEDOWN);
-    pub const SCROLL_THUMBTRACK: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_SCROLL_THUMBTRACK);
-    pub const SCROLL_THUMBRELEASE: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_SCROLL_THUMBRELEASE);
-    pub const SCROLL_CHANGED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_SCROLL_CHANGED);
-    pub const FILE_PICKER_CHANGED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_FILEPICKER_CHANGED);
-    pub const DIR_PICKER_CHANGED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_DIRPICKER_CHANGED);
-    pub const FONT_PICKER_CHANGED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_FONTPICKER_CHANGED);
+    const SCROLL_TOP = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_SCROLL_TOP;
+    const SCROLL_BOTTOM = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_SCROLL_BOTTOM;
+    const SCROLL_LINEUP = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_SCROLL_LINEUP;
+    const SCROLL_LINEDOWN = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_SCROLL_LINEDOWN;
+    const SCROLL_PAGEUP = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_SCROLL_PAGEUP;
+    const SCROLL_PAGEDOWN = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_SCROLL_PAGEDOWN;
+    const SCROLL_THUMBTRACK = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_SCROLL_THUMBTRACK;
+    const SCROLL_THUMBRELEASE = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_SCROLL_THUMBRELEASE;
+    const SCROLL_CHANGED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_SCROLL_CHANGED;
+    const FILE_PICKER_CHANGED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_FILEPICKER_CHANGED;
+    const DIR_PICKER_CHANGED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_DIRPICKER_CHANGED;
+    const FONT_PICKER_CHANGED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_FONTPICKER_CHANGED;
 
-    pub const NOTIFICATION_MESSAGE_CLICK: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_NOTIFICATION_MESSAGE_CLICK);
-    pub const NOTIFICATION_MESSAGE_DISMISSED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_NOTIFICATION_MESSAGE_DISMISSED);
-    pub const NOTIFICATION_MESSAGE_ACTION: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_NOTIFICATION_MESSAGE_ACTION);
+    const NOTIFICATION_MESSAGE_CLICK = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_NOTIFICATION_MESSAGE_CLICK;
+    const NOTIFICATION_MESSAGE_DISMISSED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_NOTIFICATION_MESSAGE_DISMISSED;
+    const NOTIFICATION_MESSAGE_ACTION = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_NOTIFICATION_MESSAGE_ACTION;
 
     // Media events - only available when media-ctrl feature is enabled
     #[cfg(feature = "media-ctrl")]
-    pub const MEDIA_LOADED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_MEDIA_LOADED);
+    const MEDIA_LOADED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_MEDIA_LOADED;
     #[cfg(feature = "media-ctrl")]
-    pub const MEDIA_STOP: EventType = EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_MEDIA_STOP);
+    const MEDIA_STOP = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_MEDIA_STOP;
     #[cfg(feature = "media-ctrl")]
-    pub const MEDIA_FINISHED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_MEDIA_FINISHED);
+    const MEDIA_FINISHED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_MEDIA_FINISHED;
     #[cfg(feature = "media-ctrl")]
-    pub const MEDIA_STATECHANGED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_MEDIA_STATECHANGED);
+    const MEDIA_STATECHANGED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_MEDIA_STATECHANGED;
     #[cfg(feature = "media-ctrl")]
-    pub const MEDIA_PLAY: EventType = EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_MEDIA_PLAY);
+    const MEDIA_PLAY = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_MEDIA_PLAY;
     #[cfg(feature = "media-ctrl")]
-    pub const MEDIA_PAUSE: EventType = EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_MEDIA_PAUSE);
+    const MEDIA_PAUSE = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_MEDIA_PAUSE;
 
-    pub const EVT_DATE_CHANGED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_DATE_CHANGED);
+    const EVT_DATE_CHANGED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_DATE_CHANGED;
 
-    pub const IDLE: EventType = EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_IDLE);
+    const IDLE = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_IDLE;
 
     // Drag and drop events
-    pub const DROP_FILES: EventType = EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_DROP_FILES);
+    const DROP_FILES = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_DROP_FILES;
 
-    pub const PAINT: EventType = EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_PAINT);
+    const PAINT = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_PAINT;
 
-    pub const DESTROY: EventType = EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_DESTROY);
+    const DESTROY = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_DESTROY;
 
     // Additional window events
-    pub const MOVE: EventType = EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_MOVE);
-    pub const ERASE: EventType = EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_ERASE);
-    pub const SET_FOCUS: EventType = EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_SET_FOCUS);
-    pub const KILL_FOCUS: EventType = EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_KILL_FOCUS);
+    const MOVE = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_MOVE;
+    const ERASE = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_ERASE;
+    const SET_FOCUS = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_SET_FOCUS;
+    const KILL_FOCUS = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_KILL_FOCUS;
 
     // DataView events
-    pub const DATAVIEW_SELECTION_CHANGED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_DATAVIEW_SELECTION_CHANGED);
-    pub const DATAVIEW_ITEM_ACTIVATED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_DATAVIEW_ITEM_ACTIVATED);
-    pub const DATAVIEW_ITEM_EDITING_STARTED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_DATAVIEW_ITEM_EDITING_STARTED);
-    pub const DATAVIEW_ITEM_EDITING_DONE: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_DATAVIEW_ITEM_EDITING_DONE);
-    pub const DATAVIEW_ITEM_COLLAPSING: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_DATAVIEW_ITEM_COLLAPSING);
-    pub const DATAVIEW_ITEM_COLLAPSED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_DATAVIEW_ITEM_COLLAPSED);
-    pub const DATAVIEW_ITEM_EXPANDING: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_DATAVIEW_ITEM_EXPANDING);
-    pub const DATAVIEW_ITEM_EXPANDED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_DATAVIEW_ITEM_EXPANDED);
-    pub const DATAVIEW_COLUMN_HEADER_CLICK: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_DATAVIEW_COLUMN_HEADER_CLICK);
-    pub const DATAVIEW_COLUMN_HEADER_RIGHT_CLICK: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_DATAVIEW_COLUMN_HEADER_RIGHT_CLICK);
-    pub const DATAVIEW_COLUMN_SORTED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_DATAVIEW_COLUMN_SORTED);
-    pub const DATAVIEW_COLUMN_REORDERED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_DATAVIEW_COLUMN_REORDERED);
+    const DATAVIEW_SELECTION_CHANGED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_DATAVIEW_SELECTION_CHANGED;
+    const DATAVIEW_ITEM_ACTIVATED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_DATAVIEW_ITEM_ACTIVATED;
+    const DATAVIEW_ITEM_EDITING_STARTED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_DATAVIEW_ITEM_EDITING_STARTED;
+    const DATAVIEW_ITEM_EDITING_DONE = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_DATAVIEW_ITEM_EDITING_DONE;
+    const DATAVIEW_ITEM_COLLAPSING = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_DATAVIEW_ITEM_COLLAPSING;
+    const DATAVIEW_ITEM_COLLAPSED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_DATAVIEW_ITEM_COLLAPSED;
+    const DATAVIEW_ITEM_EXPANDING = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_DATAVIEW_ITEM_EXPANDING;
+    const DATAVIEW_ITEM_EXPANDED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_DATAVIEW_ITEM_EXPANDED;
+    const DATAVIEW_COLUMN_HEADER_CLICK = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_DATAVIEW_COLUMN_HEADER_CLICK;
+    const DATAVIEW_COLUMN_HEADER_RIGHT_CLICK = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_DATAVIEW_COLUMN_HEADER_RIGHT_CLICK;
+    const DATAVIEW_COLUMN_SORTED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_DATAVIEW_COLUMN_SORTED;
+    const DATAVIEW_COLUMN_REORDERED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_DATAVIEW_COLUMN_REORDERED;
 
     // ADDED: New TreeCtrl Event Types (complementing 22-25)
-    pub const TREE_SEL_CHANGING: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TREE_SEL_CHANGING);
-    pub const TREE_ITEM_COLLAPSING: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TREE_ITEM_COLLAPSING);
-    pub const TREE_ITEM_COLLAPSED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TREE_ITEM_COLLAPSED);
-    pub const TREE_ITEM_EXPANDING: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TREE_ITEM_EXPANDING);
-    pub const TREE_ITEM_EXPANDED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TREE_ITEM_EXPANDED);
-    pub const TREE_ITEM_RIGHT_CLICK: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TREE_ITEM_RIGHT_CLICK);
-    pub const TREE_ITEM_MIDDLE_CLICK: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TREE_ITEM_MIDDLE_CLICK);
-    pub const TREE_KEY_DOWN: EventType = // Specific to TreeCtrl
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TREE_KEY_DOWN);
-    pub const TREE_DELETE_ITEM: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TREE_DELETE_ITEM);
-    pub const TREE_ITEM_MENU: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TREE_ITEM_MENU);
-    pub const TREE_BEGIN_DRAG: EventType = // Specific to TreeCtrl
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TREE_BEGIN_DRAG);
-    pub const TREE_BEGIN_RDRAG: EventType = // Specific to TreeCtrl
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TREE_BEGIN_RDRAG);
-    pub const TREE_END_DRAG: EventType = // Specific to TreeCtrl
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TREE_END_DRAG);
-    pub const TREE_STATE_IMAGE_CLICK: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TREE_STATE_IMAGE_CLICK);
+    const TREE_SEL_CHANGING = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TREE_SEL_CHANGING;
+    const TREE_ITEM_COLLAPSING = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TREE_ITEM_COLLAPSING;
+    const TREE_ITEM_COLLAPSED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TREE_ITEM_COLLAPSED;
+    const TREE_ITEM_EXPANDING = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TREE_ITEM_EXPANDING;
+    const TREE_ITEM_EXPANDED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TREE_ITEM_EXPANDED;
+    const TREE_ITEM_RIGHT_CLICK = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TREE_ITEM_RIGHT_CLICK;
+    const TREE_ITEM_MIDDLE_CLICK = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TREE_ITEM_MIDDLE_CLICK;
+    const TREE_KEY_DOWN = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TREE_KEY_DOWN;
+    const TREE_DELETE_ITEM = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TREE_DELETE_ITEM;
+    const TREE_ITEM_MENU = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TREE_ITEM_MENU;
+    const TREE_BEGIN_DRAG = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TREE_BEGIN_DRAG;
+    const TREE_BEGIN_RDRAG = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TREE_BEGIN_RDRAG;
+    const TREE_END_DRAG = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TREE_END_DRAG;
+    const TREE_STATE_IMAGE_CLICK = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TREE_STATE_IMAGE_CLICK;
 
     // ToolBar Events
-    pub const TOOL: EventType = EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TOOL);
-    pub const TOOL_ENTER: EventType = EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TOOL_ENTER);
+    const TOOL = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TOOL;
+    const TOOL_ENTER = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TOOL_ENTER;
 
     // TreeCtrl Events
-    pub const TREE_ITEM_GETTOOLTIP: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TREE_ITEM_GETTOOLTIP);
+    const TREE_ITEM_GETTOOLTIP = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TREE_ITEM_GETTOOLTIP;
 
     // Generic events that might not fit a specific category or are widely used
-    pub const ANY: EventType = EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_ANY);
+    const ANY = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_ANY;
 
     // Special event type for null/None, not a real wxWidgets event type
-    pub const NONE: EventType = EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_NULL); // Assuming NULL is 0
+    const NONE = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_NULL; // Assuming NULL is 0
 
     // AuiManager events
     #[cfg(feature = "aui")]
-    pub const AUI_PANE_BUTTON: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_AUI_PANE_BUTTON);
+    const AUI_PANE_BUTTON = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_AUI_PANE_BUTTON;
     #[cfg(feature = "aui")]
-    pub const AUI_PANE_CLOSE: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_AUI_PANE_CLOSE);
+    const AUI_PANE_CLOSE = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_AUI_PANE_CLOSE;
     #[cfg(feature = "aui")]
-    pub const AUI_PANE_MAXIMIZE: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_AUI_PANE_MAXIMIZE);
+    const AUI_PANE_MAXIMIZE = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_AUI_PANE_MAXIMIZE;
     #[cfg(feature = "aui")]
-    pub const AUI_PANE_RESTORE: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_AUI_PANE_RESTORE);
+    const AUI_PANE_RESTORE = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_AUI_PANE_RESTORE;
     #[cfg(feature = "aui")]
-    pub const AUI_PANE_ACTIVATED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_AUI_PANE_ACTIVATED);
+    const AUI_PANE_ACTIVATED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_AUI_PANE_ACTIVATED;
     #[cfg(feature = "aui")]
-    pub const AUI_RENDER: EventType = EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_AUI_RENDER);
+    const AUI_RENDER = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_AUI_RENDER;
 
     // Timer event
-    pub const TIMER: EventType = EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TIMER);
+    const TIMER = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TIMER;
 
     // StyledTextCtrl events - only available when stc feature is enabled
     #[cfg(feature = "stc")]
-    pub const STC_CHANGE: EventType = EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_STC_CHANGE);
+    const STC_CHANGE = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_STC_CHANGE;
     #[cfg(feature = "stc")]
-    pub const STC_STYLENEEDED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_STC_STYLENEEDED);
+    const STC_STYLENEEDED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_STC_STYLENEEDED;
     #[cfg(feature = "stc")]
-    pub const STC_CHARADDED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_STC_CHARADDED);
+    const STC_CHARADDED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_STC_CHARADDED;
     #[cfg(feature = "stc")]
-    pub const STC_SAVEPOINTREACHED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_STC_SAVEPOINTREACHED);
+    const STC_SAVEPOINTREACHED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_STC_SAVEPOINTREACHED;
     #[cfg(feature = "stc")]
-    pub const STC_SAVEPOINTLEFT: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_STC_SAVEPOINTLEFT);
+    const STC_SAVEPOINTLEFT = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_STC_SAVEPOINTLEFT;
     #[cfg(feature = "stc")]
-    pub const STC_ROMODIFYATTEMPT: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_STC_ROMODIFYATTEMPT);
+    const STC_ROMODIFYATTEMPT = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_STC_ROMODIFYATTEMPT;
     #[cfg(feature = "stc")]
-    pub const STC_DOUBLECLICK: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_STC_DOUBLECLICK);
+    const STC_DOUBLECLICK = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_STC_DOUBLECLICK;
     #[cfg(feature = "stc")]
-    pub const STC_UPDATEUI: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_STC_UPDATEUI);
+    const STC_UPDATEUI = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_STC_UPDATEUI;
     #[cfg(feature = "stc")]
-    pub const STC_MODIFIED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_STC_MODIFIED);
+    const STC_MODIFIED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_STC_MODIFIED;
     #[cfg(feature = "stc")]
-    pub const STC_MACRORECORD: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_STC_MACRORECORD);
+    const STC_MACRORECORD = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_STC_MACRORECORD;
     #[cfg(feature = "stc")]
-    pub const STC_MARGINCLICK: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_STC_MARGINCLICK);
+    const STC_MARGINCLICK = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_STC_MARGINCLICK;
     #[cfg(feature = "stc")]
-    pub const STC_NEEDSHOWN: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_STC_NEEDSHOWN);
+    const STC_NEEDSHOWN = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_STC_NEEDSHOWN;
     #[cfg(feature = "stc")]
-    pub const STC_PAINTED: EventType = EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_STC_PAINTED);
+    const STC_PAINTED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_STC_PAINTED;
     #[cfg(feature = "stc")]
-    pub const STC_USERLISTSELECTION: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_STC_USERLISTSELECTION);
+    const STC_USERLISTSELECTION = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_STC_USERLISTSELECTION;
     #[cfg(feature = "stc")]
-    pub const STC_DWELLSTART: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_STC_DWELLSTART);
+    const STC_DWELLSTART = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_STC_DWELLSTART;
     #[cfg(feature = "stc")]
-    pub const STC_DWELLEND: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_STC_DWELLEND);
+    const STC_DWELLEND = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_STC_DWELLEND;
     #[cfg(feature = "stc")]
-    pub const STC_START_DRAG: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_STC_START_DRAG);
+    const STC_START_DRAG = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_STC_START_DRAG;
     #[cfg(feature = "stc")]
-    pub const STC_DRAG_OVER: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_STC_DRAG_OVER);
+    const STC_DRAG_OVER = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_STC_DRAG_OVER;
     #[cfg(feature = "stc")]
-    pub const STC_DO_DROP: EventType = EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_STC_DO_DROP);
+    const STC_DO_DROP = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_STC_DO_DROP;
     #[cfg(feature = "stc")]
-    pub const STC_ZOOM: EventType = EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_STC_ZOOM);
+    const STC_ZOOM = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_STC_ZOOM;
     #[cfg(feature = "stc")]
-    pub const STC_HOTSPOT_CLICK: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_STC_HOTSPOT_CLICK);
+    const STC_HOTSPOT_CLICK = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_STC_HOTSPOT_CLICK;
     #[cfg(feature = "stc")]
-    pub const STC_HOTSPOT_DCLICK: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_STC_HOTSPOT_DCLICK);
+    const STC_HOTSPOT_DCLICK = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_STC_HOTSPOT_DCLICK;
     #[cfg(feature = "stc")]
-    pub const STC_CALLTIP_CLICK: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_STC_CALLTIP_CLICK);
+    const STC_CALLTIP_CLICK = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_STC_CALLTIP_CLICK;
     #[cfg(feature = "stc")]
-    pub const STC_AUTOCOMP_SELECTION: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_STC_AUTOCOMP_SELECTION);
+    const STC_AUTOCOMP_SELECTION = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_STC_AUTOCOMP_SELECTION;
     #[cfg(feature = "stc")]
-    pub const STC_INDICATOR_CLICK: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_STC_INDICATOR_CLICK);
+    const STC_INDICATOR_CLICK = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_STC_INDICATOR_CLICK;
     #[cfg(feature = "stc")]
-    pub const STC_INDICATOR_RELEASE: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_STC_INDICATOR_RELEASE);
+    const STC_INDICATOR_RELEASE = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_STC_INDICATOR_RELEASE;
     #[cfg(feature = "stc")]
-    pub const STC_AUTOCOMP_CANCELLED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_STC_AUTOCOMP_CANCELLED);
+    const STC_AUTOCOMP_CANCELLED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_STC_AUTOCOMP_CANCELLED;
     #[cfg(feature = "stc")]
-    pub const STC_AUTOCOMP_CHAR_DELETED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_STC_AUTOCOMP_CHAR_DELETED);
+    const STC_AUTOCOMP_CHAR_DELETED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_STC_AUTOCOMP_CHAR_DELETED;
 
     // RichText events
     #[cfg(feature = "richtext")]
-    pub const RICHTEXT_LEFT_CLICK: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_RICHTEXT_LEFT_CLICK);
+    const RICHTEXT_LEFT_CLICK = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_RICHTEXT_LEFT_CLICK;
     #[cfg(feature = "richtext")]
-    pub const RICHTEXT_RIGHT_CLICK: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_RICHTEXT_RIGHT_CLICK);
+    const RICHTEXT_RIGHT_CLICK = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_RICHTEXT_RIGHT_CLICK;
     #[cfg(feature = "richtext")]
-    pub const RICHTEXT_MIDDLE_CLICK: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_RICHTEXT_MIDDLE_CLICK);
+    const RICHTEXT_MIDDLE_CLICK = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_RICHTEXT_MIDDLE_CLICK;
     #[cfg(feature = "richtext")]
-    pub const RICHTEXT_LEFT_DCLICK: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_RICHTEXT_LEFT_DCLICK);
+    const RICHTEXT_LEFT_DCLICK = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_RICHTEXT_LEFT_DCLICK;
     #[cfg(feature = "richtext")]
-    pub const RICHTEXT_RETURN: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_RICHTEXT_RETURN);
+    const RICHTEXT_RETURN = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_RICHTEXT_RETURN;
     #[cfg(feature = "richtext")]
-    pub const RICHTEXT_CHARACTER: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_RICHTEXT_CHARACTER);
+    const RICHTEXT_CHARACTER = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_RICHTEXT_CHARACTER;
     #[cfg(feature = "richtext")]
-    pub const RICHTEXT_DELETE: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_RICHTEXT_DELETE);
+    const RICHTEXT_DELETE = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_RICHTEXT_DELETE;
     #[cfg(feature = "richtext")]
-    pub const RICHTEXT_CONTENT_INSERTED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_RICHTEXT_CONTENT_INSERTED);
+    const RICHTEXT_CONTENT_INSERTED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_RICHTEXT_CONTENT_INSERTED;
     #[cfg(feature = "richtext")]
-    pub const RICHTEXT_CONTENT_DELETED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_RICHTEXT_CONTENT_DELETED);
+    const RICHTEXT_CONTENT_DELETED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_RICHTEXT_CONTENT_DELETED;
     #[cfg(feature = "richtext")]
-    pub const RICHTEXT_STYLE_CHANGED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_RICHTEXT_STYLE_CHANGED);
+    const RICHTEXT_STYLE_CHANGED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_RICHTEXT_STYLE_CHANGED;
     #[cfg(feature = "richtext")]
-    pub const RICHTEXT_SELECTION_CHANGED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_RICHTEXT_SELECTION_CHANGED);
+    const RICHTEXT_SELECTION_CHANGED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_RICHTEXT_SELECTION_CHANGED;
     #[cfg(feature = "richtext")]
-    pub const RICHTEXT_STYLESHEET_CHANGING: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_RICHTEXT_STYLESHEET_CHANGING);
+    const RICHTEXT_STYLESHEET_CHANGING = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_RICHTEXT_STYLESHEET_CHANGING;
     #[cfg(feature = "richtext")]
-    pub const RICHTEXT_STYLESHEET_CHANGED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_RICHTEXT_STYLESHEET_CHANGED);
+    const RICHTEXT_STYLESHEET_CHANGED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_RICHTEXT_STYLESHEET_CHANGED;
     #[cfg(feature = "richtext")]
-    pub const RICHTEXT_STYLESHEET_REPLACING: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_RICHTEXT_STYLESHEET_REPLACING);
+    const RICHTEXT_STYLESHEET_REPLACING = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_RICHTEXT_STYLESHEET_REPLACING;
     #[cfg(feature = "richtext")]
-    pub const RICHTEXT_STYLESHEET_REPLACED: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_RICHTEXT_STYLESHEET_REPLACED);
+    const RICHTEXT_STYLESHEET_REPLACED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_RICHTEXT_STYLESHEET_REPLACED;
 
     // TaskBarIcon Event Types - platform-specific support
 
     // Common events supported on Windows and Linux
-    pub const TASKBAR_LEFT_DOWN: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TASKBAR_LEFT_DOWN);
-    pub const TASKBAR_LEFT_DCLICK: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TASKBAR_LEFT_DCLICK);
+    const TASKBAR_LEFT_DOWN = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TASKBAR_LEFT_DOWN;
+    const TASKBAR_LEFT_DCLICK = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TASKBAR_LEFT_DCLICK;
 
     // Windows-only events
     #[cfg(target_os = "windows")]
-    pub const TASKBAR_MOVE: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TASKBAR_MOVE);
+    const TASKBAR_MOVE = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TASKBAR_MOVE;
     #[cfg(target_os = "windows")]
-    pub const TASKBAR_LEFT_UP: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TASKBAR_LEFT_UP);
+    const TASKBAR_LEFT_UP = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TASKBAR_LEFT_UP;
     #[cfg(target_os = "windows")]
-    pub const TASKBAR_RIGHT_DOWN: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TASKBAR_RIGHT_DOWN);
+    const TASKBAR_RIGHT_DOWN = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TASKBAR_RIGHT_DOWN;
     #[cfg(target_os = "windows")]
-    pub const TASKBAR_RIGHT_UP: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TASKBAR_RIGHT_UP);
+    const TASKBAR_RIGHT_UP = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TASKBAR_RIGHT_UP;
     #[cfg(target_os = "windows")]
-    pub const TASKBAR_RIGHT_DCLICK: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TASKBAR_RIGHT_DCLICK);
+    const TASKBAR_RIGHT_DCLICK = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TASKBAR_RIGHT_DCLICK;
     #[cfg(target_os = "windows")]
-    pub const TASKBAR_BALLOON_TIMEOUT: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TASKBAR_BALLOON_TIMEOUT);
+    const TASKBAR_BALLOON_TIMEOUT = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TASKBAR_BALLOON_TIMEOUT;
     #[cfg(target_os = "windows")]
-    pub const TASKBAR_BALLOON_CLICK: EventType =
-        EventType(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TASKBAR_BALLOON_CLICK);
-
-    /// Get the underlying stable C enum value.
-    pub(crate) fn as_c_enum(&self) -> ffi::WXDEventTypeCEnum {
-        self.0
-    }
+    const TASKBAR_BALLOON_CLICK = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TASKBAR_BALLOON_CLICK;
+}
 }
 
 /// Idle event processing modes
@@ -632,7 +473,7 @@ impl Event {
             let c_enum_val = event_type_c
                 .try_into()
                 .unwrap_or(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_NULL);
-            Some(EventType(c_enum_val))
+            EventType::from_bits(c_enum_val)
         }
     }
 
@@ -866,14 +707,8 @@ pub trait WxEvtHandler {
         let trampoline_ptr: TrampolineFn = rust_event_handler_trampoline;
         let trampoline_c_void = trampoline_ptr as *mut c_void;
 
-        unsafe {
-            ffi::wxd_EvtHandler_Bind(
-                handler_ptr,
-                event_type.as_c_enum(),
-                trampoline_c_void,
-                user_data,
-            );
-        }
+        let et = event_type.bits();
+        unsafe { ffi::wxd_EvtHandler_Bind(handler_ptr, et, trampoline_c_void, user_data) };
     }
 
     // Internal implementation with ID support for tools and menu items
@@ -895,17 +730,10 @@ pub trait WxEvtHandler {
 
         type TrampolineFn = unsafe extern "C" fn(*mut c_void, *mut c_void);
         let trampoline_ptr: TrampolineFn = rust_event_handler_trampoline;
-        let trampoline_c_void = trampoline_ptr as *mut c_void;
+        let trampo_c_void = trampoline_ptr as *mut c_void;
 
-        unsafe {
-            ffi::wxd_EvtHandler_BindWithId(
-                handler_ptr,
-                event_type.as_c_enum(),
-                id,
-                trampoline_c_void,
-                user_data,
-            );
-        }
+        let et = event_type.bits();
+        unsafe { ffi::wxd_EvtHandler_BindWithId(handler_ptr, et, id, trampo_c_void, user_data) };
     }
 }
 
