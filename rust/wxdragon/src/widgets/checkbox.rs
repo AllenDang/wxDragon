@@ -139,7 +139,8 @@ widget_builder!(
     parent_type: &'a dyn WxWidget,
     style_type: CheckBoxStyle,
     fields: {
-        label: String = String::new()
+        label: String = String::new(),
+        value: bool = false
     },
     build_impl: |slf| {
         let parent_ptr = slf.parent.handle_ptr();

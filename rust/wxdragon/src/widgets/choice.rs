@@ -155,7 +155,8 @@ widget_builder!(
     parent_type: &'a dyn WxWidget,
     style_type: ChoiceStyle,
     fields: {
-        choices: Vec<String> = Vec::new()
+        choices: Vec<String> = Vec::new(),
+        selection: Option<u32> = None
     },
     build_impl: |slf| {
         let parent_ptr = slf.parent.handle_ptr();
@@ -184,6 +185,11 @@ widget_builder!(
         // Add initial choices
         for choice_str in &slf.choices {
             choice.append(choice_str);
+        }
+
+        // Set initial selection if provided
+        if let Some(sel) = slf.selection {
+            choice.set_selection(sel);
         }
 
         choice

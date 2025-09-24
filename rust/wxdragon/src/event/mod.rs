@@ -459,21 +459,13 @@ impl Event {
         if self.0.is_null() {
             return None;
         }
-        let event_type_c = unsafe { ffi::wxd_Event_GetEventType(self.0) };
-        // If event_type_c is WXD_EVENT_TYPE_NULL or an invalid value, return None
         #[allow(clippy::useless_conversion)]
-        if event_type_c
-            == ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_NULL
-                .try_into()
-                .unwrap()
-        {
+        let event_type_c = unsafe { ffi::wxd_Event_GetEventType(self.0) } as WXDEventTypeCEnum;
+        // If event_type_c is WXD_EVENT_TYPE_NULL or an invalid value, return None
+        if event_type_c == ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_NULL {
             None
         } else {
-            // Convert i32 to the C enum type
-            let c_enum_val = event_type_c
-                .try_into()
-                .unwrap_or(ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_NULL);
-            EventType::from_bits(c_enum_val)
+            EventType::from_bits(event_type_c)
         }
     }
 
