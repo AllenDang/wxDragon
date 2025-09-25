@@ -141,9 +141,11 @@ pub fn create_advanced_tab(notebook: &Notebook) -> (SplitterWindow, AdvancedTabC
         5,
     );
 
+    const INITIAL_VALUE: i32 = 42;
     // Create the spin control
     let spin_ctrl = SpinCtrl::builder(&spin_panel)
-        .with_initial_value(42)
+        // .with_value_str(&INITIAL_VALUE.to_string())
+        .with_initial_value(INITIAL_VALUE)
         .with_min_value(0)
         .with_max_value(1000)
         .build();
@@ -156,7 +158,7 @@ pub fn create_advanced_tab(notebook: &Notebook) -> (SplitterWindow, AdvancedTabC
 
     // SpinCtrl status label
     let spin_ctrl_label = StaticText::builder(&spin_panel)
-        .with_label("Spin Value: 42")
+        .with_label(&format!("Spin Value: {INITIAL_VALUE}"))
         .build();
     spin_sizer.add(
         &spin_ctrl_label,

@@ -144,14 +144,16 @@ widget_builder!(
     },
     build_impl: |slf| {
         let parent_ptr = slf.parent.handle_ptr();
-        CheckBox::new_impl(
+        let checkbox = CheckBox::new_impl(
             parent_ptr,
             slf.id,
             &slf.label,
             slf.pos,
             slf.size,
             slf.style.bits(),
-        )
+        );
+        checkbox.set_value(slf.value);
+        checkbox
     }
 );
 

@@ -136,7 +136,7 @@ widget_builder!(
         min_value: i32 = 0,
         max_value: i32 = 100,
         initial_value: i32 = 0,
-        value_str: String = "0".to_string()
+        value_str: String = "".to_string()
     },
     build_impl: |slf| {
         let initial_c_string =
@@ -160,7 +160,12 @@ widget_builder!(
             panic!("Failed to create SpinCtrl");
         }
 
-        unsafe { SpinCtrl::from_ptr(spin_ctrl_ptr) }
+        let spin_ctrl = unsafe { SpinCtrl::from_ptr(spin_ctrl_ptr) };
+        if slf.value_str.parse::<i32>().is_err() {
+            let initial = slf.initial_value.clamp(slf.min_value, slf.max_value);
+            spin_ctrl.set_value(initial);
+        }
+        spin_ctrl
     }
 );
 
