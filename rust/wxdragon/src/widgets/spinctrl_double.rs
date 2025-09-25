@@ -140,7 +140,12 @@ widget_builder!(
         increment: f64 = 1.0
     },
     build_impl: |slf| {
-        let c_value_str = CString::new(slf.value_str.clone()).expect("CString::new failed for value_str");
+       let initial_value = slf.initial_value.clamp(slf.min_value, slf.max_value);
+       let value_str =  match slf.value_str.parse::<f64>() {
+            Err(_) => initial_value.to_string(),
+            Ok(v) => v.clamp(slf.min_value, slf.max_value).to_string(),
+        };
+        let c_value_str = CString::new(value_str).expect("CString::new failed for value_str");
         let raw_ptr = unsafe {
             ffi::wxd_SpinCtrlDouble_Create(
                 slf.parent.handle_ptr(),
@@ -153,7 +158,7 @@ widget_builder!(
                 slf.style.bits() as c_longlong,
                 slf.min_value,
                 slf.max_value,
-                slf.initial_value,
+                initial_value,
                 slf.increment,
             )
         };
@@ -170,9 +175,6 @@ impl<'a> SpinCtrlDoubleBuilder<'a> {
     pub fn with_range(mut self, min_value: f64, max_value: f64) -> Self {
         self.min_value = min_value;
         self.max_value = max_value;
-        // Adjust initial value if it's outside the new range
-        self.initial_value = self.initial_value.clamp(min_value, max_value);
-        self.value_str = self.initial_value.to_string();
         self
     }
 }

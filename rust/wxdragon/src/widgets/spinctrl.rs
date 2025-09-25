@@ -136,11 +136,15 @@ widget_builder!(
         min_value: i32 = 0,
         max_value: i32 = 100,
         initial_value: i32 = 0,
-        value_str: String = "".to_string()
+        value_str: String = String::new()
     },
     build_impl: |slf| {
-        let initial_c_string =
-            CString::new(slf.value_str.clone()).expect("CString::new failed for SpinCtrl initial value");
+        let initial_value = slf.initial_value.clamp(slf.min_value, slf.max_value);
+        let value_str =  match slf.value_str.parse::<i32>() {
+            Err(_) => initial_value.to_string(),
+            Ok(v) => v.clamp(slf.min_value, slf.max_value).to_string(),
+        };
+        let initial_c_string = CString::new(value_str).expect("CString::new failed for SpinCtrl initial value");
 
         let spin_ctrl_ptr = unsafe {
             ffi::wxd_SpinCtrl_Create(
@@ -152,7 +156,7 @@ widget_builder!(
                 slf.style.bits() as ffi::wxd_Style_t,
                 slf.min_value as c_int,
                 slf.max_value as c_int,
-                slf.initial_value as c_int,
+                initial_value as c_int,
             )
         };
 
@@ -160,12 +164,7 @@ widget_builder!(
             panic!("Failed to create SpinCtrl");
         }
 
-        let spin_ctrl = unsafe { SpinCtrl::from_ptr(spin_ctrl_ptr) };
-        if slf.value_str.parse::<i32>().is_err() {
-            let initial = slf.initial_value.clamp(slf.min_value, slf.max_value);
-            spin_ctrl.set_value(initial);
-        }
-        spin_ctrl
+        unsafe { SpinCtrl::from_ptr(spin_ctrl_ptr) }
     }
 );
 
@@ -175,9 +174,6 @@ impl<'a> SpinCtrlBuilder<'a> {
     pub fn with_range(mut self, min_val: i32, max_val: i32) -> Self {
         self.min_value = min_val;
         self.max_value = max_val;
-        // Adjust initial value if it's outside the new range
-        self.initial_value = self.initial_value.clamp(min_val, max_val);
-        self.value_str = self.initial_value.to_string();
         self
     }
 }

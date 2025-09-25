@@ -59,7 +59,6 @@ pub fn create_basic_tab(notebook: &Notebook, _frame: &Frame) -> BasicTabControls
         .with_label("Spin Double:")
         .build();
     let spinctrl_double = SpinCtrlDouble::builder(&basic_panel)
-        .with_value_str("1.23")
         .with_range(0.0, 100.0)
         .with_initial_value(50.5)
         .with_increment(0.1)
