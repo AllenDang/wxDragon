@@ -30,6 +30,13 @@ WXD_EXPORTED bool wxd_CommandEvent_IsChecked(wxd_Event_t* event);
 WXD_EXPORTED wxd_Point wxd_MouseEvent_GetPosition(wxd_Event_t* event);
 WXD_EXPORTED int wxd_KeyEvent_GetKeyCode(wxd_Event_t* event);
 WXD_EXPORTED int wxd_KeyEvent_GetUnicodeKey(wxd_Event_t* event);
+
+// Modifier key functions for keyboard events
+WXD_EXPORTED bool wxd_KeyEvent_ControlDown(wxd_Event_t* event);
+WXD_EXPORTED bool wxd_KeyEvent_ShiftDown(wxd_Event_t* event);
+WXD_EXPORTED bool wxd_KeyEvent_AltDown(wxd_Event_t* event);
+WXD_EXPORTED bool wxd_KeyEvent_MetaDown(wxd_Event_t* event);
+WXD_EXPORTED bool wxd_KeyEvent_CmdDown(wxd_Event_t* event);
 WXD_EXPORTED int wxd_CommandEvent_GetInt(wxd_Event_t* event);
 
 WXD_EXPORTED int wxd_ScrollEvent_GetPosition(wxd_Event_t* event);

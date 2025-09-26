@@ -678,6 +678,11 @@ int main(int argc, char **argv) {
     constants_to_extract.push_back({"wxWS_SIZEBOX", wxRESIZE_BORDER}); // Alias for wxRESIZE_BORDER
     constants_to_extract.push_back({"wxWS_SYSMENU", wxSYSTEM_MENU}); // Already defined above
     constants_to_extract.push_back({"wxWS_TABSTOP", 0x00010000L}); // Tab stop for controls
+
+    // Navigation direction constants
+    constants_to_extract.push_back({"wxNAVIGATION_NEXT", 0});
+    constants_to_extract.push_back({"wxNAVIGATION_PREVIOUS", 1});
+
     constants_to_extract.push_back({"wxWS_THICKFRAME", wxRESIZE_BORDER}); // Same as wxWS_SIZEBOX
     constants_to_extract.push_back({"wxWS_TILED", 0x00000000L}); // Same as wxWS_OVERLAPPED
     constants_to_extract.push_back({"wxWS_VISIBLE", 0x10000000L}); // Initially visible

@@ -1,5 +1,43 @@
 # Changelog
 
+## 0.8.26
+
+### New Features
+- **ComboBox Text Manipulation**: Added comprehensive text manipulation functions for ComboBox widget
+  - Added text insertion, deletion, selection and manipulation methods
+  - Enhanced ComboBox API with text editing capabilities
+  - Improved ComboBox usability for dynamic text content
+
+- **TabCtrl Widget Functions**: Added extensive TabCtrl functionality for tab management
+  - Enhanced tab control operations and management
+  - Added comprehensive tab manipulation methods
+  - Improved TabCtrl widget capabilities
+
+### Enhancements
+- **Event Data Modifier State**: Added modifier state checking in event data
+  - Enhanced event handling with keyboard modifier detection
+  - Improved event system with modifier key state information
+  - Better support for keyboard shortcuts and modifier combinations
+
+- **Widget Builder Improvements**: Enhanced widget builders with better initialization options
+  - Added `ChoiceBuilder::with_selection()` method for initial selection setting
+  - Added `CheckBoxBuilder::with_value()` method for initial checkbox state
+  - Improved builder pattern consistency across widgets
+
+### Bug Fixes
+- **Cross-Platform Event Enum**: Fixed EventType enum cross-platform compatibility issues
+  - Resolved enum discriminant inconsistencies between platforms
+  - Applied bitflags to EventType for better type safety
+  - Fixed compilation errors with Rust compiler v1.90.0
+
+- **Windows ComboBox Compatibility**: Fixed compilation errors for new ComboBox functions on Windows
+  - Resolved Windows-specific build issues with ComboBox text functions
+  - Improved cross-platform compatibility for ComboBox widget
+
+- **Widget Initial Values**: Fixed SpinCtrl and CheckBox initial value issues
+  - Corrected widget initialization problems
+  - Improved default value handling for form controls
+
 ## 0.8.25
 
 ### New Features

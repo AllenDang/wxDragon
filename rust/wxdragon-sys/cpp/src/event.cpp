@@ -1243,8 +1243,49 @@ WXD_EXPORTED int wxd_MouseEvent_GetWheelDelta(wxd_Event_t* event) {
     wxEvent* wx_event = reinterpret_cast<wxEvent*>(event);
     wxMouseEvent* mouse_event = wxDynamicCast(wx_event, wxMouseEvent);
     if (!mouse_event) return 120;
-    
+
     return mouse_event->GetWheelDelta();
+}
+
+// Modifier key functions for keyboard events
+WXD_EXPORTED bool wxd_KeyEvent_ControlDown(wxd_Event_t* event) {
+    if (!event) return false;
+    wxEvent* baseEvent = static_cast<wxEvent*>(static_cast<void*>(event));
+    wxKeyEvent* keyEvent = dynamic_cast<wxKeyEvent*>(baseEvent);
+    if (!keyEvent) return false;
+    return keyEvent->ControlDown();
+}
+
+WXD_EXPORTED bool wxd_KeyEvent_ShiftDown(wxd_Event_t* event) {
+    if (!event) return false;
+    wxEvent* baseEvent = static_cast<wxEvent*>(static_cast<void*>(event));
+    wxKeyEvent* keyEvent = dynamic_cast<wxKeyEvent*>(baseEvent);
+    if (!keyEvent) return false;
+    return keyEvent->ShiftDown();
+}
+
+WXD_EXPORTED bool wxd_KeyEvent_AltDown(wxd_Event_t* event) {
+    if (!event) return false;
+    wxEvent* baseEvent = static_cast<wxEvent*>(static_cast<void*>(event));
+    wxKeyEvent* keyEvent = dynamic_cast<wxKeyEvent*>(baseEvent);
+    if (!keyEvent) return false;
+    return keyEvent->AltDown();
+}
+
+WXD_EXPORTED bool wxd_KeyEvent_MetaDown(wxd_Event_t* event) {
+    if (!event) return false;
+    wxEvent* baseEvent = static_cast<wxEvent*>(static_cast<void*>(event));
+    wxKeyEvent* keyEvent = dynamic_cast<wxKeyEvent*>(baseEvent);
+    if (!keyEvent) return false;
+    return keyEvent->MetaDown();
+}
+
+WXD_EXPORTED bool wxd_KeyEvent_CmdDown(wxd_Event_t* event) {
+    if (!event) return false;
+    wxEvent* baseEvent = static_cast<wxEvent*>(static_cast<void*>(event));
+    wxKeyEvent* keyEvent = dynamic_cast<wxKeyEvent*>(baseEvent);
+    if (!keyEvent) return false;
+    return keyEvent->CmdDown();
 }
 
 // General veto support for all event types (replaces old close event specific functions)

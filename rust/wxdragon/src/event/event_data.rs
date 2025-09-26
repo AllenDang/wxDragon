@@ -86,6 +86,31 @@ impl KeyEventData {
         self.event.get_unicode_key()
     }
 
+    /// Check if the Control key is pressed during this key event
+    pub fn control_down(&self) -> bool {
+        self.event.control_down()
+    }
+
+    /// Check if the Shift key is pressed during this key event
+    pub fn shift_down(&self) -> bool {
+        self.event.shift_down()
+    }
+
+    /// Check if the Alt key is pressed during this key event
+    pub fn alt_down(&self) -> bool {
+        self.event.alt_down()
+    }
+
+    /// Check if the Meta key is pressed during this key event (Cmd on macOS, Windows key on Windows)
+    pub fn meta_down(&self) -> bool {
+        self.event.meta_down()
+    }
+
+    /// Check if the platform-specific command key is pressed (Cmd on macOS, Ctrl on Windows/Linux)
+    pub fn cmd_down(&self) -> bool {
+        self.event.cmd_down()
+    }
+
     pub fn skip(&self, skip: bool) {
         self.event.skip(skip);
     }

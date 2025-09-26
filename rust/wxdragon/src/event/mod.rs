@@ -598,6 +598,46 @@ impl Event {
         }
     }
 
+    /// Check if the Control key is pressed during this key event
+    pub fn control_down(&self) -> bool {
+        if self.0.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_KeyEvent_ControlDown(self.0) }
+    }
+
+    /// Check if the Shift key is pressed during this key event
+    pub fn shift_down(&self) -> bool {
+        if self.0.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_KeyEvent_ShiftDown(self.0) }
+    }
+
+    /// Check if the Alt key is pressed during this key event
+    pub fn alt_down(&self) -> bool {
+        if self.0.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_KeyEvent_AltDown(self.0) }
+    }
+
+    /// Check if the Meta key is pressed during this key event (Cmd on macOS, Windows key on Windows)
+    pub fn meta_down(&self) -> bool {
+        if self.0.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_KeyEvent_MetaDown(self.0) }
+    }
+
+    /// Check if the platform-specific command key is pressed (Cmd on macOS, Ctrl on Windows/Linux)
+    pub fn cmd_down(&self) -> bool {
+        if self.0.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_KeyEvent_CmdDown(self.0) }
+    }
+
     /// Requests more idle events to be sent.
     /// This should only be called from an idle event handler.
     /// When `need_more` is true, the system will continue sending idle events.

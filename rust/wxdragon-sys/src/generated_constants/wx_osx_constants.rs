@@ -488,8 +488,8 @@ pub const WXD_WS_SIZEBOX: i64 = 64;
 pub const WXD_WS_SYSMENU: i64 = 2048;
 pub const WXD_WS_TABSTOP: i64 = 65536;
 // Navigation direction constants
-pub const WXD_NAVIGATION_NEXT: i32 = 0;
-pub const WXD_NAVIGATION_PREVIOUS: i32 = 1;
+pub const WXD_NAVIGATION_NEXT: i64 = 0;
+pub const WXD_NAVIGATION_PREVIOUS: i64 = 1;
 pub const WXD_WS_THICKFRAME: i64 = 64;
 pub const WXD_WS_TILED: i64 = 0;
 pub const WXD_WS_VISIBLE: i64 = 268435456;
@@ -500,9 +500,9 @@ pub const WXD_WS_EX_TRANSIENT: i64 = 4;
 pub const WXD_WS_EX_CONTEXTHELP: i64 = 128;
 pub const WXD_WS_EX_PROCESS_IDLE: i64 = 16;
 pub const WXD_WS_EX_PROCESS_UI_UPDATES: i64 = 32;
-pub const WXD_TBI_DEFAULT_TYPE: i64 = 0;
-pub const WXD_TBI_DOCK: i64 = 1;
-pub const WXD_TBI_CUSTOM_STATUSITEM: i64 = 2;
+pub const WXD_TBI_DEFAULT_TYPE: i64 = 1;
+pub const WXD_TBI_DOCK: i64 = 0;
+pub const WXD_TBI_CUSTOM_STATUSITEM: i64 = 1;
 
 // Font family constants
 pub const WXD_FONTFAMILY_DEFAULT: i64 = 70;

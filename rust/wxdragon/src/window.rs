@@ -1505,7 +1505,7 @@ pub trait WxWidget {
             ffi::WXD_NAVIGATION_NEXT
         } else {
             ffi::WXD_NAVIGATION_PREVIOUS
-        };
+        } as ::std::os::raw::c_int;
         unsafe { ffi::wxd_Window_Navigate(handle, flags) }
     }
 }
