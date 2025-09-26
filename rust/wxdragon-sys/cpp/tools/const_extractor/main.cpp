@@ -55,6 +55,7 @@
 #include <wx/mediactrl.h>
 #include <wx/dataview.h> // ADDED: Needed for wxDataView styles and constants
 #include <wx/taskbar.h> // ADDED: Needed for TaskBarIcon constants
+#include <wx/sysopt.h> // For wxSystemOptions
 
 // A simple application class that initializes wxWidgets
 class ConstExtractorApp : public wxApp {
@@ -69,6 +70,7 @@ public:
 wxIMPLEMENT_APP_NO_MAIN(ConstExtractorApp);
 
 int main(int argc, char **argv) {
+    wxSystemOptions::SetOption("msw.no-manifest-check", 1);
     // Initialize wxWidgets to ensure event types are properly initialized
     wxApp::SetInstance(new ConstExtractorApp());
     wxEntryStart(argc, argv);

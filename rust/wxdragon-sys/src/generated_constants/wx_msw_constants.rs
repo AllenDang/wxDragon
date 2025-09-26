@@ -2,7 +2,7 @@
 pub const WXD_DUMMY_MSW_CONST: i32 = 1;
 // Add NOT_FOUND constant
 pub const WXD_NOT_FOUND: i64 = -1;
-// Add other OSX specific or common constants here
+// Add other Windows specific or common constants here
 pub const WXD_ID_ANY: i64 = -1;
 pub const WXD_ID_HIGHEST: i64 = 6000;
 pub const WXD_ID_OK: i64 = 5100;
@@ -134,7 +134,7 @@ pub const WXD_FC_SAVE: i64 = 2;
 pub const WXD_FC_MULTIPLE: i64 = 4;
 pub const WXD_FC_NOSHOWHIDDEN: i64 = 8;
 pub const WXD_FC_DEFAULT_STYLE: i64 = 1;
-pub const WXD_TR_DEFAULT_STYLE: i64 = 8197;
+pub const WXD_TR_DEFAULT_STYLE: i64 = 8221;
 pub const WXD_TR_EDIT_LABELS: i64 = 512;
 pub const WXD_TR_HAS_BUTTONS: i64 = 1;
 pub const WXD_TR_LINES_AT_ROOT: i64 = 8;
@@ -498,8 +498,8 @@ pub const WXD_WS_EX_CONTEXTHELP: i64 = 128;
 pub const WXD_WS_EX_PROCESS_IDLE: i64 = 16;
 pub const WXD_WS_EX_PROCESS_UI_UPDATES: i64 = 32;
 pub const WXD_TBI_DEFAULT_TYPE: i64 = 0;
-pub const WXD_TBI_DOCK: i64 = 1;
-pub const WXD_TBI_CUSTOM_STATUSITEM: i64 = 2;
+pub const WXD_TBI_DOCK: i64 = 0;
+pub const WXD_TBI_CUSTOM_STATUSITEM: i64 = 1;
 
 // Font family constants
 pub const WXD_FONTFAMILY_DEFAULT: i64 = 70;
