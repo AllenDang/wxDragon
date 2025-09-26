@@ -487,6 +487,9 @@ pub const WXD_WS_POPUP: i64 = 2147483648;
 pub const WXD_WS_SIZEBOX: i64 = 64;
 pub const WXD_WS_SYSMENU: i64 = 2048;
 pub const WXD_WS_TABSTOP: i64 = 65536;
+// Navigation direction constants
+pub const WXD_NAVIGATION_NEXT: i32 = 0;
+pub const WXD_NAVIGATION_PREVIOUS: i32 = 1;
 pub const WXD_WS_THICKFRAME: i64 = 64;
 pub const WXD_WS_TILED: i64 = 0;
 pub const WXD_WS_VISIBLE: i64 = 268435456;

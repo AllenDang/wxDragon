@@ -126,7 +126,7 @@ impl MediaPlayerFrame {
         open_button.on_click(move |_| {
             let file_dialog = FileDialog::builder(&frame)
                 .with_message("Open Media File")
-                .with_style(FileDialogStyle::Default | FileDialogStyle::Open)
+                .with_style(FileDialogStyle::Open)
                 .with_wildcard(
                     "Video files (*.mp4;*.avi;*.mkv;*.mov;*.wmv)|*.mp4;*.avi;*.mkv;*.mov;*.wmv",
                 )
@@ -142,7 +142,7 @@ impl MediaPlayerFrame {
                         *file = Some(path.clone());
 
                         // Update status
-                        let file_name = path.split('/').last().unwrap_or(&path);
+                        let file_name = path.split('/').next_back().unwrap_or(&path);
                         statusbar.set_status_text(&format!("Loaded: {}", file_name), 0);
                         frame.set_title(&format!("wxDragon Media Player - {}", file_name));
                     } else {
@@ -164,6 +164,7 @@ impl MediaPlayerFrame {
                     MediaState::Stopped => "Stopped",
                     MediaState::Paused => "Paused",
                     MediaState::Playing => "Playing",
+                    _ => "Unknown",
                 };
                 statusbar.set_status_text(status, 0);
             }
@@ -177,7 +178,7 @@ impl MediaPlayerFrame {
 }
 
 fn main() {
-    wxdragon::main(|_app| {
+    let _ = wxdragon::main(|_app| {
         let player = MediaPlayerFrame::new();
         player.show();
     });

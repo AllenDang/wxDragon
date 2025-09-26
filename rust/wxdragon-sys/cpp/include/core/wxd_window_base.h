@@ -117,6 +117,13 @@ WXD_EXPORTED int64_t wxd_Window_GetLastPosition(wxd_Window_t* window);
 // Widget type identification using wxWidgets' built-in RTTI
 WXD_EXPORTED const char* wxd_Window_GetClassName(wxd_Window_t* window);
 
+// --- Tab Order Functions ---
+WXD_EXPORTED void wxd_Window_MoveAfterInTabOrder(wxd_Window_t* window, wxd_Window_t* win);
+WXD_EXPORTED void wxd_Window_MoveBeforeInTabOrder(wxd_Window_t* window, wxd_Window_t* win);
+WXD_EXPORTED wxd_Window_t* wxd_Window_GetNextSibling(wxd_Window_t* window);
+WXD_EXPORTED wxd_Window_t* wxd_Window_GetPrevSibling(wxd_Window_t* window);
+WXD_EXPORTED bool wxd_Window_Navigate(wxd_Window_t* window, int flags);
+
 // --- Platform-specific Functions ---
 /// Gets the native handle of the window (platform-specific)
 WXD_EXPORTED void* wxd_Window_GetHandle(wxd_Window_t* window);

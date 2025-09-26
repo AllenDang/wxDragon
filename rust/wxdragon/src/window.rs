@@ -1394,6 +1394,120 @@ pub trait WxWidget {
         }
         unsafe { ffi::wxd_Window_GetHandle(handle) }
     }
+
+    // --- Tab Order Functions ---
+
+    /// Moves this window to appear after the specified window in the tab order.
+    ///
+    /// This changes the tab order so that when tabbing through controls,
+    /// this window will be visited immediately after `win`.
+    ///
+    /// # Arguments
+    /// * `win` - The window that this window should appear after in tab order
+    ///
+    /// # Example
+    /// ```ignore
+    /// // Make button2 come after button1 in tab order
+    /// button2.move_after_in_tab_order(&button1);
+    /// ```
+    fn move_after_in_tab_order(&self, win: &dyn WxWidget) {
+        let handle = self.handle_ptr();
+        let win_handle = win.handle_ptr();
+        if !handle.is_null() && !win_handle.is_null() {
+            unsafe { ffi::wxd_Window_MoveAfterInTabOrder(handle, win_handle) };
+        }
+    }
+
+    /// Moves this window to appear before the specified window in the tab order.
+    ///
+    /// This changes the tab order so that when tabbing through controls,
+    /// this window will be visited immediately before `win`.
+    ///
+    /// # Arguments
+    /// * `win` - The window that this window should appear before in tab order
+    ///
+    /// # Example
+    /// ```ignore
+    /// // Make button1 come before button2 in tab order
+    /// button1.move_before_in_tab_order(&button2);
+    /// ```
+    fn move_before_in_tab_order(&self, win: &dyn WxWidget) {
+        let handle = self.handle_ptr();
+        let win_handle = win.handle_ptr();
+        if !handle.is_null() && !win_handle.is_null() {
+            unsafe { ffi::wxd_Window_MoveBeforeInTabOrder(handle, win_handle) };
+        }
+    }
+
+    /// Gets the next sibling window in the parent's child list.
+    ///
+    /// # Returns
+    /// `Some(Window)` if there is a next sibling, `None` if this is the last child
+    /// or if the window has no parent.
+    fn get_next_sibling(&self) -> Option<Window> {
+        let handle = self.handle_ptr();
+        if handle.is_null() {
+            return None;
+        }
+
+        let sibling_ptr = unsafe { ffi::wxd_Window_GetNextSibling(handle) };
+        if sibling_ptr.is_null() {
+            None
+        } else {
+            Some(unsafe { Window::from_ptr(sibling_ptr) })
+        }
+    }
+
+    /// Gets the previous sibling window in the parent's child list.
+    ///
+    /// # Returns
+    /// `Some(Window)` if there is a previous sibling, `None` if this is the first child
+    /// or if the window has no parent.
+    fn get_prev_sibling(&self) -> Option<Window> {
+        let handle = self.handle_ptr();
+        if handle.is_null() {
+            return None;
+        }
+
+        let sibling_ptr = unsafe { ffi::wxd_Window_GetPrevSibling(handle) };
+        if sibling_ptr.is_null() {
+            None
+        } else {
+            Some(unsafe { Window::from_ptr(sibling_ptr) })
+        }
+    }
+
+    /// Navigates to the next or previous control.
+    ///
+    /// This is equivalent to pressing Tab (forward) or Shift+Tab (backward)
+    /// to move between controls that can accept focus.
+    ///
+    /// # Arguments
+    /// * `forward` - If `true`, navigate to the next control; if `false`, navigate to the previous control
+    ///
+    /// # Returns
+    /// `true` if navigation was successful, `false` otherwise
+    ///
+    /// # Example
+    /// ```ignore
+    /// // Navigate to the previously focused control
+    /// if window.navigate(false) {
+    ///     println!("Successfully navigated to previous control");
+    /// }
+    /// ```
+    fn navigate(&self, forward: bool) -> bool {
+        let handle = self.handle_ptr();
+        if handle.is_null() {
+            return false;
+        }
+
+        let flags = if forward {
+            ffi::WXD_NAVIGATION_NEXT
+        } else {
+            ffi::WXD_NAVIGATION_PREVIOUS
+        };
+        unsafe { ffi::wxd_Window_Navigate(handle, flags) }
+    }
 }
 
 /// Trait for widgets that can be cast from a Window using class name matching

@@ -804,19 +804,63 @@ WXD_EXPORTED void* wxd_Window_GetHandle(wxd_Window_t* self) {
 WXD_EXPORTED const char* wxd_Window_GetClassName(wxd_Window_t* window) {
     if (!window) return nullptr;
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
-    
+
     // Get the class name and convert from wxChar* to const char*
     const wxChar* wx_class_name = wx_window->GetClassInfo()->GetClassName();
-    
+
     // Convert wxString to std::string, then to const char*
     wxString wx_str(wx_class_name);
     std::string std_str = wx_str.ToStdString();
-    
+
     // We need to return a persistent string, so we'll use a static approach
     // This is a simple implementation - in production you might want a more sophisticated approach
     static std::string persistent_name;
     persistent_name = std_str;
     return persistent_name.c_str();
+}
+
+// --- Tab Order Functions ---
+
+WXD_EXPORTED void wxd_Window_MoveAfterInTabOrder(wxd_Window_t* window, wxd_Window_t* win) {
+    wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
+    wxWindow* wx_win = reinterpret_cast<wxWindow*>(win);
+    if (wx_window && wx_win) {
+        wx_window->MoveAfterInTabOrder(wx_win);
+    }
+}
+
+WXD_EXPORTED void wxd_Window_MoveBeforeInTabOrder(wxd_Window_t* window, wxd_Window_t* win) {
+    wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
+    wxWindow* wx_win = reinterpret_cast<wxWindow*>(win);
+    if (wx_window && wx_win) {
+        wx_window->MoveBeforeInTabOrder(wx_win);
+    }
+}
+
+WXD_EXPORTED wxd_Window_t* wxd_Window_GetNextSibling(wxd_Window_t* window) {
+    wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
+    if (wx_window) {
+        wxWindow* next_sibling = wx_window->GetNextSibling();
+        return reinterpret_cast<wxd_Window_t*>(next_sibling);
+    }
+    return nullptr;
+}
+
+WXD_EXPORTED wxd_Window_t* wxd_Window_GetPrevSibling(wxd_Window_t* window) {
+    wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
+    if (wx_window) {
+        wxWindow* prev_sibling = wx_window->GetPrevSibling();
+        return reinterpret_cast<wxd_Window_t*>(prev_sibling);
+    }
+    return nullptr;
+}
+
+WXD_EXPORTED bool wxd_Window_Navigate(wxd_Window_t* window, int flags) {
+    wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
+    if (wx_window) {
+        return wx_window->Navigate(flags);
+    }
+    return false;
 }
 
 } // extern "C"

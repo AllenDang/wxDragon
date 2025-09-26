@@ -189,6 +189,41 @@ impl ComboBox {
             ffi::wxd_ComboBox_SetValue(self.window.as_ptr() as *mut _, c_value.as_ptr());
         }
     }
+
+    /// Gets the text selection range in the text entry field.
+    /// Returns (from, to) positions, or None if there's an error.
+    pub fn get_text_selection(&self) -> Option<(i64, i64)> {
+        let mut from: i64 = 0;
+        let mut to: i64 = 0;
+        unsafe {
+            ffi::wxd_ComboBox_GetTextSelection(self.window.as_ptr() as *mut _, &mut from, &mut to);
+        }
+        Some((from, to))
+    }
+
+    /// Sets the text selection range in the text entry field.
+    pub fn set_text_selection(&self, from: i64, to: i64) {
+        unsafe {
+            ffi::wxd_ComboBox_SetTextSelection(self.window.as_ptr() as *mut _, from, to);
+        }
+    }
+
+    /// Gets the current insertion point (cursor position) in the text entry field.
+    pub fn get_insertion_point(&self) -> i64 {
+        unsafe { ffi::wxd_ComboBox_GetInsertionPoint(self.window.as_ptr() as *mut _) }
+    }
+
+    /// Sets the insertion point (cursor position) in the text entry field.
+    pub fn set_insertion_point(&self, pos: i64) {
+        unsafe {
+            ffi::wxd_ComboBox_SetInsertionPoint(self.window.as_ptr() as *mut _, pos);
+        }
+    }
+
+    /// Gets the last position in the text entry field.
+    pub fn get_last_position(&self) -> i64 {
+        unsafe { ffi::wxd_ComboBox_GetLastPosition(self.window.as_ptr() as *mut _) }
+    }
 }
 
 // --- Style enum using macro ---

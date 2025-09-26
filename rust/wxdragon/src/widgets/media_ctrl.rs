@@ -103,7 +103,7 @@ pub struct MediaCtrl {
 
 impl MediaCtrl {
     /// Creates a new `MediaCtrlBuilder` for constructing a media control.
-    pub fn builder(parent: &dyn WxWidget) -> MediaCtrlBuilder {
+    pub fn builder(parent: &dyn WxWidget) -> MediaCtrlBuilder<'_> {
         MediaCtrlBuilder::new(parent)
     }
 
