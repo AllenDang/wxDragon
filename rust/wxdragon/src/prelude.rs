@@ -20,6 +20,7 @@ pub use crate::event::IdleEventData;
 pub use crate::geometry::{Point, Rect, Size, DEFAULT_POSITION, DEFAULT_SIZE};
 pub use crate::id::{Id, ID_ANY, ID_CANCEL, ID_HIGHEST, ID_NO, ID_OK, ID_YES};
 pub use crate::sizers::WxSizer;
+pub use crate::sysopt::SystemOptions;
 pub use crate::types::Style;
 pub use crate::utils::WxdArrayString;
 pub use crate::window::{

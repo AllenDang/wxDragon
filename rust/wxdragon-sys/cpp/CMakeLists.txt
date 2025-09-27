@@ -186,6 +186,7 @@ set(WXDRAGON_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/window.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/wxd_utils.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/wxd_utils.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/wxd_sysopt.cpp
 )
 
 # Add Linux compatibility layer for older systems

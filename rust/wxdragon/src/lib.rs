@@ -26,6 +26,7 @@ pub mod menus;
 pub mod prelude;
 pub mod scrollable;
 pub mod sizers;
+pub mod sysopt;
 pub mod timer;
 pub mod types;
 pub mod utils;

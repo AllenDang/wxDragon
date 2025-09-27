@@ -2,6 +2,13 @@ use wxdragon::event::window_events::WindowEventData;
 use wxdragon::prelude::*;
 
 fn main() {
+    let sys_opt = "msw.no-manifest-check";
+    SystemOptions::set_option_by_int(sys_opt, 1);
+    let v = SystemOptions::get_option_by_int(sys_opt);
+    println!("Current system option {sys_opt:?} value: {v:?}");
+    let v_str = SystemOptions::get_option_by_string(sys_opt);
+    println!("Current system option {sys_opt:?} string value: {v_str:?}");
+
     println!("ComboBox Modifier Key Test - Testing CTRL+BACKSPACE functionality");
 
     let _ = wxdragon::main(|_| {
