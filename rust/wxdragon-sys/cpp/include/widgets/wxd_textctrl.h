@@ -20,4 +20,10 @@ WXD_EXPORTED wxd_Long_t wxd_TextCtrl_GetLastPosition(wxd_TextCtrl_t* textCtrl);
 WXD_EXPORTED bool wxd_TextCtrl_IsMultiLine(wxd_TextCtrl_t* textCtrl);
 WXD_EXPORTED bool wxd_TextCtrl_IsSingleLine(wxd_TextCtrl_t* textCtrl);
 
+// Selection operations
+WXD_EXPORTED void wxd_TextCtrl_SetSelection(wxd_TextCtrl_t* textCtrl, wxd_Long_t from, wxd_Long_t to);
+WXD_EXPORTED void wxd_TextCtrl_GetSelection(wxd_TextCtrl_t* textCtrl, wxd_Long_t* from, wxd_Long_t* to);
+WXD_EXPORTED void wxd_TextCtrl_SelectAll(wxd_TextCtrl_t* textCtrl);
+WXD_EXPORTED int wxd_TextCtrl_GetStringSelection(wxd_TextCtrl_t* textCtrl, char* buffer, int buffer_len);
+
 #endif // WXD_TEXTCTRL_H 

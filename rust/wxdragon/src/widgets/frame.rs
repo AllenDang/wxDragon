@@ -376,7 +376,33 @@ impl Frame {
     {
         self.bind_window_event(crate::event::EventType::MENU, handler);
     }
+
+    /// Convenience method for tracking menu lifecycle events
+    pub fn track_menu_lifecycle<F>(&self, callback: F)
+    where
+        F: Fn(&str, bool) + 'static, // (event_type, is_opening)
+    {
+        use crate::event::MenuEvents;
+
+        let callback_ref = std::rc::Rc::new(callback);
+
+        let callback_open = {
+            let cb = callback_ref.clone();
+            move |_: crate::event::MenuEventData| cb("menu_open", true)
+        };
+
+        let callback_close = {
+            let cb = callback_ref.clone();
+            move |_: crate::event::MenuEventData| cb("menu_close", false)
+        };
+
+        self.on_menu_opened(callback_open);
+        self.on_menu_closed(callback_close);
+    }
 }
+
+// Implement MenuEvents trait for Frame
+impl crate::event::MenuEvents for Frame {}
 
 implement_widget_traits_with_target!(Frame, window, Window);
 

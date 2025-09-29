@@ -183,6 +183,7 @@ set(WXDRAGON_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/toolbar.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/treebook.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/treectrl.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/treelistctrl.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/window.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/wxd_utils.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/wxd_utils.h

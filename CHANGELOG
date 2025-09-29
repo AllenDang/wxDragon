@@ -1,5 +1,59 @@
 # Changelog
 
+## 0.8.27
+
+### New Features
+- **TreeListCtrl Widget**: Added TreeListCtrl widget for hierarchical data display with column support
+  - Combines tree structure with list/table functionality
+  - Enhanced tree control with column-based data display
+  - Advanced hierarchical data management capabilities
+
+- **Menu Event Handlers**: Added comprehensive menu event handling system
+  - Enhanced menu system with event handler support
+  - Improved menu interaction and callback functionality
+  - Better menu event management across the framework
+
+- **SearchAnchor Functionality**: Added SearchAnchor support for text search operations
+  - Added SearchAnchor call and binding implementation
+  - Enhanced text search capabilities in text controls
+  - Improved text navigation and search functionality
+
+### Enhancements
+- **TextCtrl Selection Management**: Enhanced TextCtrl with comprehensive selection methods
+  - Added GetSelection/SetSelection methods for text selection control
+  - Added SelectAll method for complete text selection
+  - Added GetStringSelection method for retrieving selected text content
+  - Improved text manipulation and selection handling
+
+- **StyledTextCtrl Text Wrapping**: Added text wrapping functionality to StyledTextCtrl
+  - Added SetWrapMode/GetWrapMode methods for configurable text wrapping
+  - Enhanced text display with flexible wrapping options
+  - Improved code editor functionality with wrap mode control
+
+- **Focus Management**: Enhanced focus handling for widgets
+  - Added AcceptsFocusFromKeyboard method for keyboard focus control
+  - Added SetCanFocus method for focus behavior configuration
+  - Improved widget focus management and accessibility
+
+- **SystemOptions Integration**: Added SystemOptions support for system-level configuration
+  - Enhanced system configuration access through SystemOptions
+  - Better integration with wxWidgets system options
+  - Improved cross-platform system setting management
+
+### Bug Fixes
+- **SpinCtrl Initial Values**: Fixed SpinCtrl and SpinCtrlDouble initial value handling issues
+  - Corrected widget initialization problems with spin controls
+  - Improved default value handling for numeric input controls
+  - Enhanced spin control reliability and consistency
+
+- **Code Generation Issues**: Resolved const_generator compilation and functionality issues
+  - Fixed constant generation problems affecting build process
+  - Improved cross-platform constant handling
+  - Enhanced build system reliability
+
+### Contributors
+- @mjfs - SearchAnchor functionality and improvements
+
 ## 0.8.26
 
 ### New Features

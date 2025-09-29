@@ -68,6 +68,7 @@ pub mod togglebutton;
 pub mod toolbar;
 pub mod treebook;
 pub mod treectrl;
+pub mod treelistctrl;
 pub mod virtual_list;
 
 // Add ImageList module
@@ -165,6 +166,10 @@ pub use toolbar::ToolBar;
 pub use treebook::Treebook;
 pub use treebook::TreebookBuilder;
 pub use treectrl::{TreeCtrl, TreeCtrlBuilder};
+pub use treelistctrl::{
+    CheckboxState, TreeListCtrl, TreeListCtrlBuilder, TreeListCtrlEvent, TreeListCtrlEventData,
+    TreeListCtrlStyle, TreeListItem,
+};
 pub use virtual_list::{
     VirtualList, VirtualListDataSource, VirtualListItemRenderer, VirtualListLayoutMode,
 };

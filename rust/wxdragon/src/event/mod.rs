@@ -10,6 +10,7 @@ use wxdragon_sys as ffi;
 pub mod button_events;
 pub mod event_data;
 pub mod macros;
+pub mod menu_events;
 pub mod scroll_events;
 pub mod taskbar_events;
 pub mod text_events;
@@ -34,6 +35,9 @@ pub use tree_events::{TreeEvent, TreeEventData, TreeEvents};
 // Re-export scroll events for easier access
 pub use scroll_events::{ScrollEvent, ScrollEventData, ScrollEvents};
 
+// Re-export menu events for easier access
+pub use menu_events::{MenuEvent, MenuEventData, MenuEvents};
+
 // Re-export taskbar events for easier access
 #[cfg(any(target_os = "windows", target_os = "linux"))]
 pub use taskbar_events::{TaskBarIconEvent, TaskBarIconEventData};
@@ -56,6 +60,11 @@ pub struct EventType: ffi::WXDEventTypeCEnum { // Use the generated C enum type
     const TEXT_ENTER = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TEXT_ENTER;
     const SIZE = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_SIZE;
     const MENU = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_MENU;
+    // NEW: Menu event types
+    const MENU_OPEN = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_MENU_OPEN;
+    const MENU_CLOSE = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_MENU_CLOSE;
+    const MENU_HIGHLIGHT = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_MENU_HIGHLIGHT;
+    const CONTEXT_MENU = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_CONTEXT_MENU;
     const LEFT_DOWN = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_LEFT_DOWN;
     const LEFT_UP = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_LEFT_UP;
     const RIGHT_DOWN = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_RIGHT_DOWN;
@@ -86,6 +95,13 @@ pub struct EventType: ffi::WXDEventTypeCEnum { // Use the generated C enum type
     const TREE_END_LABEL_EDIT = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TREE_END_LABEL_EDIT;
     const TREE_SEL_CHANGED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TREE_SEL_CHANGED;
     const TREE_ITEM_ACTIVATED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TREE_ITEM_ACTIVATED;
+    // ADDED: TreeListCtrl event types
+    const TREELIST_SELECTION_CHANGED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TREELIST_SELECTION_CHANGED;
+    const TREELIST_ITEM_CHECKED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TREELIST_ITEM_CHECKED;
+    const TREELIST_ITEM_ACTIVATED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TREELIST_ITEM_ACTIVATED;
+    const TREELIST_COLUMN_SORTED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TREELIST_COLUMN_SORTED;
+    const TREELIST_ITEM_EXPANDING = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TREELIST_ITEM_EXPANDING;
+    const TREELIST_ITEM_EXPANDED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TREELIST_ITEM_EXPANDED;
     // ADDED: Slider event type
     const SLIDER = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_SLIDER;
     // ADDED: SpinCtrl event type

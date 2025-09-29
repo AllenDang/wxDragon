@@ -490,6 +490,13 @@ WXD_EXPORTED void wxd_StyledTextCtrl_SetSavePoint(wxd_StyledTextCtrl_t* self) {
 }
 
 // Find and replace
+WXD_EXPORTED void wxd_StyledTextCtrl_SearchAnchor(wxd_StyledTextCtrl_t* self) {
+    wxStyledTextCtrl* ctrl = (wxStyledTextCtrl*)self;
+    if (ctrl) {
+        return ctrl->SearchAnchor();
+    }
+}
+
 WXD_EXPORTED int wxd_StyledTextCtrl_FindText(wxd_StyledTextCtrl_t* self, int min_pos, int max_pos, const char* text, int flags) {
     wxStyledTextCtrl* ctrl = (wxStyledTextCtrl*)self;
     if (ctrl && text) {
@@ -910,6 +917,22 @@ WXD_EXPORTED int wxd_StyledTextCtrl_WordEndPosition(wxd_StyledTextCtrl_t* self, 
         return ctrl->WordEndPosition(pos, only_word_chars);
     }
     return -1;
+}
+
+// Wrap mode operations
+WXD_EXPORTED void wxd_StyledTextCtrl_SetWrapMode(wxd_StyledTextCtrl_t* self, int wrap_mode) {
+    wxStyledTextCtrl* ctrl = (wxStyledTextCtrl*)self;
+    if (ctrl) {
+        ctrl->SetWrapMode(wrap_mode);
+    }
+}
+
+WXD_EXPORTED int wxd_StyledTextCtrl_GetWrapMode(wxd_StyledTextCtrl_t* self) {
+    wxStyledTextCtrl* ctrl = (wxStyledTextCtrl*)self;
+    if (ctrl) {
+        return ctrl->GetWrapMode();
+    }
+    return 0;
 }
 
 } // extern "C" 

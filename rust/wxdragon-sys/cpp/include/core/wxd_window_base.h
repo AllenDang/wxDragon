@@ -63,6 +63,8 @@ WXD_EXPORTED wxd_Colour_t wxd_Window_GetBackgroundColor(wxd_Window_t* window);
 WXD_EXPORTED void wxd_Window_SetFocus(wxd_Window_t* window);
 WXD_EXPORTED bool wxd_Window_HasFocus(wxd_Window_t* window);
 WXD_EXPORTED bool wxd_Window_CanAcceptFocus(wxd_Window_t* window);
+WXD_EXPORTED bool wxd_Window_AcceptsFocusFromKeyboard(wxd_Window_t* window);
+WXD_EXPORTED void wxd_Window_SetCanFocus(wxd_Window_t* window, bool canFocus);
 
 // Visibility functions
 WXD_EXPORTED bool wxd_Window_IsShown(wxd_Window_t* window);

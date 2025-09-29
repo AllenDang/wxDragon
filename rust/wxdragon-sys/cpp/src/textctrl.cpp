@@ -137,4 +137,36 @@ WXD_EXPORTED bool wxd_TextCtrl_IsSingleLine(wxd_TextCtrl_t* textCtrl) {
     return ctrl->IsSingleLine();
 }
 
+// Selection operations
+WXD_EXPORTED void wxd_TextCtrl_SetSelection(wxd_TextCtrl_t* textCtrl, wxd_Long_t from, wxd_Long_t to) {
+    wxTextCtrl* ctrl = (wxTextCtrl*)textCtrl;
+    if (ctrl) {
+        ctrl->SetSelection(from, to);
+    }
+}
+
+WXD_EXPORTED void wxd_TextCtrl_GetSelection(wxd_TextCtrl_t* textCtrl, wxd_Long_t* from, wxd_Long_t* to) {
+    wxTextCtrl* ctrl = (wxTextCtrl*)textCtrl;
+    if (ctrl && from && to) {
+        long from_long, to_long;
+        ctrl->GetSelection(&from_long, &to_long);
+        *from = static_cast<wxd_Long_t>(from_long);
+        *to = static_cast<wxd_Long_t>(to_long);
+    }
+}
+
+WXD_EXPORTED void wxd_TextCtrl_SelectAll(wxd_TextCtrl_t* textCtrl) {
+    wxTextCtrl* ctrl = (wxTextCtrl*)textCtrl;
+    if (ctrl) {
+        ctrl->SelectAll();
+    }
+}
+
+WXD_EXPORTED int wxd_TextCtrl_GetStringSelection(wxd_TextCtrl_t* textCtrl, char* buffer, int buffer_len) {
+    if (!textCtrl || !buffer || buffer_len <= 0) return -1;
+    wxTextCtrl* ctrl = (wxTextCtrl*)textCtrl;
+    wxString selection = ctrl->GetStringSelection();
+    return wxd_cpp_utils::copy_wxstring_to_buffer(selection, buffer, (size_t)buffer_len);
+}
+
 } // extern "C" 

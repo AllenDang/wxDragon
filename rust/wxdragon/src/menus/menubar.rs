@@ -146,3 +146,13 @@ impl crate::window::WxWidget for MenuBar {
         -1 // MenuBars don't typically have IDs
     }
 }
+
+// Implement WxEvtHandler for MenuBar to enable event handling
+impl crate::event::WxEvtHandler for MenuBar {
+    unsafe fn get_event_handler_ptr(&self) -> *mut ffi::wxd_EvtHandler_t {
+        self.ptr as *mut ffi::wxd_EvtHandler_t
+    }
+}
+
+// Implement MenuEvents trait for MenuBar
+impl crate::event::MenuEvents for MenuBar {}

@@ -251,6 +251,68 @@ impl TextCtrl {
     pub fn is_single_line(&self) -> bool {
         unsafe { ffi::wxd_TextCtrl_IsSingleLine(self.window.as_ptr() as *mut ffi::wxd_TextCtrl_t) }
     }
+
+    // --- Selection Operations ---
+
+    /// Sets the selection in the text control.
+    ///
+    /// # Arguments
+    /// * `from` - The start position of the selection
+    /// * `to` - The end position of the selection
+    pub fn set_selection(&self, from: i64, to: i64) {
+        unsafe {
+            ffi::wxd_TextCtrl_SetSelection(
+                self.window.as_ptr() as *mut ffi::wxd_TextCtrl_t,
+                from,
+                to,
+            );
+        }
+    }
+
+    /// Gets the current selection range.
+    ///
+    /// Returns a tuple (from, to) representing the selection range.
+    /// If there's no selection, both values will be equal to the insertion point.
+    pub fn get_selection(&self) -> (i64, i64) {
+        let mut from = 0i64;
+        let mut to = 0i64;
+        unsafe {
+            ffi::wxd_TextCtrl_GetSelection(
+                self.window.as_ptr() as *mut ffi::wxd_TextCtrl_t,
+                &mut from,
+                &mut to,
+            );
+        }
+        (from, to)
+    }
+
+    /// Selects all text in the control.
+    pub fn select_all(&self) {
+        unsafe {
+            ffi::wxd_TextCtrl_SelectAll(self.window.as_ptr() as *mut ffi::wxd_TextCtrl_t);
+        }
+    }
+
+    /// Gets the currently selected text.
+    ///
+    /// Returns an empty string if no text is selected.
+    pub fn get_string_selection(&self) -> String {
+        unsafe {
+            let mut buffer: Vec<c_char> = vec![0; 1024];
+            let len = ffi::wxd_TextCtrl_GetStringSelection(
+                self.window.as_ptr() as *mut ffi::wxd_TextCtrl_t,
+                buffer.as_mut_ptr(),
+                buffer.len() as i32,
+            );
+            if len >= 0 {
+                let byte_slice =
+                    std::slice::from_raw_parts(buffer.as_ptr() as *const u8, len as usize);
+                String::from_utf8_lossy(byte_slice).to_string()
+            } else {
+                String::new()
+            }
+        }
+    }
 }
 
 // Apply common trait implementations for this widget

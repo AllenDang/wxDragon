@@ -782,6 +782,45 @@ pub trait WxWidget {
         }
     }
 
+    /// Returns `true` if this window accepts focus from keyboard navigation.
+    ///
+    /// This determines whether the window can receive focus when the user presses Tab
+    /// or other keyboard navigation keys. By default, this returns the same as `can_accept_focus()`,
+    /// but some controls may override this to accept focus from mouse clicks but not keyboard navigation.
+    fn accepts_focus_from_keyboard(&self) -> bool {
+        let handle = self.handle_ptr();
+        if !handle.is_null() {
+            unsafe { ffi::wxd_Window_AcceptsFocusFromKeyboard(handle) }
+        } else {
+            false
+        }
+    }
+
+    /// Sets whether this window can accept focus.
+    ///
+    /// This can be used to enable or disable focus for a window. When set to `false`,
+    /// the window will not be able to receive keyboard focus through any means.
+    /// When set to `true`, the window's ability to receive focus depends on its type
+    /// and other factors.
+    ///
+    /// # Arguments
+    /// * `can_focus` - Whether the window should be able to accept focus
+    ///
+    /// # Example
+    /// ```ignore
+    /// // Disable focus for a button
+    /// button.set_can_focus(false);
+    ///
+    /// // Re-enable focus later
+    /// button.set_can_focus(true);
+    /// ```
+    fn set_can_focus(&self, can_focus: bool) {
+        let handle = self.handle_ptr();
+        if !handle.is_null() {
+            unsafe { ffi::wxd_Window_SetCanFocus(handle, can_focus) };
+        }
+    }
+
     // --- Visibility ---
 
     /// Returns `true` if the window is currently shown.

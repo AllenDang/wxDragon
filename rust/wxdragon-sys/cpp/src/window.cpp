@@ -416,6 +416,21 @@ WXD_EXPORTED bool wxd_Window_CanAcceptFocus(wxd_Window_t* window) {
     return false;
 }
 
+WXD_EXPORTED bool wxd_Window_AcceptsFocusFromKeyboard(wxd_Window_t* window) {
+    wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
+    if (wx_window) {
+        return wx_window->AcceptsFocusFromKeyboard();
+    }
+    return false;
+}
+
+WXD_EXPORTED void wxd_Window_SetCanFocus(wxd_Window_t* window, bool canFocus) {
+    wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
+    if (wx_window) {
+        wx_window->SetCanFocus(canFocus);
+    }
+}
+
 // Visibility functions
 WXD_EXPORTED bool wxd_Window_IsShown(wxd_Window_t* window) {
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);

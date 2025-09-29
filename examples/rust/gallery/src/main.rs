@@ -15,6 +15,7 @@ use tabs::lists_tab::create_lists_tab;
 use tabs::media_tab::create_media_tab;
 use tabs::richtext_tab::create_richtext_tab;
 use tabs::treectrl_tab::create_treectrl_tab;
+use tabs::treelistctrl_tab::create_treelistctrl_tab;
 
 // Tool IDs - used in main.rs
 const ID_TOOL_NEW: Id = ID_HIGHEST + 1;
@@ -112,6 +113,7 @@ fn main() {
         let dialog_controls = create_dialog_tab(&notebook, &frame);
         let media_controls = create_media_tab(&notebook);
         let tree_controls = create_treectrl_tab(&notebook);
+        let treelist_controls = create_treelistctrl_tab(&notebook);
         let aui_controls = create_aui_tab(&notebook);
         let color_controls = create_color_tab(&notebook, &frame);
         let dataview_virtual_controls = create_dataview_virtual_tab(&notebook);
@@ -216,6 +218,12 @@ fn main() {
         notebook.add_page(
             &tree_controls.panel,
             "Tree Controls",
+            false,
+            next_image_id(),
+        );
+        notebook.add_page(
+            &treelist_controls.panel,
+            "TreeList Controls",
             false,
             next_image_id(),
         );
@@ -334,6 +342,7 @@ fn main() {
         dialog_controls.bind_events(&frame);
         media_controls.bind_events();
         tree_controls.bind_events();
+        treelist_controls.bind_events();
         aui_controls.bind_events();
         richtext_controls.bind_events();
 

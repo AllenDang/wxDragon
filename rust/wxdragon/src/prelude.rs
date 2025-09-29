@@ -13,10 +13,12 @@ pub use crate::cursor::{
 pub use crate::datetime::DateTime;
 pub use crate::event::{Event, EventType, IdleEvent, IdleMode, WindowEventData, WxEvtHandler};
 // ADDED: Event category traits
-pub use crate::event::{ButtonEvents, ScrollEvents, TextEvents, TreeEvents, WindowEvents};
+pub use crate::event::{
+    ButtonEvents, MenuEvents, ScrollEvents, TextEvents, TreeEvents, WindowEvents,
+};
 // ADDED: Event Data Structs
 pub use crate::event::event_data::{CommandEventData, KeyEventData, MouseEventData};
-pub use crate::event::IdleEventData;
+pub use crate::event::{IdleEventData, MenuEventData};
 pub use crate::geometry::{Point, Rect, Size, DEFAULT_POSITION, DEFAULT_SIZE};
 pub use crate::id::{Id, ID_ANY, ID_CANCEL, ID_HIGHEST, ID_NO, ID_OK, ID_YES};
 pub use crate::sizers::WxSizer;

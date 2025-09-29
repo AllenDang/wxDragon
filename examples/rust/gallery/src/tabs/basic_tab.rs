@@ -665,12 +665,15 @@ impl BasicTabControls {
         });
 
         // SearchCtrl Event Handlers
-        let search_ctrl_clone_search = self.search_ctrl.clone();
+        let search_ctrl_debug_clone = self.search_ctrl.clone();
         self.search_ctrl.on_search_button_clicked(move |event| {
+            let event_text = event.get_string().unwrap_or_default();
+            let widget_text = search_ctrl_debug_clone.get_value();
             println!(
-                "SEARCH_CTRL Event: Search Button Clicked! ID: {}, Value: \"{}\"",
+                "SEARCH_CTRL Event: Search Button Clicked! ID: {}, Event text: \"{}\", Widget text: \"{}\"",
                 event.get_id(),
-                search_ctrl_clone_search.get_value()
+                event_text,
+                widget_text
             );
         });
 

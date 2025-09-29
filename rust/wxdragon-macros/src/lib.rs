@@ -137,6 +137,7 @@ fn get_class_mapping() -> HashMap<&'static str, &'static str> {
     map.insert("wxSpinCtrlDouble", "wxdragon::widgets::SpinCtrlDouble");
     map.insert("wxSpinButton", "wxdragon::widgets::SpinButton");
     map.insert("wxTreeCtrl", "wxdragon::widgets::TreeCtrl");
+    map.insert("wxTreeListCtrl", "wxdragon::widgets::TreeListCtrl");
     map.insert("wxNotebook", "wxdragon::widgets::Notebook");
     map.insert("wxSimplebook", "wxdragon::widgets::SimpleBook");
     map.insert("wxRadioButton", "wxdragon::widgets::RadioButton");

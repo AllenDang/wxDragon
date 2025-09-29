@@ -268,6 +268,18 @@ impl From<WrapMode> for i32 {
     }
 }
 
+impl From<i32> for WrapMode {
+    fn from(val: i32) -> Self {
+        match val {
+            0 => WrapMode::None,
+            1 => WrapMode::Word,
+            2 => WrapMode::Char,
+            3 => WrapMode::Whitespace,
+            _ => WrapMode::None,
+        }
+    }
+}
+
 // --- Styled Text Control Styles ---
 widget_style_enum!(
     name: StyledTextCtrlStyle,
@@ -1151,6 +1163,14 @@ impl StyledTextCtrl {
 
     // --- Find and Replace ---
 
+    pub fn search_anchor(&self) {
+        unsafe {
+            ffi::wxd_StyledTextCtrl_SearchAnchor(
+                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t
+            )
+        }
+    }
+
     /// Find text in the document with specified flags
     pub fn find_text(
         &self,
@@ -1772,6 +1792,28 @@ impl StyledTextCtrl {
                 only_word_chars,
             )
         }
+    }
+
+    // --- Wrap Mode Operations ---
+
+    /// Set the wrap mode for long lines
+    pub fn set_wrap_mode(&self, wrap_mode: WrapMode) {
+        unsafe {
+            ffi::wxd_StyledTextCtrl_SetWrapMode(
+                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
+                wrap_mode.into(),
+            );
+        }
+    }
+
+    /// Get the current wrap mode
+    pub fn get_wrap_mode(&self) -> WrapMode {
+        let mode = unsafe {
+            ffi::wxd_StyledTextCtrl_GetWrapMode(
+                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t
+            )
+        };
+        WrapMode::from(mode)
     }
 }
 
