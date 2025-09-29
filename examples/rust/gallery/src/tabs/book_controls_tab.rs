@@ -11,6 +11,8 @@ pub fn create_book_controls_tab(notebook: &Notebook) -> BookControlsTab {
         .build();
 
     let treebook = Treebook::builder(&tab_panel)
+        // .with_size(DEFAULT_SIZE)
+        // .with_pos(DEFAULT_POSITION)
         .with_id(ID_HIGHEST + 20) // Example ID
         .build();
 
@@ -52,7 +54,9 @@ pub fn create_book_controls_tab(notebook: &Notebook) -> BookControlsTab {
     );
     settings_page_panel.set_sizer(settings_page_sizer, true);
     settings_page_panel.fit();
-    let _settings_page_index = treebook.add_page(&settings_page_panel, "Settings", false, -1);
+    let padding = " ".repeat(12); // Adjust number of spaces for indentation
+    let title = format!("Settings{padding}"); // Extra spaces to workaround wxTreeBook width issue
+    let _settings_page_index = treebook.add_page(&settings_page_panel, &title, false, -1);
 
     // Sub-Page for Settings Page
     let advanced_settings_panel = Panel::builder(&treebook).build();
@@ -77,6 +81,15 @@ pub fn create_book_controls_tab(notebook: &Notebook) -> BookControlsTab {
     // Sizer for the main tab panel, to make the Treebook expand
     let main_tab_sizer = BoxSizer::builder(Orientation::Vertical).build();
     main_tab_sizer.add(&treebook, 1, SizerFlag::Expand | SizerFlag::All, 5);
+
+    treebook.on_node_expanded(|event| {
+        let id = event.get_id();
+        println!("TREEBOOK_NODE_EXPANDED Event: ItemId={id:?}, Event={event:?}");
+    });
+    treebook.on_node_collapsed(|event| {
+        let id = event.get_id();
+        println!("TREEBOOK_NODE_COLLAPSED Event: ItemId={id:?}, Event={event:?}");
+    });
 
     tab_panel.set_sizer(main_tab_sizer, true);
     tab_panel.fit();

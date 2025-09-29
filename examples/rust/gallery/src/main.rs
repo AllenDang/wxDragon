@@ -29,7 +29,7 @@ fn main() {
         // Create the main application frame
         let frame = Frame::builder()
             .with_title("wxDragon Notebook Example")
-            .with_size(Size::new(800, 900))
+            .with_size(Size::new(1100, 900))
             .build();
 
         // --- Menu Bar Setup ---
