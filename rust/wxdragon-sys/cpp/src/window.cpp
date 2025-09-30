@@ -878,4 +878,23 @@ WXD_EXPORTED bool wxd_Window_Navigate(wxd_Window_t* window, int flags) {
     return false;
 }
 
+// --- Popup Menu Functions ---
+
+WXD_EXPORTED bool wxd_Window_PopupMenu(wxd_Window_t* window, wxd_Menu_t* menu, const wxd_Point* pos) {
+    wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
+    wxMenu* wx_menu = reinterpret_cast<wxMenu*>(menu);
+
+    if (!wx_window || !wx_menu) {
+        return false;
+    }
+
+    if (pos) {
+        // Use provided position
+        return wx_window->PopupMenu(wx_menu, pos->x, pos->y);
+    } else {
+        // Use default position (current mouse position)
+        return wx_window->PopupMenu(wx_menu);
+    }
+}
+
 } // extern "C"

@@ -31,7 +31,7 @@ resolver = "2" # Keep resolver = "2"
 
 [workspace.package]
 authors = ["Allen Dang <allengnr@gmail.com>"]
-version = "0.8.27"
+version = "0.8.28"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/AllenDang/wxDragon"

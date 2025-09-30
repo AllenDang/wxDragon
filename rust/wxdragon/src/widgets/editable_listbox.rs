@@ -251,8 +251,5 @@ crate::implement_widget_local_event_handlers!(
     EndLabelEdit => end_label_edit, crate::event::EventType::LIST_END_LABEL_EDIT
 );
 
-// Implement WindowEvents for standard window events
-impl crate::event::WindowEvents for EditableListBox {}
-
 // Add XRC Support - enables EditableListBox to be created from XRC-managed pointers
 impl_xrc_support!(EditableListBox, { window });

@@ -174,6 +174,7 @@ impl MenuEventsApp {
         let panel = Panel::builder(&self.frame).build();
 
         // Context menu event handling - now test the fixed FFI functions
+        let panel_clone = panel.clone();
         panel.on_context_menu(move |event: MenuEventData| {
             println!("🖱️ Context menu event received!");
             println!("   Event ID: {}", event.get_id());
@@ -188,6 +189,16 @@ impl MenuEventsApp {
 
             // Test the formatting function
             println!("   Formatted: {}", event.format_for_logging());
+
+            let view_id = 3001;
+            let delete_id = 3002;
+            let popup_menu = Menu::builder()
+                .append_item(view_id, "View", "View item")
+                .append_item(delete_id, "Delete", "Delete item")
+                .build();
+
+            let pos = event.get_context_position();
+            panel_clone.popup_menu(&popup_menu, pos);
         });
 
         // Set the panel as the frame's main child
@@ -233,6 +244,7 @@ impl MenuEventsApp {
 }
 
 fn main() {
+    SystemOptions::set_option_by_int("msw.no-manifest-check", 1);
     let _ = wxdragon::main(|_| {
         let app = MenuEventsApp::new();
         app.run();

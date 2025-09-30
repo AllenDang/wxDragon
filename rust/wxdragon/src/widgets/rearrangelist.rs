@@ -1,6 +1,6 @@
 //! Safe wrapper for wxRearrangeList.
 
-use crate::event::{Event, EventType, WindowEvents};
+use crate::event::{Event, EventType};
 use crate::geometry::{Point, Size};
 use crate::id::Id;
 use crate::implement_widget_traits_with_target;
@@ -221,9 +221,6 @@ crate::implement_widget_local_event_handlers!(
     Toggled => toggled, EventType::COMMAND_CHECKLISTBOX_SELECTED,
     Rearranged => rearranged, EventType::COMMAND_REARRANGE_LIST
 );
-
-// Implement WindowEvents for standard window events
-impl WindowEvents for RearrangeList {}
 
 widget_builder!(
     name: RearrangeList,

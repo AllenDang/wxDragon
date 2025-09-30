@@ -181,12 +181,22 @@ macro_rules! implement_widget_traits {
 /// - Deref/DerefMut to the specified target type
 /// - WxEvtHandler trait
 /// - Drop implementation with empty body (for child widgets)
+/// - Clone trait (clones the target field; other fields must be Copy or have manual Clone)
+/// - MenuEvents trait (for context menus and menu handling)
+/// - WindowEvents trait (for standard window events)
 ///
 /// # Parameters
 ///
 /// * `name` - The name of the widget struct
 /// * `field` - The name of the field within the struct that implements WxWidget
 /// * `target_type` - The target type for Deref/DerefMut implementations
+///
+/// # Note on Clone
+///
+/// The generated Clone implementation only explicitly clones the target field.
+/// Other fields in the struct must either:
+/// - Be Copy types (like raw pointers, PhantomData)
+/// - Or the struct should manually implement Clone
 ///
 /// # Example
 ///
@@ -234,6 +244,10 @@ macro_rules! implement_widget_traits_with_target {
                 // so no explicit cleanup is needed here.
             }
         }
+
+        // Auto-implement common event traits that all Window-based widgets support
+        impl $crate::event::MenuEvents for $widget_name {}
+        impl $crate::event::WindowEvents for $widget_name {}
     };
 }
 

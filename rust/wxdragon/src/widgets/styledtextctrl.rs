@@ -1,7 +1,6 @@
 //! Safe wrapper for wxStyledTextCtrl (STC).
 
 use crate::color::Colour;
-use crate::event::WindowEvents;
 use crate::event::{Event, EventType};
 use crate::font::Font;
 use crate::geometry::{Point, Size};
@@ -1876,7 +1875,6 @@ crate::implement_widget_local_event_handlers!(
 );
 
 // Implement standard window events trait
-impl WindowEvents for StyledTextCtrl {}
 
 // Implement XRC support for loading StyledTextCtrl from XRC files
 crate::impl_xrc_support!(StyledTextCtrl, { window });

@@ -228,9 +228,6 @@ crate::implement_widget_local_event_handlers!(
     Pause => pause, EventType::MEDIA_PAUSE
 );
 
-// Implement WindowEvents for standard window events
-impl WindowEvents for MediaCtrl {}
-
 // Add XRC Support - enables MediaCtrl to be created from XRC-managed pointers
 impl_xrc_support!(MediaCtrl, { window });
 

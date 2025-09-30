@@ -4,7 +4,7 @@
 use std::ffi::c_longlong;
 use wxdragon_sys as ffi;
 
-use crate::event::{Event, EventType, WindowEvents};
+use crate::event::{Event, EventType};
 use crate::font::Font;
 use crate::implement_widget_traits_with_target;
 use crate::prelude::*;
@@ -152,9 +152,6 @@ crate::implement_widget_local_event_handlers!(
     FontChangedEventData,
     FontChanged => font_changed, EventType::FONT_PICKER_CHANGED
 );
-
-// Add WindowEvents implementation
-impl WindowEvents for FontPickerCtrl {}
 
 // Add XRC Support - enables FontPickerCtrl to be created from XRC-managed pointers
 impl_xrc_support!(FontPickerCtrl, { window });

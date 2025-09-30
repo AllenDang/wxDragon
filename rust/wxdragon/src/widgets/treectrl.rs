@@ -64,7 +64,7 @@ use std::ffi::CString;
 use std::ptr;
 use std::sync::Arc;
 
-use crate::event::{TreeEvents, WindowEvents, WxEvtHandler};
+use crate::event::{TreeEvents, WxEvtHandler};
 // Base for some events
 use crate::geometry::{Point, Size};
 use crate::id::Id;
@@ -824,9 +824,6 @@ widget_builder!(
 
 // At the bottom of the file, add the TreeEvents trait implementation
 impl TreeEvents for TreeCtrl {}
-
-// After TreeEvents implementation at the bottom
-impl WindowEvents for TreeCtrl {}
 
 // Add XRC Support - enables TreeCtrl to be created from XRC-managed pointers
 impl_xrc_support!(TreeCtrl, { window });

@@ -3,7 +3,7 @@ use std::os::raw::c_longlong;
 use wxdragon_sys as ffi;
 
 use crate::color::Colour;
-use crate::event::{Event, EventType, WindowEvents};
+use crate::event::{Event, EventType};
 use crate::geometry::{Point, Size};
 use crate::id::Id;
 use crate::implement_widget_traits_with_target;
@@ -199,9 +199,6 @@ crate::implement_widget_local_event_handlers!(
     HyperlinkCtrlEventData,
     Clicked => clicked, EventType::COMMAND_HYPERLINK
 );
-
-// Implement WindowEvents for standard window events
-impl WindowEvents for HyperlinkCtrl {}
 
 // Add XRC Support - enables HyperlinkCtrl to be created from XRC-managed pointers
 impl_xrc_support!(HyperlinkCtrl, { window });

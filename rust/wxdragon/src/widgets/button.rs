@@ -8,7 +8,6 @@ use crate::widget_style_enum;
 use crate::window::{Window, WxWidget}; // Make sure WxEvtHandler is imported // Added
                                        // Remove specific imports covered by prelude
                                        // use crate::{Id, Point, Size};
-use crate::event::WindowEvents;
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
 use wxdragon_sys as ffi; // ADDED for enum bitwise operations
@@ -306,9 +305,6 @@ impl Button {
 
 // Implement ButtonEvents trait for Button
 impl ButtonEvents for Button {}
-
-// Implement WindowEvents trait for Button
-impl WindowEvents for Button {}
 
 // Use the widget_builder macro to generate the ButtonBuilder implementation
 widget_builder!(

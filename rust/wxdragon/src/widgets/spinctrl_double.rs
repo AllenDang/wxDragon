@@ -1,4 +1,4 @@
-use crate::event::{Event, EventType, WindowEvents};
+use crate::event::{Event, EventType};
 use crate::geometry::{Point, Size};
 use crate::id::Id;
 use crate::implement_widget_traits_with_target;
@@ -120,9 +120,6 @@ crate::implement_widget_local_event_handlers!(
     ValueChanged => value_changed, EventType::SPINCTRLDOUBLE,
     Enter => enter, EventType::TEXT_ENTER
 );
-
-// Implement WindowEvents to get standard window events
-impl WindowEvents for SpinCtrlDouble {}
 
 // Apply common trait implementations
 implement_widget_traits_with_target!(SpinCtrlDouble, window, Window);

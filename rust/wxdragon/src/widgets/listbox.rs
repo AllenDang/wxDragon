@@ -1,7 +1,6 @@
 //! Safe wrapper for wxListBox.
 
 use crate::event::event_data::CommandEventData;
-use crate::event::WindowEvents;
 use crate::event::{Event, EventType};
 use crate::geometry::{Point, Size};
 use crate::id::Id;
@@ -313,8 +312,6 @@ crate::implement_widget_local_event_handlers!(
     Selected => selection_changed, EventType::COMMAND_LISTBOX_SELECTED,
     DoubleClicked => item_double_clicked, EventType::COMMAND_LISTBOX_DOUBLECLICKED
 );
-
-impl WindowEvents for ListBox {}
 
 // Add XRC Support - enables ListBox to be created from XRC-managed pointers
 impl_xrc_support!(ListBox, { window });

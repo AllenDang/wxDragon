@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.8.28
+
+### Enhancements
+- **Widget Traits Organization**: Embedded WindowEvents and MenuEvents trait implementations into widget_traits
+  - Improved trait implementation structure for better organization
+  - Enhanced widget trait system with embedded event handling capabilities
+
+### Bug Fixes
+- **Popup Menu**: Fixed duplicate popup_menu implementation
+  - Resolved code duplication issue in popup menu functionality
+  - Ensured consistent popup menu behavior across widgets
+
 ## 0.8.27
 
 ### New Features

@@ -2,7 +2,6 @@
 //! Safe wrapper for wxToggleButton.
 
 use crate::event::button_events::ButtonEvents;
-use crate::event::WindowEvents;
 use crate::geometry::{Point, Size};
 use crate::id::Id;
 use crate::implement_widget_traits_with_target;
@@ -137,9 +136,6 @@ impl ToggleButton {
 
 // Implement ButtonEvents trait for ToggleButton
 impl ButtonEvents for ToggleButton {}
-
-// Implement WindowEvents trait for ToggleButton
-impl WindowEvents for ToggleButton {}
 
 // Apply common trait implementations for this widget
 implement_widget_traits_with_target!(ToggleButton, window, Window);

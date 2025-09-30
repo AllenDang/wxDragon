@@ -1,6 +1,6 @@
 //! Safe wrapper for wxSpinButton.
 
-use crate::event::{Event, EventType, WindowEvents};
+use crate::event::{Event, EventType};
 use crate::geometry::{Point, Size};
 use crate::id::Id;
 use crate::implement_widget_traits_with_target;
@@ -175,9 +175,6 @@ crate::implement_widget_local_event_handlers!(
     SpinDown => spin_down, EventType::SPIN_DOWN,
     Spin => spin, EventType::SPIN
 );
-
-// Add WindowEvents implementation
-impl WindowEvents for SpinButton {}
 
 // Add XRC Support - enables SpinButton to be created from XRC-managed pointers
 impl_xrc_support!(SpinButton, { window });

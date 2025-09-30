@@ -274,6 +274,11 @@ fn main() {
             id if id == ID_TOOL_SAVE => {
                 println!("Toolbar: Save clicked!");
             }
+            // Context menu IDs from DataView tab (handled by the tab itself)
+            1001 | 1002 => {
+                // These are handled by the DataViewCtrl's context menu handlers
+                // Don't print "Unhandled" for these
+            }
             _ => {
                 println!("Unhandled Menu/Tool ID: {}", event.get_id());
                 event.skip(true);

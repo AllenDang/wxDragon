@@ -4,7 +4,7 @@
 use std::ffi::{c_longlong, CString};
 use wxdragon_sys as ffi;
 
-use crate::event::{Event, EventType, WindowEvents};
+use crate::event::{Event, EventType};
 use crate::implement_widget_traits_with_target;
 use crate::prelude::*;
 use crate::widget_builder;
@@ -123,9 +123,6 @@ crate::implement_widget_local_event_handlers!(
     DirPickerCtrlEventData,
     DirChanged => dir_changed, EventType::DIR_PICKER_CHANGED
 );
-
-// Implement WindowEvents for standard window events
-impl WindowEvents for DirPickerCtrl {}
 
 // Add XRC Support - enables DirPickerCtrl to be created from XRC-managed pointers
 impl_xrc_support!(DirPickerCtrl, { window });

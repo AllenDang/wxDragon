@@ -58,6 +58,7 @@ widget_style_enum!(
 ///     .with_style(DataViewStyle::RowLines | DataViewStyle::VerticalRules)
 ///     .build();
 /// ```
+#[derive(Clone)]
 pub struct DataViewCtrl {
     window: Window,
 }
@@ -771,6 +772,3 @@ impl crate::widgets::dataview::DataViewEventHandler for DataViewCtrl {}
 
 // Implement TreeViewEventHandler for DataViewCtrl since it supports tree functionality
 impl crate::widgets::dataview::TreeViewEventHandler for DataViewCtrl {}
-
-// Implement WindowEvents for standard window events
-impl crate::event::WindowEvents for DataViewCtrl {}

@@ -1,4 +1,4 @@
-use crate::event::{Event, EventType, WindowEvents};
+use crate::event::{Event, EventType};
 use crate::implement_widget_traits_with_target;
 use crate::prelude::*;
 use crate::widget_builder;
@@ -155,9 +155,6 @@ crate::implement_widget_local_event_handlers!(
     FolderSelectionChanged => folder_selection_changed, EventType::DIR_PICKER_CHANGED,
     FileActivated => file_activated, EventType::LIST_ITEM_ACTIVATED
 );
-
-// Implement WindowEvents for standard window events
-impl WindowEvents for FileCtrl {}
 
 // Add XRC Support - enables FileCtrl to be created from XRC-managed pointers
 impl_xrc_support!(FileCtrl, { window });

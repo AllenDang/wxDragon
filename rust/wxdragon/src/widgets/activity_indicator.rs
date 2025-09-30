@@ -1,4 +1,3 @@
-use crate::event::WindowEvents;
 use crate::geometry::{Point, Size};
 use crate::id::Id;
 use crate::implement_widget_traits_with_target;
@@ -97,8 +96,6 @@ widget_builder!(
 
 // Apply common trait implementations for this widget
 implement_widget_traits_with_target!(ActivityIndicator, window, Window);
-
-impl WindowEvents for ActivityIndicator {}
 
 // Add XRC Support - enables ActivityIndicator to be created from XRC-managed pointers
 impl_xrc_support!(ActivityIndicator, { window });

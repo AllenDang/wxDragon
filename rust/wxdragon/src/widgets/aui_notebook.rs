@@ -1,4 +1,3 @@
-use crate::event::WindowEvents;
 use crate::prelude::*;
 use crate::window::Window;
 use std::ffi::CString;
@@ -101,5 +100,3 @@ widget_builder!(
 
 // Implement all standard widget traits in one go
 implement_widget_traits_with_target!(AuiNotebook, window, Window);
-
-impl WindowEvents for AuiNotebook {}

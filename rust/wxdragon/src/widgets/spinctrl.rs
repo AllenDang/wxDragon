@@ -1,7 +1,7 @@
 //! Safe wrapper for wxSpinCtrl.
 
 use crate::event::event_data::CommandEventData;
-use crate::event::{Event, EventType, WindowEvents};
+use crate::event::{Event, EventType};
 use crate::geometry::{Point, Size};
 use crate::id::Id;
 use crate::implement_widget_traits_with_target;
@@ -120,9 +120,6 @@ crate::implement_widget_local_event_handlers!(
     SpinCtrl, SpinCtrlEvent, SpinCtrlEventData,
     ValueChanged => value_changed, EventType::SPINCTRL
 );
-
-// Add WindowEvents implementation
-impl WindowEvents for SpinCtrl {}
 
 // Apply common trait implementations
 implement_widget_traits_with_target!(SpinCtrl, window, Window);

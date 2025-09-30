@@ -1,7 +1,7 @@
 //! Safe wrapper for wxComboBox.
 
 use crate::event::event_data::CommandEventData;
-use crate::event::{Event, EventType, TextEvents, WindowEvents};
+use crate::event::{Event, EventType, TextEvents};
 use crate::geometry::{Point, Size};
 use crate::id::Id;
 use crate::window::{Window, WxWidget};
@@ -341,8 +341,6 @@ crate::implement_widget_local_event_handlers!(
 
 // We still implement TextEvents for text entry capabilities
 impl TextEvents for ComboBox {}
-
-impl WindowEvents for ComboBox {}
 
 // Add XRC Support - enables ComboBox to be created from XRC-managed pointers
 impl_xrc_support!(ComboBox, { window });

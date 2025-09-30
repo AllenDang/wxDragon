@@ -4,7 +4,7 @@
 use std::ffi::{c_longlong, CString};
 use wxdragon_sys as ffi;
 
-use crate::event::{Event, EventType, WindowEvents};
+use crate::event::{Event, EventType};
 use crate::implement_widget_traits_with_target;
 use crate::prelude::*;
 use crate::widget_builder;
@@ -109,9 +109,6 @@ crate::implement_widget_local_event_handlers!(
     FilePickerCtrlEventData,
     FileChanged => file_changed, EventType::FILE_PICKER_CHANGED
 );
-
-// Implement WindowEvents to get standard window events
-impl WindowEvents for FilePickerCtrl {}
 
 // Add XRC Support - enables FilePickerCtrl to be created from XRC-managed pointers
 impl_xrc_support!(FilePickerCtrl, { window });

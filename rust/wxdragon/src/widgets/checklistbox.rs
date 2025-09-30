@@ -1,6 +1,6 @@
 // ! Safe wrapper for wxCheckListBox.
 
-use crate::event::{Event, EventType, WindowEvents};
+use crate::event::{Event, EventType};
 use crate::geometry::{Point, Size};
 use crate::id::Id;
 use crate::implement_widget_traits_with_target;
@@ -218,9 +218,6 @@ crate::implement_widget_local_event_handlers!(
     Toggled => toggled, EventType::COMMAND_CHECKLISTBOX_SELECTED,
     DoubleClicked => double_clicked, EventType::COMMAND_LISTBOX_DOUBLECLICKED
 );
-
-// Implement WindowEvents for standard window events
-impl WindowEvents for CheckListBox {}
 
 // Add XRC Support - enables CheckListBox to be created from XRC-managed pointers
 impl_xrc_support!(CheckListBox, { window });

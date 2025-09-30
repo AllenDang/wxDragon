@@ -1,4 +1,4 @@
-use crate::event::{Event, EventType, TextEvents, WindowEvents};
+use crate::event::{Event, EventType, TextEvents};
 use crate::geometry::{Point, Size};
 use crate::id::Id;
 use crate::implement_widget_traits_with_target;
@@ -182,7 +182,6 @@ crate::implement_widget_local_event_handlers!(
 );
 
 // Implement standard WindowEvents and TextEvents traits
-impl WindowEvents for SearchCtrl {}
 impl TextEvents for SearchCtrl {}
 
 // Add XRC Support - enables SearchCtrl to be created from XRC-managed pointers

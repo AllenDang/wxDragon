@@ -1,7 +1,7 @@
 //!
 //! Safe wrapper for wxTreebook.
 
-use crate::event::{Event, EventType, WindowEvents};
+use crate::event::{Event, EventType};
 use crate::geometry::{Point, Size};
 use crate::id::Id;
 use crate::implement_widget_traits_with_target;
@@ -272,9 +272,6 @@ crate::implement_widget_local_event_handlers!(
     NodeExpanded => node_expanded, EventType::TREEBOOK_NODE_EXPANDED,
     NodeCollapsed => node_collapsed, EventType::TREEBOOK_NODE_COLLAPSED
 );
-
-// Implement WindowEvents for standard window events
-impl WindowEvents for Treebook {}
 
 // Add XRC Support - enables Treebook to be created from XRC-managed pointers
 impl_xrc_support!(Treebook, { window });

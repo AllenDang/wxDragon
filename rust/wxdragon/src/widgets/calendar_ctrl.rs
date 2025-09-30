@@ -1,5 +1,5 @@
 use crate::datetime::DateTime;
-use crate::event::{Event, EventType, WindowEvents};
+use crate::event::{Event, EventType};
 use crate::geometry::{Point, Size};
 use crate::id::Id;
 use crate::implement_widget_traits_with_target;
@@ -158,9 +158,6 @@ crate::implement_widget_local_event_handlers!(
     MonthChanged => month_changed, EventType::CALENDAR_MONTH_CHANGED,
     YearChanged => year_changed, EventType::CALENDAR_YEAR_CHANGED
 );
-
-// Add WindowEvents implementation
-impl WindowEvents for CalendarCtrl {}
 
 // Add XRC Support - enables CalendarCtrl to be created from XRC-managed pointers
 impl_xrc_support!(CalendarCtrl, { window });

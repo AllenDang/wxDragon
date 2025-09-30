@@ -351,6 +351,48 @@ pub fn create_dataview_virtual_tab(parent: &impl WxWidget) -> DataViewVirtualTab
         }
     });
 
+    // Create context menu once (reused for all right-clicks)
+    let context_menu = Menu::builder()
+        .append_item(1001, "Modify", "")
+        .append_item(1002, "Delete", "")
+        .build();
+
+    // Bind menu handlers once - they will read the current selection when invoked
+    let employees_for_modify = Rc::clone(&employees);
+    let dvc_for_modify = dvc.clone();
+    dvc.bind_with_id_internal(EventType::MENU, 1001, move |_| {
+        if let Some(row_index) = dvc_for_modify.get_selected_row() {
+            let employees_borrow = employees_for_modify.borrow();
+            if let Some(employee) = employees_borrow.get(row_index) {
+                println!(
+                    "modify [ID: {}, Name: {}, Department: {}]",
+                    employee.id, employee.name, employee.department
+                );
+            }
+        }
+    });
+
+    let employees_for_delete = Rc::clone(&employees);
+    let dvc_for_delete = dvc.clone();
+    dvc.bind_with_id_internal(EventType::MENU, 1002, move |_| {
+        if let Some(row_index) = dvc_for_delete.get_selected_row() {
+            let employees_borrow = employees_for_delete.borrow();
+            if let Some(employee) = employees_borrow.get(row_index) {
+                println!(
+                    "delete [ID: {}, Name: {}, Department: {}]",
+                    employee.id, employee.name, employee.department
+                );
+            }
+        }
+    });
+
+    // Add context menu handler - reuse the same menu each time
+    let dvc_for_popup = dvc.clone();
+    dvc.on_context_menu(move |_event| {
+        // Show the popup menu at current mouse position
+        dvc_for_popup.popup_menu(&context_menu, None);
+    });
+
     sizer.add(&dvc, 1, SizerFlag::All | SizerFlag::Expand, 10);
     panel.set_sizer(sizer, true);
 

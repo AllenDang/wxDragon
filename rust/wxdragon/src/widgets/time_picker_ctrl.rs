@@ -3,7 +3,7 @@ use std::ptr;
 use wxdragon_sys as ffi;
 
 use crate::datetime::DateTime;
-use crate::event::{Event, EventType, WindowEvents};
+use crate::event::{Event, EventType};
 use crate::implement_widget_traits_with_target;
 use crate::prelude::*;
 use crate::widget_builder;
@@ -132,9 +132,6 @@ crate::implement_widget_local_event_handlers!(
     TimePickerEventData,
     TimeChanged => time_changed, EventType::TIME_CHANGED
 );
-
-// Add WindowEvents implementation
-impl WindowEvents for TimePickerCtrl {}
 
 // Add XRC Support - enables TimePickerCtrl to be created from XRC-managed pointers
 impl_xrc_support!(TimePickerCtrl, { window });

@@ -1,5 +1,4 @@
 use crate::event::event_data::CommandEventData;
-use crate::event::WindowEvents;
 use crate::event::{Event, EventType};
 use crate::geometry::{Point, Size};
 use crate::id::Id;
@@ -242,8 +241,6 @@ crate::implement_widget_local_event_handlers!(
     ChoiceEventData,
     Selected => selection_changed, EventType::COMMAND_CHOICE_SELECTED
 );
-
-impl WindowEvents for Choice {}
 
 // Add XRC Support - enables Choice to be created from XRC-managed pointers
 impl_xrc_support!(Choice, { window });

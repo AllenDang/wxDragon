@@ -1,7 +1,7 @@
 //!
 //! Safe wrapper for wxScrolledWindow.
 
-use crate::event::{ScrollEvents, WindowEvents};
+use crate::event::ScrollEvents;
 use crate::geometry::{Point, Size};
 use crate::id::Id;
 use crate::implement_widget_traits_with_target;
@@ -154,7 +154,6 @@ widget_builder!(
     }
 );
 
-impl WindowEvents for ScrolledWindow {}
 impl ScrollEvents for ScrolledWindow {}
 
 // Add XRC Support - enables ScrolledWindow to be created from XRC-managed pointers

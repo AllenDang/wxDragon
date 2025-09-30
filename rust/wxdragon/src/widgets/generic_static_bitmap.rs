@@ -3,7 +3,6 @@
 
 use crate::bitmap::Bitmap;
 use crate::bitmap_bundle::BitmapBundle;
-use crate::event::WindowEvents;
 use crate::geometry::{Point, Size};
 use crate::id::Id;
 use crate::widgets::static_bitmap::ScaleMode; // Reuse existing ScaleMode
@@ -231,8 +230,6 @@ widget_builder!(
 
 // Use the macro to implement all the standard traits
 implement_widget_traits_with_target!(GenericStaticBitmap, window, Window);
-
-impl WindowEvents for GenericStaticBitmap {}
 
 // Add XRC Support - enables GenericStaticBitmap to be created from XRC-managed pointers
 impl_xrc_support!(GenericStaticBitmap, { window });

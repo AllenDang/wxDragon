@@ -5,7 +5,6 @@ use crate::widgets::dataview::item::DataViewItem;
 use crate::window::{Window, WxWidget}; // WxWidget needed for parent_type and Deref target
                                        // TODO: Add ImageList if/when it's implemented
                                        // use crate::widgets::imagelist::ImageList;
-use crate::event::WindowEvents;
 use crate::widgets::imagelist::ImageList; // USE THE NEW ImageList
 use crate::{
     implement_widget_traits_with_target,
@@ -500,9 +499,6 @@ impl crate::widgets::dataview::DataViewEventHandler for DataViewTreeCtrl {}
 
 // Implement TreeViewEventHandler for DataViewTreeCtrl since it supports tree functionality
 impl crate::widgets::dataview::TreeViewEventHandler for DataViewTreeCtrl {}
-
-// Implement WindowEvents for standard window events
-impl WindowEvents for DataViewTreeCtrl {}
 
 // Missing wxd_DataViewTreeCtrl_new
 // This needs to be added to rust/wxdragon-sys/cpp/include/widgets/wxd_dataviewtreectrl.h

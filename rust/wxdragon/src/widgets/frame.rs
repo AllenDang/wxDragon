@@ -1,5 +1,4 @@
 use crate::bitmap::Bitmap; // ADDED: Import Bitmap
-use crate::event::WindowEvents;
 use crate::geometry::{Point, Size, DEFAULT_POSITION};
 use crate::id::Id;
 use crate::id::ID_ANY;
@@ -355,9 +354,6 @@ impl Frame {
     }
 }
 
-// Implement WindowEvents trait for Frame
-impl WindowEvents for Frame {}
-
 // Add event binding methods to Frame
 impl Frame {
     /// Bind a handler to window events using the underlying window
@@ -400,9 +396,6 @@ impl Frame {
         self.on_menu_closed(callback_close);
     }
 }
-
-// Implement MenuEvents trait for Frame
-impl crate::event::MenuEvents for Frame {}
 
 implement_widget_traits_with_target!(Frame, window, Window);
 

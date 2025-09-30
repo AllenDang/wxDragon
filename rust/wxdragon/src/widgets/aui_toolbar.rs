@@ -347,6 +347,3 @@ crate::implement_widget_local_event_handlers!(
     ToolDropDown => tool_dropdown, EventType::COMMAND_BUTTON_CLICKED, // No specific dropdown event, so use button clicked
     Menu => menu, EventType::MENU // Add menu event support
 );
-
-// Add WindowEvents implementation
-impl crate::event::WindowEvents for AuiToolBar {}

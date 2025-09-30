@@ -1,6 +1,5 @@
 //! DataViewListCtrl implementation.
 
-use crate::event::WindowEvents;
 use crate::{implement_widget_traits_with_target, widget_builder};
 use crate::{Id, Point, Size, Window, WxWidget};
 use wxdragon_sys as ffi;
@@ -190,6 +189,3 @@ widget_builder!(
 
 // Implement DataViewEventHandler for DataViewListCtrl
 impl crate::widgets::dataview::DataViewEventHandler for DataViewListCtrl {}
-
-// Implement WindowEvents for standard window events
-impl WindowEvents for DataViewListCtrl {}

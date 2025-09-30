@@ -2,7 +2,6 @@
 
 use crate::bitmap::Bitmap;
 use crate::event::EventType;
-use crate::event::WindowEvents;
 use crate::geometry::{Point, Size};
 use crate::id::Id;
 use crate::implement_widget_traits_with_target;
@@ -208,8 +207,6 @@ implement_widget_local_event_handlers!(
 // Also implement TextEvents for text entry capabilities
 use crate::event::TextEvents;
 impl TextEvents for BitmapComboBox {}
-
-impl WindowEvents for BitmapComboBox {}
 
 // Add XRC Support - enables BitmapComboBox to be created from XRC-managed pointers
 impl_xrc_support!(BitmapComboBox, { window });

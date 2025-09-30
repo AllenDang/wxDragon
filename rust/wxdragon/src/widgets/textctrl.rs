@@ -2,7 +2,6 @@
 //! Safe wrapper for wxTextCtrl.
 
 use crate::event::TextEvents;
-use crate::event::WindowEvents;
 use crate::event::{Event, EventType};
 use crate::geometry::{Point, Size};
 use crate::id::Id;
@@ -352,7 +351,6 @@ crate::implement_widget_local_event_handlers!(
 
 // Implement standard events traits
 impl TextEvents for TextCtrl {}
-impl WindowEvents for TextCtrl {}
 
 // XRC Support - enables TextCtrl to be created from XRC-managed pointers
 impl_xrc_support!(TextCtrl, { window });

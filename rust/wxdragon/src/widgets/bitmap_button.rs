@@ -3,7 +3,6 @@
 
 use crate::bitmap::Bitmap;
 use crate::event::button_events::ButtonEvents;
-use crate::event::WindowEvents;
 use crate::geometry::{Point, Size};
 use crate::id::Id;
 use crate::implement_widget_traits_with_target;
@@ -39,8 +38,6 @@ pub struct BitmapButton {
 
 // Implement ButtonEvents trait for BitmapButton
 impl ButtonEvents for BitmapButton {}
-
-impl WindowEvents for BitmapButton {}
 
 /// Configuration for creating a BitmapButton
 #[derive(Debug)]

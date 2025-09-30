@@ -1,4 +1,3 @@
-use crate::event::WindowEvents;
 use crate::widget_style_enum;
 use crate::window::{Window, WxWidget};
 use std::ffi::CString;
@@ -107,9 +106,6 @@ impl Dialog {
 
 // Apply common trait implementations for Dialog
 implement_widget_traits_with_target!(Dialog, window, Window);
-
-// Implement WindowEvents trait for Dialog
-impl WindowEvents for Dialog {}
 
 // XRC Support - enables Dialog to be created from XRC-managed pointers
 impl_xrc_support!(Dialog, {

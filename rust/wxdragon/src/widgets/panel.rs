@@ -1,6 +1,5 @@
 //! Safe wrapper for wxPanel.
 
-use crate::event::WindowEvents;
 use crate::geometry::{Point, Size};
 use crate::id::Id;
 use crate::implement_widget_traits_with_target;
@@ -83,12 +82,6 @@ widget_builder!(
         unsafe { Panel::from_ptr(panel_ptr) }
     }
 );
-
-// Implement WindowEvents trait for Panel
-impl WindowEvents for Panel {}
-
-// Implement MenuEvents trait for Panel (for context menus)
-impl crate::event::MenuEvents for Panel {}
 
 // XRC Support - enables Panel to be created from XRC-managed pointers
 impl_xrc_support!(Panel, { window });

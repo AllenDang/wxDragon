@@ -1,7 +1,7 @@
 //! Safe wrapper for wxRadioButton.
 
 use crate::event::event_data::CommandEventData;
-use crate::event::{Event, EventType, WindowEvents};
+use crate::event::{Event, EventType};
 use crate::geometry::{Point, Size};
 use crate::id::Id;
 use crate::implement_widget_traits_with_target;
@@ -139,9 +139,6 @@ crate::implement_widget_local_event_handlers!(
     RadioButton, RadioButtonEvent, RadioButtonEventData,
     Selected => selected, EventType::COMMAND_RADIOBUTTON_SELECTED
 );
-
-// Add WindowEvents implementation
-impl WindowEvents for RadioButton {}
 
 // Add XRC Support - enables RadioButton to be created from XRC-managed pointers
 impl_xrc_support!(RadioButton, { window });

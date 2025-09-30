@@ -1,5 +1,5 @@
 use crate::event::event_data::CommandEventData;
-use crate::event::{Event, EventType, WindowEvents};
+use crate::event::{Event, EventType};
 use crate::geometry::{Point, Size};
 use crate::id::Id;
 use crate::implement_widget_traits_with_target;
@@ -115,9 +115,6 @@ crate::implement_widget_local_event_handlers!(
     CheckBox, CheckBoxEvent, CheckBoxEventData,
     Toggled => toggled, EventType::CHECKBOX
 );
-
-// Add WindowEvents implementation
-impl WindowEvents for CheckBox {}
 
 // Define the CheckBoxStyle enum using the widget_style_enum macro
 widget_style_enum!(
