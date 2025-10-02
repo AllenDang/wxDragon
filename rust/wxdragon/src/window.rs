@@ -1569,12 +1569,17 @@ pub trait WxWidget {
     /// window.popup_menu(&menu, None);
     /// ```
     fn popup_menu(&self, menu: &crate::Menu, pos: Option<crate::geometry::Point>) -> bool {
-        let pos_ptr = pos
-            .as_ref()
-            .map(|p| p as *const crate::geometry::Point as *const ffi::wxd_Point)
-            .unwrap_or(std::ptr::null());
+        let handle = self.handle_ptr();
+        let menu_ptr = unsafe { menu.as_ptr() };
+        if handle.is_null() || menu_ptr.is_null() {
+            return false;
+        }
+        let pos = pos
+            .map(|p| self.screen_to_client(p))
+            .unwrap_or(crate::DEFAULT_POSITION);
+        let pos_ptr = &pos as *const crate::geometry::Point as *const ffi::wxd_Point;
 
-        unsafe { ffi::wxd_Window_PopupMenu(self.handle_ptr(), menu.as_ptr(), pos_ptr) }
+        unsafe { ffi::wxd_Window_PopupMenu(handle, menu_ptr, pos_ptr) }
     }
 }
 
