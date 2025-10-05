@@ -70,6 +70,11 @@ impl DataViewEventData {
         Self { event, event_type }
     }
 
+    /// Get the mouse position in window coordinates
+    pub fn get_position(&self) -> Option<crate::Point> {
+        self.event.get_position()
+    }
+
     /// Get the ID of the control that generated the event
     pub fn get_id(&self) -> i32 {
         self.event.get_id()
