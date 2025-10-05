@@ -386,9 +386,24 @@ pub fn create_dataview_virtual_tab(parent: &impl WxWidget) -> DataViewVirtualTab
         }
     });
 
-    // Add context menu handler - reuse the same menu each time
+    // Add context menu handler using DataView-specific event
+    // This provides item and column information directly
     let dvc_for_popup = dvc.clone();
-    dvc.on_context_menu(move |_event| {
+    let employees_for_context = Rc::clone(&employees);
+    dvc.on_item_context_menu(move |event| {
+        // Get the row that was right-clicked
+        if let Some(row_index) = event.get_row() {
+            let employees_borrow = employees_for_context.borrow();
+            if let Some(employee) = employees_borrow.get(row_index as usize) {
+                println!(
+                    "Context menu requested on: [ID: {}, Name: {}, Department: {}]",
+                    employee.id, employee.name, employee.department
+                );
+                if let Some(col) = event.get_column() {
+                    println!("  Column: {}", col);
+                }
+            }
+        }
         // Show the popup menu at current mouse position
         dvc_for_popup.popup_menu(&context_menu, None);
     });
