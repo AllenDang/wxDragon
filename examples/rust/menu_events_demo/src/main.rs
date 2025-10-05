@@ -224,10 +224,134 @@ impl MenuEventsApp {
         });
     }
 
+    fn setup_dataview(&self) {
+        // Create DataViewCtrl
+        let dataview = DataViewCtrl::builder(&self.frame)
+            .with_pos(Point::new(10, 10))
+            .with_size(Size::new(400, 200))
+            .with_style(DataViewStyle::Multiple | DataViewStyle::RowLines)
+            .build();
+
+        // Create data model
+        let model = DataViewListModel::new();
+        model.append_column("Name");
+        model.append_column("Age");
+        model.append_column("City");
+        model.append_column("Status");
+
+        let demo_data = [
+            ("Alice", 23, "Beijing", "Active"),
+            ("Bob", 31, "Shanghai", "Offline"),
+            ("Carol", 27, "Guangzhou", "Active"),
+        ];
+        for (row, (name, age, city, status)) in demo_data.iter().enumerate() {
+            model.append_row();
+            model.set_value(row, 0, Variant::String(name.to_string()));
+            model.set_value(row, 1, Variant::Int32(*age));
+            model.set_value(row, 2, Variant::String(city.to_string()));
+            model.set_value(row, 3, Variant::String(status.to_string()));
+        }
+
+        // Create columns
+        let name_col = DataViewColumn::new(
+            "Name",
+            &DataViewTextRenderer::new(
+                VariantType::String,
+                DataViewCellMode::Inert,
+                DataViewAlign::Left,
+            ),
+            0,
+            100,
+            DataViewAlign::Left,
+            DataViewColumnFlags::Resizable,
+        );
+        let age_col = DataViewColumn::new(
+            "Age",
+            &DataViewTextRenderer::new(
+                VariantType::Int32,
+                DataViewCellMode::Inert,
+                DataViewAlign::Center,
+            ),
+            1,
+            60,
+            DataViewAlign::Center,
+            DataViewColumnFlags::Resizable,
+        );
+        let city_col = DataViewColumn::new(
+            "City",
+            &DataViewTextRenderer::new(
+                VariantType::String,
+                DataViewCellMode::Inert,
+                DataViewAlign::Left,
+            ),
+            2,
+            100,
+            DataViewAlign::Left,
+            DataViewColumnFlags::Resizable,
+        );
+        let status_col = DataViewColumn::new(
+            "Status",
+            &DataViewTextRenderer::new(
+                VariantType::String,
+                DataViewCellMode::Inert,
+                DataViewAlign::Center,
+            ),
+            3,
+            80,
+            DataViewAlign::Center,
+            DataViewColumnFlags::Resizable,
+        );
+
+        dataview.append_column(&name_col);
+        dataview.append_column(&age_col);
+        dataview.append_column(&city_col);
+        dataview.append_column(&status_col);
+        dataview.associate_model(&model);
+
+        let sizer = BoxSizer::builder(Orientation::Vertical).build();
+        sizer.add_stretch_spacer(1);
+        let flag = SizerFlag::AlignCenterHorizontal | SizerFlag::AlignCenterVertical;
+        sizer.add(&dataview, 0, flag, 0);
+        sizer.add_stretch_spacer(1);
+        self.frame.set_sizer(sizer, true);
+        let dataview_clone = dataview.clone();
+        use wxdragon::widgets::dataview::DataViewEventData;
+        dataview.on_item_context_menu(move |event: DataViewEventData| {
+            println!("🖱️ Context menu event received!");
+            println!("   Event ID: {}", event.get_id());
+            let Some(item) = event.get_item() else {
+                println!("   No item associated with event");
+                return;
+            };
+
+            let Some(row) = event.get_row() else {
+                println!("   No row associated with event");
+                return;
+            };
+            println!("   Item ID Pointer: {:?}", item);
+            println!("   Row Index: {}", row);
+
+            if let Some(col) = event.get_column() {
+                println!("  Column: {}", col);
+            }
+
+            let view_id = 3001;
+            let delete_id = 3002;
+            let popup_menu = Menu::builder()
+                .append_item(view_id, "View", "View item")
+                .append_item(delete_id, "Delete", "Delete item")
+                .build();
+
+            let pos = event.get_position();
+            dataview_clone.popup_menu(&popup_menu, pos);
+        });
+    }
+
     fn run(&self) {
         self.setup_menu();
         self.setup_menu_events();
         self.setup_context_menu();
+        self.setup_dataview();
         self.setup_frame_events();
 
         self.frame.show(true);
