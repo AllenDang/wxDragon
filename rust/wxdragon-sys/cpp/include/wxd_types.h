@@ -78,6 +78,7 @@ typedef struct wxd_Variant_t {
 
 /// @brief Event types represented by stable integer values in C.
 typedef enum {
+    WXD_EVENT_TYPE_INVALID = -1,
     WXD_EVENT_TYPE_NULL = 0,
     WXD_EVENT_TYPE_COMMAND_BUTTON_CLICKED = 1,
     WXD_EVENT_TYPE_CLOSE_WINDOW = 2,
