@@ -47,6 +47,12 @@ pub enum DataViewEvent {
     ColumnSorted,
     /// Emitted when a column is reordered
     ColumnReordered,
+    /// Emitted when a context menu is requested on an item
+    ///
+    /// This event provides the item and column information directly.
+    /// Use this instead of the generic `on_context_menu` from MenuEvents trait
+    /// for better DataView-specific context information.
+    ItemContextMenu,
 }
 
 /// Event data for a DataView event
@@ -196,6 +202,7 @@ pub trait DataViewEventHandler: WxEvtHandler {
             DataViewEvent::ItemCollapsing => crate::event::EventType::DATAVIEW_ITEM_COLLAPSING,
             DataViewEvent::ColumnSorted => crate::event::EventType::DATAVIEW_COLUMN_SORTED,
             DataViewEvent::ColumnReordered => crate::event::EventType::DATAVIEW_COLUMN_REORDERED,
+            DataViewEvent::ItemContextMenu => crate::event::EventType::DATAVIEW_ITEM_CONTEXT_MENU,
         };
 
         // Create wrapper with special handling for editing cancelled events
@@ -293,6 +300,34 @@ pub trait DataViewEventHandler: WxEvtHandler {
         F: FnMut(DataViewEventData) + 'static,
     {
         self.bind_dataview_event(DataViewEvent::ColumnReordered, callback)
+    }
+
+    /// Binds a handler to the item context menu event
+    ///
+    /// This event is emitted when a context menu is requested on an item
+    /// (e.g., via right-click or keyboard). The event provides direct access
+    /// to the item and column information.
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// use wxdragon::{DataViewCtrl, DataViewEventHandler};
+    ///
+    /// # let data_view: DataViewCtrl = todo!();
+    /// data_view.on_item_context_menu(|event| {
+    ///     if let Some(item) = event.get_item() {
+    ///         if let Some(col) = event.get_column() {
+    ///             println!("Context menu requested on item at column {}", col);
+    ///             // Show a popup menu here
+    ///         }
+    ///     }
+    /// });
+    /// ```
+    fn on_item_context_menu<F>(&self, callback: F)
+    where
+        F: FnMut(DataViewEventData) + 'static,
+    {
+        self.bind_dataview_event(DataViewEvent::ItemContextMenu, callback)
     }
 }
 

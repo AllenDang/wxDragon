@@ -136,6 +136,29 @@ pub fn create_dataview_tree_tab(parent: &impl WxWidget) -> DataViewTreeTabContro
         }
     });
 
+    // Add context menu handler using DataView-specific event
+    // This provides item and column information directly
+    let dvc_tree_for_context = dvc_tree.clone();
+    dvc_tree.on_item_context_menu(move |event| {
+        if let Some(item) = event.get_item() {
+            let text = dvc_tree_for_context.get_item_text(&item);
+            println!("Context menu requested on item: '{}'", text);
+            if let Some(col) = event.get_column() {
+                println!("  Column: {}", col);
+            }
+
+            // Create a simple context menu
+            let menu = Menu::builder()
+                .append_item(5001, "Expand All", "")
+                .append_item(5002, "Collapse All", "")
+                .append_separator()
+                .append_item(5003, "Info", "")
+                .build();
+
+            dvc_tree_for_context.popup_menu(&menu, None);
+        }
+    });
+
     sizer.add(&dvc_tree, 1, SizerFlag::All | SizerFlag::Expand, 10);
     panel.set_sizer(sizer, true);
 
