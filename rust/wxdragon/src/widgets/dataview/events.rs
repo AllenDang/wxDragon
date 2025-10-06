@@ -184,30 +184,23 @@ pub trait DataViewEventHandler: WxEvtHandler {
     where
         F: FnMut(DataViewEventData) + 'static,
     {
+        use crate::event::EventType;
         // Map enum variant to EventType
         let event_type = match event {
-            DataViewEvent::SelectionChanged => crate::event::EventType::DATAVIEW_SELECTION_CHANGED,
-            DataViewEvent::ItemActivated => crate::event::EventType::DATAVIEW_ITEM_ACTIVATED,
-            DataViewEvent::ItemEditingStarted => {
-                crate::event::EventType::DATAVIEW_ITEM_EDITING_STARTED
-            }
-            DataViewEvent::ItemEditingDone => crate::event::EventType::DATAVIEW_ITEM_EDITING_DONE,
-            DataViewEvent::ItemEditingCancelled => {
-                crate::event::EventType::DATAVIEW_ITEM_EDITING_DONE
-            }
-            DataViewEvent::ItemExpanded => crate::event::EventType::DATAVIEW_ITEM_EXPANDED,
-            DataViewEvent::ItemCollapsed => crate::event::EventType::DATAVIEW_ITEM_COLLAPSED,
-            DataViewEvent::ColumnHeaderClick => {
-                crate::event::EventType::DATAVIEW_COLUMN_HEADER_CLICK
-            }
-            DataViewEvent::ColumnHeaderRightClick => {
-                crate::event::EventType::DATAVIEW_COLUMN_HEADER_RIGHT_CLICK
-            }
-            DataViewEvent::ItemExpanding => crate::event::EventType::DATAVIEW_ITEM_EXPANDING,
-            DataViewEvent::ItemCollapsing => crate::event::EventType::DATAVIEW_ITEM_COLLAPSING,
-            DataViewEvent::ColumnSorted => crate::event::EventType::DATAVIEW_COLUMN_SORTED,
-            DataViewEvent::ColumnReordered => crate::event::EventType::DATAVIEW_COLUMN_REORDERED,
-            DataViewEvent::ItemContextMenu => crate::event::EventType::DATAVIEW_ITEM_CONTEXT_MENU,
+            DataViewEvent::SelectionChanged => EventType::DATAVIEW_SELECTION_CHANGED,
+            DataViewEvent::ItemActivated => EventType::DATAVIEW_ITEM_ACTIVATED,
+            DataViewEvent::ItemEditingStarted => EventType::DATAVIEW_ITEM_EDITING_STARTED,
+            DataViewEvent::ItemEditingDone => EventType::DATAVIEW_ITEM_EDITING_DONE,
+            DataViewEvent::ItemEditingCancelled => EventType::DATAVIEW_ITEM_EDITING_DONE, // Same underlying event as ItemEditingDone
+            DataViewEvent::ItemExpanded => EventType::DATAVIEW_ITEM_EXPANDED,
+            DataViewEvent::ItemCollapsed => EventType::DATAVIEW_ITEM_COLLAPSED,
+            DataViewEvent::ColumnHeaderClick => EventType::DATAVIEW_COLUMN_HEADER_CLICK,
+            DataViewEvent::ColumnHeaderRightClick => EventType::DATAVIEW_COLUMN_HEADER_RIGHT_CLICK,
+            DataViewEvent::ItemExpanding => EventType::DATAVIEW_ITEM_EXPANDING,
+            DataViewEvent::ItemCollapsing => EventType::DATAVIEW_ITEM_COLLAPSING,
+            DataViewEvent::ColumnSorted => EventType::DATAVIEW_COLUMN_SORTED,
+            DataViewEvent::ColumnReordered => EventType::DATAVIEW_COLUMN_REORDERED,
+            DataViewEvent::ItemContextMenu => EventType::DATAVIEW_ITEM_CONTEXT_MENU,
         };
 
         // Create wrapper with special handling for editing cancelled events
