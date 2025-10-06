@@ -315,7 +315,6 @@ impl MenuEventsApp {
         sizer.add_stretch_spacer(1);
         self.frame.set_sizer(sizer, true);
         let dataview_clone = dataview.clone();
-        use wxdragon::widgets::dataview::DataViewEventData;
         dataview.on_item_context_menu(move |event: DataViewEventData| {
             println!("🖱️ Context menu event received!");
             println!("   Event ID: {}", event.get_id());
