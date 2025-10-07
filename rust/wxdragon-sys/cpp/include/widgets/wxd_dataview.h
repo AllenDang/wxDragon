@@ -59,17 +59,17 @@ WXD_EXPORTED int wxd_DataViewCtrl_GetColumnPosition(wxd_Window_t* self, wxd_Data
 WXD_EXPORTED bool wxd_DataViewCtrl_ClearColumns(wxd_Window_t* self);
 
 // Item management
-WXD_EXPORTED void wxd_DataViewCtrl_Select(wxd_Window_t* self, wxd_DataViewItem_t item);
-WXD_EXPORTED void wxd_DataViewCtrl_Unselect(wxd_Window_t* self, wxd_DataViewItem_t item);
+WXD_EXPORTED void wxd_DataViewCtrl_Select(wxd_Window_t* self, const wxd_DataViewItem_t* item);
+WXD_EXPORTED void wxd_DataViewCtrl_Unselect(wxd_Window_t* self, const wxd_DataViewItem_t* item);
 WXD_EXPORTED void wxd_DataViewCtrl_SelectAll(wxd_Window_t* self);
-WXD_EXPORTED bool wxd_DataViewCtrl_IsSelected(wxd_Window_t* self, wxd_DataViewItem_t item);
+WXD_EXPORTED bool wxd_DataViewCtrl_IsSelected(wxd_Window_t* self, const wxd_DataViewItem_t* item);
 WXD_EXPORTED uint32_t wxd_DataViewCtrl_GetSelectedItemsCount(wxd_Window_t* self);
-WXD_EXPORTED wxd_DataViewItem_t wxd_DataViewCtrl_GetSelection(wxd_Window_t* self);
-WXD_EXPORTED void wxd_DataViewCtrl_GetSelections(wxd_Window_t* self, wxd_DataViewItem_t* items, uint32_t max_count);
-WXD_EXPORTED void wxd_DataViewCtrl_SetSelections(wxd_Window_t* self, const wxd_DataViewItem_t* items, uint32_t count);
+WXD_EXPORTED const wxd_DataViewItem_t* wxd_DataViewCtrl_GetSelection(wxd_Window_t* self);
+WXD_EXPORTED void wxd_DataViewCtrl_GetSelections(wxd_Window_t* self, const wxd_DataViewItem_t* * items, uint32_t max_count);
+WXD_EXPORTED void wxd_DataViewCtrl_SetSelections(wxd_Window_t* self, const wxd_DataViewItem_t* const* items, uint32_t count);
 
-WXD_EXPORTED wxd_DataViewItem_t wxd_DataViewCtrl_GetCurrentItem(wxd_Window_t* self);
-WXD_EXPORTED void wxd_DataViewCtrl_SetCurrentItem(wxd_Window_t* self, wxd_DataViewItem_t item);
+WXD_EXPORTED const wxd_DataViewItem_t* wxd_DataViewCtrl_GetCurrentItem(wxd_Window_t* self);
+WXD_EXPORTED void wxd_DataViewCtrl_SetCurrentItem(wxd_Window_t* self, const wxd_DataViewItem_t* item);
 
 // Visual appearance
 WXD_EXPORTED int wxd_DataViewCtrl_GetIndent(wxd_Window_t* self);
