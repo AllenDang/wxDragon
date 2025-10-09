@@ -11,76 +11,53 @@ use wxdragon_sys as ffi;
 #[derive(Debug)]
 #[repr(C)]
 pub struct DataViewItem {
-    // This id is a *mut wxDataViewItem (cast to void*) that Rust owns if created by FromWxDVI.
-    id: *mut std::ffi::c_void,
+    // inner is non-null when this Rust struct was created from a C wrapper pointer (wxd_DataViewItem_t*)
+    // and therefore is responsible for calling wxd_DataViewItem_Release in Drop.
+    inner: *const ffi::wxd_DataViewItem_t,
+}
+
+impl Default for DataViewItem {
+    /// Creates an invalid/empty DataViewItem.
+    ///
+    /// The default implementation calls `wxd_DataViewItem_Clone` with a null pointer,
+    /// which results in an invalid/empty DataViewItem.
+    /// Use [`is_valid()`](DataViewItem::is_valid) to check if the item is valid.
+    fn default() -> Self {
+        let inner = unsafe { ffi::wxd_DataViewItem_Clone(std::ptr::null()) };
+        Self { inner }
+    }
+}
+
+impl From<*const ffi::wxd_DataViewItem_t> for DataViewItem {
+    fn from(raw: *const ffi::wxd_DataViewItem_t) -> Self {
+        Self { inner: raw }
+    }
+}
+
+impl AsRef<*const ffi::wxd_DataViewItem_t> for DataViewItem {
+    fn as_ref(&self) -> &*const ffi::wxd_DataViewItem_t {
+        &self.inner
+    }
+}
+
+impl std::ops::Deref for DataViewItem {
+    type Target = *const ffi::wxd_DataViewItem_t;
+    fn deref(&self) -> &Self::Target {
+        &self.inner
+    }
 }
 
 impl DataViewItem {
-    /// Creates a new DataViewItem with a null ID.
-    ///
-    /// A null DataViewItem is not valid and cannot be used with a DataViewCtrl.
-    pub fn new_null() -> Self {
-        Self {
-            id: std::ptr::null_mut(),
-        }
-    }
-
-    /// Creates a new DataViewItem with the given numeric ID.
-    ///
-    /// This is a safe way to create items with simple numeric IDs.
-    pub fn from_number(id: usize) -> Self {
-        Self {
-            id: id as *mut std::ffi::c_void,
-        }
-    }
-
-    /// Checks if the DataViewItem is valid (non-null).
+    /// Checks if the inner DataViewItem is valid (non-null and the inner C++ object is valid).
     pub fn is_valid(&self) -> bool {
-        !self.id.is_null()
-    }
-
-    /// Creates a DataViewItem from a raw FFI type.
-    ///
-    /// # Safety
-    /// This function should only be used with valid wxd_DataViewItem_t values.
-    pub(crate) unsafe fn from_raw(raw: ffi::wxd_DataViewItem_t) -> Self {
-        Self { id: raw.id }
-    }
-
-    /// Converts the DataViewItem to its raw FFI representation.
-    pub(crate) fn as_raw(&self) -> ffi::wxd_DataViewItem_t {
-        ffi::wxd_DataViewItem_t { id: self.id }
-    }
-
-    /// Gets the numeric ID if this item was created with from_number().
-    ///
-    /// # Returns
-    /// The numeric ID or 0 if the item is null or not created with from_number.
-    pub fn as_number(&self) -> usize {
-        if self.id.is_null() {
-            0
-        } else {
-            self.id as usize
-        }
-    }
-
-    /// Creates a new invalid `DataViewItem`.
-    /// This is often used to represent the root item or no specific item.
-    pub fn new_invalid() -> Self {
-        Self {
-            id: std::ptr::null_mut(),
-        }
+        !self.inner.is_null() && unsafe { ffi::wxd_DataViewItem_IsOk(self.inner) }
     }
 }
 
 impl Drop for DataViewItem {
     fn drop(&mut self) {
-        if !self.id.is_null() {
-            // This item was created by an FFI call (e.g., FromWxDVI) that allocated a wxDataViewItem on the heap.
-            // Rust is responsible for releasing this memory.
-            unsafe { ffi::wxd_DataViewItem_Release(self.as_raw()) };
-            // Set to null to prevent double free if this Drop is somehow called again (though not typical for owned types).
-            self.id = std::ptr::null_mut();
+        if !self.inner.is_null() {
+            unsafe { ffi::wxd_DataViewItem_Release(self.inner) };
         }
     }
 }

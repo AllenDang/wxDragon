@@ -105,13 +105,12 @@ impl DataViewEventData {
         }
 
         unsafe {
-            let item_data = ffi::wxd_DataViewEvent_GetItem(self.event.0);
-            if item_data.id.is_null() {
+            let item_ptr = ffi::wxd_DataViewEvent_GetItem(self.event.0);
+            if item_ptr.is_null() {
                 None
             } else {
-                // The C++ function returns a wxd_DataViewItem_t by value
-                // The DataViewItem::from_raw will take ownership and handle cleanup via Drop trait
-                Some(DataViewItem::from_raw(item_data))
+                // The C++ function returns a newly-allocated wrapper pointer that Rust takes ownership of
+                Some(DataViewItem::from(item_ptr))
             }
         }
     }

@@ -929,16 +929,20 @@ WXD_EXPORTED bool wxd_DataViewCtrl_ClearColumns(wxd_Window_t* self) {
 }
 
 // Item management
-WXD_EXPORTED void wxd_DataViewCtrl_Select(wxd_Window_t* self, wxd_DataViewItem_t item) {
+WXD_EXPORTED void wxd_DataViewCtrl_Select(wxd_Window_t* self, const wxd_DataViewItem_t* item) {
     wxDataViewCtrl* ctrl = reinterpret_cast<wxDataViewCtrl*>(self);
     if (!ctrl) return;
-    ctrl->Select(wxDataViewItem(item.id));
+    const wxDataViewItem* inner = reinterpret_cast<const wxDataViewItem*>(item);
+    if (!inner) return;
+    ctrl->Select(*inner);
 }
 
-WXD_EXPORTED void wxd_DataViewCtrl_Unselect(wxd_Window_t* self, wxd_DataViewItem_t item) {
+WXD_EXPORTED void wxd_DataViewCtrl_Unselect(wxd_Window_t* self, const wxd_DataViewItem_t* item) {
     wxDataViewCtrl* ctrl = reinterpret_cast<wxDataViewCtrl*>(self);
     if (!ctrl) return;
-    ctrl->Unselect(wxDataViewItem(item.id));
+    const wxDataViewItem* inner = reinterpret_cast<const wxDataViewItem*>(item);
+    if (!inner) return;
+    ctrl->Unselect(*inner);
 }
 
 WXD_EXPORTED void wxd_DataViewCtrl_SelectAll(wxd_Window_t* self) {
@@ -947,10 +951,12 @@ WXD_EXPORTED void wxd_DataViewCtrl_SelectAll(wxd_Window_t* self) {
     ctrl->SelectAll();
 }
 
-WXD_EXPORTED bool wxd_DataViewCtrl_IsSelected(wxd_Window_t* self, wxd_DataViewItem_t item) {
+WXD_EXPORTED bool wxd_DataViewCtrl_IsSelected(wxd_Window_t* self, const wxd_DataViewItem_t* item) {
     wxDataViewCtrl* ctrl = reinterpret_cast<wxDataViewCtrl*>(self);
     if (!ctrl) return false;
-    return ctrl->IsSelected(wxDataViewItem(item.id));
+    const wxDataViewItem* inner = reinterpret_cast<const wxDataViewItem*>(item);
+    if (!inner) return false;
+    return ctrl->IsSelected(*inner);
 }
 
 WXD_EXPORTED uint32_t wxd_DataViewCtrl_GetSelectedItemsCount(wxd_Window_t* self) {
@@ -959,43 +965,33 @@ WXD_EXPORTED uint32_t wxd_DataViewCtrl_GetSelectedItemsCount(wxd_Window_t* self)
     return ctrl->GetSelectedItemsCount();
 }
 
-WXD_EXPORTED wxd_DataViewItem_t wxd_DataViewCtrl_GetSelection(wxd_Window_t* self) {
-    wxd_DataViewItem_t result = {nullptr};
+WXD_EXPORTED const wxd_DataViewItem_t* wxd_DataViewCtrl_GetSelection(wxd_Window_t* self) {
     wxDataViewCtrl* ctrl = reinterpret_cast<wxDataViewCtrl*>(self);
-    if (!ctrl) return result;
+    if (!ctrl) return nullptr;
 
     wxDataViewItem item = ctrl->GetSelection();
-
-    // Use the same pattern as FromWxDVI in dataviewtreectrl.cpp
-    if (!item.IsOk()) {
-        return result; // Return a wxd_DataViewItem_t with a null id
-    }
-    wxDataViewItem* heap_item = new wxDataViewItem(item);
-    result.id = reinterpret_cast<void*>(heap_item);
-    return result;
+    if (!item.IsOk()) return nullptr;
+    return wxd_DataViewItem_Clone(reinterpret_cast<const wxd_DataViewItem_t*>(&item));
 }
 
-WXD_EXPORTED void wxd_DataViewCtrl_GetSelections(wxd_Window_t* self, wxd_DataViewItem_t* items, uint32_t max_count) {
+WXD_EXPORTED void wxd_DataViewCtrl_GetSelections(wxd_Window_t* self, const wxd_DataViewItem_t* * items, uint32_t max_count) {
     wxDataViewCtrl* ctrl = reinterpret_cast<wxDataViewCtrl*>(self);
     if (!ctrl || !items || max_count == 0) return;
 
     wxDataViewItemArray selections;
     ctrl->GetSelections(selections);
 
-    uint32_t count = std::min(max_count, static_cast<uint32_t>(selections.GetCount()));
-
-    for (uint32_t i = 0; i < count; i++) {
-        // Use the same pattern as FromWxDVI in dataviewtreectrl.cpp
-        if (!selections[i].IsOk()) {
-            items[i].id = nullptr;
-        } else {
-            wxDataViewItem* heap_item = new wxDataViewItem(selections[i]);
-            items[i].id = reinterpret_cast<void*>(heap_item);
-        }
+    // Only include valid selections (IsOk) in the results. Skip invalid
+    // entries and stop when we've filled up to max_count.
+    uint32_t written = 0;
+    uint32_t total = static_cast<uint32_t>(selections.GetCount());
+    for (uint32_t i = 0; i < total && written < max_count; ++i) {
+        if (!selections[i].IsOk()) continue; // skip invalid items
+        items[written++] = wxd_DataViewItem_Clone(reinterpret_cast<const wxd_DataViewItem_t*>(&selections[i]));
     }
 }
 
-WXD_EXPORTED void wxd_DataViewCtrl_SetSelections(wxd_Window_t* self, const wxd_DataViewItem_t* items, uint32_t count) {
+WXD_EXPORTED void wxd_DataViewCtrl_SetSelections(wxd_Window_t* self, const wxd_DataViewItem_t* const* items, uint32_t count) {
     wxDataViewCtrl* ctrl = reinterpret_cast<wxDataViewCtrl*>(self);
     if (!ctrl || !items || count == 0) return;
 
@@ -1003,26 +999,27 @@ WXD_EXPORTED void wxd_DataViewCtrl_SetSelections(wxd_Window_t* self, const wxd_D
     selections.Alloc(count);
     
     for (uint32_t i = 0; i < count; i++) {
-        selections.Add(wxDataViewItem(items[i].id));
+        const wxDataViewItem* inner = reinterpret_cast<const wxDataViewItem*>(items[i]);
+        selections.Add(*inner);
     }
     
     ctrl->SetSelections(selections);
 }
 
-WXD_EXPORTED wxd_DataViewItem_t wxd_DataViewCtrl_GetCurrentItem(wxd_Window_t* self) {
-    wxd_DataViewItem_t result = {nullptr};
+WXD_EXPORTED const wxd_DataViewItem_t* wxd_DataViewCtrl_GetCurrentItem(wxd_Window_t* self) {
     wxDataViewCtrl* ctrl = reinterpret_cast<wxDataViewCtrl*>(self);
-    if (!ctrl) return result;
-    
+    if (!ctrl) return nullptr;
+
     wxDataViewItem item = ctrl->GetCurrentItem();
-    result.id = item.GetID();
-    return result;
+    if (!item.IsOk()) return nullptr;
+    return wxd_DataViewItem_Clone(reinterpret_cast<const wxd_DataViewItem_t*>(&item));
 }
 
-WXD_EXPORTED void wxd_DataViewCtrl_SetCurrentItem(wxd_Window_t* self, wxd_DataViewItem_t item) {
+WXD_EXPORTED void wxd_DataViewCtrl_SetCurrentItem(wxd_Window_t* self, const wxd_DataViewItem_t* item) {
     wxDataViewCtrl* ctrl = reinterpret_cast<wxDataViewCtrl*>(self);
-    if (!ctrl) return;
-    ctrl->SetCurrentItem(wxDataViewItem(item.id));
+    if (!ctrl || !item) return;
+    const wxDataViewItem* inner = reinterpret_cast<const wxDataViewItem*>(item);
+    ctrl->SetCurrentItem(*inner);
 }
 
 // Visual appearance

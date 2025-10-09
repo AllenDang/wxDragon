@@ -82,7 +82,7 @@ pub fn create_dataview_tree_tab(parent: &impl WxWidget) -> DataViewTreeTabContro
     }
 
     dvc_tree.set_image_list(image_list);
-    let root_item = DataViewItem::new_invalid();
+    let root_item = DataViewItem::default();
 
     let cat_a = dvc_tree.append_container(&root_item, "Category A", idx_folder, idx_folder);
     let _item_a1 = dvc_tree.append_item(&cat_a, "Item A.1 (File)", idx_file);
