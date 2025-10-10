@@ -4,6 +4,28 @@
 use std::os::raw::{c_int, c_uchar};
 use wxdragon_sys as ffi;
 
+/// A constant reference to wxNullBitmap, representing an invalid/empty bitmap.
+/// This is useful when you need to pass an empty bitmap to wxWidgets functions.
+///
+/// # Example
+/// ```rust
+/// # use wxdragon::prelude::*;
+/// // Use NULL_BITMAP when you need to pass an empty bitmap
+/// let empty = unsafe { Bitmap::from_ptr_unowned(NULL_BITMAP.as_ptr() as *mut _) };
+/// assert!(!empty.is_ok());
+/// ```
+pub const NULL_BITMAP: NullBitmap = NullBitmap;
+
+/// Wrapper type for wxNullBitmap constant.
+pub struct NullBitmap;
+
+impl NullBitmap {
+    /// Returns a const pointer to wxNullBitmap.
+    pub fn as_ptr(&self) -> *const ffi::wxd_Bitmap_t {
+        unsafe { ffi::wxd_Bitmap_GetNull() }
+    }
+}
+
 /// Represents a platform-dependent bitmap image.
 #[derive(Debug)] // Keep Debug if useful, or remove if pointer isn't meaningful for debug
 pub struct Bitmap {

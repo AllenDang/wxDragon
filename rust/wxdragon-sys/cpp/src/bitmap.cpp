@@ -171,4 +171,9 @@ WXD_EXPORTED void wxd_Bitmap_FreeRGBAData(unsigned char* data) {
     if (data) {
         free(data);
     }
+}
+
+// Get a pointer to wxNullBitmap
+WXD_EXPORTED const wxd_Bitmap_t* wxd_Bitmap_GetNull(void) {
+    return reinterpret_cast<const wxd_Bitmap_t*>(&wxNullBitmap);
 } 
