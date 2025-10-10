@@ -10,19 +10,38 @@ use wxdragon_sys as ffi;
 /// # Example
 /// ```rust
 /// # use wxdragon::prelude::*;
-/// // Use NULL_BITMAP when you need to pass an empty bitmap
-/// let empty = unsafe { Bitmap::from_ptr_unowned(NULL_BITMAP.as_ptr() as *mut _) };
+/// // Convert NULL_BITMAP to Bitmap when needed
+/// let empty: Bitmap = NULL_BITMAP.into();
 /// assert!(!empty.is_ok());
+///
+/// // Or use it inline:
+/// // static_bitmap.set_bitmap(&NULL_BITMAP.into());
 /// ```
 pub const NULL_BITMAP: NullBitmap = NullBitmap;
 
 /// Wrapper type for wxNullBitmap constant.
+#[derive(Debug, Clone, Copy)]
 pub struct NullBitmap;
 
 impl NullBitmap {
     /// Returns a const pointer to wxNullBitmap.
     pub fn as_ptr(&self) -> *const ffi::wxd_Bitmap_t {
         unsafe { ffi::wxd_Bitmap_GetNull() }
+    }
+}
+
+/// Convert NullBitmap to Bitmap.
+/// This creates an unowned Bitmap wrapper around wxNullBitmap.
+impl From<NullBitmap> for Bitmap {
+    fn from(null_bitmap: NullBitmap) -> Self {
+        unsafe { Bitmap::from_ptr_unowned(null_bitmap.as_ptr() as *mut _) }
+    }
+}
+
+/// Convert &NullBitmap to Bitmap.
+impl From<&NullBitmap> for Bitmap {
+    fn from(null_bitmap: &NullBitmap) -> Self {
+        unsafe { Bitmap::from_ptr_unowned(null_bitmap.as_ptr() as *mut _) }
     }
 }
 
