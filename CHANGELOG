@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.30
+
+- Implement From and Into Bitmap for NullBitmap
+
 ## 0.8.29
 
 ### Enhancements
