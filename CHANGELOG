@@ -1,5 +1,40 @@
 # Changelog
 
+## 0.8.29
+
+### Enhancements
+- **DataViewCtrl Context Menu Support**: Added context menu event support for DataViewCtrl
+  - Implemented `on_item_context_menu` event handler for DataViewCtrl
+  - Added DataViewEventData `get_position` method for retrieving context menu position
+  - Enhanced DataViewCtrl integration with menu_events_demo example
+  - Improved event handling for DataView controls with position information
+
+### Bug Fixes
+- **Event System**: Fixed WXDEventTypeCEnum issue with negative value handling
+  - Added a negative value to WXDEventTypeCEnum for proper event type representation
+  - Resolved event enum discriminant issues across platforms
+  - Fixed EventType enum cross-platform compatibility issues
+
+- **Popup Menu Fix**: Fixed WxWidget::popup_menu method implementation
+  - Corrected duplicate popup_menu implementation issues
+  - Improved popup menu behavior across different widget types
+  - Enhanced menu positioning and context menu support
+
+### Refactoring
+- **DataViewItem Architecture**: Refactored struct wxd_DataViewItem_t and related functionality
+  - Improved DataViewItem internal structure for better memory management
+  - Enhanced DataView event data handling
+  - Added DataViewEventData to prelude module for easier access
+
+- **Bitmap Support**: Added NullBitmap support for better null bitmap handling
+  - Provides a safe way to represent and check for null bitmaps
+  - Improves bitmap-related API consistency
+
+### Documentation
+- **Development Guidelines**: Added copilot-instructions.md for project development guidance
+  - Provides coding standards and best practices for contributors
+  - Documents architectural patterns and design decisions
+
 ## 0.8.28
 
 ### Enhancements
