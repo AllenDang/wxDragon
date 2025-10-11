@@ -474,7 +474,7 @@ impl CustomDataViewTreeModel {
         T: Any + 'static,
         N: Any + 'static,
         // Use HRTB so callbacks can accept references with any short lifetime
-        GP: for<'a> Fn(&T, Option<&'a N>) -> Option<&'a N> + 'static,
+        GP: for<'a> Fn(&T, Option<&'a N>) -> Option<*mut N> + 'static,
         IC: for<'a> Fn(&T, Option<&'a N>) -> bool + 'static,
         // get_children returns a vector of raw typed pointers; returning raw
         // pointers avoids complex lifetime issues for collections.
@@ -500,7 +500,7 @@ impl CustomDataViewTreeModel {
             };
             let ret_opt = get_parent(t, item_opt);
             match ret_opt {
-                Some(r) => r as *const N as *mut std::ffi::c_void,
+                Some(ptr) => ptr as *mut std::ffi::c_void,
                 None => std::ptr::null_mut(),
             }
         });

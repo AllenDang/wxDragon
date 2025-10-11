@@ -128,14 +128,9 @@ pub fn create_music_tree_model() -> Option<CustomDataViewTreeModel> {
             Some(node) => {
                 // Borrow the parent RefCell and inspect the Option<Weak<_>>
                 match node.parent.borrow().as_ref() {
-                    Some(w) => match w.upgrade() {
-                        Some(rc) => {
-                            // SAFETY: take raw pointer to inner allocation owned by Rc
-                            let p = Rc::as_ptr(&rc);
-                            Some(unsafe { &*p })
-                        }
-                        None => None,
-                    },
+                    Some(w) => w
+                        .upgrade()
+                        .map(|rc| Rc::as_ptr(&rc) as *mut MyMusicTreeNode),
                     None => None,
                 }
             }
