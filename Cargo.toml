@@ -4,6 +4,7 @@ members = [
   "examples/rust/combobox_modifier_test",
   "examples/rust/custom_dataview_renderer",
   "examples/rust/custom_widget",
+  "examples/rust/dataview",
   "examples/rust/dc_example",
   "examples/rust/dnd_advanced",
   "examples/rust/events_test",

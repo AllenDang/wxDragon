@@ -46,14 +46,14 @@ pub use wxdragon_macros::include_xrc;
 // include_xrc_dialog!, include_xrc_panel! are available via #[macro_use]
 
 pub use widgets::dataview::{
-    CustomDataViewVirtualListModel, DataViewAlign, DataViewBitmapRenderer, DataViewCellMode,
-    DataViewCheckIconTextRenderer, DataViewChoiceRenderer, DataViewColumn, DataViewColumnFlag,
-    DataViewCtrl, DataViewCtrlBuilder, DataViewCustomRenderer, DataViewCustomRendererBuilder,
-    DataViewDateRenderer, DataViewIconTextRenderer, DataViewItem, DataViewListCtrl,
-    DataViewListCtrlBuilder, DataViewListModel, DataViewModel, DataViewProgressRenderer,
-    DataViewRenderer, DataViewSpinRenderer, DataViewStyle, DataViewTextRenderer,
-    DataViewToggleRenderer, DataViewTreeCtrl, DataViewTreeCtrlBuilder, DataViewTreeCtrlStyle,
-    DataViewVirtualListModel, RenderContext, Variant,
+    CustomDataViewTreeModel, CustomDataViewVirtualListModel, DataViewAlign, DataViewBitmapRenderer,
+    DataViewCellMode, DataViewCheckIconTextRenderer, DataViewChoiceRenderer, DataViewColumn,
+    DataViewColumnFlag, DataViewCtrl, DataViewCtrlBuilder, DataViewCustomRenderer,
+    DataViewCustomRendererBuilder, DataViewDateRenderer, DataViewIconTextRenderer, DataViewItem,
+    DataViewListCtrl, DataViewListCtrlBuilder, DataViewListModel, DataViewModel,
+    DataViewProgressRenderer, DataViewRenderer, DataViewSpinRenderer, DataViewStyle,
+    DataViewTextRenderer, DataViewToggleRenderer, DataViewTreeCtrl, DataViewTreeCtrlBuilder,
+    DataViewTreeCtrlStyle, DataViewVirtualListModel, RenderContext, Variant,
 };
 
 // Re-export DC functionality for custom renderers

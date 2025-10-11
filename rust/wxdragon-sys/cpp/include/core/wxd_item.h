@@ -28,6 +28,20 @@ WXD_EXPORTED const wxd_DataViewItem_t* wxd_DataViewItem_Clone(const wxd_DataView
  */
 WXD_EXPORTED bool wxd_DataViewItem_IsOk(const wxd_DataViewItem_t* item);
 
+/**
+ * @brief Retrieves the internal ID of the DataViewItem.
+ * @param item Pointer to the wxd_DataViewItem_t to query.
+ * @return The internal ID (void*) of the item, or nullptr if item is invalid.
+ */
+WXD_EXPORTED const void* wxd_DataViewItem_GetID(const wxd_DataViewItem_t* item);
+
+/**
+ * @brief Creates a new DataViewItem from the given ID.
+ * @param id The internal ID (void*) to wrap in a new DataViewItem.
+ * @return Pointer to the new wxd_DataViewItem_t instance. You own the returned pointer and must free it with wxd_DataViewItem_Release().
+ */
+WXD_EXPORTED const wxd_DataViewItem_t* wxd_DataViewItem_CreateFromID(const void* id);
+
 // Releases the wrapper and the heap-allocated wxDataViewItem it contains (if any).
 WXD_EXPORTED void wxd_DataViewItem_Release(const wxd_DataViewItem_t* item);
 

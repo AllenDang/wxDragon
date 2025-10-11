@@ -499,8 +499,7 @@ typedef struct {
 } wxd_DataViewItemWithID_t;
 
 // DataView types
-typedef void wxd_DataViewModel_t;
-//typedef void wxd_DataViewItem_t;  // Already defined above as a struct
+typedef struct wxd_DataViewModel_t wxd_DataViewModel_t;
 typedef void wxd_DataViewColumn_t;
 
 // DataViewCell mode enum (for cell renderers)
