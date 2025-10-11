@@ -530,8 +530,7 @@ impl DataViewCtrl {
     ///
     /// * `item` - The item to select.
     pub fn select(&self, item: &DataViewItem) {
-        let item_raw = item.as_raw();
-        unsafe { ffi::wxd_DataViewCtrl_Select(self.window.handle_ptr(), item_raw) }
+        unsafe { ffi::wxd_DataViewCtrl_Select(self.window.handle_ptr(), **item) };
     }
 
     /// Unselects a specific item.
@@ -540,8 +539,7 @@ impl DataViewCtrl {
     ///
     /// * `item` - The item to unselect.
     pub fn unselect(&self, item: &DataViewItem) {
-        let item_raw = item.as_raw();
-        unsafe { ffi::wxd_DataViewCtrl_Unselect(self.window.handle_ptr(), item_raw) }
+        unsafe { ffi::wxd_DataViewCtrl_Unselect(self.window.handle_ptr(), **item) };
     }
 
     /// Selects all items in the control.
@@ -559,8 +557,7 @@ impl DataViewCtrl {
     ///
     /// `true` if the item is selected, `false` otherwise.
     pub fn is_selected(&self, item: &DataViewItem) -> bool {
-        let item_raw = item.as_raw();
-        unsafe { ffi::wxd_DataViewCtrl_IsSelected(self.window.handle_ptr(), item_raw) }
+        unsafe { ffi::wxd_DataViewCtrl_IsSelected(self.window.handle_ptr(), **item) }
     }
 
     /// Gets the number of selected items.
@@ -593,25 +590,15 @@ impl DataViewCtrl {
         }
 
         let mut items = Vec::with_capacity(count);
-        let mut items_raw = Vec::with_capacity(count);
-        items_raw.resize(
-            count,
-            ffi::wxd_DataViewItem_t {
-                id: std::ptr::null_mut(),
-            },
-        );
+        // Create an array of const pointers that the C++ side will fill with newly-created wrappers
+        let mut items_raw: Vec<*const ffi::wxd_DataViewItem_t> = vec![std::ptr::null(); count];
 
-        unsafe {
-            ffi::wxd_DataViewCtrl_GetSelections(
-                self.window.handle_ptr(),
-                items_raw.as_mut_ptr(),
-                count as u32,
-            );
+        let ptr = items_raw.as_mut_ptr();
+        unsafe { ffi::wxd_DataViewCtrl_GetSelections(self.window.handle_ptr(), ptr, count as u32) };
 
-            for raw_item in items_raw {
-                if !raw_item.id.is_null() {
-                    items.push(DataViewItem::from_raw(raw_item));
-                }
+        for raw_ptr in items_raw {
+            if !raw_ptr.is_null() {
+                items.push(DataViewItem::from(raw_ptr));
             }
         }
 
@@ -624,7 +611,7 @@ impl DataViewCtrl {
     ///
     /// * `items` - The items to select.
     pub fn set_selections(&self, items: &[DataViewItem]) {
-        let items_raw: Vec<_> = items.iter().map(|item| item.as_raw()).collect();
+        let items_raw: Vec<_> = items.iter().map(|item| **item).collect();
         unsafe {
             ffi::wxd_DataViewCtrl_SetSelections(
                 self.window.handle_ptr(),
@@ -640,12 +627,29 @@ impl DataViewCtrl {
     ///
     /// An `Option` containing the current item, or `None` if no item is focused.
     pub fn get_current_item(&self) -> Option<DataViewItem> {
-        let item_raw = unsafe { ffi::wxd_DataViewCtrl_GetCurrentItem(self.window.handle_ptr()) };
-        if !item_raw.id.is_null() {
-            Some(unsafe { DataViewItem::from_raw(item_raw) })
-        } else {
+        let item_ptr = unsafe { ffi::wxd_DataViewCtrl_GetCurrentItem(self.window.handle_ptr()) };
+        if item_ptr.is_null() {
             None
+        } else {
+            Some(DataViewItem::from(item_ptr))
         }
+    }
+
+    /// Gets the nth child of a parent item (works for tree models attached to a DataViewCtrl)
+    pub fn get_nth_child(&self, parent: &DataViewItem, pos: u32) -> DataViewItem {
+        let item =
+            unsafe { ffi::wxd_DataViewCtrl_GetNthChild(self.window.handle_ptr(), **parent, pos) };
+        DataViewItem::from(item)
+    }
+
+    /// Expand the given item (works for tree models attached to a DataViewCtrl)
+    pub fn expand(&self, item: &DataViewItem) {
+        unsafe { ffi::wxd_DataViewCtrl_Expand(self.window.handle_ptr(), **item) };
+    }
+
+    /// Ensure the given item is visible (scroll into view)
+    pub fn ensure_visible(&self, item: &DataViewItem) {
+        unsafe { ffi::wxd_DataViewCtrl_EnsureVisible(self.window.handle_ptr(), **item) };
     }
 
     /// Gets the currently selected item.
@@ -654,11 +658,11 @@ impl DataViewCtrl {
     ///
     /// An `Option` containing the selected item, or `None` if no item is selected.
     pub fn get_selection(&self) -> Option<DataViewItem> {
-        let item_raw = unsafe { ffi::wxd_DataViewCtrl_GetSelection(self.window.handle_ptr()) };
-        if !item_raw.id.is_null() {
-            Some(unsafe { DataViewItem::from_raw(item_raw) })
-        } else {
+        let item_ptr = unsafe { ffi::wxd_DataViewCtrl_GetSelection(self.window.handle_ptr()) };
+        if item_ptr.is_null() {
             None
+        } else {
+            Some(DataViewItem::from(item_ptr))
         }
     }
 
@@ -668,8 +672,7 @@ impl DataViewCtrl {
     ///
     /// * `item` - The item to set as current.
     pub fn set_current_item(&self, item: &DataViewItem) {
-        let item_raw = item.as_raw();
-        unsafe { ffi::wxd_DataViewCtrl_SetCurrentItem(self.window.handle_ptr(), item_raw) }
+        unsafe { ffi::wxd_DataViewCtrl_SetCurrentItem(self.window.handle_ptr(), **item) }
     }
 
     /// Gets the currently used indentation.

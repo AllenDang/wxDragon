@@ -10,23 +10,14 @@ static inline wxDataViewTreeCtrl* ToWxDVTC(wxd_Window_t* self) {
     return wxDynamicCast(reinterpret_cast<wxWindow*>(self), wxDataViewTreeCtrl);
 }
 
-// Helper to convert wxd_DataViewItem_t to wxDataViewItem
-// wxd_DataViewItem_t.id is wxDataViewItem*
-static inline wxDataViewItem ToWxDVI(wxd_DataViewItem_t item_wrapper) {
-    if (item_wrapper.id == nullptr) {
-        return wxDataViewItem(nullptr);
+// Helper to convert wxd_DataViewItem_t* to wxDataViewItem&
+// wxd_DataViewItem_t* just is wxDataViewItem* internally.
+static inline const wxDataViewItem& ToWxDVI(const wxd_DataViewItem_t* item_wrapper) {
+    if (!item_wrapper) {
+        static const wxDataViewItem kInvalid;
+        return kInvalid;
     }
-    return *reinterpret_cast<wxDataViewItem*>(item_wrapper.id);
-}
-
-// Helper to convert wxDataViewItem to wxd_DataViewItem_t
-// Creates a new wxDataViewItem on the heap for Rust to own.
-static inline wxd_DataViewItem_t FromWxDVI(const wxDataViewItem& item) {
-    if (!item.IsOk()) {
-        return {nullptr}; // Return a wxd_DataViewItem_t with a null id
-    }
-    wxDataViewItem* heap_item = new wxDataViewItem(item);
-    return {reinterpret_cast<void*>(heap_item)};
+    return *reinterpret_cast<const wxDataViewItem*>(item_wrapper);
 }
 
 // --- Constructor ---
@@ -66,78 +57,76 @@ WXD_EXPORTED wxd_Window_t* wxd_DataViewTreeCtrl_new(
 }
 
 // --- Item Management ---
-WXD_EXPORTED wxd_DataViewItem_t wxd_DataViewTreeCtrl_AppendItem(wxd_Window_t* self, wxd_DataViewItem_t parent_wrapper, const char* text, int icon) {
+WXD_EXPORTED const wxd_DataViewItem_t* wxd_DataViewTreeCtrl_AppendItem(wxd_Window_t* self, const wxd_DataViewItem_t* parent_wrapper, const char* text, int icon) {
     wxDataViewTreeCtrl* ctrl = ToWxDVTC(self);
-    if (!ctrl) return {nullptr};
-    wxDataViewItem parent_item = ToWxDVI(parent_wrapper);
+    if (!ctrl) return nullptr;
+    const wxDataViewItem& parent_item = ToWxDVI(parent_wrapper);
     wxString wx_text = wxString::FromUTF8(text ? text : "");
     wxDataViewItem new_item = ctrl->AppendItem(parent_item, wx_text, icon, nullptr /*client_data*/);
-    return FromWxDVI(new_item);
+    return wxd_DataViewItem_Clone(reinterpret_cast<const wxd_DataViewItem_t*>(&new_item));
 }
 
-WXD_EXPORTED wxd_DataViewItem_t wxd_DataViewTreeCtrl_AppendContainer(wxd_Window_t* self, wxd_DataViewItem_t parent_wrapper, const char* text, int icon, int expanded_icon) {
+WXD_EXPORTED const wxd_DataViewItem_t* wxd_DataViewTreeCtrl_AppendContainer(wxd_Window_t* self, const wxd_DataViewItem_t* parent_wrapper, const char* text, int icon, int expanded_icon) {
     wxDataViewTreeCtrl* ctrl = ToWxDVTC(self);
-    if (!ctrl) return {nullptr};
-    wxDataViewItem parent_item = ToWxDVI(parent_wrapper);
+    if (!ctrl) return nullptr;
+    const wxDataViewItem& parent_item = ToWxDVI(parent_wrapper);
     wxString wx_text = wxString::FromUTF8(text ? text : "");
     wxDataViewItem new_item = ctrl->AppendContainer(parent_item, wx_text, icon, expanded_icon, nullptr /*client_data*/);
-    return FromWxDVI(new_item);
+    return wxd_DataViewItem_Clone(reinterpret_cast<const wxd_DataViewItem_t*>(&new_item));
 }
 
-WXD_EXPORTED wxd_DataViewItem_t wxd_DataViewTreeCtrl_PrependItem(wxd_Window_t* self, wxd_DataViewItem_t parent_wrapper, const char* text, int icon) {
+WXD_EXPORTED const wxd_DataViewItem_t* wxd_DataViewTreeCtrl_PrependItem(wxd_Window_t* self, const wxd_DataViewItem_t* parent_wrapper, const char* text, int icon) {
     wxDataViewTreeCtrl* ctrl = ToWxDVTC(self);
-    if (!ctrl) return {nullptr};
-    wxDataViewItem parent_item = ToWxDVI(parent_wrapper);
+    if (!ctrl) return nullptr;
+    const wxDataViewItem& parent_item = ToWxDVI(parent_wrapper);
     wxString wx_text = wxString::FromUTF8(text ? text : "");
     wxDataViewItem new_item = ctrl->PrependItem(parent_item, wx_text, icon, nullptr /*client_data*/);
-    return FromWxDVI(new_item);
+    return wxd_DataViewItem_Clone(reinterpret_cast<const wxd_DataViewItem_t*>(&new_item));
 }
 
-WXD_EXPORTED wxd_DataViewItem_t wxd_DataViewTreeCtrl_PrependContainer(wxd_Window_t* self, wxd_DataViewItem_t parent_wrapper, const char* text, int icon, int expanded_icon) {
+WXD_EXPORTED const wxd_DataViewItem_t* wxd_DataViewTreeCtrl_PrependContainer(wxd_Window_t* self, const wxd_DataViewItem_t* parent_wrapper, const char* text, int icon, int expanded_icon) {
     wxDataViewTreeCtrl* ctrl = ToWxDVTC(self);
-    if (!ctrl) return {nullptr};
-    wxDataViewItem parent_item = ToWxDVI(parent_wrapper);
+    if (!ctrl) return nullptr;
+    const wxDataViewItem& parent_item = ToWxDVI(parent_wrapper);
     wxString wx_text = wxString::FromUTF8(text ? text : "");
     wxDataViewItem new_item = ctrl->PrependContainer(parent_item, wx_text, icon, expanded_icon, nullptr /*client_data*/);
-    return FromWxDVI(new_item);
+    return wxd_DataViewItem_Clone(reinterpret_cast<const wxd_DataViewItem_t*>(&new_item));
 }
 
-WXD_EXPORTED wxd_DataViewItem_t wxd_DataViewTreeCtrl_InsertItem(wxd_Window_t* self, wxd_DataViewItem_t parent_wrapper, wxd_DataViewItem_t previous_wrapper, const char* text, int icon) {
+WXD_EXPORTED const wxd_DataViewItem_t* wxd_DataViewTreeCtrl_InsertItem(wxd_Window_t* self, const wxd_DataViewItem_t* parent_wrapper, const wxd_DataViewItem_t* previous_wrapper, const char* text, int icon) {
     wxDataViewTreeCtrl* ctrl = ToWxDVTC(self);
-    if (!ctrl) return {nullptr};
-    wxDataViewItem parent_item = ToWxDVI(parent_wrapper);
-    wxDataViewItem previous_item = ToWxDVI(previous_wrapper);
+    if (!ctrl) return nullptr;
+    const wxDataViewItem& parent_item = ToWxDVI(parent_wrapper);
+    const wxDataViewItem& previous_item = ToWxDVI(previous_wrapper);
     wxString wx_text = wxString::FromUTF8(text ? text : "");
     wxDataViewItem new_item = ctrl->InsertItem(parent_item, previous_item, wx_text, icon, nullptr /*client_data*/);
-    return FromWxDVI(new_item);
+    return wxd_DataViewItem_Clone(reinterpret_cast<const wxd_DataViewItem_t*>(&new_item));
 }
 
-WXD_EXPORTED wxd_DataViewItem_t wxd_DataViewTreeCtrl_InsertContainer(wxd_Window_t* self, wxd_DataViewItem_t parent_wrapper, wxd_DataViewItem_t previous_wrapper, const char* text, int icon, int expanded_icon) {
+WXD_EXPORTED const wxd_DataViewItem_t* wxd_DataViewTreeCtrl_InsertContainer(wxd_Window_t* self, const wxd_DataViewItem_t* parent_wrapper, const wxd_DataViewItem_t* previous_wrapper, const char* text, int icon, int expanded_icon) {
     wxDataViewTreeCtrl* ctrl = ToWxDVTC(self);
-    if (!ctrl) return {nullptr};
-    wxDataViewItem parent_item = ToWxDVI(parent_wrapper);
-    wxDataViewItem previous_item = ToWxDVI(previous_wrapper);
+    if (!ctrl) return nullptr;
+    const wxDataViewItem& parent_item = ToWxDVI(parent_wrapper);
+    const wxDataViewItem& previous_item = ToWxDVI(previous_wrapper);
     wxString wx_text = wxString::FromUTF8(text ? text : "");
     wxDataViewItem new_item = ctrl->InsertContainer(parent_item, previous_item, wx_text, icon, expanded_icon, nullptr /*client_data*/);
-    return FromWxDVI(new_item);
+    return wxd_DataViewItem_Clone(reinterpret_cast<const wxd_DataViewItem_t*>(&new_item));
 }
 
-WXD_EXPORTED void wxd_DataViewTreeCtrl_DeleteItem(wxd_Window_t* self, wxd_DataViewItem_t item_wrapper) {
+WXD_EXPORTED void wxd_DataViewTreeCtrl_DeleteItem(wxd_Window_t* self, const wxd_DataViewItem_t* item_wrapper) {
     wxDataViewTreeCtrl* ctrl = ToWxDVTC(self);
     if (!ctrl) return;
-    wxDataViewItem item = ToWxDVI(item_wrapper);
+    const wxDataViewItem& item = ToWxDVI(item_wrapper);
     // It's important that item is valid for DeleteItem.
     // If item_wrapper.id was null, ToWxDVI returns an invalid wxDataViewItem,
     // and calling DeleteItem with it is fine (it will do nothing).
     ctrl->DeleteItem(item);
-    // Rust owns the memory for item_wrapper.id (the heap-allocated wxDataViewItem)
-    // and will free it via wxd_DataViewItem_Release.
 }
 
-WXD_EXPORTED void wxd_DataViewTreeCtrl_DeleteChildren(wxd_Window_t* self, wxd_DataViewItem_t parent_wrapper) {
+WXD_EXPORTED void wxd_DataViewTreeCtrl_DeleteChildren(wxd_Window_t* self, const wxd_DataViewItem_t* parent_wrapper) {
     wxDataViewTreeCtrl* ctrl = ToWxDVTC(self);
     if (!ctrl) return;
-    wxDataViewItem parent_item = ToWxDVI(parent_wrapper);
+    const wxDataViewItem& parent_item = ToWxDVI(parent_wrapper);
     ctrl->DeleteChildren(parent_item);
 }
 
@@ -148,28 +137,28 @@ WXD_EXPORTED void wxd_DataViewTreeCtrl_DeleteAllItems(wxd_Window_t* self) {
 }
 
 // --- Item Attributes ---
-WXD_EXPORTED const char* wxd_DataViewTreeCtrl_GetItemText(wxd_Window_t* self, wxd_DataViewItem_t item_wrapper) {
+WXD_EXPORTED const char* wxd_DataViewTreeCtrl_GetItemText(wxd_Window_t* self, const wxd_DataViewItem_t* item_wrapper) {
     wxDataViewTreeCtrl* ctrl = ToWxDVTC(self);
     if (!ctrl) return nullptr;
-    wxDataViewItem item = ToWxDVI(item_wrapper);
+    const wxDataViewItem& item = ToWxDVI(item_wrapper);
     if (!item.IsOk()) return nullptr;
     wxString text = ctrl->GetItemText(item);
     return wxd_str_to_c_str(text); // Rust frees via wxd_free_string
 }
 
-WXD_EXPORTED void wxd_DataViewTreeCtrl_SetItemText(wxd_Window_t* self, wxd_DataViewItem_t item_wrapper, const char* text) {
+WXD_EXPORTED void wxd_DataViewTreeCtrl_SetItemText(wxd_Window_t* self, const wxd_DataViewItem_t* item_wrapper, const char* text) {
     wxDataViewTreeCtrl* ctrl = ToWxDVTC(self);
     if (!ctrl) return;
-    wxDataViewItem item = ToWxDVI(item_wrapper);
+    const wxDataViewItem& item = ToWxDVI(item_wrapper);
     if (!item.IsOk()) return;
     wxString wx_text = wxString::FromUTF8(text ? text : "");
     ctrl->SetItemText(item, wx_text);
 }
 
-WXD_EXPORTED void wxd_DataViewTreeCtrl_SetItemIcon(wxd_Window_t* self, wxd_DataViewItem_t item_wrapper, int icon_idx) {
+WXD_EXPORTED void wxd_DataViewTreeCtrl_SetItemIcon(wxd_Window_t* self, const wxd_DataViewItem_t* item_wrapper, int icon_idx) {
     wxDataViewTreeCtrl* ctrl = ToWxDVTC(self);
     if (!ctrl) return;
-    wxDataViewItem item = ToWxDVI(item_wrapper);
+    const wxDataViewItem& item = ToWxDVI(item_wrapper);
     if (!item.IsOk()) return;
 
     wxImageList* img_list = ctrl->GetImageList();
@@ -185,10 +174,10 @@ WXD_EXPORTED void wxd_DataViewTreeCtrl_SetItemIcon(wxd_Window_t* self, wxd_DataV
     }
 }
 
-WXD_EXPORTED void wxd_DataViewTreeCtrl_SetItemExpandedIcon(wxd_Window_t* self, wxd_DataViewItem_t item_wrapper, int icon_idx) {
+WXD_EXPORTED void wxd_DataViewTreeCtrl_SetItemExpandedIcon(wxd_Window_t* self, const wxd_DataViewItem_t* item_wrapper, int icon_idx) {
     wxDataViewTreeCtrl* ctrl = ToWxDVTC(self);
     if (!ctrl) return;
-    wxDataViewItem item = ToWxDVI(item_wrapper);
+    const wxDataViewItem& item = ToWxDVI(item_wrapper);
     if (!item.IsOk() || !ctrl->IsContainer(item)) return;
 
     wxImageList* img_list = ctrl->GetImageList();
@@ -203,58 +192,58 @@ WXD_EXPORTED void wxd_DataViewTreeCtrl_SetItemExpandedIcon(wxd_Window_t* self, w
 }
 
 // --- Item Relationships ---
-WXD_EXPORTED wxd_DataViewItem_t wxd_DataViewTreeCtrl_GetItemParent(wxd_Window_t* self, wxd_DataViewItem_t item_wrapper) {
+WXD_EXPORTED const wxd_DataViewItem_t* wxd_DataViewTreeCtrl_GetItemParent(wxd_Window_t* self, const wxd_DataViewItem_t* item_wrapper) {
     wxDataViewTreeCtrl* ctrl = ToWxDVTC(self);
-    if (!ctrl) return {nullptr};
-    wxDataViewItem item = ToWxDVI(item_wrapper);
-    if (!item.IsOk()) return {nullptr}; // Cannot get parent of an invalid item
+    if (!ctrl) return nullptr;
+    const wxDataViewItem& item = ToWxDVI(item_wrapper);
+    if (!item.IsOk()) return nullptr;
     wxDataViewItem parent_item = ctrl->GetItemParent(item);
-    return FromWxDVI(parent_item);
+    return wxd_DataViewItem_Clone(reinterpret_cast<const wxd_DataViewItem_t*>(&parent_item));
 }
 
-WXD_EXPORTED unsigned int wxd_DataViewTreeCtrl_GetChildCount(wxd_Window_t* self, wxd_DataViewItem_t parent_wrapper) {
+WXD_EXPORTED unsigned int wxd_DataViewTreeCtrl_GetChildCount(wxd_Window_t* self, const wxd_DataViewItem_t* parent_wrapper) {
     wxDataViewTreeCtrl* ctrl = ToWxDVTC(self);
     if (!ctrl) return 0;
-    wxDataViewItem parent_item = ToWxDVI(parent_wrapper);
+    const wxDataViewItem& parent_item = ToWxDVI(parent_wrapper);
     // GetChildCount on an invalid parent_item is okay (means root items)
     return ctrl->GetChildCount(parent_item);
 }
 
-WXD_EXPORTED wxd_DataViewItem_t wxd_DataViewTreeCtrl_GetNthChild(wxd_Window_t* self, wxd_DataViewItem_t parent_wrapper, unsigned int pos) {
+WXD_EXPORTED const wxd_DataViewItem_t* wxd_DataViewTreeCtrl_GetNthChild(wxd_Window_t* self, const wxd_DataViewItem_t* parent_wrapper, unsigned int pos) {
     wxDataViewTreeCtrl* ctrl = ToWxDVTC(self);
-    if (!ctrl) return {nullptr};
-    wxDataViewItem parent_item = ToWxDVI(parent_wrapper);
+    if (!ctrl) return nullptr;
+    const wxDataViewItem& parent_item = ToWxDVI(parent_wrapper);
     wxDataViewItem child_item = ctrl->GetNthChild(parent_item, pos);
-    return FromWxDVI(child_item);
+    return wxd_DataViewItem_Clone(reinterpret_cast<const wxd_DataViewItem_t*>(&child_item));
 }
 
-WXD_EXPORTED bool wxd_DataViewTreeCtrl_IsContainer(wxd_Window_t* self, wxd_DataViewItem_t item_wrapper) {
+WXD_EXPORTED bool wxd_DataViewTreeCtrl_IsContainer(wxd_Window_t* self, const wxd_DataViewItem_t* item_wrapper) {
     wxDataViewTreeCtrl* ctrl = ToWxDVTC(self);
     if (!ctrl) return false;
-    wxDataViewItem item = ToWxDVI(item_wrapper);
+    const wxDataViewItem& item = ToWxDVI(item_wrapper);
     if (!item.IsOk()) return false;
     return ctrl->IsContainer(item);
 }
 
 // --- Tree State ---
-WXD_EXPORTED void wxd_DataViewTreeCtrl_Expand(wxd_Window_t* self, wxd_DataViewItem_t item_wrapper) {
+WXD_EXPORTED void wxd_DataViewTreeCtrl_Expand(wxd_Window_t* self, const wxd_DataViewItem_t* item_wrapper) {
     wxDataViewTreeCtrl* ctrl = ToWxDVTC(self);
     if (!ctrl) return;
-    wxDataViewItem item = ToWxDVI(item_wrapper);
+    const wxDataViewItem& item = ToWxDVI(item_wrapper);
     if (item.IsOk()) ctrl->Expand(item);
 }
 
-WXD_EXPORTED void wxd_DataViewTreeCtrl_Collapse(wxd_Window_t* self, wxd_DataViewItem_t item_wrapper) {
+WXD_EXPORTED void wxd_DataViewTreeCtrl_Collapse(wxd_Window_t* self, const wxd_DataViewItem_t* item_wrapper) {
     wxDataViewTreeCtrl* ctrl = ToWxDVTC(self);
     if (!ctrl) return;
-    wxDataViewItem item = ToWxDVI(item_wrapper);
+    const wxDataViewItem& item = ToWxDVI(item_wrapper);
     if (item.IsOk()) ctrl->Collapse(item);
 }
 
-WXD_EXPORTED bool wxd_DataViewTreeCtrl_IsExpanded(wxd_Window_t* self, wxd_DataViewItem_t item_wrapper) {
+WXD_EXPORTED bool wxd_DataViewTreeCtrl_IsExpanded(wxd_Window_t* self, const wxd_DataViewItem_t* item_wrapper) {
     wxDataViewTreeCtrl* ctrl = ToWxDVTC(self);
     if (!ctrl) return false;
-    wxDataViewItem item = ToWxDVI(item_wrapper);
+    const wxDataViewItem& item = ToWxDVI(item_wrapper);
     if (!item.IsOk()) return false;
     return ctrl->IsExpanded(item);
 }

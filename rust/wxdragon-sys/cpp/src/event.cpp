@@ -51,8 +51,6 @@
 #include <wx/richtext/richtextctrl.h> // ADDED: For richtext events
 #endif
 
-struct wxd_Event_t { wxEvent* event; };
-
 // --- Internal C++ Structures/Classes (Not exposed in C API) ---
 
 // Define a hash function for std::pair<int, int>
@@ -190,17 +188,6 @@ public:
 // Define WxdHandlerClientData destructor (no change needed here, it still just deletes the handler)
 WxdHandlerClientData::~WxdHandlerClientData() {
     delete handler;
-}
-
-// --- Declare the Rust helper functions ---
-// These functions will be implemented in the Rust `wxdragon` crate.
-extern "C" {
-    // The trampoline function implemented in Rust
-    // Its signature MUST match wxd_ClosureCallback in wxdragon.h
-    // void rust_event_handler_trampoline(wxd_Event_t* event_ptr, void* user_data);
-    
-    // Function implemented in Rust to drop the Box<dyn FnMut(Event)>.
-    void drop_rust_closure_box(void* ptr);
 }
 
 // WxdEventHandler Destructor Implementation
@@ -1234,25 +1221,19 @@ WXD_EXPORTED bool wxd_DataViewEvent_IsEditCancelled(wxd_Event_t* event)
     return dve->IsEditCancelled();
 }
 
-// Header: WXD_EXPORTED wxd_DataViewItem_t wxd_DataViewEvent_GetItem(wxd_Event_t* event);
-WXD_EXPORTED wxd_DataViewItem_t wxd_DataViewEvent_GetItem(wxd_Event_t* event)
+WXD_EXPORTED const wxd_DataViewItem_t* wxd_DataViewEvent_GetItem(wxd_Event_t* event)
 {
-    wxd_DataViewItem_t result = {nullptr};
-    if (!event) return result;
+    if (!event) return nullptr;
 
     wxEvent* wx_event = reinterpret_cast<wxEvent*>(event);
     wxDataViewEvent* dve = dynamic_cast<wxDataViewEvent*>(wx_event);
-    if (!dve) return result;
+    if (!dve) return nullptr;
 
     wxDataViewItem item = dve->GetItem();
 
-    // Use the same pattern as FromWxDVI in dataviewtreectrl.cpp
-    if (!item.IsOk()) {
-        return result; // Return a wxd_DataViewItem_t with a null id
-    }
-    wxDataViewItem* heap_item = new wxDataViewItem(item);
-    result.id = reinterpret_cast<void*>(heap_item);
-    return result;
+    if (!item.IsOk()) return nullptr;
+
+    return wxd_DataViewItem_Clone(reinterpret_cast<const wxd_DataViewItem_t*>(&item));
 }
 
 // --- Idle Event Implementation ---

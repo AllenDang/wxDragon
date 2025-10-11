@@ -4,8 +4,7 @@
 //! DataViewCtrl, DataViewListCtrl, and DataViewTreeCtrl.
 
 use super::item::DataViewItem;
-use crate::event::Event;
-use crate::event::WxEvtHandler;
+use crate::event::{Event, EventType, WxEvtHandler};
 use wxdragon_sys as ffi;
 
 /// Events emitted by DataView widgets
@@ -105,13 +104,12 @@ impl DataViewEventData {
         }
 
         unsafe {
-            let item_data = ffi::wxd_DataViewEvent_GetItem(self.event.0);
-            if item_data.id.is_null() {
+            let item_ptr = ffi::wxd_DataViewEvent_GetItem(self.event.0);
+            if item_ptr.is_null() {
                 None
             } else {
-                // The C++ function returns a wxd_DataViewItem_t by value
-                // The DataViewItem::from_raw will take ownership and handle cleanup via Drop trait
-                Some(DataViewItem::from_raw(item_data))
+                // The C++ function returns a newly-allocated wrapper pointer that Rust takes ownership of
+                Some(DataViewItem::from(item_ptr))
             }
         }
     }
@@ -184,7 +182,6 @@ pub trait DataViewEventHandler: WxEvtHandler {
     where
         F: FnMut(DataViewEventData) + 'static,
     {
-        use crate::event::EventType;
         // Map enum variant to EventType
         let event_type = match event {
             DataViewEvent::SelectionChanged => EventType::DATAVIEW_SELECTION_CHANGED,

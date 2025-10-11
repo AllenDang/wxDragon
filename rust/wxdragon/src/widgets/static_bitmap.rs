@@ -115,6 +115,20 @@ impl StaticBitmap {
     }
 
     /// Sets or replaces the bitmap shown in the control.
+    ///
+    /// Accepts either a `&Bitmap` or anything convertible to `Bitmap` (like `NullBitmap`).
+    ///
+    /// # Example
+    /// ```rust
+    /// # use wxdragon::prelude::*;
+    /// # fn example(sb: &StaticBitmap, bmp: &Bitmap) {
+    /// // Set a normal bitmap
+    /// sb.set_bitmap(bmp);
+    ///
+    /// // Clear with NullBitmap
+    /// sb.set_bitmap(&NULL_BITMAP.into());
+    /// # }
+    /// ```
     pub fn set_bitmap(&self, bitmap: &Bitmap) {
         unsafe {
             ffi::wxd_StaticBitmap_SetBitmap(

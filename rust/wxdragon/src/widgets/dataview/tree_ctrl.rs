@@ -23,6 +23,7 @@ use super::column::DataViewColumn;
 use super::enums::{DataViewAlign, DataViewCellMode, DataViewColumnFlags}; // Added DataViewCellMode and DataViewColumnFlags
 use super::renderer::{DataViewIconTextRenderer, DataViewTextRenderer}; // Added DataViewIconTextRenderer
 use super::variant::VariantType; // Added VariantType
+use super::DataViewModel;
 
 // Styles for DataViewTreeCtrl (currently uses general DataViewCtrl styles)
 // If specific styles are needed, they can be added here.
@@ -190,17 +191,25 @@ impl DataViewTreeCtrl {
         self.append_column(&column)
     }
 
+    /// Associates a data model with this DataViewTreeCtrl.
+    ///
+    /// Mirrors DataViewCtrl::associate_model. The model must outlive the control.
+    pub fn associate_model<M: DataViewModel>(&self, model: &M) -> bool {
+        let model_ptr = model.handle_ptr();
+        unsafe { ffi::wxd_DataViewCtrl_AssociateModel(self.window.handle_ptr(), model_ptr) }
+    }
+
     // --- Item Management ---
     pub fn append_item(&self, parent: &DataViewItem, text: &str, icon: i32) -> DataViewItem {
         let text_c_str = CString::new(text).unwrap_or_default();
         unsafe {
             let raw_item = ffi::wxd_DataViewTreeCtrl_AppendItem(
                 self.handle_ptr(),
-                parent.as_raw(),
+                **parent,
                 text_c_str.as_ptr(),
                 icon,
             );
-            DataViewItem::from_raw(raw_item)
+            DataViewItem::from(raw_item)
         }
     }
 
@@ -215,12 +224,12 @@ impl DataViewTreeCtrl {
         unsafe {
             let raw_item = ffi::wxd_DataViewTreeCtrl_AppendContainer(
                 self.handle_ptr(),
-                parent.as_raw(),
+                **parent,
                 text_c_str.as_ptr(),
                 icon,
                 expanded_icon,
             );
-            DataViewItem::from_raw(raw_item)
+            DataViewItem::from(raw_item)
         }
     }
 
@@ -229,11 +238,11 @@ impl DataViewTreeCtrl {
         unsafe {
             let raw_item = ffi::wxd_DataViewTreeCtrl_PrependItem(
                 self.handle_ptr(),
-                parent.as_raw(),
+                **parent,
                 text_c_str.as_ptr(),
                 icon,
             );
-            DataViewItem::from_raw(raw_item)
+            DataViewItem::from(raw_item)
         }
     }
 
@@ -248,12 +257,12 @@ impl DataViewTreeCtrl {
         unsafe {
             let raw_item = ffi::wxd_DataViewTreeCtrl_PrependContainer(
                 self.handle_ptr(),
-                parent.as_raw(),
+                **parent,
                 text_c_str.as_ptr(),
                 icon,
                 expanded_icon,
             );
-            DataViewItem::from_raw(raw_item)
+            DataViewItem::from(raw_item)
         }
     }
 
@@ -268,12 +277,12 @@ impl DataViewTreeCtrl {
         unsafe {
             let raw_item = ffi::wxd_DataViewTreeCtrl_InsertItem(
                 self.handle_ptr(),
-                parent.as_raw(),
-                previous.as_raw(),
+                **parent,
+                **previous,
                 text_c_str.as_ptr(),
                 icon,
             );
-            DataViewItem::from_raw(raw_item)
+            DataViewItem::from(raw_item)
         }
     }
 
@@ -289,20 +298,19 @@ impl DataViewTreeCtrl {
         unsafe {
             let raw_item = ffi::wxd_DataViewTreeCtrl_InsertContainer(
                 self.handle_ptr(),
-                parent.as_raw(),
-                previous.as_raw(),
+                **parent,
+                **previous,
                 text_c_str.as_ptr(),
                 icon,
                 expanded_icon,
             );
-            DataViewItem::from_raw(raw_item)
+            DataViewItem::from(raw_item)
         }
     }
 
     pub fn delete_item(&self, item: &DataViewItem) {
-        unsafe {
-            ffi::wxd_DataViewTreeCtrl_DeleteItem(self.handle_ptr(), item.as_raw());
-        }
+        unsafe { ffi::wxd_DataViewTreeCtrl_DeleteItem(self.handle_ptr(), **item) };
+
         // Note: C++ ffi::wxd_DataViewItem_Release is called by DataViewItem's Drop trait
         // when the Rust DataViewItem object goes out of scope IF it owned the item.
         // If `item` here is just a borrow, its owner will handle the drop.
@@ -311,21 +319,17 @@ impl DataViewTreeCtrl {
     }
 
     pub fn delete_children(&self, item: &DataViewItem) {
-        unsafe {
-            ffi::wxd_DataViewTreeCtrl_DeleteChildren(self.handle_ptr(), item.as_raw());
-        }
+        unsafe { ffi::wxd_DataViewTreeCtrl_DeleteChildren(self.handle_ptr(), **item) };
     }
 
     pub fn delete_all_items(&self) {
-        unsafe {
-            ffi::wxd_DataViewTreeCtrl_DeleteAllItems(self.handle_ptr());
-        }
+        unsafe { ffi::wxd_DataViewTreeCtrl_DeleteAllItems(self.handle_ptr()) };
     }
 
     // --- Item Attributes ---
     pub fn get_item_text(&self, item: &DataViewItem) -> String {
         unsafe {
-            let c_str = ffi::wxd_DataViewTreeCtrl_GetItemText(self.handle_ptr(), item.as_raw());
+            let c_str = ffi::wxd_DataViewTreeCtrl_GetItemText(self.handle_ptr(), **item);
             if c_str.is_null() {
                 String::new()
             } else {
@@ -342,70 +346,56 @@ impl DataViewTreeCtrl {
     pub fn set_item_text(&self, item: &DataViewItem, text: &str) {
         let text_c_str = CString::new(text).unwrap_or_default();
         unsafe {
-            ffi::wxd_DataViewTreeCtrl_SetItemText(
-                self.handle_ptr(),
-                item.as_raw(),
-                text_c_str.as_ptr(),
-            );
+            ffi::wxd_DataViewTreeCtrl_SetItemText(self.handle_ptr(), **item, text_c_str.as_ptr());
         }
     }
 
     pub fn set_item_icon(&self, item: &DataViewItem, icon_idx: i32) {
         unsafe {
-            ffi::wxd_DataViewTreeCtrl_SetItemIcon(self.handle_ptr(), item.as_raw(), icon_idx);
+            ffi::wxd_DataViewTreeCtrl_SetItemIcon(self.handle_ptr(), **item, icon_idx);
         }
     }
 
     pub fn set_item_expanded_icon(&self, item: &DataViewItem, icon_idx: i32) {
         unsafe {
-            ffi::wxd_DataViewTreeCtrl_SetItemExpandedIcon(
-                self.handle_ptr(),
-                item.as_raw(),
-                icon_idx,
-            );
+            ffi::wxd_DataViewTreeCtrl_SetItemExpandedIcon(self.handle_ptr(), **item, icon_idx);
         }
     }
 
     // --- Item Relationships ---
     pub fn get_item_parent(&self, item: &DataViewItem) -> DataViewItem {
         unsafe {
-            let raw_item =
-                ffi::wxd_DataViewTreeCtrl_GetItemParent(self.handle_ptr(), item.as_raw());
-            DataViewItem::from_raw(raw_item)
+            let raw_item = ffi::wxd_DataViewTreeCtrl_GetItemParent(self.handle_ptr(), **item);
+            DataViewItem::from(raw_item)
         }
     }
 
     pub fn get_child_count(&self, parent: &DataViewItem) -> u32 {
-        unsafe { ffi::wxd_DataViewTreeCtrl_GetChildCount(self.handle_ptr(), parent.as_raw()) }
+        unsafe { ffi::wxd_DataViewTreeCtrl_GetChildCount(self.handle_ptr(), **parent) }
     }
 
     pub fn get_nth_child(&self, parent: &DataViewItem, pos: u32) -> DataViewItem {
         unsafe {
-            let raw_item =
-                ffi::wxd_DataViewTreeCtrl_GetNthChild(self.handle_ptr(), parent.as_raw(), pos);
-            DataViewItem::from_raw(raw_item)
+            let raw_item = ffi::wxd_DataViewTreeCtrl_GetNthChild(self.handle_ptr(), **parent, pos);
+            DataViewItem::from(raw_item)
         }
     }
 
     pub fn is_container(&self, item: &DataViewItem) -> bool {
-        unsafe { ffi::wxd_DataViewTreeCtrl_IsContainer(self.handle_ptr(), item.as_raw()) }
+        unsafe { ffi::wxd_DataViewTreeCtrl_IsContainer(self.handle_ptr(), **item) }
     }
 
     // --- Tree State ---
     pub fn expand(&self, item: &DataViewItem) {
-        unsafe {
-            ffi::wxd_DataViewTreeCtrl_Expand(self.handle_ptr(), item.as_raw());
-        }
+        unsafe { ffi::wxd_DataViewTreeCtrl_Expand(self.handle_ptr(), **item) };
     }
 
     pub fn collapse(&self, item: &DataViewItem) {
-        unsafe {
-            ffi::wxd_DataViewTreeCtrl_Collapse(self.handle_ptr(), item.as_raw());
-        }
+        unsafe { ffi::wxd_DataViewTreeCtrl_Collapse(self.handle_ptr(), **item) };
     }
 
     pub fn is_expanded(&self, item: &DataViewItem) -> bool {
-        unsafe { ffi::wxd_DataViewTreeCtrl_IsExpanded(self.handle_ptr(), item.as_raw()) }
+        unsafe { ffi::wxd_DataViewTreeCtrl_IsExpanded(self.handle_ptr(), **item) }
     }
 
     // --- Image List ---
@@ -461,21 +451,15 @@ impl DataViewTreeCtrl {
         }
 
         let mut items = Vec::with_capacity(count as usize);
-        let mut items_raw = Vec::with_capacity(count as usize);
-        items_raw.resize(
-            count as usize,
-            ffi::wxd_DataViewItem_t {
-                id: std::ptr::null_mut(),
-            },
-        );
+        let mut items_raw: Vec<*const ffi::wxd_DataViewItem_t> =
+            vec![std::ptr::null(); count as usize];
 
-        unsafe {
-            ffi::wxd_DataViewCtrl_GetSelections(self.handle_ptr(), items_raw.as_mut_ptr(), count);
+        let items_raw_ptr = items_raw.as_mut_ptr();
+        unsafe { ffi::wxd_DataViewCtrl_GetSelections(self.handle_ptr(), items_raw_ptr, count) };
 
-            for raw_item in items_raw {
-                if !raw_item.id.is_null() {
-                    items.push(DataViewItem::from_raw(raw_item));
-                }
+        for raw_ptr in items_raw {
+            if !raw_ptr.is_null() {
+                items.push(DataViewItem::from(raw_ptr));
             }
         }
 
@@ -549,7 +533,7 @@ WXD_EXPORTED wxd_Window_t* wxd_DataViewTreeCtrl_new(
 //   impl calls wxd_DataViewItem_Release.
 // - When Rust passes a &DataViewItem to C++ (e.g. parent in AppendItem), C++ uses the
 //   pointer via ToWxDVI, but does not take ownership or delete the wxDataViewItem.
-// - For parent items (like the root), DataViewItem::new_invalid() should be used, which creates
-//   an item with a null `id`. ToWxDVI handles this by creating an invalid wxDataViewItem.
+// - For parent items (like the root), DataViewItem::default() should be used, which creates
+//   an item with invalid state. ToWxDVI handles this by creating an invalid wxDataViewItem.
 // - The icon parameters are integer indices into the ImageList associated with the control.
 //   A value of -1 typically means no icon.
