@@ -4,8 +4,7 @@
 //! DataViewCtrl, DataViewListCtrl, and DataViewTreeCtrl.
 
 use super::item::DataViewItem;
-use crate::event::Event;
-use crate::event::WxEvtHandler;
+use crate::event::{Event, EventType, WxEvtHandler};
 use wxdragon_sys as ffi;
 
 /// Events emitted by DataView widgets
@@ -183,7 +182,6 @@ pub trait DataViewEventHandler: WxEvtHandler {
     where
         F: FnMut(DataViewEventData) + 'static,
     {
-        use crate::event::EventType;
         // Map enum variant to EventType
         let event_type = match event {
             DataViewEvent::SelectionChanged => EventType::DATAVIEW_SELECTION_CHANGED,

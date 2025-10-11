@@ -51,8 +51,6 @@
 #include <wx/richtext/richtextctrl.h> // ADDED: For richtext events
 #endif
 
-struct wxd_Event_t { wxEvent* event; };
-
 // --- Internal C++ Structures/Classes (Not exposed in C API) ---
 
 // Define a hash function for std::pair<int, int>
@@ -190,17 +188,6 @@ public:
 // Define WxdHandlerClientData destructor (no change needed here, it still just deletes the handler)
 WxdHandlerClientData::~WxdHandlerClientData() {
     delete handler;
-}
-
-// --- Declare the Rust helper functions ---
-// These functions will be implemented in the Rust `wxdragon` crate.
-extern "C" {
-    // The trampoline function implemented in Rust
-    // Its signature MUST match wxd_ClosureCallback in wxdragon.h
-    // void rust_event_handler_trampoline(wxd_Event_t* event_ptr, void* user_data);
-    
-    // Function implemented in Rust to drop the Box<dyn FnMut(Event)>.
-    void drop_rust_closure_box(void* ptr);
 }
 
 // WxdEventHandler Destructor Implementation

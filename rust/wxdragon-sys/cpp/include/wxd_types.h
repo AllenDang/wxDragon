@@ -455,9 +455,6 @@ typedef struct wxd_MemoryDC_t wxd_MemoryDC_t;
 typedef struct wxd_ScreenDC_t wxd_ScreenDC_t;
 typedef struct wxd_AutoBufferedPaintDC_t wxd_AutoBufferedPaintDC_t;
 
-// wxBitmap (placeholder for future use)
-typedef struct wxd_Bitmap_t wxd_Bitmap_t;
-
 // wxItemKind C Enum (for wxAuiToolBar, wxMenu, etc.)
 typedef enum {
     WXD_ITEM_NORMAL = 0,     // wxITEM_NORMAL
