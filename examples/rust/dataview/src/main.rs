@@ -54,7 +54,7 @@ fn main() {
         let year_col = DataViewColumn::new(
             "Year",
             &DataViewTextRenderer::new(
-                VariantType::Int32,
+                VariantType::String,
                 DataViewCellMode::Inert,
                 DataViewAlign::Center,
             ),

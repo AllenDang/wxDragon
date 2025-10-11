@@ -15,7 +15,7 @@ pub struct MyMusicTreeNode {
     pub node_type: NodeType,
     pub title: String,
     pub artist: String,
-    pub year: i32,
+    pub year: Option<i32>,
     pub quality: String,
     // Parent is a Weak pointer stored in a RefCell so we can set it after
     // constructing the child Rc.
@@ -37,7 +37,7 @@ impl MyMusicTreeNode {
         node_type: NodeType,
         title: &str,
         artist: &str,
-        year: i32,
+        year: Option<i32>,
         quality: &str,
     ) -> Rc<Self> {
         Rc::new(Self {
@@ -71,37 +71,37 @@ impl Drop for MyMusicData {
 
 pub fn create_music_tree_model() -> Option<CustomDataViewTreeModel> {
     // Build nodes
-    let root = MyMusicTreeNode::new(NodeType::Branch, "My Music", "", -1, "");
+    let root = MyMusicTreeNode::new(NodeType::Branch, "My Music", "", None, "");
 
-    let pop = MyMusicTreeNode::new(NodeType::Branch, "Pop music", "", -1, "");
+    let pop = MyMusicTreeNode::new(NodeType::Branch, "Pop music", "", None, "");
     MyMusicTreeNode::push_child(
         &pop,
         MyMusicTreeNode::new(
             NodeType::Leaf,
             "You are not alone",
             "Michael Jackson",
-            1995,
+            Some(1995),
             "good",
         ),
     );
     MyMusicTreeNode::push_child(
         &pop,
-        MyMusicTreeNode::new(NodeType::Leaf, "Yesterday", "The Beatles", -1, "good"),
+        MyMusicTreeNode::new(NodeType::Leaf, "Yesterday", "The Beatles", None, "good"),
     );
     MyMusicTreeNode::push_child(
         &pop,
-        MyMusicTreeNode::new(NodeType::Leaf, "Take a bow", "Madonna", 1994, "good"),
+        MyMusicTreeNode::new(NodeType::Leaf, "Take a bow", "Madonna", Some(1994), "good"),
     );
     MyMusicTreeNode::push_child(&root, pop);
 
-    let classical = MyMusicTreeNode::new(NodeType::Branch, "Classical music", "", -1, "");
+    let classical = MyMusicTreeNode::new(NodeType::Branch, "Classical music", "", None, "");
     MyMusicTreeNode::push_child(
         &classical,
         MyMusicTreeNode::new(
             NodeType::Leaf,
             "Ninth symphony",
             "Ludwig van Beethoven",
-            1824,
+            Some(1824),
             "good",
         ),
     );
@@ -111,7 +111,7 @@ pub fn create_music_tree_model() -> Option<CustomDataViewTreeModel> {
             NodeType::Leaf,
             "German Requiem",
             "Johannes Brahms",
-            1868,
+            Some(1868),
             "good",
         ),
     );
@@ -161,7 +161,10 @@ pub fn create_music_tree_model() -> Option<CustomDataViewTreeModel> {
                 match col {
                     0 => Variant::String(r.title.clone()),
                     1 => Variant::String(r.artist.clone()),
-                    2 => Variant::Int32(r.year),
+                    2 => match r.year {
+                        Some(v) => Variant::String(v.to_string()),
+                        None => Variant::String(String::new()),
+                    },
                     3 => Variant::String(r.quality.clone()),
                     _ => Variant::String(String::new()),
                 }
@@ -169,14 +172,37 @@ pub fn create_music_tree_model() -> Option<CustomDataViewTreeModel> {
             Some(n) => match col {
                 0 => Variant::String(n.title.clone()),
                 1 => Variant::String(n.artist.clone()),
-                2 => Variant::Int32(n.year),
+                2 => match n.year {
+                    Some(v) => Variant::String(v.to_string()),
+                    None => Variant::String(String::new()),
+                },
                 3 => Variant::String(n.quality.clone()),
                 _ => Variant::String(String::new()),
             },
         },
         Some(move |_: &MyMusicData, _: Option<&MyMusicTreeNode>, _: u32, _: &Variant| false),
         Some(move |_: &MyMusicData, _: Option<&MyMusicTreeNode>, _: u32| true),
-        Some(move |_: &MyMusicData, _: &MyMusicTreeNode, _: &MyMusicTreeNode, _: u32, _: bool| 0),
+        Some(
+            move |_: &MyMusicData,
+                  a: &MyMusicTreeNode,
+                  b: &MyMusicTreeNode,
+                  col: u32,
+                  asc: bool| {
+                if col == 2 {
+                    let va = a.year.unwrap_or(0);
+                    let vb = b.year.unwrap_or(0);
+                    // return negative if a < b, positive if a > b
+                    let diff = va.wrapping_sub(vb);
+                    if asc {
+                        diff
+                    } else {
+                        -diff
+                    }
+                } else {
+                    0
+                }
+            },
+        ),
     );
 
     Some(model)
