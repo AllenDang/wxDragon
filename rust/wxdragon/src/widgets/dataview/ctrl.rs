@@ -635,6 +635,23 @@ impl DataViewCtrl {
         }
     }
 
+    /// Gets the nth child of a parent item (works for tree models attached to a DataViewCtrl)
+    pub fn get_nth_child(&self, parent: &DataViewItem, pos: u32) -> DataViewItem {
+        let item =
+            unsafe { ffi::wxd_DataViewCtrl_GetNthChild(self.window.handle_ptr(), **parent, pos) };
+        DataViewItem::from(item)
+    }
+
+    /// Expand the given item (works for tree models attached to a DataViewCtrl)
+    pub fn expand(&self, item: &DataViewItem) {
+        unsafe { ffi::wxd_DataViewCtrl_Expand(self.window.handle_ptr(), **item) };
+    }
+
+    /// Ensure the given item is visible (scroll into view)
+    pub fn ensure_visible(&self, item: &DataViewItem) {
+        unsafe { ffi::wxd_DataViewCtrl_EnsureVisible(self.window.handle_ptr(), **item) };
+    }
+
     /// Gets the currently selected item.
     ///
     /// # Returns

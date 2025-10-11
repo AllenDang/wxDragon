@@ -23,6 +23,7 @@ use super::column::DataViewColumn;
 use super::enums::{DataViewAlign, DataViewCellMode, DataViewColumnFlags}; // Added DataViewCellMode and DataViewColumnFlags
 use super::renderer::{DataViewIconTextRenderer, DataViewTextRenderer}; // Added DataViewIconTextRenderer
 use super::variant::VariantType; // Added VariantType
+use super::DataViewModel;
 
 // Styles for DataViewTreeCtrl (currently uses general DataViewCtrl styles)
 // If specific styles are needed, they can be added here.
@@ -188,6 +189,14 @@ impl DataViewTreeCtrl {
         let column =
             DataViewColumn::new(label, &renderer, model_column as usize, width, align, flags);
         self.append_column(&column)
+    }
+
+    /// Associates a data model with this DataViewTreeCtrl.
+    ///
+    /// Mirrors DataViewCtrl::associate_model. The model must outlive the control.
+    pub fn associate_model<M: DataViewModel>(&self, model: &M) -> bool {
+        let model_ptr = model.handle_ptr();
+        unsafe { ffi::wxd_DataViewCtrl_AssociateModel(self.window.handle_ptr(), model_ptr) }
     }
 
     // --- Item Management ---

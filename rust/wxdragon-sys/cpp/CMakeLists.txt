@@ -109,6 +109,7 @@ set(WXDRAGON_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/dataobject.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/dataview.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/dataviewtreectrl.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/dataviewtreemodel.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/dataviewvirtuallistmodel.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/dataviewvirtuallistmodel_custom.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/datepickerctrl.cpp

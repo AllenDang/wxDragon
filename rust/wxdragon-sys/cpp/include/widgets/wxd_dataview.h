@@ -9,9 +9,6 @@ extern "C" {
 
 // Forward declarations
 typedef struct wxd_DataViewCtrl_tag wxd_DataViewCtrl_t;
-// Don't redefine these types as they're already defined in wxd_types.h
-// typedef struct wxd_DataViewModel_tag wxd_DataViewModel_t;
-// typedef struct wxd_DataViewModel_tag wxd_DataViewModel_t;
 typedef struct wxd_DataViewRenderer_tag wxd_DataViewRenderer_t;
 // typedef struct wxd_DataViewColumn_tag wxd_DataViewColumn_t;
 
@@ -78,6 +75,11 @@ WXD_EXPORTED wxd_DataViewColumn_t* wxd_DataViewCtrl_GetExpanderColumn(wxd_Window
 WXD_EXPORTED void wxd_DataViewCtrl_SetExpanderColumn(wxd_Window_t* self, wxd_DataViewColumn_t* column);
 WXD_EXPORTED bool wxd_DataViewCtrl_SetRowHeight(wxd_Window_t* self, int height);
 WXD_EXPORTED bool wxd_DataViewCtrl_SetAlternateRowColour(wxd_Window_t* self, const wxd_Colour_t* colour);
+
+// Provide tree-style navigation methods for DataViewCtrl when used with tree models
+WXD_EXPORTED const wxd_DataViewItem_t* wxd_DataViewCtrl_GetNthChild(wxd_Window_t* self, const wxd_DataViewItem_t* parent, unsigned int pos);
+WXD_EXPORTED void wxd_DataViewCtrl_Expand(wxd_Window_t* self, const wxd_DataViewItem_t* item);
+WXD_EXPORTED void wxd_DataViewCtrl_EnsureVisible(wxd_Window_t* self, const wxd_DataViewItem_t* item);
 
 // Renderer creation functions
 WXD_EXPORTED wxd_DataViewRenderer_t* wxd_DataViewTextRenderer_Create(const char* varianttype, 
@@ -199,6 +201,42 @@ WXD_EXPORTED wxd_DataViewModel_t* wxd_DataViewVirtualListModel_CreateWithCallbac
 );
 
 WXD_EXPORTED void wxd_DataViewVirtualListModel_ReleaseCallbacks(wxd_DataViewModel_t* model);
+
+// Custom tree model with callbacks: create a wxDataViewModel subclass that
+// forwards GetParent/IsContainer/GetChildren/GetValue/SetValue/IsEnabled/Compare
+// to C callbacks supplied in a struct allocated by the caller.
+
+// Callback function types for custom CustomDataViewTreeModel (C-compatible)
+typedef void* (*wxd_dataview_tree_model_get_parent_fn)(void* userdata, void* item);
+typedef bool (*wxd_dataview_tree_model_is_container_fn)(void* userdata, void* item);
+typedef void (*wxd_dataview_tree_model_get_children_fn)(void* userdata, void* item, void*** out_items, int* out_count);
+typedef void (*wxd_dataview_tree_model_free_children_fn)(void** items, int count);
+// Use the C-compatible wxd_Variant_t bridge (same as virtual list helper)
+typedef void (*wxd_dataview_tree_model_get_value_fn)(void* userdata, void* item, unsigned int col, wxd_Variant_t* out_variant);
+typedef bool (*wxd_dataview_tree_model_set_value_fn)(void* userdata, void* item, unsigned int col, const wxd_Variant_t* variant);
+typedef bool (*wxd_dataview_tree_model_is_enabled_fn)(void* userdata, void* item, unsigned int col);
+typedef int  (*wxd_dataview_tree_model_compare_fn)(void* userdata, void* item1, void* item2, unsigned int col, bool ascending);
+// Optional destructor callback for userdata. If provided, this function is
+// called with the `userdata` pointer to allow the owner to reclaim it using
+// the proper Rust type/destructor across the FFI boundary.
+typedef void (*wxd_dataview_tree_model_userdata_free_fn)(void* userdata);
+
+// Struct bundling callbacks. This is the public ABI for custom tree models.
+typedef struct wxd_DataViewTreeModel_Callbacks {
+    void* userdata;
+    wxd_dataview_tree_model_userdata_free_fn userdata_free;
+    wxd_dataview_tree_model_get_parent_fn get_parent;
+    wxd_dataview_tree_model_is_container_fn is_container;
+    wxd_dataview_tree_model_get_children_fn get_children;
+    wxd_dataview_tree_model_free_children_fn free_children;
+    wxd_dataview_tree_model_get_value_fn get_value;
+    wxd_dataview_tree_model_set_value_fn set_value;
+    wxd_dataview_tree_model_is_enabled_fn is_enabled;
+    wxd_dataview_tree_model_compare_fn compare;
+} wxd_DataViewTreeModel_Callbacks;
+
+WXD_EXPORTED wxd_DataViewModel_t* wxd_DataViewTreeModel_CreateWithCallbacks(const wxd_DataViewTreeModel_Callbacks* callbacks);
+WXD_EXPORTED void wxd_DataViewTreeModel_Release(wxd_DataViewModel_t* model);
 
 // Free function for custom model callbacks (used by Rust)
 WXD_EXPORTED void drop_rust_virtual_list_model_callbacks(void* ptr);

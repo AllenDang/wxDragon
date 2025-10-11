@@ -150,6 +150,31 @@ WXD_EXPORTED bool wxd_DataViewCtrl_InsertColumn(wxd_Window_t* self, int64_t pos,
     return ctrl->InsertColumn(static_cast<unsigned int>(pos), col);
 }
 
+// Tree-style helpers on DataViewCtrl
+WXD_EXPORTED const wxd_DataViewItem_t* wxd_DataViewCtrl_GetNthChild(wxd_Window_t* self, const wxd_DataViewItem_t* parent_wrapper, unsigned int pos) {
+    wxDataViewCtrl* ctrl = reinterpret_cast<wxDataViewCtrl*>(self);
+    const wxDataViewItem *parent_item = reinterpret_cast<const wxDataViewItem *>(parent_wrapper);
+    if (!ctrl || !parent_item) return nullptr; // Invalid parent
+    wxDataViewModel* model = ctrl->GetModel();
+    if (!model) return nullptr;
+    wxDataViewItemArray arr;
+    unsigned int count = model->GetChildren(*parent_item, arr);
+    if (pos >= count) return nullptr;
+    return wxd_DataViewItem_Clone(reinterpret_cast<const wxd_DataViewItem_t*>(&arr[pos]));
+}
+
+WXD_EXPORTED void wxd_DataViewCtrl_Expand(wxd_Window_t* self, const wxd_DataViewItem_t* item_wrapper) {
+    wxDataViewCtrl* ctrl = reinterpret_cast<wxDataViewCtrl*>(self);
+    const wxDataViewItem *item = reinterpret_cast<const wxDataViewItem *>(item_wrapper);
+    if (ctrl && item) ctrl->Expand(*item);
+}
+
+WXD_EXPORTED void wxd_DataViewCtrl_EnsureVisible(wxd_Window_t* self, const wxd_DataViewItem_t* item_wrapper) {
+    wxDataViewCtrl* ctrl = reinterpret_cast<wxDataViewCtrl*>(self);
+    const wxDataViewItem *item = reinterpret_cast<const wxDataViewItem *>(item_wrapper);
+    if (ctrl && item) ctrl->EnsureVisible(*item);
+}
+
 // Renderer creation functions
 WXD_EXPORTED wxd_DataViewRenderer_t* wxd_DataViewTextRenderer_Create(const char* varianttype, 
                                                              int64_t mode, 

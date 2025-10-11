@@ -50,8 +50,8 @@ pub use events::{DataViewEvent, DataViewEventData, DataViewEventHandler, TreeVie
 pub use item::DataViewItem;
 pub use list_ctrl::{DataViewListCtrl, DataViewListCtrlBuilder};
 pub use model::{
-    CustomDataViewVirtualListModel, DataViewItemAttr, DataViewListModel, DataViewModel,
-    DataViewVirtualListModel,
+    CustomDataViewTreeModel, CustomDataViewVirtualListModel, DataViewItemAttr, DataViewListModel,
+    DataViewModel, DataViewVirtualListModel,
 };
 pub use renderer::{
     DataViewBitmapRenderer, DataViewCheckIconTextRenderer, DataViewChoiceRenderer,
