@@ -160,7 +160,8 @@ sudo dnf install clang-devel pkg-config gtk3-devel libpng-devel libjpeg-devel me
 **Windows Additional Requirements:**
 - Visual Studio Build Tools or Visual Studio with C++ support
 - Windows SDK
-- Ninja build system: `winget install --id=Ninja-build.Ninja -e`
+- Ninja build system: `winget install --id=Ninja-build.Ninja -e`,
+  or download from [Ninja Releases](https://github.com/ninja-build/ninja/releases) directly.
 - **[REQUIRED for MinGW builds] WinLibs GCC 15.1.0 UCRT toolchain** (must match the version used for prebuilt wxWidgets libraries)
 
 > ⚠️ **Important:** You must use the exact same MinGW/WinLibs GCC version as the prebuilt wxWidgets libraries (GCC 15.1.0 UCRT, WinLibs) for MinGW builds. Mismatched toolchains will cause linker errors for C++ symbols. Download from: https://github.com/brechtsanders/winlibs_mingw/releases/tag/15.1.0posix-13.0.0-ucrt-r2

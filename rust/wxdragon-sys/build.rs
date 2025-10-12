@@ -182,9 +182,31 @@ fn build_wxdragon_wrapper(
                 .env("CC", "gcc")
                 .define("CMAKE_CXX_COMPILER", "g++")
                 .define("CMAKE_C_COMPILER", "gcc");
-        } else {
+        } else if target_env == "msvc" {
+            // Rust MSVC toolchain links against release CRT (msvcrt) even in debug builds.
+            // To avoid CRT mismatches (e.g., unresolved __imp__CrtDbgReport), we build
+            // the C++ side (wxWidgets and wrapper) with the Release CRT and link against
+            // non-"d" suffixed libs even when Rust profile is debug. We still prefer
+            // RelWithDebInfo for symbols while keeping Release CRT.
             is_debug = false;
-            cmake_config.generator("Ninja");
+
+            let rt_lib = if is_debug {
+                "MultiThreadedDebugDLL"
+            } else {
+                "MultiThreadedDLL"
+            };
+
+            let build_type = if is_debug { "Debug" } else { "RelWithDebInfo" };
+            cmake_config
+                .generator("Ninja")
+                .define("CMAKE_BUILD_TYPE", build_type)
+                .define("CMAKE_MSVC_RUNTIME_LIBRARY", rt_lib)
+                .define("CMAKE_POLICY_DEFAULT_CMP0091", "NEW")
+                .cxxflag("/EHsc");
+        } else {
+            return Err(std::io::Error::other(format!(
+                "Unsupported Windows target environment: {target_env}"
+            )));
         }
 
         if target == "i686-pc-windows-msvc" {
@@ -196,14 +218,12 @@ fn build_wxdragon_wrapper(
         }
     }
 
-    // Set CMake build type based on Rust profile
-    cmake_config.define(
-        "CMAKE_BUILD_TYPE",
-        if is_debug { "Debug" } else { "Release" },
-    );
-    if target_env == "msvc" {
-        cmake_config.cflag(if is_debug { "/MDd" } else { "/MD" });
-        cmake_config.cxxflag(if is_debug { "/MDd" } else { "/MD" });
+    if target_env != "msvc" {
+        // Set CMake build type based on Rust profile
+        cmake_config.define(
+            "CMAKE_BUILD_TYPE",
+            if is_debug { "Debug" } else { "Release" },
+        );
     }
 
     let dst = cmake_config.build();
