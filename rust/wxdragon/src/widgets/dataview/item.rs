@@ -49,8 +49,26 @@ impl std::ops::Deref for DataViewItem {
 
 impl DataViewItem {
     /// Checks if the inner DataViewItem is valid (non-null and the inner C++ object is valid).
-    pub fn is_valid(&self) -> bool {
-        !self.inner.is_null() && unsafe { ffi::wxd_DataViewItem_IsOk(self.inner) }
+    pub fn is_ok(&self) -> bool {
+        unsafe { ffi::wxd_DataViewItem_IsOk(self.inner) }
+    }
+
+    /// Returns the ID pointer associated with this DataViewItem, or None if invalid.
+    pub fn get_id<T>(&self) -> Option<*const T> {
+        if self.is_ok() {
+            Some(unsafe { ffi::wxd_DataViewItem_GetID(self.inner) as *const T })
+        } else {
+            None
+        }
+    }
+
+    /// Create a DataViewItem from an arbitrary ID pointer.
+    ///
+    /// This is the preferred generic constructor to avoid trait overlap issues
+    /// with `From<*const T>` while keeping a dedicated `From<*const wxd_DataViewItem_t>`.
+    pub fn from_id_ptr<T>(raw: *const T) -> Self {
+        let inner = unsafe { ffi::wxd_DataViewItem_CreateFromID(raw as *const std::ffi::c_void) };
+        Self { inner }
     }
 }
 

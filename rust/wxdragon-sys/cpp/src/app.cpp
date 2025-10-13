@@ -4,6 +4,8 @@
 #include <wx/app.h>
 #include <wx/image.h>
 #include <cstdlib>
+#include <wx/private/safecall.h>
+#include <wx/scopeguard.h>
 
 // --- Globals --- 
 // Store the C callback and user data provided to wxd_Main
@@ -103,22 +105,36 @@ int wxd_Main(int argc, char** argv, wxd_OnInitCallback on_init_cb, void* userDat
     // This must be done after wxEntryStart and before any image loading (e.g., in app OnInit).
     wxInitAllImageHandlers();
 
-    // wxTheApp should now be a WxdApp instance.
-    // CallOnInit will execute WxdApp::OnInit, which calls the Rust g_OnInitCallback.
-    if (wxTheApp && wxTheApp->CallOnInit()) {
-        // Rust initialization was successful (returned true)
-        wxTheApp->OnRun(); // Start the main event loop
-    } else {
-        // wxApp initialization failed (CallOnInit returned false or wxTheApp was null)
-        // Log this case, as WxdApp::OnInit (and thus Rust init) might have returned false.
-        fprintf(stderr, "wxDragon Error: wxApp initialization failed or Rust OnInit callback returned false.\n");
-        // wxEntryCleanup will be called below if wxEntryStart succeeded.
-    }
-    
+    int result = wxSafeCall<int>(
+        []() {
+            // wxTheApp should now be a WxdApp instance.
+            if (wxTheApp == nullptr) {
+                fprintf(stderr, "wxDragon Error: wxTheApp is null after wxEntryStart.\n");
+                return wxApp::GetFatalErrorExitCode();
+            }
+            // CallOnInit will execute WxdApp::OnInit, which calls the Rust g_OnInitCallback.
+            if ( !wxTheApp->CallOnInit() ) {
+                // don't call OnExit() if OnInit() failed
+                return wxTheApp->GetErrorExitCode();
+            }
+
+            // ensure that OnExit() is called if OnInit() had succeeded
+            wxON_BLOCK_EXIT_OBJ0(*wxTheApp, wxApp::OnExit);
+
+            // Rust initialization was successful (returned true),
+            // then app execution, start the main event loop
+            return wxTheApp->OnRun();
+        },
+        []() {
+            wxApp::CallOnUnhandledException();
+            return wxApp::GetFatalErrorExitCode();
+        }
+    );
+
     wxEntryCleanup();
     g_OnInitCallback = nullptr;
     g_OnInitUserData = nullptr;
-    return 0; // Consider returning an error code if init failed
+    return result;
 }
 
 // Gets the handle to the global application instance.

@@ -2,19 +2,17 @@
 // Currently, the main application logic is driven by the C wxd_Main function.
 // This module might later contain wrappers for App-specific functions if needed.
 
-use lazy_static::lazy_static;
 use std::collections::VecDeque;
 use std::ffi::{c_char, c_void, CString};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, LazyLock, Mutex};
 use wxdragon_sys as ffi; // Import Window and WxWidget trait
 
 // Type alias to reduce complexity
 type CallbackQueue = Arc<Mutex<VecDeque<Box<dyn FnOnce() + Send + 'static>>>>;
 
 // Queue for storing callbacks to be executed on the main thread
-lazy_static! {
-    static ref MAIN_THREAD_QUEUE: CallbackQueue = Arc::new(Mutex::new(VecDeque::new()));
-}
+static MAIN_THREAD_QUEUE: LazyLock<CallbackQueue> =
+    LazyLock::new(|| Arc::new(Mutex::new(VecDeque::new())));
 
 /// Schedules a callback to be executed on the main thread.
 ///
@@ -206,25 +204,51 @@ pub fn main<F>(on_init: F) -> Result<(), Box<dyn std::error::Error>>
 where
     F: FnOnce(()) + 'static,
 {
-    let on_init_boxed: Box<Box<dyn FnOnce(())>> = Box::new(Box::new(on_init));
-    let user_data_ptr = Box::into_raw(on_init_boxed) as *mut c_void;
-
-    // Prepare arguments for wxd_Main (using a default program name)
+    // Prepare arguments for wxd_Main from real command line
+    // We collect all args (including program name), convert to CString, build a null-terminated argv.
     let exit_code = unsafe {
-        let prog_name = CString::new("wxRustApp").expect("Failed to create CString for app name");
-        let mut argv: [*mut c_char; 2] = [prog_name.into_raw(), std::ptr::null_mut()];
-        let argc: i32 = 1;
+        // Prepare payload for the C trampoline. We keep ownership on Rust side and
+        // only take() the Option in the trampoline. After wxd_Main returns, we
+        // reclaim and drop the Box to avoid leaks even if OnInit wasn't called.
+        let payload = Box::new(OnInitPayload {
+            cb: Some(Box::new(on_init)),
+        });
+        let user_data_ptr = Box::into_raw(payload) as *mut c_void;
+
+        // Collect OS arguments and convert to CString losslessly via to_string_lossy()
+        let args: Vec<CString> = std::env::args_os()
+            .map(|os| {
+                // Preserve content best-effort: use lossy UTF-8; wxWidgets on Windows supports wide args internally
+                let s = os.to_string_lossy();
+                CString::new(s.as_bytes()).unwrap_or_else(|_| CString::new("").unwrap())
+            })
+            .collect();
+
+        // Build argv: raw pointers from CString; keep them alive in a separate vector to free later
+        let mut raw_args: Vec<*mut c_char> =
+            args.iter().map(|c| c.as_ptr() as *mut c_char).collect();
+        // Ensure at least one arg (program name). If none, inject a default name.
+        let _owned_prog: Option<CString>;
+        if raw_args.is_empty() {
+            let pn = CString::new("wxRustApp").expect("CString for app name");
+            raw_args.push(pn.as_ptr() as *mut c_char);
+            _owned_prog = Some(pn);
+        }
+        // Append null terminator as argv[argc] expected by some consumers
+        raw_args.push(std::ptr::null_mut());
+
+        let argc: i32 = (raw_args.len() as i32) - 1; // exclude trailing null
+        let argv_ptr = raw_args.as_mut_ptr();
 
         // Call the C entry point, passing the trampoline and the closure data
-        let result = ffi::wxd_Main(
-            argc,
-            argv.as_mut_ptr(),
-            Some(on_init_trampoline),
-            user_data_ptr,
-        );
+        let code = ffi::wxd_Main(argc, argv_ptr, Some(on_init_trampoline), user_data_ptr);
 
-        let _ = CString::from_raw(argv[0]);
-        result
+        // Reclaim and drop the payload Box to free memory in all cases.
+        // If the trampoline ran, cb was taken() and executed (now None).
+        // If it didn't, dropping here frees the closure too.
+        let _ = Box::from_raw(user_data_ptr as *mut OnInitPayload);
+
+        code
     };
 
     if exit_code != 0 {
@@ -234,19 +258,24 @@ where
     Ok(())
 }
 
+struct OnInitPayload {
+    cb: Option<Box<dyn FnOnce(())>>,
+}
+
 // Trampoline function to call the Rust closure from C
 unsafe extern "C" fn on_init_trampoline(user_data: *mut c_void) -> bool {
     if user_data.is_null() {
         return false;
     }
 
-    // Cast back to Box<dyn FnOnce(())>
-    let closure_box: Box<Box<dyn FnOnce(())>> = Box::from_raw(user_data as *mut _);
+    // Borrow the payload and take the callback out.
+    let payload = &mut *(user_data as *mut OnInitPayload);
+    let Some(cb) = payload.cb.take() else {
+        return false;
+    };
 
     // Call the closure, catching potential panics
-    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        (*closure_box)(()) // Call the closure itself
-    }));
+    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| cb(())));
 
     // Process the result
     match result {
