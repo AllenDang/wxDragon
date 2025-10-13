@@ -228,11 +228,11 @@ where
         let mut raw_args: Vec<*mut c_char> =
             args.iter().map(|c| c.as_ptr() as *mut c_char).collect();
         // Ensure at least one arg (program name). If none, inject a default name.
-        let owned_prog: Option<CString>;
+        let _owned_prog: Option<CString>;
         if raw_args.is_empty() {
             let pn = CString::new("wxRustApp").expect("CString for app name");
-            owned_prog = Some(pn);
-            raw_args.push(owned_prog.as_ref().unwrap().as_ptr() as *mut c_char);
+            raw_args.push(pn.as_ptr() as *mut c_char);
+            _owned_prog = Some(pn);
         }
         // Append null terminator as argv[argc] expected by some consumers
         raw_args.push(std::ptr::null_mut());

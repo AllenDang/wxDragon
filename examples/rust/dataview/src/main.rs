@@ -91,17 +91,17 @@ fn main() {
         let invalid = DataViewItem::default();
         // Get the visible root (first top-level item)
         let root_item = dataview.get_nth_child(&invalid, 0);
-        if root_item.is_valid() {
+        if root_item.is_ok() {
             dataview.expand(&root_item);
             dataview.ensure_visible(&root_item);
             // Expand the first child of the visible root (Pop music)
             let first_child = dataview.get_nth_child(&root_item, 0);
-            if first_child.is_valid() {
+            if first_child.is_ok() {
                 dataview.expand(&first_child);
                 dataview.ensure_visible(&first_child);
                 // Select the second grandchild ("Yesterday")
                 let grandchild = dataview.get_nth_child(&first_child, 1);
-                if grandchild.is_valid() {
+                if grandchild.is_ok() {
                     dataview.select(&grandchild);
                     dataview.ensure_visible(&grandchild);
                 }
