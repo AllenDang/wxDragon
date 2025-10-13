@@ -29,8 +29,9 @@ fn main() {
         // Create the main application frame
         let frame = Frame::builder()
             .with_title("wxDragon Notebook Example")
-            .with_size(Size::new(1100, 900))
+            .with_size(Size::new(1200, 900))
             .build();
+        frame.centre();
 
         // --- Menu Bar Setup ---
         let file_menu = Menu::builder()
@@ -353,6 +354,5 @@ fn main() {
 
         // --- Final Setup ---
         frame.show(true);
-        frame.centre();
     });
 }
