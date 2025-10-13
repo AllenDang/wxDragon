@@ -11,8 +11,6 @@ fn main() {
     let target = std::env::var("TARGET").unwrap();
     let profile = std::env::var("PROFILE").unwrap();
 
-    println!("cargo::warning=Target OS: {target_os}, Target Env: {target_env}, Target: {target}, profile: {profile}");
-
     let dest_bin_dir = std::path::Path::new(&out_dir)
         .ancestors()
         .find(|p| p.file_name().map(|n| *n == *profile).unwrap_or(false))
@@ -22,7 +20,6 @@ fn main() {
         .join("wxWidgets");
 
     let wxwidgets_dir_str = wxwidgets_dir.display().to_string();
-    println!("cargo:warning=wxWidgets source directory: {wxwidgets_dir_str}");
 
     // --- 1. Generate FFI Bindings ---
     println!("info: Generating FFI bindings...");
