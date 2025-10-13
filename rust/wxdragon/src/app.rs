@@ -206,12 +206,17 @@ pub fn main<F>(on_init: F) -> Result<(), Box<dyn std::error::Error>>
 where
     F: FnOnce(()) + 'static,
 {
-    let on_init_boxed: Box<Box<dyn FnOnce(())>> = Box::new(Box::new(on_init));
-    let user_data_ptr = Box::into_raw(on_init_boxed) as *mut c_void;
-
     // Prepare arguments for wxd_Main from real command line
     // We collect all args (including program name), convert to CString, build a null-terminated argv.
     let exit_code = unsafe {
+        // Prepare payload for the C trampoline. We keep ownership on Rust side and
+        // only take() the Option in the trampoline. After wxd_Main returns, we
+        // reclaim and drop the Box to avoid leaks even if OnInit wasn't called.
+        let payload = Box::new(OnInitPayload {
+            cb: Some(Box::new(on_init)),
+        });
+        let user_data_ptr = Box::into_raw(payload) as *mut c_void;
+
         // Collect OS arguments and convert to CString losslessly via to_string_lossy()
         let args: Vec<CString> = std::env::args_os()
             .map(|os| {
@@ -238,7 +243,14 @@ where
         let argv_ptr = raw_args.as_mut_ptr();
 
         // Call the C entry point, passing the trampoline and the closure data
-        ffi::wxd_Main(argc, argv_ptr, Some(on_init_trampoline), user_data_ptr)
+        let code = ffi::wxd_Main(argc, argv_ptr, Some(on_init_trampoline), user_data_ptr);
+
+        // Reclaim and drop the payload Box to free memory in all cases.
+        // If the trampoline ran, cb was taken() and executed (now None).
+        // If it didn't, dropping here frees the closure too.
+        let _ = Box::from_raw(user_data_ptr as *mut OnInitPayload);
+
+        code
     };
 
     if exit_code != 0 {
@@ -248,19 +260,24 @@ where
     Ok(())
 }
 
+struct OnInitPayload {
+    cb: Option<Box<dyn FnOnce(())>>,
+}
+
 // Trampoline function to call the Rust closure from C
 unsafe extern "C" fn on_init_trampoline(user_data: *mut c_void) -> bool {
     if user_data.is_null() {
         return false;
     }
 
-    // Cast back to Box<dyn FnOnce(())>
-    let closure_box: Box<Box<dyn FnOnce(())>> = Box::from_raw(user_data as *mut _);
+    // Borrow the payload and take the callback out.
+    let payload = &mut *(user_data as *mut OnInitPayload);
+    let Some(cb) = payload.cb.take() else {
+        return false;
+    };
 
     // Call the closure, catching potential panics
-    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        (*closure_box)(()) // Call the closure itself
-    }));
+    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| cb(())));
 
     // Process the result
     match result {
