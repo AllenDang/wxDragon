@@ -2,19 +2,17 @@
 // Currently, the main application logic is driven by the C wxd_Main function.
 // This module might later contain wrappers for App-specific functions if needed.
 
-use lazy_static::lazy_static;
 use std::collections::VecDeque;
 use std::ffi::{c_char, c_void, CString};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, LazyLock, Mutex};
 use wxdragon_sys as ffi; // Import Window and WxWidget trait
 
 // Type alias to reduce complexity
 type CallbackQueue = Arc<Mutex<VecDeque<Box<dyn FnOnce() + Send + 'static>>>>;
 
 // Queue for storing callbacks to be executed on the main thread
-lazy_static! {
-    static ref MAIN_THREAD_QUEUE: CallbackQueue = Arc::new(Mutex::new(VecDeque::new()));
-}
+static MAIN_THREAD_QUEUE: LazyLock<CallbackQueue> =
+    LazyLock::new(|| Arc::new(Mutex::new(VecDeque::new())));
 
 /// Schedules a callback to be executed on the main thread.
 ///

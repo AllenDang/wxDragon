@@ -3,20 +3,19 @@
 // This module provides a generic way to associate arbitrary Rust data
 // with various wxDragon elements like list items, tree items, etc.
 
-use lazy_static::lazy_static;
 use std::any::Any;
 use std::collections::HashMap;
 use std::sync::{
     atomic::{AtomicU64, Ordering},
-    Arc, RwLock,
+    Arc, LazyLock, RwLock,
 };
 
 // Global registry to store item data safely
-lazy_static! {
-    static ref ITEM_DATA_REGISTRY: RwLock<HashMap<u64, Arc<dyn Any + Send + Sync>>> =
-        RwLock::new(HashMap::new());
-    static ref NEXT_DATA_ID: AtomicU64 = AtomicU64::new(1);
-}
+static ITEM_DATA_REGISTRY: LazyLock<RwLock<HashMap<u64, Arc<dyn Any + Send + Sync>>>> =
+    LazyLock::new(|| RwLock::new(HashMap::new()));
+
+// Monotonic counter for item IDs
+static NEXT_DATA_ID: AtomicU64 = AtomicU64::new(1);
 
 /// Store an item in the global registry and return a unique ID
 pub fn store_item_data<T: Any + Send + Sync + 'static>(data: T) -> u64 {
