@@ -209,22 +209,36 @@ where
     let on_init_boxed: Box<Box<dyn FnOnce(())>> = Box::new(Box::new(on_init));
     let user_data_ptr = Box::into_raw(on_init_boxed) as *mut c_void;
 
-    // Prepare arguments for wxd_Main (using a default program name)
+    // Prepare arguments for wxd_Main from real command line
+    // We collect all args (including program name), convert to CString, build a null-terminated argv.
     let exit_code = unsafe {
-        let prog_name = CString::new("wxRustApp").expect("Failed to create CString for app name");
-        let mut argv: [*mut c_char; 2] = [prog_name.into_raw(), std::ptr::null_mut()];
-        let argc: i32 = 1;
+        // Collect OS arguments and convert to CString losslessly via to_string_lossy()
+        let args: Vec<CString> = std::env::args_os()
+            .map(|os| {
+                // Preserve content best-effort: use lossy UTF-8; wxWidgets on Windows supports wide args internally
+                let s = os.to_string_lossy();
+                CString::new(s.as_bytes()).unwrap_or_else(|_| CString::new("").unwrap())
+            })
+            .collect();
+
+        // Build argv: raw pointers from CString; keep them alive in a separate vector to free later
+        let mut raw_args: Vec<*mut c_char> =
+            args.iter().map(|c| c.as_ptr() as *mut c_char).collect();
+        // Ensure at least one arg (program name). If none, inject a default name.
+        let owned_prog: Option<CString>;
+        if raw_args.is_empty() {
+            let pn = CString::new("wxRustApp").expect("CString for app name");
+            owned_prog = Some(pn);
+            raw_args.push(owned_prog.as_ref().unwrap().as_ptr() as *mut c_char);
+        }
+        // Append null terminator as argv[argc] expected by some consumers
+        raw_args.push(std::ptr::null_mut());
+
+        let argc: i32 = (raw_args.len() as i32) - 1; // exclude trailing null
+        let argv_ptr = raw_args.as_mut_ptr();
 
         // Call the C entry point, passing the trampoline and the closure data
-        let result = ffi::wxd_Main(
-            argc,
-            argv.as_mut_ptr(),
-            Some(on_init_trampoline),
-            user_data_ptr,
-        );
-
-        let _ = CString::from_raw(argv[0]);
-        result
+        ffi::wxd_Main(argc, argv_ptr, Some(on_init_trampoline), user_data_ptr)
     };
 
     if exit_code != 0 {
