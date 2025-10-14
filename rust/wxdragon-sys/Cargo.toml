@@ -28,4 +28,7 @@ richtext = []
 [build-dependencies]
 bindgen = "0.72"    # For generating Rust bindings from C/C++ headers
 cmake = "0.1"
+flate2 = "1.1.4"
 pkg-config = "0.3"  # For finding libgtk and its dependencies (Linux only)
+rawzip = "0.4"
+reqwest = { version = "0.12", features = ["blocking", "rustls-tls", "socks"] }

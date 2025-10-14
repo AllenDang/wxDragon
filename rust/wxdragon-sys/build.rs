@@ -1,4 +1,8 @@
-fn main() {
+const WX_SRC_URL: &str =
+    "https://github.com/wxWidgets/wxWidgets/releases/download/v3.3.1/wxWidgets-3.3.1.zip";
+const WX_VERSION: &str = "3.3.1";
+
+fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
     println!("Building wxdragon-sys...");
 
     println!("cargo::rerun-if-changed=cpp");
@@ -20,6 +24,31 @@ fn main() {
         .join("wxWidgets");
 
     let wxwidgets_dir_str = wxwidgets_dir.display().to_string();
+
+    let ver_matched = chk_wx_version(&wxwidgets_dir, WX_VERSION).unwrap_or(false);
+    if !ver_matched {
+        std::fs::remove_dir_all(&wxwidgets_dir).ok();
+
+        let archive_dest_path = std::env::temp_dir().join("wxWidgets.zip");
+
+        if let Err(e) = download_file_with_git_http_proxy(WX_SRC_URL, &archive_dest_path) {
+            println!(
+                "cargo::error=Could not download wxWidgets source archive from {WX_SRC_URL}: {e}\n\
+Potential solutions: Check your network connectivity, ensure the URL is accessible, and verify any proxy settings."
+            );
+            return Err(Box::new(e));
+        }
+
+        if let Err(e) = extract_zip_archive(&archive_dest_path, &wxwidgets_dir) {
+            println!("cargo::error=Could not extract wxWidgets source archive: {e}");
+            if wxwidgets_dir.exists() {
+                if let Err(remove_err) = std::fs::remove_dir_all(&wxwidgets_dir) {
+                    println!("cargo::warning=Failed to clean up {wxwidgets_dir:?} directory after extraction error: {remove_err}");
+                }
+            }
+            return Err(Box::new(e));
+        }
+    }
 
     // --- 1. Generate FFI Bindings ---
     println!("info: Generating FFI bindings...");
@@ -70,7 +99,7 @@ fn main() {
             .expect("Couldn't write bindings!");
 
         println!("info: Successfully generated FFI bindings");
-        return;
+        return Ok(());
     }
 
     let mut bindings_builder2 = bindings_builder.clone();
@@ -122,6 +151,7 @@ fn main() {
         &target_env,
     )
     .expect("Failed to build wxDragon wrapper library");
+    Ok(())
 }
 
 fn build_wxdragon_wrapper(
@@ -624,4 +654,152 @@ fn fix_isPlatformVersionAtLeast() -> std::io::Result<()> {
     }
 
     Err(Error::new(NotFound, "Could not find clang runtime library"))
+}
+
+use std::fs::File;
+use std::path::Path;
+
+/// Try to read the proxy URL via `git config --get http.proxy`.
+fn get_git_http_proxy() -> Option<String> {
+    let output = std::process::Command::new("git")
+        .args(["config", "--get", "http.proxy"])
+        .output()
+        .ok()?;
+    if !output.status.success() {
+        return None;
+    }
+    let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
+    if stdout.is_empty() {
+        None
+    } else {
+        Some(stdout)
+    }
+}
+
+/// Download a ZIP file from `url` to `dest_path`, using ~/.gitconfig [http].proxy if present.
+/// Falls back to direct connection if no proxy is configured.
+pub fn download_file_with_git_http_proxy<P: AsRef<Path>>(
+    url: &str,
+    dest_path: P,
+) -> std::io::Result<()> {
+    use std::io::Error;
+    // Build reqwest blocking client, optionally with proxy.
+    let client = match get_git_http_proxy() {
+        Some(proxy_url) => {
+            // Try with proxy first
+            match reqwest::blocking::Client::builder()
+                .proxy(reqwest::Proxy::all(&proxy_url).map_err(Error::other)?)
+                .build()
+            {
+                Ok(c) => c,
+                Err(e) => return Err(Error::other(e)),
+            }
+        }
+        None => {
+            // No proxy; direct
+            reqwest::blocking::Client::new()
+        }
+    };
+
+    // Perform GET request
+    let mut resp = client.get(url).send().map_err(Error::other)?;
+    if !resp.status().is_success() {
+        return Err(Error::other(format!("HTTP error: {}", resp.status())));
+    }
+
+    // Stream to file to avoid loading the entire ZIP into memory.
+    let path = dest_path.as_ref();
+    if let Some(parent) = path.parent() {
+        if !parent.as_os_str().is_empty() {
+            std::fs::create_dir_all(parent)?;
+        }
+    }
+    let mut file = File::create(path)?;
+    resp.copy_to(&mut file).map_err(Error::other)?;
+    Ok(())
+}
+
+fn extract_zip_archive<P, T>(archive_path: P, target_dir: T) -> std::io::Result<()>
+where
+    P: AsRef<std::path::Path>,
+    T: AsRef<std::path::Path>,
+{
+    use rawzip::{CompressionMethod, ZipArchive, RECOMMENDED_BUFFER_SIZE};
+    use std::io::{Error, ErrorKind::InvalidData};
+
+    let file = std::fs::File::open(archive_path)?;
+    let mut buffer = vec![0_u8; RECOMMENDED_BUFFER_SIZE];
+    let archive = ZipArchive::from_file(file, &mut buffer)
+        .map_err(|e| Error::new(InvalidData, format!("Failed to read ZIP archive: {e}")))?;
+
+    let mut entries = archive.entries(&mut buffer);
+    while let Some(entry) = entries
+        .next_entry()
+        .map_err(|e| Error::new(InvalidData, format!("Failed to read entry: {e}")))?
+    {
+        let file_path = entry.file_path();
+        let file_path = match file_path.try_normalize() {
+            Ok(p) => p,
+            Err(e) => {
+                println!("cargo:warning=Skipping invalid file path {file_path:?} in ZIP: {e}");
+                continue;
+            }
+        };
+        let out_path = target_dir.as_ref().join(file_path.as_ref());
+
+        if entry.is_dir() {
+            std::fs::create_dir_all(&out_path)?;
+            continue;
+        }
+
+        if let Some(parent) = out_path.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+        let zip_entry = archive
+            .get_entry(entry.wayfinder())
+            .map_err(|e| Error::new(InvalidData, format!("Failed to get entry: {e}")))?;
+        let reader = zip_entry.reader();
+
+        let mut outfile = std::fs::File::create(&out_path)?;
+        let method = entry.compression_method();
+        match method {
+            CompressionMethod::Store => {
+                let mut verifier = zip_entry.verifying_reader(reader);
+                std::io::copy(&mut verifier, &mut outfile)?;
+            }
+            CompressionMethod::Deflate => {
+                let inflater = flate2::read::DeflateDecoder::new(reader);
+                let mut verifier = zip_entry.verifying_reader(inflater);
+                std::io::copy(&mut verifier, &mut outfile)?;
+            }
+            _ => {
+                println!("cargo:warning=Unsupported compression method {method:?} for file: {file_path:?}");
+            }
+        }
+    }
+
+    Ok(())
+}
+
+fn chk_wx_version<P: AsRef<std::path::Path>>(
+    wxwidgets_dir: P,
+    expected_version: &str,
+) -> std::io::Result<bool> {
+    use std::io::{BufRead, BufReader};
+    let cfg = wxwidgets_dir.as_ref().join("configure");
+
+    let file = std::fs::File::open(cfg)?;
+    let reader = BufReader::new(file);
+
+    for line in reader.lines() {
+        let line = line?;
+        if let Some(ver) = line.strip_prefix("PACKAGE_VERSION='") {
+            if let Some(end) = ver.find('\'') {
+                let found_version = &ver[..end];
+                let matched = found_version == expected_version;
+                return Ok(matched);
+            }
+        }
+    }
+    Ok(false)
 }
