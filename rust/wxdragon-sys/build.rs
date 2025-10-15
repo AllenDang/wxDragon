@@ -202,13 +202,26 @@ fn build_wxdragon_wrapper(
     if target_os == "windows" {
         if target_env == "gnu" {
             // Potentially set MinGW toolchain for CMake if not automatically detected
+            let host_os = std::env::consts::OS;
+            let (generator, cc, cxx) = if host_os == "macos" {
+                // On macOS, use Unix Makefiles and MinGW cross-compiler for cross-compilation to Windows
+                (
+                    "Unix Makefiles",
+                    "x86_64-w64-mingw32-gcc",
+                    "x86_64-w64-mingw32-g++",
+                )
+            } else {
+                // On Windows, use MinGW Makefiles and native compilers
+                ("MinGW Makefiles", "gcc", "g++")
+            };
+
             cmake_config
-                .generator("MinGW Makefiles")
+                .generator(generator)
                 .define("--config", &profile)
-                .env("CXX", "g++")
-                .env("CC", "gcc")
-                .define("CMAKE_CXX_COMPILER", "g++")
-                .define("CMAKE_C_COMPILER", "gcc");
+                .env("CXX", cxx)
+                .env("CC", cc)
+                .define("CMAKE_CXX_COMPILER", cxx)
+                .define("CMAKE_C_COMPILER", cc);
         } else if target_env == "msvc" {
             // Rust MSVC toolchain links against release CRT (msvcrt) even in debug builds.
             // To avoid CRT mismatches (e.g., unresolved __imp__CrtDbgReport), we build
@@ -277,13 +290,20 @@ fn build_wxdragon_wrapper(
             println!("cargo:rustc-link-search=native={wx_lib2}");
 
             // --- Dynamically find MinGW GCC library paths ---
-            let gcc_path = "x86_64-w64-mingw32-gcc"; // Assume it's in PATH
+            let host_os = std::env::consts::OS;
+            let gcc_path = if host_os == "macos" {
+                // On macOS, use the cross-compiler
+                "x86_64-w64-mingw32-gcc"
+            } else {
+                // On Windows, use the native compiler
+                "gcc"
+            };
 
             // Find the path containing libgcc.a
             let output_libgcc = std::process::Command::new(gcc_path)
                 .arg("-print-libgcc-file-name")
                 .output()
-                .expect("Failed to execute x86_64-w64-mingw32-gcc -print-libgcc-file-name");
+                .unwrap_or_else(|_| panic!("Failed to execute {gcc_path} -print-libgcc-file-name"));
 
             if output_libgcc.status.success() {
                 let libgcc_path_str = String::from_utf8_lossy(&output_libgcc.stdout)
