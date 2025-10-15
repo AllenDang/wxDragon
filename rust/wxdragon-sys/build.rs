@@ -30,6 +30,7 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
 
         let archive_dest_path = std::env::temp_dir().join("wxWidgets.zip");
 
+        #[allow(clippy::print_literal)]
         if let Err(e) = download_file_with_git_http_proxy(WX_SRC_URL, &archive_dest_path) {
             println!(
                 "cargo::error=Could not download wxWidgets source archive from {WX_SRC_URL}: {e}\n{}\n{}",
