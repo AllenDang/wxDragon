@@ -148,6 +148,13 @@ Cross-compilation is supported, including building Windows executables from macO
 - CMake
 - C++ compiler
 
+> Note: To users who have difficulty accessing GitHub, you should prepare an HTTP proxy and set it to your git config:
+> ```bash
+> git config --global http.proxy http://your-proxy:port
+> ```
+> Since wxDragon's builder downloads wxWidgets source code from GitHub using git's proxy settings,
+> applying the proxy will help avoid download issues.
+
 **Linux Additional Requirements:**
 ```bash
 # Ubuntu/Debian
