@@ -1,5 +1,47 @@
 # Changelog
 
+## 0.9.0
+
+### New Features
+- **App Events Trait with macOS Implementation**: Added comprehensive application event handling system
+
+### Enhancements
+- **Build System Improvements**: Major refactoring of the build system for better maintainability
+  - Now downloads wxWidgets as a zip archive during build
+
+- **DataViewItem API Enhancement**: Improved DataViewItem functionality
+  - Added `is_ok()` method for validity checking
+  - Added `get_id()` method for retrieving item identifiers
+  - Better item state management
+
+- **Code Quality Improvements**: Enhanced code maintainability and safety
+  - Removed `lazy_static` dependency in favor of modern alternatives
+  - Fixed potential memory leak in `wxDragon::main`
+  - Refactored `argc` & `argv` handling for better memory safety
+  - Refined `wxd_Main` function implementation
+  - Removed unsafe calls from user code where possible
+  - Cleaned up unused code and dependencies
+
+- **DataViewTreeModel Implementation**: Added comprehensive tree model support for DataView controls
+  - Full implementation of hierarchical data models
+  - Enhanced DataView functionality with tree-based data structures
+
+### Bug Fixes
+- **Type Safety**: Improved type handling throughout the codebase
+  - Using `Option<T>` instead of `-1` sentinel values for better type safety
+  - Enhanced null-safety patterns
+
+### Refactoring
+- **Build Configuration**: Streamlined build process
+
+### Examples
+- **Gallery Example Updates**: Improved gallery example presentation
+
+### Platform Support
+- ✅ **Enhanced macOS Support**: Full application event handling support
+- ✅ **Improved Windows GNU Support**: Better cross-compilation from macOS
+- ✅ **Linux**: All improvements fully compatible
+
 ## 0.8.30
 
 - Implement From and Into Bitmap for NullBitmap
