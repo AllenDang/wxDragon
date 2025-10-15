@@ -32,8 +32,9 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
 
         if let Err(e) = download_file_with_git_http_proxy(WX_SRC_URL, &archive_dest_path) {
             println!(
-                "cargo::error=Could not download wxWidgets source archive from {WX_SRC_URL}: {e}\n\
-Potential solutions: Check your network connectivity, ensure the URL is accessible, and verify any proxy settings."
+                "cargo::error=Could not download wxWidgets source archive from {WX_SRC_URL}: {e}\n{}\n{}",
+                "Potential solutions: Check your network connectivity, ensure the URL is accessible,",
+                "and verify any proxy settings and set it via `git config --global http.proxy http://your-proxy:port`."
             );
             return Err(Box::new(e));
         }

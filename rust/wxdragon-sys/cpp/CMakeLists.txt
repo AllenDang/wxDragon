@@ -47,7 +47,7 @@ set(wxUSE_XML ON CACHE BOOL "Use XML support for XRC. Since wxUSE_XRC is always 
 set(wxUSE_LIBWEBP OFF CACHE BOOL "Disable WebP support to avoid extra dependencies")
 
 # wxWidgets source directory, normally this needn't be changed, but can be adjusted if needed
-set(WXWIDGETS_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../wxWidgets CACHE PATH "Path to the wxWidgets libraries")
+set(WXWIDGETS_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../target/debug/wxWidgets CACHE PATH "Path to the wxWidgets libraries")
 message(STATUS "Using wxWidgets libraries source from: ${WXWIDGETS_LIB_DIR}")
 
 # wxWidgets build directory, note that this can be changed to a different path if needed
