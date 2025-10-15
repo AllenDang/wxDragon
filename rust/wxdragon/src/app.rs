@@ -3,7 +3,9 @@
 // This module might later contain wrappers for App-specific functions if needed.
 
 use std::collections::VecDeque;
-use std::ffi::{c_char, c_int, c_void, CStr, CString};
+use std::ffi::{c_char, c_void, CString};
+#[cfg(target_os = "macos")]
+use std::ffi::{c_int, CStr};
 use std::sync::{Arc, LazyLock, Mutex};
 use wxdragon_sys as ffi; // Import Window and WxWidget trait
 
@@ -114,16 +116,24 @@ pub fn process_callbacks() {
 /// ```
 #[derive(Clone)]
 pub struct App {
+    #[cfg(target_os = "macos")]
     handle: *mut ffi::wxd_App_t,
 }
 
 impl App {
     pub(crate) fn new() -> Option<Self> {
-        let handle = unsafe { ffi::wxd_GetApp() };
-        if handle.is_null() {
-            None
-        } else {
-            Some(App { handle })
+        #[cfg(target_os = "macos")]
+        {
+            let handle = unsafe { ffi::wxd_GetApp() };
+            if handle.is_null() {
+                None
+            } else {
+                Some(App { handle })
+            }
+        }
+        #[cfg(not(target_os = "macos"))]
+        {
+            Some(App {})
         }
     }
 }
