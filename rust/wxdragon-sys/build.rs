@@ -19,9 +19,8 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
         .ancestors()
         .find(|p| p.file_name().map(|n| *n == *profile).unwrap_or(false))
         .expect("Could not find destination binary directory");
-    let wxwidgets_dir = std::env::current_dir()
-        .expect("Failed to get current directory")
-        .join("wxWidgets");
+    // Download wxWidgets to target directory to avoid including it in published crate
+    let wxwidgets_dir = dest_bin_dir.join("wxWidgets");
 
     let wxwidgets_dir_str = wxwidgets_dir.display().to_string();
 
