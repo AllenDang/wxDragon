@@ -43,14 +43,13 @@ fn embed_windows_manifest(name: &str) {
 
 /// Compile and embed wx.rc resources for wxWidgets
 fn embed_wx_resources() {
-    // Find the wxWidgets directory with wx.rc
+    // Find the wxWidgets directory
+    let wx_dir = get_dest_bin_dir().join("wxWidgets");
 
-    // The wxdragon-sys crate's root directory
-    let crate_dir = get_crate_dir("wxdragon-sys").expect("Could not get wxdragon-sys crate dir");
-
-    // Look for wxWidgets directory
-    let wx_dir = crate_dir.join("wxWidgets");
-    let wx_rc_path = wx_dir.join("include").join("wx").join("msw").join("wx.rc");
+    let Ok(wx_rc_path) = get_wx_rc_path(&wx_dir) else {
+        // If wx.rc is not found, skip embedding resources
+        return;
+    };
 
     let wx_include_path = wx_dir.join("include");
 
@@ -61,6 +60,7 @@ fn embed_wx_resources() {
     }
 }
 
+#[allow(dead_code)]
 fn get_crate_dir(crate_name: &str) -> std::io::Result<std::path::PathBuf> {
     let output = std::process::Command::new("cargo")
         .arg("metadata")
@@ -84,4 +84,44 @@ fn get_crate_dir(crate_name: &str) -> std::io::Result<std::path::PathBuf> {
         }
     }
     Err(std::io::Error::other("crate_dir not found"))
+}
+
+fn get_wx_rc_path(wx_dir: &std::path::Path) -> std::io::Result<std::path::PathBuf> {
+    let wx_rc_path = wx_dir.join("include").join("wx").join("msw").join("wx.rc");
+
+    // Retry logic: Check if wx.rc exists, retry up to 10 times with a 5-second delay
+    let mut retry_count = 0;
+    const MAX_RETRIES: u32 = 10;
+    const RETRY_DELAY_SECS: u64 = 5;
+
+    while !wx_rc_path.exists() && retry_count < MAX_RETRIES {
+        if retry_count == 0 {
+            println!("cargo::warning=wx.rc not found at {wx_rc_path:?}, waiting and retrying...");
+        }
+
+        println!(
+            "cargo::warning=Retry {}/{MAX_RETRIES}: Waiting {RETRY_DELAY_SECS} seconds before checking again...",
+            retry_count + 1
+        );
+
+        std::thread::sleep(std::time::Duration::from_secs(RETRY_DELAY_SECS));
+        retry_count += 1;
+    }
+
+    if !wx_rc_path.exists() {
+        println!("cargo::warning=wx.rc not found at {wx_rc_path:?} after {MAX_RETRIES} retries, skipping resource embedding");
+        return Err(std::io::Error::other("wx.rc not found"));
+    }
+    Ok(wx_rc_path)
+}
+
+fn get_dest_bin_dir() -> std::path::PathBuf {
+    let out_dir = std::path::PathBuf::from(std::env::var("OUT_DIR").unwrap());
+    let profile = std::env::var("PROFILE").unwrap();
+
+    let dest_bin_dir = std::path::Path::new(&out_dir)
+        .ancestors()
+        .find(|p| p.file_name().map(|n| *n == *profile).unwrap_or(false))
+        .expect("Could not find destination binary directory");
+    dest_bin_dir.to_path_buf()
 }
