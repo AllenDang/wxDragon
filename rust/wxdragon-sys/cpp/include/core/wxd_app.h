@@ -39,4 +39,15 @@ WXD_EXPORTED void wxd_SystemAppearance_Destroy(wxd_SystemAppearance_t* appearanc
 
 // --- End of Appearance Support ---
 
+// --- macOS-specific App Event Handlers ---
+
+// Register handlers for macOS application events (supports multiple handlers per event)
+WXD_EXPORTED void wxd_App_AddMacOpenFilesHandler(wxd_App_t* app, wxd_MacOpenFilesCallback callback, void* userData);
+WXD_EXPORTED void wxd_App_AddMacOpenURLHandler(wxd_App_t* app, wxd_MacOpenURLCallback callback, void* userData);
+WXD_EXPORTED void wxd_App_AddMacNewFileHandler(wxd_App_t* app, wxd_MacNewFileCallback callback, void* userData);
+WXD_EXPORTED void wxd_App_AddMacReopenAppHandler(wxd_App_t* app, wxd_MacReopenAppCallback callback, void* userData);
+WXD_EXPORTED void wxd_App_AddMacPrintFilesHandler(wxd_App_t* app, wxd_MacPrintFilesCallback callback, void* userData);
+
+// --- End of macOS-specific App Event Handlers ---
+
 #endif // WXD_APP_H 

@@ -1,5 +1,5 @@
 // --- Core Types & Traits ---
-pub use crate::app::{call_after, get_app, main, set_appearance, set_top_window};
+pub use crate::app::{call_after, get_app, main, set_appearance, set_top_window, App};
 pub use crate::appearance::{
     get_app as get_app_for_appearance, get_system_appearance, is_system_dark_mode, AppAppearance,
     Appearance, AppearanceResult, SystemAppearance,
@@ -14,7 +14,7 @@ pub use crate::datetime::DateTime;
 pub use crate::event::{Event, EventType, IdleEvent, IdleMode, WindowEventData, WxEvtHandler};
 // ADDED: Event category traits
 pub use crate::event::{
-    ButtonEvents, MenuEvents, ScrollEvents, TextEvents, TreeEvents, WindowEvents,
+    AppEvents, ButtonEvents, MenuEvents, ScrollEvents, TextEvents, TreeEvents, WindowEvents,
 };
 // ADDED: Event Data Structs
 pub use crate::event::event_data::{CommandEventData, KeyEventData, MouseEventData};

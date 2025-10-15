@@ -3,7 +3,7 @@
 // This module might later contain wrappers for App-specific functions if needed.
 
 use std::collections::VecDeque;
-use std::ffi::{c_char, c_void, CString};
+use std::ffi::{c_char, c_int, c_void, CStr, CString};
 use std::sync::{Arc, LazyLock, Mutex};
 use wxdragon_sys as ffi; // Import Window and WxWidget trait
 
@@ -89,6 +89,47 @@ pub fn process_callbacks() {
         ffi::wxd_App_ProcessCallbacks();
     }
 }
+
+/// Application handle for setting up app-level event handlers
+///
+/// This handle is passed to the closure in `wxdragon::main()` and provides
+/// methods for registering application-level event handlers, including
+/// macOS-specific events.
+///
+/// # Example
+/// ```no_run
+/// use wxdragon::prelude::*;
+///
+/// wxdragon::main(|app| {
+///     // Use app to register event handlers
+///     app.on_mac_open_files(|files| {
+///         println!("Files opened: {:?}", files);
+///     });
+///
+///     let frame = Frame::builder()
+///         .with_title("My App")
+///         .build();
+///     frame.show(true);
+/// });
+/// ```
+#[derive(Clone)]
+pub struct App {
+    handle: *mut ffi::wxd_App_t,
+}
+
+impl App {
+    pub(crate) fn new() -> Option<Self> {
+        let handle = unsafe { ffi::wxd_GetApp() };
+        if handle.is_null() {
+            None
+        } else {
+            Some(App { handle })
+        }
+    }
+}
+
+unsafe impl Send for App {}
+unsafe impl Sync for App {}
 
 /// Sets the application's top window.
 ///
@@ -178,6 +219,220 @@ pub fn set_appearance(
     }
 }
 
+// Implement AppEvents trait for App
+impl crate::event::AppEvents for App {
+    fn on_open_files<F>(&self, callback: F)
+    where
+        F: Fn(Vec<String>) + Send + 'static,
+    {
+        #[cfg(target_os = "macos")]
+        {
+            let callback = Box::new(callback);
+            let user_data = Box::into_raw(callback) as *mut c_void;
+
+            unsafe {
+                ffi::wxd_App_AddMacOpenFilesHandler(
+                    self.handle,
+                    Some(mac_open_files_trampoline::<F>),
+                    user_data,
+                );
+            }
+        }
+        #[cfg(not(target_os = "macos"))]
+        {
+            let _ = callback; // Suppress unused warning
+        }
+    }
+
+    fn on_open_url<F>(&self, callback: F)
+    where
+        F: Fn(String) + Send + 'static,
+    {
+        #[cfg(target_os = "macos")]
+        {
+            let callback = Box::new(callback);
+            let user_data = Box::into_raw(callback) as *mut c_void;
+
+            unsafe {
+                ffi::wxd_App_AddMacOpenURLHandler(
+                    self.handle,
+                    Some(mac_open_url_trampoline::<F>),
+                    user_data,
+                );
+            }
+        }
+        #[cfg(not(target_os = "macos"))]
+        {
+            let _ = callback;
+        }
+    }
+
+    fn on_new_file<F>(&self, callback: F)
+    where
+        F: Fn() + Send + 'static,
+    {
+        #[cfg(target_os = "macos")]
+        {
+            let callback = Box::new(callback);
+            let user_data = Box::into_raw(callback) as *mut c_void;
+
+            unsafe {
+                ffi::wxd_App_AddMacNewFileHandler(
+                    self.handle,
+                    Some(mac_new_file_trampoline::<F>),
+                    user_data,
+                );
+            }
+        }
+        #[cfg(not(target_os = "macos"))]
+        {
+            let _ = callback;
+        }
+    }
+
+    fn on_reopen_app<F>(&self, callback: F)
+    where
+        F: Fn() + Send + 'static,
+    {
+        #[cfg(target_os = "macos")]
+        {
+            let callback = Box::new(callback);
+            let user_data = Box::into_raw(callback) as *mut c_void;
+
+            unsafe {
+                ffi::wxd_App_AddMacReopenAppHandler(
+                    self.handle,
+                    Some(mac_reopen_app_trampoline::<F>),
+                    user_data,
+                );
+            }
+        }
+        #[cfg(not(target_os = "macos"))]
+        {
+            let _ = callback;
+        }
+    }
+
+    fn on_print_files<F>(&self, callback: F)
+    where
+        F: Fn(Vec<String>) + Send + 'static,
+    {
+        #[cfg(target_os = "macos")]
+        {
+            let callback = Box::new(callback);
+            let user_data = Box::into_raw(callback) as *mut c_void;
+
+            unsafe {
+                ffi::wxd_App_AddMacPrintFilesHandler(
+                    self.handle,
+                    Some(mac_print_files_trampoline::<F>),
+                    user_data,
+                );
+            }
+        }
+        #[cfg(not(target_os = "macos"))]
+        {
+            let _ = callback;
+        }
+    }
+}
+
+// Trampoline functions for macOS
+#[cfg(target_os = "macos")]
+unsafe extern "C" fn mac_open_files_trampoline<F>(
+    user_data: *mut c_void,
+    files: *mut *const c_char,
+    count: c_int,
+) where
+    F: Fn(Vec<String>) + Send + 'static,
+{
+    if user_data.is_null() || files.is_null() {
+        return;
+    }
+
+    let callback = &*(user_data as *const F);
+
+    let mut file_list = Vec::new();
+    for i in 0..count as isize {
+        let file_ptr = *files.offset(i);
+        if !file_ptr.is_null() {
+            if let Ok(file_str) = CStr::from_ptr(file_ptr).to_str() {
+                file_list.push(file_str.to_string());
+            }
+        }
+    }
+
+    callback(file_list);
+}
+
+#[cfg(target_os = "macos")]
+unsafe extern "C" fn mac_open_url_trampoline<F>(user_data: *mut c_void, url: *const c_char)
+where
+    F: Fn(String) + Send + 'static,
+{
+    if user_data.is_null() || url.is_null() {
+        return;
+    }
+
+    let callback = &*(user_data as *const F);
+    if let Ok(url_str) = CStr::from_ptr(url).to_str() {
+        callback(url_str.to_string());
+    }
+}
+
+#[cfg(target_os = "macos")]
+unsafe extern "C" fn mac_new_file_trampoline<F>(user_data: *mut c_void)
+where
+    F: Fn() + Send + 'static,
+{
+    if user_data.is_null() {
+        return;
+    }
+
+    let callback = &*(user_data as *const F);
+    callback();
+}
+
+#[cfg(target_os = "macos")]
+unsafe extern "C" fn mac_reopen_app_trampoline<F>(user_data: *mut c_void)
+where
+    F: Fn() + Send + 'static,
+{
+    if user_data.is_null() {
+        return;
+    }
+
+    let callback = &*(user_data as *const F);
+    callback();
+}
+
+#[cfg(target_os = "macos")]
+unsafe extern "C" fn mac_print_files_trampoline<F>(
+    user_data: *mut c_void,
+    files: *mut *const c_char,
+    count: c_int,
+) where
+    F: Fn(Vec<String>) + Send + 'static,
+{
+    if user_data.is_null() || files.is_null() {
+        return;
+    }
+
+    let callback = &*(user_data as *const F);
+
+    let mut file_list = Vec::new();
+    for i in 0..count as isize {
+        let file_ptr = *files.offset(i);
+        if !file_ptr.is_null() {
+            if let Ok(file_str) = CStr::from_ptr(file_ptr).to_str() {
+                file_list.push(file_str.to_string());
+            }
+        }
+    }
+
+    callback(file_list);
+}
+
 /// Runs the wxWidgets application main loop, providing a safe entry point.
 ///
 /// This function initializes wxWidgets and starts the event loop. It takes a closure
@@ -191,18 +446,23 @@ pub fn set_appearance(
 /// ```no_run
 /// use wxdragon::prelude::*;
 ///
-/// wxdragon::main(|_| {
+/// wxdragon::main(|app| {
+///     // app is the App handle for registering event handlers
+///     app.on_mac_open_files(|files| {
+///         println!("Files: {:?}", files);
+///     });
+///
 ///     let frame = Frame::builder()
 ///         .with_title("My App")
 ///         .build();
 ///     frame.show(true);
-///     
+///
 ///     // No need to preserve the frame - wxWidgets manages it
 /// });
 /// ```
 pub fn main<F>(on_init: F) -> Result<(), Box<dyn std::error::Error>>
 where
-    F: FnOnce(()) + 'static,
+    F: FnOnce(App) + 'static,
 {
     // Prepare arguments for wxd_Main from real command line
     // We collect all args (including program name), convert to CString, build a null-terminated argv.
@@ -259,7 +519,7 @@ where
 }
 
 struct OnInitPayload {
-    cb: Option<Box<dyn FnOnce(())>>,
+    cb: Option<Box<dyn FnOnce(App)>>,
 }
 
 // Trampoline function to call the Rust closure from C
@@ -274,8 +534,17 @@ unsafe extern "C" fn on_init_trampoline(user_data: *mut c_void) -> bool {
         return false;
     };
 
-    // Call the closure, catching potential panics
-    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| cb(())));
+    // Create App instance to pass to the callback
+    let app = match App::new() {
+        Some(app) => app,
+        None => {
+            eprintln!("Failed to get app instance");
+            return false;
+        }
+    };
+
+    // Call the closure with the App instance, catching potential panics
+    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| cb(app)));
 
     // Process the result
     match result {

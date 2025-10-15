@@ -7,6 +7,7 @@ use std::ffi::c_void;
 use std::ffi::CStr;
 use std::os::raw::c_char;
 use wxdragon_sys as ffi;
+pub mod app_events;
 pub mod button_events;
 pub mod event_data;
 pub mod macros;
@@ -41,6 +42,9 @@ pub use menu_events::{MenuEvent, MenuEventData, MenuEvents};
 // Re-export taskbar events for easier access
 #[cfg(any(target_os = "windows", target_os = "linux"))]
 pub use taskbar_events::{TaskBarIconEvent, TaskBarIconEventData};
+
+// Re-export app events for easier access
+pub use app_events::AppEvents;
 
 // Re-export the stable C enum for use in the safe wrapper
 pub use ffi::WXDEventTypeCEnum;

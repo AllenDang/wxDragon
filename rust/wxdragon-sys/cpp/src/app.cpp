@@ -6,6 +6,8 @@
 #include <cstdlib>
 #include <wx/private/safecall.h>
 #include <wx/scopeguard.h>
+#include <vector>
+#include <utility>
 
 // --- Globals --- 
 // Store the C callback and user data provided to wxd_Main
@@ -15,7 +17,7 @@ static void* g_OnInitUserData = nullptr;
 // Function to process Rust callbacks, implemented in Rust
 extern "C" int process_rust_callbacks();
 
-// --- Internal C++ App Class --- 
+// --- Internal C++ App Class ---
 
 class WxdApp : public wxApp {
 public:
@@ -24,9 +26,27 @@ public:
 
     // Idle event handler to process callbacks
     void OnIdle(wxIdleEvent& event);
-    
+
     // Optional: Override OnExit for cleanup if needed
     // virtual int OnExit() override;
+
+#ifdef __WXOSX__
+    // macOS-specific overrides
+    virtual void MacOpenFiles(const wxArrayString& fileNames) override;
+    virtual void MacOpenURL(const wxString& url) override;
+    virtual void MacNewFile() override;
+    virtual void MacReopenApp() override;
+    virtual void MacPrintFiles(const wxArrayString& fileNames) override;
+
+    // Store multiple callbacks for each event type
+    struct MacCallbackList {
+        std::vector<std::pair<wxd_MacOpenFilesCallback, void*>> openFiles;
+        std::vector<std::pair<wxd_MacOpenURLCallback, void*>> openURL;
+        std::vector<std::pair<wxd_MacNewFileCallback, void*>> newFile;
+        std::vector<std::pair<wxd_MacReopenAppCallback, void*>> reopenApp;
+        std::vector<std::pair<wxd_MacPrintFilesCallback, void*>> printFiles;
+    } m_macCallbacks;
+#endif
 };
 
 // Implementation of OnInit - this is where we call the C callback
@@ -279,3 +299,154 @@ void wxd_SystemAppearance_Destroy(wxd_SystemAppearance_t* appearance) {
 }
 
 // --- End of Appearance Support Implementation ---
+
+// --- macOS-specific App Event Handlers Implementation ---
+
+#ifdef __WXOSX__
+
+// MacOpenFiles override - calls all registered handlers
+void WxdApp::MacOpenFiles(const wxArrayString& fileNames) {
+    if (m_macCallbacks.openFiles.empty()) {
+        // No callbacks registered, use default behavior
+        wxApp::MacOpenFiles(fileNames);
+        return;
+    }
+
+    // Convert wxArrayString to C string array
+    size_t count = fileNames.GetCount();
+    std::vector<std::string> strings;
+    std::vector<const char*> cStrings;
+    strings.reserve(count);
+    cStrings.reserve(count);
+
+    for (size_t i = 0; i < count; i++) {
+        strings.push_back(fileNames[i].ToStdString());
+        cStrings.push_back(strings.back().c_str());
+    }
+
+    // Call ALL registered Rust callbacks
+    for (const auto& pair : m_macCallbacks.openFiles) {
+        if (pair.first) {
+            pair.first(pair.second, cStrings.data(), static_cast<int>(count));
+        }
+    }
+}
+
+// MacOpenURL override - calls all registered handlers
+void WxdApp::MacOpenURL(const wxString& url) {
+    if (m_macCallbacks.openURL.empty()) {
+        wxApp::MacOpenURL(url);
+        return;
+    }
+
+    std::string urlStr = url.ToStdString();
+
+    // Call ALL registered Rust callbacks
+    for (const auto& pair : m_macCallbacks.openURL) {
+        if (pair.first) {
+            pair.first(pair.second, urlStr.c_str());
+        }
+    }
+}
+
+// MacNewFile override - calls all registered handlers
+void WxdApp::MacNewFile() {
+    if (m_macCallbacks.newFile.empty()) {
+        wxApp::MacNewFile();
+        return;
+    }
+
+    // Call ALL registered Rust callbacks
+    for (const auto& pair : m_macCallbacks.newFile) {
+        if (pair.first) {
+            pair.first(pair.second);
+        }
+    }
+}
+
+// MacReopenApp override - calls all registered handlers
+void WxdApp::MacReopenApp() {
+    if (m_macCallbacks.reopenApp.empty()) {
+        wxApp::MacReopenApp();
+        return;
+    }
+
+    // Call ALL registered Rust callbacks
+    for (const auto& pair : m_macCallbacks.reopenApp) {
+        if (pair.first) {
+            pair.first(pair.second);
+        }
+    }
+}
+
+// MacPrintFiles override - calls all registered handlers
+void WxdApp::MacPrintFiles(const wxArrayString& fileNames) {
+    if (m_macCallbacks.printFiles.empty()) {
+        wxApp::MacPrintFiles(fileNames);
+        return;
+    }
+
+    // Convert wxArrayString to C string array
+    size_t count = fileNames.GetCount();
+    std::vector<std::string> strings;
+    std::vector<const char*> cStrings;
+    strings.reserve(count);
+    cStrings.reserve(count);
+
+    for (size_t i = 0; i < count; i++) {
+        strings.push_back(fileNames[i].ToStdString());
+        cStrings.push_back(strings.back().c_str());
+    }
+
+    // Call ALL registered Rust callbacks
+    for (const auto& pair : m_macCallbacks.printFiles) {
+        if (pair.first) {
+            pair.first(pair.second, cStrings.data(), static_cast<int>(count));
+        }
+    }
+}
+
+#endif // __WXOSX__
+
+// Registration functions - add handlers to the callback lists
+void wxd_App_AddMacOpenFilesHandler(wxd_App_t* app, wxd_MacOpenFilesCallback callback, void* userData) {
+#ifdef __WXOSX__
+    if (!app || !callback) return;
+    WxdApp* wx_app = reinterpret_cast<WxdApp*>(app);
+    wx_app->m_macCallbacks.openFiles.push_back(std::make_pair(callback, userData));
+#endif
+}
+
+void wxd_App_AddMacOpenURLHandler(wxd_App_t* app, wxd_MacOpenURLCallback callback, void* userData) {
+#ifdef __WXOSX__
+    if (!app || !callback) return;
+    WxdApp* wx_app = reinterpret_cast<WxdApp*>(app);
+    wx_app->m_macCallbacks.openURL.push_back(std::make_pair(callback, userData));
+#endif
+}
+
+void wxd_App_AddMacNewFileHandler(wxd_App_t* app, wxd_MacNewFileCallback callback, void* userData) {
+#ifdef __WXOSX__
+    if (!app || !callback) return;
+    WxdApp* wx_app = reinterpret_cast<WxdApp*>(app);
+    wx_app->m_macCallbacks.newFile.push_back(std::make_pair(callback, userData));
+#endif
+}
+
+void wxd_App_AddMacReopenAppHandler(wxd_App_t* app, wxd_MacReopenAppCallback callback, void* userData) {
+#ifdef __WXOSX__
+    if (!app || !callback) return;
+    WxdApp* wx_app = reinterpret_cast<WxdApp*>(app);
+    wx_app->m_macCallbacks.reopenApp.push_back(std::make_pair(callback, userData));
+#endif
+}
+
+void wxd_App_AddMacPrintFilesHandler(wxd_App_t* app, wxd_MacPrintFilesCallback callback, void* userData) {
+#ifdef __WXOSX__
+    if (!app || !callback) return;
+    WxdApp* wx_app = reinterpret_cast<WxdApp*>(app);
+    wx_app->m_macCallbacks.printFiles.push_back(std::make_pair(callback, userData));
+#endif
+}
+
+// --- End of macOS-specific App Event Handlers Implementation ---

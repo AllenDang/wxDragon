@@ -465,9 +465,16 @@ typedef enum {
     // wxITEM_MAX is not typically used directly as a kind
 } WXDItemKindCEnum;
 
-// --- Function Pointer Typedefs --- 
+// --- Function Pointer Typedefs ---
 typedef bool (*wxd_OnInitCallback)(void* userData);
 typedef void (*wxd_ClosureCallback)(void* closure_ptr, wxd_Event_t* event);
+
+// macOS-specific event callbacks
+typedef void (*wxd_MacOpenFilesCallback)(void* userData, const char** files, int count);
+typedef void (*wxd_MacOpenURLCallback)(void* userData, const char* url);
+typedef void (*wxd_MacNewFileCallback)(void* userData);
+typedef void (*wxd_MacReopenAppCallback)(void* userData);
+typedef void (*wxd_MacPrintFilesCallback)(void* userData, const char** files, int count);
 
 // wxDragResult C Enum (for drag and drop operations)
 typedef enum {
