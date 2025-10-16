@@ -18,7 +18,12 @@ impl MediaControls {
 
 pub fn create_media_tab(notebook: &Notebook) -> MediaControls {
     let panel = Panel::builder(notebook).build();
-    let sizer = BoxSizer::builder(Orientation::Vertical).build();
+    // Use a 2-column FlexGridSizer so each row is: [image | text]
+    let grid = FlexGridSizer::builder(0, 2)
+        .with_gap(Size::new(10, 10))
+        .build();
+    // Make right column grow to give more space to text
+    grid.add_growable_col(1, 1);
 
     let animation_bytes = include_bytes!("../../asset/dancing-ferris.gif");
     // Determine animation size
@@ -52,7 +57,8 @@ pub fn create_media_tab(notebook: &Notebook) -> MediaControls {
         println!("Failed to load animation from bytes.");
     }
 
-    sizer.add(
+    // Row 1: Animation (left) and description (right)
+    grid.add(
         &animation_ctrl,
         0,
         SizerFlag::AlignCenterHorizontal | SizerFlag::All,
@@ -60,12 +66,18 @@ pub fn create_media_tab(notebook: &Notebook) -> MediaControls {
     );
 
     let info_text = StaticText::builder(&panel)
-        .with_label("Animation loaded from embedded bytes. Dancing Ferris should appear above.")
+        .with_label(
+            "Animation loaded from embedded bytes. Dancing Ferris should appear to the left",
+        )
         .build();
-    sizer.add(&info_text, 0, SizerFlag::All, 10);
+    grid.add(
+        &info_text,
+        0,
+        SizerFlag::AlignLeft | SizerFlag::AlignCenterVertical | SizerFlag::All,
+        10,
+    );
 
     // --- StaticBitmap Demo ---
-    let hbox_bitmap_example = BoxSizer::builder(Orientation::Horizontal).build();
     let static_bitmap_image_bytes = include_bytes!("../../asset/simple.png"); // Path relative to media_tab.rs
     match image::load_from_memory_with_format(static_bitmap_image_bytes, image::ImageFormat::Png) {
         Ok(img) => {
@@ -77,59 +89,58 @@ pub fn create_media_tab(notebook: &Notebook) -> MediaControls {
                     .with_size(Size::new(width as i32, height as i32))
                     .build();
 
-                let bmp_label = StaticText::builder(&panel)
-                    .with_label("StaticBitmap (simple.png from bytes):")
-                    .build();
-                hbox_bitmap_example.add(
-                    &bmp_label,
-                    0,
-                    SizerFlag::AlignCenterVertical | SizerFlag::All,
-                    5,
-                );
-                hbox_bitmap_example.add(
+                // Row 2: PNG image (left) and label (right)
+                grid.add(
                     &static_bitmap_ctrl,
                     0,
-                    SizerFlag::AlignCenterVertical | SizerFlag::All,
+                    SizerFlag::AlignCenterHorizontal | SizerFlag::All,
+                    5,
+                );
+
+                let bmp_label = StaticText::builder(&panel)
+                    .with_label("StaticBitmap (simple.png from bytes)")
+                    .build();
+                grid.add(
+                    &bmp_label,
+                    0,
+                    SizerFlag::AlignLeft | SizerFlag::AlignCenterVertical | SizerFlag::All,
                     5,
                 );
             } else {
                 println!("[MediaTab] Failed to create Bitmap object for StaticBitmap.");
+                // Maintain 2-column structure even on error
+                grid.add_spacer(1);
                 let bmp_error_label = StaticText::builder(&panel)
                     .with_label("StaticBitmap: Error creating Bitmap obj")
                     .build();
-                hbox_bitmap_example.add(
+                grid.add(
                     &bmp_error_label,
                     0,
-                    SizerFlag::AlignCenterVertical | SizerFlag::All,
+                    SizerFlag::AlignLeft | SizerFlag::AlignCenterVertical | SizerFlag::All,
                     5,
                 );
             }
         }
         Err(e) => {
             println!("[MediaTab] Failed to load static bitmap: {e}");
+            // Maintain 2-column structure even on error
+            grid.add_spacer(1);
             let bmp_error_label = StaticText::builder(&panel)
                 .with_label("StaticBitmap: Failed to load from bytes")
                 .build();
-            hbox_bitmap_example.add(
+            grid.add(
                 &bmp_error_label,
                 0,
-                SizerFlag::AlignCenterVertical | SizerFlag::All,
+                SizerFlag::AlignLeft | SizerFlag::AlignCenterVertical | SizerFlag::All,
                 5,
             );
         }
     }
-    sizer.add_sizer(&hbox_bitmap_example, 0, SizerFlag::All, 10);
+    // spacing between sections handled by grid gap
 
     // SVG Demo
-    let svg_sizer = BoxSizer::builder(Orientation::Horizontal).build();
+    // Row 3: SVG image (left) and label (right)
     let svg_info_text = StaticText::builder(&panel).with_label("SVG icon").build();
-    svg_sizer.add(
-        &svg_info_text,
-        0,
-        SizerFlag::AlignCenterVertical | SizerFlag::All,
-        5,
-    );
-
     let svg_icon_bytes = include_bytes!("../../asset/icon_baby.svg");
     let svg_icon_bundle = BitmapBundle::from_svg_data(svg_icon_bytes, Size::new(64, 64)).unwrap();
     let static_bitmap_ctrl = StaticBitmap::builder(&panel)
@@ -137,17 +148,21 @@ pub fn create_media_tab(notebook: &Notebook) -> MediaControls {
         .with_size(Size::new(24, 24))
         .build();
 
-    svg_sizer.add(
+    grid.add(
         &static_bitmap_ctrl,
         0,
-        SizerFlag::AlignCenterVertical | SizerFlag::All,
+        SizerFlag::AlignCenterHorizontal | SizerFlag::All,
+        5,
+    );
+    grid.add(
+        &svg_info_text,
+        0,
+        SizerFlag::AlignLeft | SizerFlag::AlignCenterVertical | SizerFlag::All,
         5,
     );
 
-    sizer.add_sizer(&svg_sizer, 0, SizerFlag::All, 10);
-
     // Finalize layout
-    panel.set_sizer(sizer, true);
+    panel.set_sizer(grid, true);
 
     MediaControls {
         panel,

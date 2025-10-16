@@ -25,6 +25,7 @@ const ID_TOOL_SAVE: Id = ID_HIGHEST + 3;
 // --- Main Application Logic ---
 
 fn main() {
+    SystemOptions::set_option_by_int("msw.no-manifest-check", 1);
     let _ = wxdragon::main(|_| {
         // Create the main application frame
         let frame = Frame::builder()
@@ -63,8 +64,9 @@ fn main() {
 
         let mut image_ids: Vec<i32> = Vec::new();
 
+        let size = Size::new(16, 16);
         if let Some(bmp_info) =
-            ArtProvider::get_bitmap(ArtId::Information, ArtClient::Menu, Some(Size::new(16, 16)))
+            ArtProvider::get_bitmap(ArtId::Information, ArtClient::Menu, Some(size))
         {
             let idx = image_list.add_bitmap(&bmp_info);
             if idx != -1 {
@@ -75,29 +77,27 @@ fn main() {
         } else {
             eprintln!("Failed to get ArtId::Information for Notebook");
         }
-        if let Some(bmp_question) =
-            ArtProvider::get_bitmap(ArtId::Question, ArtClient::Menu, Some(Size::new(16, 16)))
+        if let Some(bmp_find_and_replace) =
+            ArtProvider::get_bitmap(ArtId::FindAndReplace, ArtClient::Menu, Some(size))
         {
-            let idx = image_list.add_bitmap(&bmp_question);
+            let idx = image_list.add_bitmap(&bmp_find_and_replace);
             if idx != -1 {
                 image_ids.push(idx);
             } else {
-                eprintln!("Failed to add Question icon to ImageList");
+                eprintln!("Failed to add FindAndReplace icon to ImageList");
             }
         } else {
-            eprintln!("Failed to get ArtId::Question for Notebook");
+            eprintln!("Failed to get ArtId::FindAndReplace for Notebook");
         }
-        if let Some(bmp_warning) =
-            ArtProvider::get_bitmap(ArtId::Warning, ArtClient::Menu, Some(Size::new(16, 16)))
-        {
-            let idx = image_list.add_bitmap(&bmp_warning);
+        if let Some(bmp_tip) = ArtProvider::get_bitmap(ArtId::Tip, ArtClient::Menu, Some(size)) {
+            let idx = image_list.add_bitmap(&bmp_tip);
             if idx != -1 {
                 image_ids.push(idx);
             } else {
-                eprintln!("Failed to add Warning icon to ImageList");
+                eprintln!("Failed to add Tip icon to ImageList");
             }
         } else {
-            eprintln!("Failed to get ArtId::Warning for Notebook");
+            eprintln!("Failed to get ArtId::Tip for Notebook");
         }
 
         if !image_ids.is_empty() {

@@ -44,7 +44,9 @@ fn embed_windows_manifest(name: &str) {
 /// Compile and embed wx.rc resources for wxWidgets
 fn embed_wx_resources() {
     // Find the wxWidgets directory
-    let wx_dir = get_dest_bin_dir().join("wxWidgets");
+    let wx_dir = get_dest_bin_dir()
+        .expect("Failed to get destination binary directory")
+        .join("wxWidgets");
 
     let Ok(wx_rc_path) = get_wx_rc_path(&wx_dir) else {
         // If wx.rc is not found, skip embedding resources
@@ -115,13 +117,16 @@ fn get_wx_rc_path(wx_dir: &std::path::Path) -> std::io::Result<std::path::PathBu
     Ok(wx_rc_path)
 }
 
-fn get_dest_bin_dir() -> std::path::PathBuf {
-    let out_dir = std::path::PathBuf::from(std::env::var("OUT_DIR").unwrap());
-    let profile = std::env::var("PROFILE").unwrap();
+fn get_dest_bin_dir() -> std::io::Result<std::path::PathBuf> {
+    use std::env::var;
+    use std::io::Error;
+    use std::path::{Path, PathBuf};
+    let out_dir = PathBuf::from(var("OUT_DIR").map_err(|e| Error::other(format!("OUT_DIR: {e}")))?);
+    let profile = var("PROFILE").map_err(|e| Error::other(format!("PROFILE env var: {e}")))?;
 
-    let dest_bin_dir = std::path::Path::new(&out_dir)
+    let dest_bin_dir = Path::new(&out_dir)
         .ancestors()
         .find(|p| p.file_name().map(|n| *n == *profile).unwrap_or(false))
-        .expect("Could not find destination binary directory");
-    dest_bin_dir.to_path_buf()
+        .ok_or(Error::other("destination binary directory not found"))?;
+    Ok(dest_bin_dir.to_path_buf())
 }
