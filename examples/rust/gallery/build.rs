@@ -98,7 +98,8 @@ fn get_wx_rc_path(wx_dir: &std::path::Path) -> std::io::Result<std::path::PathBu
 
     while !wx_rc_path.exists() && retry_count < MAX_RETRIES {
         if retry_count == 0 {
-            println!("cargo::warning=wx.rc not found at {wx_rc_path:?}, waiting and retrying...");
+            let p = wx_rc_path.display();
+            println!("cargo::warning=wx.rc not found at {p}, waiting and retrying...");
         }
 
         println!(

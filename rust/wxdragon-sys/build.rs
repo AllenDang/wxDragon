@@ -677,9 +677,6 @@ fn fix_isPlatformVersionAtLeast() -> std::io::Result<()> {
     Err(Error::new(NotFound, "Could not find clang runtime library"))
 }
 
-use std::fs::File;
-use std::path::Path;
-
 /// Try to read the proxy URL via `git config --get http.proxy`.
 fn get_git_http_proxy() -> Option<String> {
     let output = std::process::Command::new("git")
@@ -699,27 +696,18 @@ fn get_git_http_proxy() -> Option<String> {
 
 /// Download a ZIP file from `url` to `dest_path`, using ~/.gitconfig [http].proxy if present.
 /// Falls back to direct connection if no proxy is configured.
-pub fn download_file_with_git_http_proxy<P: AsRef<Path>>(
+pub fn download_file_with_git_http_proxy<P: AsRef<std::path::Path>>(
     url: &str,
     dest_path: P,
 ) -> std::io::Result<()> {
     use std::io::Error;
     // Build reqwest blocking client, optionally with proxy.
     let client = match get_git_http_proxy() {
-        Some(proxy_url) => {
-            // Try with proxy first
-            match reqwest::blocking::Client::builder()
-                .proxy(reqwest::Proxy::all(&proxy_url).map_err(Error::other)?)
-                .build()
-            {
-                Ok(c) => c,
-                Err(e) => return Err(Error::other(e)),
-            }
-        }
-        None => {
-            // No proxy; direct
-            reqwest::blocking::Client::new()
-        }
+        Some(proxy_url) => reqwest::blocking::Client::builder()
+            .proxy(reqwest::Proxy::all(&proxy_url).map_err(Error::other)?)
+            .build()
+            .map_err(Error::other)?,
+        None => reqwest::blocking::Client::new(),
     };
 
     // Perform GET request
@@ -735,7 +723,7 @@ pub fn download_file_with_git_http_proxy<P: AsRef<Path>>(
             std::fs::create_dir_all(parent)?;
         }
     }
-    let mut file = File::create(path)?;
+    let mut file = std::fs::File::create(path)?;
     resp.copy_to(&mut file).map_err(Error::other)?;
     Ok(())
 }
