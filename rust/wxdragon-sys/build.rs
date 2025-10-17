@@ -1,6 +1,7 @@
 const WX_SRC_URL: &str =
     "https://github.com/wxWidgets/wxWidgets/releases/download/v3.3.1/wxWidgets-3.3.1.zip";
 const WX_VERSION: &str = "3.3.1";
+const WX_SRC_URL_SHA256: &str = "c25311fecbc4b508577bdee4e90660da8d0d79f4099bc40e9cac8338879f9334";
 
 fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
     println!("Building wxdragon-sys...");
@@ -31,7 +32,9 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
         let archive_dest_path = std::env::temp_dir().join("wxWidgets.zip");
 
         #[allow(clippy::print_literal)]
-        if let Err(e) = download_file_with_git_http_proxy(WX_SRC_URL, &archive_dest_path) {
+        if let Err(e) =
+            download_file_with_git_http_proxy(WX_SRC_URL, &archive_dest_path, WX_SRC_URL_SHA256)
+        {
             println!(
                 "cargo::error=Could not download wxWidgets source archive from {WX_SRC_URL}: {e}\n{}\n{}",
                 "Potential solutions: Check your network connectivity, ensure the URL is accessible,",
@@ -699,8 +702,19 @@ fn get_git_http_proxy() -> Option<String> {
 pub fn download_file_with_git_http_proxy<P: AsRef<std::path::Path>>(
     url: &str,
     dest_path: P,
+    expected_sha: &str,
 ) -> std::io::Result<()> {
     use std::io::Error;
+
+    // If the file already exists, verify its checksum first.
+    let path = dest_path.as_ref();
+    if path.exists() {
+        match verify_downloaded_file_sha256(path, expected_sha) {
+            Ok(_) => return Ok(()),
+            Err(_) => std::fs::remove_file(path).ok(),
+        };
+    }
+
     // Build reqwest blocking client, optionally with proxy.
     let client = match get_git_http_proxy() {
         Some(proxy_url) => reqwest::blocking::Client::builder()
@@ -717,7 +731,6 @@ pub fn download_file_with_git_http_proxy<P: AsRef<std::path::Path>>(
     }
 
     // Stream to file to avoid loading the entire ZIP into memory.
-    let path = dest_path.as_ref();
     if let Some(parent) = path.parent() {
         if !parent.as_os_str().is_empty() {
             std::fs::create_dir_all(parent)?;
@@ -725,7 +738,49 @@ pub fn download_file_with_git_http_proxy<P: AsRef<std::path::Path>>(
     }
     let mut file = std::fs::File::create(path)?;
     resp.copy_to(&mut file).map_err(Error::other)?;
+
+    // Verify SHA256 of the downloaded file before proceeding
+    verify_downloaded_file_sha256(path, expected_sha)?;
     Ok(())
+}
+
+fn verify_downloaded_file_sha256<P: AsRef<std::path::Path>>(
+    path: P,
+    expected_sha: &str,
+) -> std::io::Result<()> {
+    let path = path.as_ref();
+    let computed_sha = compute_file_sha256_hex(path)?;
+    if !computed_sha.eq_ignore_ascii_case(expected_sha) {
+        return Err(std::io::Error::other(format!(
+            "SHA256 mismatch for file {path:?}: got {computed_sha}, expected {expected_sha}"
+        )));
+    }
+    Ok(())
+}
+
+/// Compute the SHA256 of a file and return lowercase hex string.
+fn compute_file_sha256_hex<P: AsRef<std::path::Path>>(path: P) -> std::io::Result<String> {
+    use sha2::{Digest, Sha256};
+    use std::io::{Error, Read};
+
+    let mut file = std::fs::File::open(path)?;
+    let mut hasher = Sha256::new();
+    let mut buf = [0u8; 64 * 1024];
+    loop {
+        let n = file.read(&mut buf)?;
+        if n == 0 {
+            break;
+        }
+        hasher.update(&buf[..n]);
+    }
+    let digest = hasher.finalize();
+    // Convert to lowercase hex without extra dependencies
+    let mut s = String::with_capacity(digest.len() * 2);
+    for b in digest {
+        use std::fmt::Write as _;
+        write!(&mut s, "{:02x}", b).map_err(Error::other)?;
+    }
+    Ok(s)
 }
 
 fn extract_zip_archive<P, T>(archive_path: P, target_dir: T) -> std::io::Result<()>
