@@ -328,7 +328,7 @@ wxd_DataViewModel_t* wxd_DataViewVirtualListModel_CreateWithCallbacks(
         return nullptr;
     }
     
-    // Create model and ensure it stays alive
+    // Create model and ensure it stays alive, the reference count now is 1
     WxdCustomDataViewVirtualListModel* model = new WxdCustomDataViewVirtualListModel(
         static_cast<unsigned int>(initial_size),
         userdata,
@@ -337,12 +337,7 @@ wxd_DataViewModel_t* wxd_DataViewVirtualListModel_CreateWithCallbacks(
         get_attr_callback,
         is_enabled_callback
     );
-    
-    // Important: Increase the reference count so wxWidgets doesn't delete it
-    // The wxDataViewCtrl uses wxDataViewModel::IncRef internally, but we need
-    // to make sure our model stays alive correctly
-    model->IncRef();
-    
+
     return reinterpret_cast<wxd_DataViewModel_t*>(model);
 }
 

@@ -706,6 +706,31 @@ public:
     }
 };
 
+extern "C" void wxd_DataViewModel_AddRef(wxd_DataViewModel_t* model)
+{
+    wxDataViewModel* m = reinterpret_cast<wxDataViewModel*>(model);
+    if (m) {
+        m->IncRef();
+    }
+}
+
+extern "C" void wxd_DataViewModel_Release(wxd_DataViewModel_t* model)
+{
+    wxDataViewModel* m = reinterpret_cast<wxDataViewModel*>(model);
+    if (m) {
+        m->DecRef();
+    }
+}
+
+extern "C" int wxd_DataViewModel_GetRefCount(const wxd_DataViewModel_t* model)
+{
+    const wxDataViewModel* m = reinterpret_cast<const wxDataViewModel*>(model);
+    if (m) {
+        return m->GetRefCount();
+    }
+    return 0;
+}
+
 // Model creation and attachment
 WXD_EXPORTED wxd_DataViewModel_t* wxd_DataViewModel_Create(
     wxd_DataViewModel_GetColumnCountCallback get_column_count,
@@ -732,22 +757,9 @@ WXD_EXPORTED bool wxd_DataViewCtrl_AssociateModel(wxd_Window_t* self, wxd_DataVi
     wxDataViewCtrl* ctrl = reinterpret_cast<wxDataViewCtrl*>(self);
     wxDataViewModel* m = reinterpret_cast<wxDataViewModel*>(model);
     
-    // When we associate a model with a control, wxWidgets internally calls IncRef()
-    // We'll make sure the model is properly referenced
-    
-    // Workaround for a known issue in wxWidgets: DataViewCtrl::AssociateModel
-    // is taking ownership of the model, but we need to maintain it separately
-    // This is why we call IncRef before passing it
-    m->IncRef();
-    
-    // AssociateModel returns a bool indicating success/failure
+    // AssociateModel returns a bool indicating success/failure, now the reference count is incremented by 1.
     bool result = ctrl->AssociateModel(m);
-    
-    if (!result) {
-        // If associating failed, we need to revert our IncRef
-        m->DecRef();
-    }
-    
+
     return result;
 }
 

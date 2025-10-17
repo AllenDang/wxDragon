@@ -9,7 +9,7 @@
 // wxd_DataViewTreeModel_Callbacks structs specifically.
 extern "C" void wxd_Drop_Rust_DataViewTreeModelCallbacks(wxd_DataViewTreeModel_Callbacks* ptr);
 
-class Wxd_Callbacks_DataViewTreeModel : public wxDataViewModel
+class Wxd_Callbacks_DataViewTreeModel : public wxDataViewTreeStore
 {
 public:
     Wxd_Callbacks_DataViewTreeModel(const wxd_DataViewTreeModel_Callbacks* cb)
@@ -217,13 +217,4 @@ extern "C" wxd_DataViewModel_t* wxd_DataViewTreeModel_CreateWithCallbacks(const 
     if (!cb) return nullptr;
     Wxd_Callbacks_DataViewTreeModel* model = new Wxd_Callbacks_DataViewTreeModel(cb);
     return reinterpret_cast<wxd_DataViewModel_t*>(model);
-}
-
-extern "C" void wxd_DataViewTreeModel_Release(wxd_DataViewModel_t* model)
-{
-    if (!model) return;
-    Wxd_Callbacks_DataViewTreeModel* m = reinterpret_cast<Wxd_Callbacks_DataViewTreeModel*>((wxDataViewModel*)model);
-    if (m) {
-        delete m;
-    }
 }

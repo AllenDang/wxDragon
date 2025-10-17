@@ -422,15 +422,18 @@ impl Default for DataViewVirtualListModel {
 
 /// A callback-based DataView tree model wrapper.
 pub struct CustomDataViewTreeModel {
-    handle: *mut ffi::wxd_DataViewModel_t,
+    model: *mut ffi::wxd_DataViewModel_t,
     // Pointer to the FFI callbacks struct allocated and owned by C++.
     _callback_data_ptr: *const ffi::wxd_DataViewTreeModel_Callbacks,
 }
 
 impl Drop for CustomDataViewTreeModel {
     fn drop(&mut self) {
-        if !self.handle.is_null() {
-            unsafe { ffi::wxd_DataViewTreeModel_Release(self.handle) };
+        if !self.model.is_null() {
+            // Here the reference count is decreased; if it reaches zero, the model will be destroyed.
+            // let count = unsafe { ffi::wxd_DataViewModel_GetRefCount(self.model) };
+            // println!("wxd_DataViewModel_t RefCount is {count}");
+            unsafe { ffi::wxd_DataViewModel_Release(self.model) };
         }
     }
 }
@@ -651,11 +654,11 @@ impl CustomDataViewTreeModel {
         let cb_box = Box::new(cb);
         let cb_raw = Box::into_raw(cb_box);
 
-        // Create the native model
-        let handle = unsafe { ffi::wxd_DataViewTreeModel_CreateWithCallbacks(cb_raw) };
+        // Create the native model which reference count is 1 now.
+        let model = unsafe { ffi::wxd_DataViewTreeModel_CreateWithCallbacks(cb_raw) };
 
         Self {
-            handle,
+            model,
             _callback_data_ptr: cb_raw,
         }
     }
@@ -791,7 +794,7 @@ extern "C" fn free_owned_tree_callbacks(ptr: *mut std::ffi::c_void) {
 
 impl DataViewModel for CustomDataViewTreeModel {
     fn handle_ptr(&self) -> *mut ffi::wxd_DataViewModel_t {
-        self.handle
+        self.model
     }
 
     fn get_column_count(&self) -> usize {
@@ -995,6 +998,8 @@ impl CustomDataViewVirtualListModel {
 
             // Create the C++ model with our callbacks
             let raw_callback_data = Box::into_raw(callback_data);
+
+            // The handle returned by the C++ side, which reference count is 1 now
             let handle = ffi::wxd_DataViewVirtualListModel_CreateWithCallbacks(
                 initial_size as u64,
                 raw_callback_data as *mut ::std::os::raw::c_void,
@@ -1163,23 +1168,9 @@ impl DataViewModel for CustomDataViewVirtualListModel {
 impl Drop for CustomDataViewVirtualListModel {
     fn drop(&mut self) {
         if !self.handle.is_null() {
-            // IMPORTANT: Do not release callbacks here, as this would cause
-            // issues with the model's use in the DataViewCtrl.
-            // The callbacks need to remain valid for the lifetime of the model.
-            //
-            // We only need to ensure the model's reference count is managed correctly
-            // by wxWidgets, which handles cleanup when the control is destroyed.
-            //
-            // ffi::wxd_DataViewVirtualListModel_ReleaseCallbacks(self.handle);
-
-            // Note: We don't free the handle itself because wxWidgets takes ownership of it
-            // via AssociateModel, which increases the reference count.
-            // The model will be destroyed when the control it's associated with is destroyed.
-            // In C++, we call IncRef() when creating the model and wxWidgets calls it again
-            // during AssociateModel(), so the reference count is at least 2 at this point.
-
-            // wxWidgets will call DecRef() when the control is destroyed, and we don't need
-            // to call it here because we're letting the C++ side handle destruction.
+            // This call will decreases the reference count by 1.
+            // If reference count reaches zero, the internal C++ model and its callbacks will be destroyed.
+            unsafe { ffi::wxd_DataViewModel_Release(self.handle) };
         }
     }
 }

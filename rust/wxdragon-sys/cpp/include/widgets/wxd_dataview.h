@@ -133,6 +133,10 @@ typedef bool (*wxd_DataViewModel_SetValueCallback)(void* user_data,
                                                 uint64_t col, 
                                                 const wxd_Variant_t* variant);
 
+WXD_EXPORTED void wxd_DataViewModel_AddRef(wxd_DataViewModel_t* model);
+WXD_EXPORTED void wxd_DataViewModel_Release(wxd_DataViewModel_t* model);
+WXD_EXPORTED int wxd_DataViewModel_GetRefCount(const wxd_DataViewModel_t* model);
+
 // Model creation and attachment
 WXD_EXPORTED wxd_DataViewModel_t* wxd_DataViewModel_Create(
     wxd_DataViewModel_GetColumnCountCallback get_column_count,
@@ -236,7 +240,6 @@ typedef struct wxd_DataViewTreeModel_Callbacks {
 } wxd_DataViewTreeModel_Callbacks;
 
 WXD_EXPORTED wxd_DataViewModel_t* wxd_DataViewTreeModel_CreateWithCallbacks(const wxd_DataViewTreeModel_Callbacks* callbacks);
-WXD_EXPORTED void wxd_DataViewTreeModel_Release(wxd_DataViewModel_t* model);
 
 // Free function for custom model callbacks (used by Rust)
 WXD_EXPORTED void drop_rust_virtual_list_model_callbacks(void* ptr);
