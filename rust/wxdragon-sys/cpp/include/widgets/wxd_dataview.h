@@ -241,9 +241,6 @@ typedef struct wxd_DataViewTreeModel_Callbacks {
 
 WXD_EXPORTED wxd_DataViewModel_t* wxd_DataViewTreeModel_CreateWithCallbacks(const wxd_DataViewTreeModel_Callbacks* callbacks);
 
-// Free function for custom model callbacks (used by Rust)
-WXD_EXPORTED void drop_rust_virtual_list_model_callbacks(void* ptr);
-
 // DataViewCtrl functions
 WXD_EXPORTED wxd_DataViewColumn_t* wxd_DataViewCtrl_CreateTextColumn(wxd_Window_t* ctrl, const char* label, 
                                                      uint32_t model_column, wxd_DataViewCellModeCEnum mode, 

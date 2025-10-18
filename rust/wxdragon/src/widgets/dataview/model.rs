@@ -843,6 +843,13 @@ struct CustomModelCallbacks {
     is_enabled: Option<IsEnabledCallback>,
 }
 
+impl Drop for CustomModelCallbacks {
+    fn drop(&mut self) {
+        // Userdata and callbacks will be dropped automatically
+        log::debug!("CustomModelCallbacks dropped");
+    }
+}
+
 impl CustomDataViewVirtualListModel {
     /// Creates a new custom virtual list model with the specified data provider.
     pub fn new<T, F, G, H, I>(
@@ -1169,6 +1176,11 @@ impl DataViewModel for CustomDataViewVirtualListModel {
 impl Drop for CustomDataViewVirtualListModel {
     fn drop(&mut self) {
         if !self.handle.is_null() {
+            let ref_count = unsafe { ffi::wxd_DataViewModel_GetRefCount(self.handle) };
+            log::debug!(
+                "CustomDataViewVirtualListModel dropped with handle of RefCount: {ref_count}"
+            );
+
             // This call will decreases the reference count by 1.
             // If reference count reaches zero, the internal C++ model and its callbacks will be destroyed.
             unsafe { ffi::wxd_DataViewModel_Release(self.handle) };

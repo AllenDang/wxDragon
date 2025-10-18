@@ -6,9 +6,8 @@
 #include <wx/object.h>  // For wxIsKindOf macro
 #include "wxd_utils.h"
 
-// Keep track of all active models to ensure they don't get garbage collected
-#include <map>
-std::map<void*, void*> g_model_registry;
+// Forward declaration for Rust function that properly handles Box::from_raw()
+extern "C" void wxd_Drop_Rust_CustomModelCallbacks(void* ptr);
 
 // Define a custom implementation of wxDataViewVirtualListModel that uses callbacks
 class WxdCustomDataViewVirtualListModel : public wxDataViewVirtualListModel {
@@ -29,20 +28,18 @@ public:
           m_get_value(get_value),
           m_set_value(set_value),
           m_get_attr(get_attr),
-          m_is_enabled(is_enabled) {
-            
-        // Register this model in the global registry to ensure it stays alive
-        g_model_registry[this] = this;
+          m_is_enabled(is_enabled)
+    {
+        wxLogDebug("WxdCustomDataViewVirtualListModel created with initial size %u", initial_size);
     }
     
     // Destructor to clean up registry and callback data
     ~WxdCustomDataViewVirtualListModel() {
+        wxLogDebug("WxdCustomDataViewVirtualListModel destroyed");
         // Clean up the Rust-allocated callback data
         if (m_userdata) {
-            drop_rust_virtual_list_model_callbacks(m_userdata);
-            m_userdata = nullptr;
+            wxd_Drop_Rust_CustomModelCallbacks(m_userdata);
         }
-        g_model_registry.erase(this);
     }
 
     // Implementation of the pure virtual methods
@@ -348,17 +345,6 @@ void wxd_DataViewVirtualListModel_ReleaseCallbacks(wxd_DataViewModel_t* model) {
     
     if (custom_model) {
         custom_model->ReleaseCallbacks();
-    }
-}
-
-// Forward declaration for Rust function that properly handles Box::from_raw()
-extern "C" void wxd_Drop_Rust_CustomModelCallbacks(void* ptr);
-
-// Function to drop Rust callback data (used by Rust's Drop implementation)
-void drop_rust_virtual_list_model_callbacks(void* ptr) {
-    if (ptr) {
-        // Call the Rust function that properly handles Box::from_raw()
-        wxd_Drop_Rust_CustomModelCallbacks(ptr);
     }
 }
 
