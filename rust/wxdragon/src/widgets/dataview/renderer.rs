@@ -65,7 +65,7 @@ impl DataViewTextRenderer {
     /// * `mode` - The cell mode (inert, activatable, or editable)
     /// * `align` - The text alignment
     pub fn new(variant_type: VariantType, mode: DataViewCellMode, align: DataViewAlign) -> Self {
-        let variant_type_str = variant_type.to_type_string();
+        let variant_type_str = variant_type.as_str();
         let variant_type_cstr = CString::new(variant_type_str).unwrap();
         let handle = unsafe {
             ffi::wxd_DataViewTextRenderer_Create(
@@ -100,7 +100,7 @@ impl DataViewToggleRenderer {
     /// * `mode` - The cell mode (typically activatable for toggles)
     /// * `align` - The alignment of the checkbox
     pub fn new(variant_type: VariantType, mode: DataViewCellMode, align: DataViewAlign) -> Self {
-        let variant_type_str = variant_type.to_type_string();
+        let variant_type_str = variant_type.as_str();
         let variant_type_cstr = CString::new(variant_type_str).unwrap();
         let handle = unsafe {
             ffi::wxd_DataViewToggleRenderer_Create(
@@ -134,7 +134,7 @@ impl DataViewProgressRenderer {
     /// * `variant_type` - The type of data this renderer can display (typically Int32)
     /// * `mode` - The cell mode (typically inert for progress bars)
     pub fn new(variant_type: VariantType, mode: DataViewCellMode) -> Self {
-        let variant_type_str = variant_type.to_type_string();
+        let variant_type_str = variant_type.as_str();
         let variant_type_cstr = CString::new(variant_type_str).unwrap();
         let handle = unsafe {
             ffi::wxd_DataViewProgressRenderer_Create(
@@ -169,7 +169,7 @@ impl DataViewIconTextRenderer {
     /// * `mode` - The cell mode
     /// * `align` - The alignment
     pub fn new(variant_type: VariantType, mode: DataViewCellMode, align: DataViewAlign) -> Self {
-        let variant_type_str = variant_type.to_type_string();
+        let variant_type_str = variant_type.as_str();
         let variant_type_cstr =
             CString::new(variant_type_str).unwrap_or_else(|_| CString::new("string").unwrap());
         let handle = unsafe {
@@ -239,7 +239,7 @@ impl DataViewDateRenderer {
     /// * `mode` - The cell mode
     /// * `align` - The alignment
     pub fn new(variant_type: VariantType, mode: DataViewCellMode, align: DataViewAlign) -> Self {
-        let variant_type_str = variant_type.to_type_string();
+        let variant_type_str = variant_type.as_str();
         let variant_type_cstr = CString::new(variant_type_str).unwrap();
         let handle = unsafe {
             ffi::wxd_DataViewDateRenderer_Create(
@@ -284,7 +284,7 @@ impl DataViewSpinRenderer {
         max: i32,
         inc: i32,
     ) -> Self {
-        let variant_type_str = variant_type.to_type_string();
+        let variant_type_str = variant_type.as_str();
         let variant_type_cstr = CString::new(variant_type_str).unwrap();
         let handle = unsafe {
             ffi::wxd_DataViewSpinRenderer_Create(
@@ -332,7 +332,7 @@ impl DataViewChoiceRenderer {
         let choices_str = choices.join(",");
         let choices_cstr = CString::new(choices_str).unwrap();
 
-        let variant_type_str = variant_type.to_type_string();
+        let variant_type_str = variant_type.as_str();
         let variant_type_cstr = CString::new(variant_type_str).unwrap();
 
         let handle = unsafe {
@@ -703,7 +703,7 @@ impl DataViewCustomRendererBuilder {
 
         unsafe {
             let raw_callback_data = Box::into_raw(callbacks);
-            let variant_type_cstr = CString::new(self.variant_type.to_type_string()).unwrap();
+            let variant_type_cstr = CString::new(self.variant_type.as_str()).unwrap();
 
             let handle = ffi::wxd_DataViewCustomRenderer_Create(
                 variant_type_cstr.as_ptr(),

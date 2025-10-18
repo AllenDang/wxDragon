@@ -5,9 +5,6 @@ use std::ffi::CString;
 use wxdragon_sys as ffi;
 
 /// Represents the type of data stored in a variant.
-///
-/// This enum defines the standard data types that can be used with
-/// DataViewRenderer and wxVariant.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum VariantType {
     /// Boolean value (true/false)
@@ -22,17 +19,17 @@ pub enum VariantType {
     String,
     /// Date and time value
     DateTime,
-    /// Binary data
+    /// Bitmap image
     Bitmap,
     /// Progress value (typically 0-100)
     Progress,
-    /// Icon text
+    /// wxDataViewIconText
     IconText,
 }
 
 impl VariantType {
     /// Converts the enum variant to a C string compatible with wxWidgets
-    pub fn to_type_string(&self) -> &'static str {
+    pub fn as_str(&self) -> &'static str {
         match self {
             VariantType::Bool => "bool",
             VariantType::Int32 => "long",
