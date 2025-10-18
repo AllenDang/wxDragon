@@ -141,7 +141,7 @@ impl TreeItemId {
                 if ffi::wxd_TreeItemId_IsOk(ptr) {
                     Some(TreeItemId { ptr })
                 } else {
-                    eprintln!(
+                    log::warn!(
                         "Warning: C++ returned invalid TreeItemId pointer {ptr:p}, rejecting"
                     );
                     // Free the invalid pointer since we were supposed to take ownership
@@ -149,7 +149,7 @@ impl TreeItemId {
                     None
                 }
             } else {
-                eprintln!("Warning: C++ returned corrupted TreeItemId pointer {ptr:p}, rejecting");
+                log::warn!("Warning: C++ returned corrupted TreeItemId pointer {ptr:p}, rejecting");
                 None
             }
         }
@@ -218,7 +218,7 @@ impl Drop for TreeItemId {
                     }
                 } else {
                     // Pointer looks corrupted, don't try to free it to avoid crashes
-                    eprintln!("Warning: Dropping TreeItemId with corrupted pointer {:p}, not freeing to avoid crash", self.ptr);
+                    log::warn!("Warning: Dropping TreeItemId with corrupted pointer {:p}, not freeing to avoid crash", self.ptr);
                 }
             }
             self.ptr = ptr::null_mut();

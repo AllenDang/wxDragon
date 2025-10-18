@@ -330,15 +330,15 @@ pub fn create_dataview_virtual_tab(parent: &impl WxWidget) -> DataViewVirtualTab
     dvc.on_item_activated(move |event| {
         match event.get_row() {
             Some(row_index) => {
-                println!("Double-clicked on row: {row_index}");
+                log::info!("Double-clicked on row: {row_index}");
                 // Get employee data for the clicked row
                 let employees_borrow = employees_for_click.borrow();
                 if let Some(employee) = employees_borrow.get(row_index as usize) {
-                    println!("  Employee ID: {}", employee.id);
-                    println!("  Employee Name: {}", employee.name);
-                    println!("  Department: {}", employee.department);
+                    log::debug!("  Employee ID: {}", employee.id);
+                    log::debug!("  Employee Name: {}", employee.name);
+                    log::debug!("  Department: {}", employee.department);
                 } else {
-                    println!(
+                    log::warn!(
                         "  Row {} is out of bounds (total rows: {})",
                         row_index,
                         employees_borrow.len()
@@ -346,7 +346,7 @@ pub fn create_dataview_virtual_tab(parent: &impl WxWidget) -> DataViewVirtualTab
                 }
             }
             None => {
-                println!("Double-clicked but could not determine row index!");
+                log::warn!("Double-clicked but could not determine row index!");
             }
         }
     });
@@ -364,9 +364,11 @@ pub fn create_dataview_virtual_tab(parent: &impl WxWidget) -> DataViewVirtualTab
         if let Some(row_index) = dvc_for_modify.get_selected_row() {
             let employees_borrow = employees_for_modify.borrow();
             if let Some(employee) = employees_borrow.get(row_index) {
-                println!(
+                log::info!(
                     "modify [ID: {}, Name: {}, Department: {}]",
-                    employee.id, employee.name, employee.department
+                    employee.id,
+                    employee.name,
+                    employee.department
                 );
             }
         }
@@ -378,9 +380,11 @@ pub fn create_dataview_virtual_tab(parent: &impl WxWidget) -> DataViewVirtualTab
         if let Some(row_index) = dvc_for_delete.get_selected_row() {
             let employees_borrow = employees_for_delete.borrow();
             if let Some(employee) = employees_borrow.get(row_index) {
-                println!(
+                log::info!(
                     "delete [ID: {}, Name: {}, Department: {}]",
-                    employee.id, employee.name, employee.department
+                    employee.id,
+                    employee.name,
+                    employee.department
                 );
             }
         }
@@ -395,12 +399,14 @@ pub fn create_dataview_virtual_tab(parent: &impl WxWidget) -> DataViewVirtualTab
         if let Some(row_index) = event.get_row() {
             let employees_borrow = employees_for_context.borrow();
             if let Some(employee) = employees_borrow.get(row_index as usize) {
-                println!(
+                log::info!(
                     "Context menu requested on: [ID: {}, Name: {}, Department: {}]",
-                    employee.id, employee.name, employee.department
+                    employee.id,
+                    employee.name,
+                    employee.department
                 );
                 if let Some(col) = event.get_column() {
-                    println!("  Column: {}", col);
+                    log::debug!("  Column: {}", col);
                 }
             }
         }
@@ -414,5 +420,11 @@ pub fn create_dataview_virtual_tab(parent: &impl WxWidget) -> DataViewVirtualTab
     DataViewVirtualTabControls {
         panel,
         _model: model, // Keep the model alive
+    }
+}
+
+impl Drop for DataViewVirtualTabControls {
+    fn drop(&mut self) {
+        log::info!("DataViewVirtualTabControls is being dropped, cleaning up resources.");
     }
 }

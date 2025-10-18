@@ -217,7 +217,7 @@ impl RichTextTabControls {
             if from != to {
                 rich_text_clone.set_style_range(from, to, true, false, false);
                 status_label_clone.set_label("Applied bold formatting to selection");
-                println!("Applied bold to range {from}-{to}");
+                log::info!("Applied bold to range {from}-{to}");
             } else {
                 status_label_clone.set_label("Please select text first");
             }
@@ -231,7 +231,7 @@ impl RichTextTabControls {
             if from != to {
                 rich_text_clone.set_style_range(from, to, false, true, false);
                 status_label_clone.set_label("Applied italic formatting to selection");
-                println!("Applied italic to range {from}-{to}");
+                log::info!("Applied italic to range {from}-{to}");
             } else {
                 status_label_clone.set_label("Please select text first");
             }
@@ -245,7 +245,7 @@ impl RichTextTabControls {
             if from != to {
                 rich_text_clone.set_style_range(from, to, false, false, true);
                 status_label_clone.set_label("Applied underline formatting to selection");
-                println!("Applied underline to range {from}-{to}");
+                log::info!("Applied underline to range {from}-{to}");
             } else {
                 status_label_clone.set_label("Please select text first");
             }
@@ -261,7 +261,7 @@ impl RichTextTabControls {
             if from != to {
                 rich_text_clone.set_font_size(from, to, size);
                 status_label_clone.set_label(&format!("Changed font size to {size}pt"));
-                println!("Applied font size {size} to range {from}-{to}");
+                log::info!("Applied font size {size} to range {from}-{to}");
             } else {
                 status_label_clone.set_label(&format!("Font size {size}pt - select text to apply"));
             }
@@ -273,7 +273,7 @@ impl RichTextTabControls {
         self.clear_btn.on_click(move |_event| {
             rich_text_clone.clear();
             status_label_clone.set_label("Cleared all content");
-            println!("Cleared all content");
+            log::info!("Cleared all content");
         });
 
         // Undo button
@@ -283,7 +283,7 @@ impl RichTextTabControls {
             if rich_text_clone.can_undo() {
                 rich_text_clone.undo();
                 status_label_clone.set_label("Undone last action");
-                println!("Undone last action");
+                log::info!("Undone last action");
             } else {
                 status_label_clone.set_label("Nothing to undo");
             }
@@ -296,7 +296,7 @@ impl RichTextTabControls {
             if rich_text_clone.can_redo() {
                 rich_text_clone.redo();
                 status_label_clone.set_label("Redone last action");
-                println!("Redone last action");
+                log::info!("Redone last action");
             } else {
                 status_label_clone.set_label("Nothing to redo");
             }
@@ -310,7 +310,7 @@ impl RichTextTabControls {
             if from != to {
                 rich_text_clone.cut();
                 status_label_clone.set_label("Cut selection to clipboard");
-                println!("Cut selection to clipboard");
+                log::info!("Cut selection to clipboard");
             } else {
                 status_label_clone.set_label("Nothing to cut");
             }
@@ -324,7 +324,7 @@ impl RichTextTabControls {
             if from != to {
                 rich_text_clone.copy();
                 status_label_clone.set_label("Copied selection to clipboard");
-                println!("Copied selection to clipboard");
+                log::info!("Copied selection to clipboard");
             } else {
                 status_label_clone.set_label("Nothing to copy");
             }
@@ -337,7 +337,7 @@ impl RichTextTabControls {
             // Always try to paste - the control will handle it if clipboard is empty
             rich_text_clone.paste();
             status_label_clone.set_label("Pasted from clipboard");
-            println!("Pasted from clipboard");
+            log::info!("Pasted from clipboard");
         });
 
         // Select All button
@@ -347,7 +347,7 @@ impl RichTextTabControls {
             let last_pos = rich_text_clone.get_last_position();
             rich_text_clone.set_selection(0, last_pos);
             status_label_clone.set_label("Selected all text");
-            println!("Selected all text");
+            log::info!("Selected all text");
         });
 
         // Save button - Use file dialog to save
@@ -383,10 +383,10 @@ impl RichTextTabControls {
                                 .and_then(|name| name.to_str())
                                 .unwrap_or(&file_path)
                         ));
-                        println!("Successfully saved content to {file_path}");
+                        log::info!("Successfully saved content to {file_path}");
                     } else {
                         status_label_clone.set_label("Failed to save file");
-                        println!("Failed to save content to file: {file_path}");
+                        log::warn!("Failed to save content to file: {file_path}");
                     }
                 } else {
                     status_label_clone.set_label("Failed to get file path");
@@ -423,10 +423,10 @@ impl RichTextTabControls {
                             std::path::Path::new(&file_path).file_name()
                                 .and_then(|name| name.to_str())
                                 .unwrap_or(&file_path)));
-                        println!("Successfully loaded content from {file_path}");
+                        log::info!("Successfully loaded content from {file_path}");
                     } else {
                         status_label_clone.set_label("Failed to load file");
-                        println!("Failed to load content from file: {file_path}");
+                        log::warn!("Failed to load content from file: {file_path}");
                     }
                 } else {
                     status_label_clone.set_label("Failed to get file path");
@@ -446,7 +446,7 @@ impl RichTextTabControls {
                 let red_color = Colour::rgb(255, 0, 0);
                 rich_text_clone.set_text_color_selection(red_color);
                 status_label_clone.set_label("Changed text color to red");
-                println!("Applied red text color to range {from}-{to}");
+                log::info!("Applied red text color to range {from}-{to}");
             } else {
                 status_label_clone.set_label("Please select text first");
             }
@@ -462,7 +462,7 @@ impl RichTextTabControls {
                 let yellow_color = Colour::rgb(255, 255, 0);
                 rich_text_clone.set_background_color_selection(yellow_color);
                 status_label_clone.set_label("Changed background color to yellow");
-                println!("Applied yellow background color to range {from}-{to}");
+                log::info!("Applied yellow background color to range {from}-{to}");
             } else {
                 status_label_clone.set_label("Please select text first");
             }
@@ -480,7 +480,7 @@ impl RichTextTabControls {
                 rich_text_clone.set_text_color_selection(black_color);
                 rich_text_clone.set_background_color_selection(white_color);
                 status_label_clone.set_label("Reset colors to default");
-                println!("Reset colors to default for range {from}-{to}");
+                log::info!("Reset colors to default for range {from}-{to}");
             } else {
                 status_label_clone.set_label("Please select text first");
             }
@@ -516,7 +516,7 @@ impl RichTextTabControls {
             } else {
                 status_label_clone.set_label("Added content (no auto-scroll, user had scrolled away)");
             }
-            println!("Added content and checked auto-scroll behavior");
+            log::info!("Added content and checked auto-scroll behavior");
         });
 
         // Scroll to End button
@@ -526,7 +526,7 @@ impl RichTextTabControls {
             rich_text_clone.scroll_to_end();
             let last_pos = rich_text_clone.get_last_position();
             status_label_clone.set_label(&format!("Scrolled to end (position {last_pos})"));
-            println!("Scrolled to end position {last_pos}");
+            log::info!("Scrolled to end position {last_pos}");
         });
 
         // Scroll to Beginning button
@@ -535,7 +535,7 @@ impl RichTextTabControls {
         self.scroll_to_beginning_btn.on_click(move |_event| {
             rich_text_clone.scroll_to_beginning();
             status_label_clone.set_label("Scrolled to beginning (position 0)");
-            println!("Scrolled to beginning");
+            log::info!("Scrolled to beginning");
         });
 
         // Check Visibility button
@@ -553,7 +553,7 @@ impl RichTextTabControls {
             } else {
                 status_label_clone.set_label(&format!("Position {test_position} is not visible - use scroll buttons to see it"));
             }
-            println!("Checked visibility of position {test_position} (visible: {is_visible}, last_pos: {last_pos})");
+            log::info!("Checked visibility of position {test_position} (visible: {is_visible}, last_pos: {last_pos})");
         });
     }
 }

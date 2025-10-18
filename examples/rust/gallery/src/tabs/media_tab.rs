@@ -11,7 +11,7 @@ impl MediaControls {
     pub fn bind_events(&self) {
         // Bind events for media controls if any
         self.animation_ctrl.on_mouse_left_down( |_event| {
-            println!("AnimationCtrl clicked - this event might not be standard for it, just for testing.");
+            log::debug!("AnimationCtrl clicked - this event might not be standard for it, just for testing.");
         });
     }
 }
@@ -30,11 +30,11 @@ pub fn create_media_tab(notebook: &Notebook) -> MediaControls {
     let animation_size = match image::load_from_memory(animation_bytes) {
         Ok(anim_image) => {
             let (w, h) = anim_image.dimensions();
-            println!("Loaded animation dimensions: {w}x{h}");
+            log::info!("Loaded animation dimensions: {w}x{h}");
             Size::new(w as i32, h as i32)
         }
         Err(e) => {
-            println!(
+            log::warn!(
                 "Failed to load animation metadata to get size: {e}. Falling back to default."
             );
             Size::new(100, 100) // Fallback size
@@ -47,14 +47,14 @@ pub fn create_media_tab(notebook: &Notebook) -> MediaControls {
         .build();
 
     if animation_ctrl.load_from_bytes(animation_bytes) {
-        println!("Animation loaded from bytes successfully.");
+        log::info!("Animation loaded from bytes successfully.");
         if animation_ctrl.play() {
-            println!("Animation started successfully from bytes.");
+            log::info!("Animation started successfully from bytes.");
         } else {
-            println!("Failed to start animation even after loading from bytes.");
+            log::warn!("Failed to start animation even after loading from bytes.");
         }
     } else {
-        println!("Failed to load animation from bytes.");
+        log::warn!("Failed to load animation from bytes.");
     }
 
     // Row 1: Animation (left) and description (right)
@@ -107,7 +107,7 @@ pub fn create_media_tab(notebook: &Notebook) -> MediaControls {
                     5,
                 );
             } else {
-                println!("[MediaTab] Failed to create Bitmap object for StaticBitmap.");
+                log::warn!("[MediaTab] Failed to create Bitmap object for StaticBitmap.");
                 // Maintain 2-column structure even on error
                 grid.add_spacer(1);
                 let bmp_error_label = StaticText::builder(&panel)
@@ -122,7 +122,7 @@ pub fn create_media_tab(notebook: &Notebook) -> MediaControls {
             }
         }
         Err(e) => {
-            println!("[MediaTab] Failed to load static bitmap: {e}");
+            log::warn!("[MediaTab] Failed to load static bitmap: {e}");
             // Maintain 2-column structure even on error
             grid.add_spacer(1);
             let bmp_error_label = StaticText::builder(&panel)

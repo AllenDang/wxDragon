@@ -196,7 +196,7 @@ impl Variant {
                         None => {
                             // If even this fails, we're in trouble, but let's try to recover
                             // by using a default variant type instead of failing completely
-                            eprintln!(
+                            log::warn!(
                                 "Warning: Failed to create empty bitmap for null bitmap pointer"
                             );
                             Variant::String("".to_string())

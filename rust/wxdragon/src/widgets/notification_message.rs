@@ -173,7 +173,7 @@ impl NotificationMessage {
         if action_id <= 0 {
             // wxWidgets requires action IDs to be > 0
             // Consider returning a specific error type here
-            println!("Warning: NotificationMessage action_id must be > 0.");
+            log::warn!("NotificationMessage action_id must be > 0.");
             return Ok(false);
         }
         let c_label = CString::new(label)?; // This can return NulError, which converts to Error::NulError

@@ -15,11 +15,11 @@ impl AuiTabControls {
         toolbar_ref.on_menu(move |event| {
             let id = event.get_id();
             if id == 1001 {
-                println!("Save Perspective button clicked");
-                println!("(In a real app, we would save the perspective string)");
+                log::info!("Save Perspective button clicked");
+                log::debug!("(In a real app, we would save the perspective string)");
             } else if id == 1002 {
-                println!("Load Perspective button clicked");
-                println!("(In a real app, we would load the saved perspective)");
+                log::info!("Load Perspective button clicked");
+                log::debug!("(In a real app, we would load the saved perspective)");
             }
         });
     }

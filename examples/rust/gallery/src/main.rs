@@ -26,6 +26,8 @@ const ID_TOOL_SAVE: Id = ID_HIGHEST + 3;
 
 fn main() {
     SystemOptions::set_option_by_int("msw.no-manifest-check", 1);
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("trace")).init();
+
     let _ = wxdragon::main(|_| {
         // Create the main application frame
         let frame = Frame::builder()
@@ -72,11 +74,12 @@ fn main() {
             if idx != -1 {
                 image_ids.push(idx);
             } else {
-                eprintln!("Failed to add Information icon to ImageList");
+                log::warn!("Failed to add Information icon to ImageList");
             }
         } else {
-            eprintln!("Failed to get ArtId::Information for Notebook");
+            log::warn!("Failed to get ArtId::Information for Notebook");
         }
+
         if let Some(bmp_find_and_replace) =
             ArtProvider::get_bitmap(ArtId::FindAndReplace, ArtClient::Menu, Some(size))
         {
@@ -84,26 +87,27 @@ fn main() {
             if idx != -1 {
                 image_ids.push(idx);
             } else {
-                eprintln!("Failed to add FindAndReplace icon to ImageList");
+                log::warn!("Failed to add FindAndReplace icon to ImageList");
             }
         } else {
-            eprintln!("Failed to get ArtId::FindAndReplace for Notebook");
+            log::warn!("Failed to get ArtId::FindAndReplace for Notebook");
         }
+
         if let Some(bmp_tip) = ArtProvider::get_bitmap(ArtId::Tip, ArtClient::Menu, Some(size)) {
             let idx = image_list.add_bitmap(&bmp_tip);
             if idx != -1 {
                 image_ids.push(idx);
             } else {
-                eprintln!("Failed to add Tip icon to ImageList");
+                log::warn!("Failed to add Tip icon to ImageList");
             }
         } else {
-            eprintln!("Failed to get ArtId::Tip for Notebook");
+            log::warn!("Failed to get ArtId::Tip for Notebook");
         }
 
         if !image_ids.is_empty() {
             notebook.set_image_list(image_list);
         } else {
-            eprintln!("No images were added to the ImageList. Not setting it on the Notebook.");
+            log::warn!("No images were added to the ImageList. Not setting it on the Notebook.");
         }
 
         // --- Create Tabs ---
@@ -126,9 +130,10 @@ fn main() {
         if let Some(toolbar) = frame.create_tool_bar(Some(tb_style), ID_ANY as i32) {
             // Get sizes for the toolbar icons (platform-dependent)
             let icon_size = ArtProvider::get_native_dip_size_hint(ArtClient::Toolbar);
-            println!(
+            log::info!(
                 "Native toolbar icon size: {}x{}",
-                icon_size.width, icon_size.height
+                icon_size.width,
+                icon_size.height
             );
 
             // New Tool
@@ -136,14 +141,14 @@ fn main() {
                 ArtProvider::get_bitmap_bundle(ArtId::New, ArtClient::Toolbar, None)
             {
                 toolbar.add_tool_bundle(ID_TOOL_NEW, "New", &new_bundle, "Create a new file");
-                println!("Using BitmapBundle for New tool");
+                log::debug!("Using BitmapBundle for New tool");
             } else if let Some(new_icon) =
                 ArtProvider::get_bitmap(ArtId::New, ArtClient::Toolbar, None)
             {
                 toolbar.add_tool(ID_TOOL_NEW, "New", &new_icon, "Create a new file");
-                println!("Fallback to Bitmap for New tool");
+                log::debug!("Fallback to Bitmap for New tool");
             } else {
-                eprintln!("Failed to get ArtId::New for toolbar");
+                log::warn!("Failed to get ArtId::New for toolbar");
             }
 
             // Open Tool
@@ -156,14 +161,14 @@ fn main() {
                     &open_bundle,
                     "Open an existing file",
                 );
-                println!("Using BitmapBundle for Open tool");
+                log::debug!("Using BitmapBundle for Open tool");
             } else if let Some(open_icon) =
                 ArtProvider::get_bitmap(ArtId::FileOpen, ArtClient::Toolbar, None)
             {
                 toolbar.add_tool(ID_TOOL_OPEN, "Open", &open_icon, "Open an existing file");
-                println!("Fallback to Bitmap for Open tool");
+                log::debug!("Fallback to Bitmap for Open tool");
             } else {
-                eprintln!("Failed to get ArtId::FileOpen for toolbar");
+                log::warn!("Failed to get ArtId::FileOpen for toolbar");
             }
 
             // Save Tool
@@ -176,14 +181,14 @@ fn main() {
                     &save_bundle,
                     "Save the current file",
                 );
-                println!("Using BitmapBundle for Save tool");
+                log::debug!("Using BitmapBundle for Save tool");
             } else if let Some(save_icon) =
                 ArtProvider::get_bitmap(ArtId::FileSave, ArtClient::Toolbar, None)
             {
                 toolbar.add_tool(ID_TOOL_SAVE, "Save", &save_icon, "Save the current file");
-                println!("Fallback to Bitmap for Save tool");
+                log::debug!("Fallback to Bitmap for Save tool");
             } else {
-                eprintln!("Failed to get ArtId::FileSave for toolbar");
+                log::warn!("Failed to get ArtId::FileSave for toolbar");
             }
 
             toolbar.realize();
@@ -260,20 +265,20 @@ fn main() {
         let frame_clone_for_menu = frame.clone();
         frame.on_menu(move |event| match event.get_id() {
             id if id == ID_EXIT => {
-                println!("Menu/Toolbar: Exit clicked!");
+                log::info!("Menu/Toolbar: Exit clicked!");
                 frame_clone_for_menu.close(true);
             }
             id if id == ID_ABOUT => {
-                println!("Menu: About clicked!");
+                log::info!("Menu: About clicked!");
             }
             id if id == ID_TOOL_NEW => {
-                println!("Toolbar: New clicked!");
+                log::info!("Toolbar: New clicked!");
             }
             id if id == ID_TOOL_OPEN => {
-                println!("Toolbar: Open clicked!");
+                log::info!("Toolbar: Open clicked!");
             }
             id if id == ID_TOOL_SAVE => {
-                println!("Toolbar: Save clicked!");
+                log::info!("Toolbar: Save clicked!");
             }
             // Context menu IDs from DataView tab (handled by the tab itself)
             1001 | 1002 => {
@@ -281,7 +286,7 @@ fn main() {
                 // Don't print "Unhandled" for these
             }
             _ => {
-                println!("Unhandled Menu/Tool ID: {}", event.get_id());
+                log::warn!("Unhandled Menu/Tool ID: {}", event.get_id());
                 event.skip(true);
             }
         });
@@ -306,7 +311,7 @@ fn main() {
                     |p| p.get_label().unwrap_or_default(),
                 );
 
-            println!(
+            log::info!(
                 "Notebook PageChanged: New={new_page_index}, Old={old_page_index}, NewLabel='{new_page_text}', OldLabel='{old_page_text}'"
             );
             frame_clone_page_changed.set_status_text(
@@ -336,7 +341,7 @@ fn main() {
                     |p| p.get_label().unwrap_or_default(),
                 );
 
-            println!(
+            log::info!(
                 "Notebook PageChanging: New={new_page_index}, Old={old_page_index}, NewLabel='{new_page_text}', OldLabel='{old_page_text}'"
             );
         });

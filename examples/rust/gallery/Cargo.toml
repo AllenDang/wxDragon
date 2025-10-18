@@ -4,10 +4,12 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+env_logger = "0.11.8"
 image = { version = "0.25.1", default-features = false, features = [
   "png",
   "gif",
 ] }
+log = "0.4"
 # Depend on the safe wrapper crate now
 wxdragon = { path = "../../../rust/wxdragon", features = ["aui", "richtext"] }
 

@@ -77,7 +77,7 @@ impl Bitmap {
     pub fn from_rgba(data: &[u8], width: u32, height: u32) -> Option<Self> {
         let expected_len = (width * height * 4) as usize;
         if data.len() != expected_len || width == 0 || height == 0 {
-            eprintln!(
+            log::error!(
                 "Bitmap::from_rgba: Invalid data length or dimensions. Expected {}, got {}, w={}, h={}", 
                 expected_len, data.len(), width, height
             );

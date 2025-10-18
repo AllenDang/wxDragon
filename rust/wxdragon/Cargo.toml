@@ -21,6 +21,7 @@ richtext = ["wxdragon-sys/richtext"]
 
 [dependencies]
 bitflags = "2.4.2"
+log = "0.4.28"
 paste = "1.0.15"
 wxdragon-macros = { path = "../../rust/wxdragon-macros" }
 wxdragon-sys = { path = "../../rust/wxdragon-sys" } 

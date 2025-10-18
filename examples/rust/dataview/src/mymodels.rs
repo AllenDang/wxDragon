@@ -28,7 +28,7 @@ pub struct MyMusicTreeNode {
 
 impl Drop for MyMusicTreeNode {
     fn drop(&mut self) {
-        println!("Dropping MyMusicTreeNode: {}", self.title);
+        log::debug!("Dropping MyMusicTreeNode: {}", self.title);
     }
 }
 
@@ -65,7 +65,7 @@ pub struct MyMusicData {
 
 impl Drop for MyMusicData {
     fn drop(&mut self) {
-        println!("Dropping MyMusicData {self:p}");
+        log::debug!("Dropping MyMusicData {self:p}");
     }
 }
 

@@ -431,8 +431,9 @@ impl Drop for CustomDataViewTreeModel {
     fn drop(&mut self) {
         if !self.model.is_null() {
             // Here the reference count is decreased; if it reaches zero, the model will be destroyed.
-            // let count = unsafe { ffi::wxd_DataViewModel_GetRefCount(self.model) };
-            // println!("wxd_DataViewModel_t RefCount is {count}");
+            let count = unsafe { ffi::wxd_DataViewModel_GetRefCount(self.model) };
+            let text = if count == 1 { "last" } else { "not last" };
+            log::debug!("CustomDataViewTreeModel::model RefCount is {count}, {text} one.");
             unsafe { ffi::wxd_DataViewModel_Release(self.model) };
         }
     }

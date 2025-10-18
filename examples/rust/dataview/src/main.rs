@@ -7,6 +7,7 @@ mod mymodels;
 
 fn main() {
     SystemOptions::set_option_by_int("msw.no-manifest-check", 1);
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("trace")).init();
     // Keep the model alive for the duration of the app
     let model = Rc::new(mymodels::create_music_tree_model().expect("Failed to create tree model"));
     let model_clone = model.clone();

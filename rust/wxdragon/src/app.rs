@@ -548,7 +548,7 @@ unsafe extern "C" fn on_init_trampoline(user_data: *mut c_void) -> bool {
     let app = match App::new() {
         Some(app) => app,
         None => {
-            eprintln!("Failed to get app instance");
+            log::error!("Failed to get app instance");
             return false;
         }
     };
@@ -560,7 +560,7 @@ unsafe extern "C" fn on_init_trampoline(user_data: *mut c_void) -> bool {
     match result {
         Ok(_) => true, // Always return success if no panic occurred
         Err(_) => {
-            eprintln!("Panic caught in Rust AppOnInit callback!");
+            log::error!("Panic caught in Rust AppOnInit callback!");
             false // Indicate failure on panic
         }
     }
