@@ -1018,6 +1018,7 @@ impl CustomDataViewVirtualListModel {
             );
 
             if handle.is_null() {
+                log::error!("Failed to create CustomDataViewVirtualListModel in C++");
                 // If the C++ side failed, reclaim ownership and drop the box properly
                 drop(Box::from_raw(raw_callback_data));
 
@@ -1039,7 +1040,6 @@ impl CustomDataViewVirtualListModel {
 
             // Create a dummy callback_data for our own Rust-side model
             // The real one is now owned by C++ and will be properly cleaned up
-            // when we call wxd_DataViewVirtualListModel_ReleaseCallbacks in Drop
             let dummy_callback_data = Box::new(CustomModelCallbacks {
                 userdata: Box::new(()),
                 get_value: Box::new(|_, _, _| Variant::String(String::new())),

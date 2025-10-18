@@ -195,6 +195,10 @@ typedef struct {
     bool italic;
 } wxd_DataViewItemAttr_t;
 
+/**
+ * @brief Creates a new custom virtual list model with callbacks, the returned model has ref count 1,
+ * the caller is responsible for releasing it when done with wxd_DataViewModel_Release.
+ */
 WXD_EXPORTED wxd_DataViewModel_t* wxd_DataViewVirtualListModel_CreateWithCallbacks(
     uint64_t initial_size,
     void* userdata,
@@ -203,8 +207,6 @@ WXD_EXPORTED wxd_DataViewModel_t* wxd_DataViewVirtualListModel_CreateWithCallbac
     bool (*get_attr_callback)(void* userdata, uint64_t row, uint64_t col, wxd_DataViewItemAttr_t* attr),
     bool (*is_enabled_callback)(void* userdata, uint64_t row, uint64_t col)
 );
-
-WXD_EXPORTED void wxd_DataViewVirtualListModel_ReleaseCallbacks(wxd_DataViewModel_t* model);
 
 // Custom tree model with callbacks: create a wxDataViewModel subclass that
 // forwards GetParent/IsContainer/GetChildren/GetValue/SetValue/IsEnabled/Compare
@@ -239,6 +241,10 @@ typedef struct wxd_DataViewTreeModel_Callbacks {
     wxd_dataview_tree_model_compare_fn compare;
 } wxd_DataViewTreeModel_Callbacks;
 
+/**
+ * @brief Creates a new custom tree model with callbacks, the returned model has ref count 1,
+ * the caller is responsible for releasing it when done with wxd_DataViewModel_Release.
+ */
 WXD_EXPORTED wxd_DataViewModel_t* wxd_DataViewTreeModel_CreateWithCallbacks(const wxd_DataViewTreeModel_Callbacks* callbacks);
 
 // DataViewCtrl functions

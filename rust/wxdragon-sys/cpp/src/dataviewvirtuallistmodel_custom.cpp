@@ -289,15 +289,6 @@ public:
         }
         return true;
     }
-    
-    // Release the callbacks
-    void ReleaseCallbacks() {
-        m_userdata = nullptr;
-        m_get_value = nullptr;
-        m_set_value = nullptr;
-        m_get_attr = nullptr;
-        m_is_enabled = nullptr;
-    }
 
 private:
     void* m_userdata;
@@ -312,7 +303,8 @@ extern "C" {
 // Function pointer for dropping Rust callback data
 typedef void (*DropRustFnPtr)(void*);
 
-// Creates a new custom virtual list model with callbacks
+// @brief Creates a new custom virtual list model with callbacks, the returned model has ref count 1,
+// the caller is responsible for releasing it when done with wxd_DataViewModel_Release.
 wxd_DataViewModel_t* wxd_DataViewVirtualListModel_CreateWithCallbacks(
     uint64_t initial_size,
     void* userdata,
@@ -336,16 +328,6 @@ wxd_DataViewModel_t* wxd_DataViewVirtualListModel_CreateWithCallbacks(
     );
 
     return reinterpret_cast<wxd_DataViewModel_t*>(model);
-}
-
-// Release the callbacks for the custom model
-void wxd_DataViewVirtualListModel_ReleaseCallbacks(wxd_DataViewModel_t* model) {
-    WxdCustomDataViewVirtualListModel* custom_model = 
-        dynamic_cast<WxdCustomDataViewVirtualListModel*>(reinterpret_cast<wxDataViewModel*>(model));
-    
-    if (custom_model) {
-        custom_model->ReleaseCallbacks();
-    }
 }
 
 } // extern "C" 
