@@ -829,8 +829,6 @@ pub extern "C" fn wxd_Drop_Rust_DataViewTreeModelCallbacks(
 pub struct CustomDataViewVirtualListModel {
     handle: *mut ffi::wxd_DataViewModel_t,
     size: usize,
-    // Box holding the callback data to ensure it lives as long as the model
-    callback_data: Box<CustomModelCallbacks>,
 }
 
 struct CustomModelCallbacks {
@@ -912,147 +910,124 @@ impl CustomDataViewVirtualListModel {
             is_enabled: any_is_enabled,
         });
 
-        unsafe {
-            // Create C++ callbacks
-            extern "C" fn get_value_callback(
-                userdata: *mut ::std::os::raw::c_void,
-                row: u64,
-                col: u64,
-                variant: *mut ffi::wxd_Variant_t,
-            ) {
-                if variant.is_null() {
-                    return;
-                }
+        // Create C++ callbacks
+        unsafe extern "C" fn get_value_callback(
+            userdata: *mut ::std::os::raw::c_void,
+            row: u64,
+            col: u64,
+            variant: *mut ffi::wxd_Variant_t,
+        ) {
+            if variant.is_null() {
+                return;
+            }
 
-                if userdata.is_null() {
-                    unsafe {
-                        (*variant).type_ = ffi::WXD_VARIANT_TYPE_STRING as i32;
-                        let error_message = "Error: null userdata".to_string();
-                        (*variant).data.string_val =
-                            CString::new(error_message).unwrap_or_default().into_raw();
-                    }
-                    return;
+            if userdata.is_null() {
+                unsafe {
+                    (*variant).type_ = ffi::WXD_VARIANT_TYPE_STRING as i32;
+                    let error_message = "Error: null userdata".to_string();
+                    (*variant).data.string_val =
+                        CString::new(error_message).unwrap_or_default().into_raw();
                 }
+                return;
+            }
 
-                // Safety: This cast should be valid if the userdata was properly created
-                let callbacks = unsafe { &*(userdata as *const CustomModelCallbacks) };
+            // Safety: This cast should be valid if the userdata was properly created
+            let callbacks = unsafe { &*(userdata as *const CustomModelCallbacks) };
+
+            // Call the user's callback
+            let value = (callbacks.get_value)(&*callbacks.userdata, row as usize, col as usize);
+
+            // Convert Variant to wxd_Variant_t
+            let raw_variant = to_raw_variant(&value);
+
+            // Copy the result to the provided variant
+            unsafe {
+                *variant = raw_variant;
+            }
+        }
+
+        unsafe extern "C" fn set_value_callback(
+            userdata: *mut ::std::os::raw::c_void,
+            variant: *const ffi::wxd_Variant_t,
+            row: u64,
+            col: u64,
+        ) -> bool {
+            let callbacks = unsafe { &*(userdata as *const CustomModelCallbacks) };
+            if let Some(set_value) = &callbacks.set_value {
+                // Convert wxd_Variant_t to Variant
+                let value = unsafe { from_raw_variant(variant) };
 
                 // Call the user's callback
-                let value = (callbacks.get_value)(&*callbacks.userdata, row as usize, col as usize);
-
-                // Convert Variant to wxd_Variant_t
-                let raw_variant = to_raw_variant(&value);
-
-                // Copy the result to the provided variant
-                unsafe {
-                    *variant = raw_variant;
-                }
+                (set_value)(&*callbacks.userdata, row as usize, col as usize, &value)
+            } else {
+                false
             }
+        }
 
-            extern "C" fn set_value_callback(
-                userdata: *mut ::std::os::raw::c_void,
-                variant: *const ffi::wxd_Variant_t,
-                row: u64,
-                col: u64,
-            ) -> bool {
-                let callbacks = unsafe { &*(userdata as *const CustomModelCallbacks) };
-                if let Some(set_value) = &callbacks.set_value {
-                    // Convert wxd_Variant_t to Variant
-                    let value = unsafe { from_raw_variant(variant) };
-
-                    // Call the user's callback
-                    (set_value)(&*callbacks.userdata, row as usize, col as usize, &value)
-                } else {
-                    false
-                }
-            }
-
-            extern "C" fn get_attr_callback(
-                userdata: *mut ::std::os::raw::c_void,
-                row: u64,
-                col: u64,
-                attr: *mut ffi::wxd_DataViewItemAttr_t,
-            ) -> bool {
-                let callbacks = unsafe { &*(userdata as *const CustomModelCallbacks) };
-                if let Some(get_attr) = &callbacks.get_attr {
-                    if let Some(attrs) =
-                        (get_attr)(&*callbacks.userdata, row as usize, col as usize)
-                    {
-                        // Copy the attributes to the provided struct
-                        unsafe {
-                            *attr = attrs.to_raw();
-                        }
-                        true
-                    } else {
-                        false
+        unsafe extern "C" fn get_attr_callback(
+            userdata: *mut ::std::os::raw::c_void,
+            row: u64,
+            col: u64,
+            attr: *mut ffi::wxd_DataViewItemAttr_t,
+        ) -> bool {
+            let callbacks = unsafe { &*(userdata as *const CustomModelCallbacks) };
+            if let Some(get_attr) = &callbacks.get_attr {
+                if let Some(attrs) = (get_attr)(&*callbacks.userdata, row as usize, col as usize) {
+                    // Copy the attributes to the provided struct
+                    unsafe {
+                        *attr = attrs.to_raw();
                     }
+                    true
                 } else {
                     false
                 }
+            } else {
+                false
             }
+        }
 
-            extern "C" fn is_enabled_callback(
-                userdata: *mut ::std::os::raw::c_void,
-                row: u64,
-                col: u64,
-            ) -> bool {
-                let callbacks = unsafe { &*(userdata as *const CustomModelCallbacks) };
-                if let Some(is_enabled) = &callbacks.is_enabled {
-                    (is_enabled)(&*callbacks.userdata, row as usize, col as usize)
-                } else {
-                    true
-                }
+        unsafe extern "C" fn is_enabled_callback(
+            userdata: *mut ::std::os::raw::c_void,
+            row: u64,
+            col: u64,
+        ) -> bool {
+            let callbacks = unsafe { &*(userdata as *const CustomModelCallbacks) };
+            if let Some(is_enabled) = &callbacks.is_enabled {
+                (is_enabled)(&*callbacks.userdata, row as usize, col as usize)
+            } else {
+                true
             }
+        }
 
-            // Create the C++ model with our callbacks
-            let raw_callback_data = Box::into_raw(callback_data);
+        // Create the C++ model with our callbacks
+        let raw_callback_data = Box::into_raw(callback_data);
 
-            // The handle returned by the C++ side, which reference count is 1 now
-            let handle = ffi::wxd_DataViewVirtualListModel_CreateWithCallbacks(
+        // The handle returned by the C++ side, which reference count is 1 now
+        let handle = unsafe {
+            ffi::wxd_DataViewVirtualListModel_CreateWithCallbacks(
                 initial_size as u64,
                 raw_callback_data as *mut ::std::os::raw::c_void,
                 Some(get_value_callback),
                 Some(set_value_callback),
                 Some(get_attr_callback),
                 Some(is_enabled_callback),
-            );
+            )
+        };
 
-            if handle.is_null() {
-                log::error!("Failed to create CustomDataViewVirtualListModel in C++");
-                // If the C++ side failed, reclaim ownership and drop the box properly
-                drop(Box::from_raw(raw_callback_data));
+        if handle.is_null() {
+            log::error!("Failed to create CustomDataViewVirtualListModel in C++");
+            // If the C++ side failed, reclaim ownership and drop the box properly
+            drop(unsafe { Box::from_raw(raw_callback_data) });
 
-                // Create a dummy callback_data for the error case
-                let dummy_callback_data = Box::new(CustomModelCallbacks {
-                    userdata: Box::new(()),
-                    get_value: Box::new(|_, _, _| Variant::String(String::new())),
-                    set_value: None,
-                    get_attr: None,
-                    is_enabled: None,
-                });
+            return Self {
+                handle: std::ptr::null_mut(),
+                size: 0,
+            };
+        }
 
-                return Self {
-                    handle: std::ptr::null_mut(),
-                    size: 0,
-                    callback_data: dummy_callback_data,
-                };
-            }
-
-            // Create a dummy callback_data for our own Rust-side model
-            // The real one is now owned by C++ and will be properly cleaned up
-            let dummy_callback_data = Box::new(CustomModelCallbacks {
-                userdata: Box::new(()),
-                get_value: Box::new(|_, _, _| Variant::String(String::new())),
-                set_value: None,
-                get_attr: None,
-                is_enabled: None,
-            });
-
-            Self {
-                handle,
-                size: initial_size,
-                callback_data: dummy_callback_data,
-            }
+        Self {
+            handle,
+            size: initial_size,
         }
     }
 
@@ -1144,32 +1119,8 @@ impl DataViewModel for CustomDataViewVirtualListModel {
         self.size
     }
 
-    fn get_value(&self, row: usize, col: usize) -> Variant {
-        (self.callback_data.get_value)(&*self.callback_data.userdata, row, col)
-    }
-
-    fn set_value(&self, row: usize, col: usize, value: &Variant) -> bool {
-        if let Some(set_value) = &self.callback_data.set_value {
-            (set_value)(&*self.callback_data.userdata, row, col, value)
-        } else {
-            false
-        }
-    }
-
-    fn get_attributes(&self, row: usize, col: usize) -> Option<DataViewItemAttr> {
-        if let Some(get_attr) = &self.callback_data.get_attr {
-            (get_attr)(&*self.callback_data.userdata, row, col)
-        } else {
-            None
-        }
-    }
-
-    fn is_enabled(&self, row: usize, col: usize) -> bool {
-        if let Some(is_enabled) = &self.callback_data.is_enabled {
-            (is_enabled)(&*self.callback_data.userdata, row, col)
-        } else {
-            true
-        }
+    fn get_value(&self, _row: usize, _col: usize) -> Variant {
+        Variant::String(String::new())
     }
 }
 
