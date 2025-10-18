@@ -5,7 +5,7 @@ project(const_extractor)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(WXWIDGETS_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../wxWidgets CACHE PATH "Path to the wxWidgets libraries")
+set(WXWIDGETS_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../../../target/debug/wxWidgets CACHE PATH "Path to the wxWidgets libraries")
 message(STATUS "Using wxWidgets libraries source from: ${WXWIDGETS_LIB_DIR}")
 
 # wxWidgets build directory
