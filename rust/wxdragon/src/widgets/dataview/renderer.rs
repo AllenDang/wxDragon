@@ -830,7 +830,7 @@ extern "C" fn set_value_trampoline(
     }
 
     let callbacks = unsafe { &*(user_data as *const CustomRendererCallbacks) };
-    let variant = unsafe { super::model::from_raw_variant(value) };
+    let variant = unsafe { super::variant::from_raw_variant(value) };
 
     // Store the value internally in the renderer
     let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
@@ -852,7 +852,7 @@ extern "C" fn get_value_trampoline(
     let callbacks = unsafe { &*(user_data as *const CustomRendererCallbacks) };
     let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
         let current_value = callbacks.current_value.borrow();
-        let raw = super::model::to_raw_variant(&current_value);
+        let raw = super::variant::to_raw_variant(&current_value);
         unsafe {
             *value = raw;
         }
@@ -923,7 +923,7 @@ extern "C" fn create_editor_trampoline(
             label_rect.width,
             label_rect.height,
         );
-        let variant = unsafe { super::model::from_raw_variant(value) };
+        let variant = unsafe { super::variant::from_raw_variant(value) };
 
         // Create a wrapper for the parent widget
         // Note: This is a simplified implementation. In a full implementation,
@@ -982,7 +982,7 @@ extern "C" fn get_value_from_editor_trampoline(
 
         match result {
             Ok(Some(variant)) => {
-                let raw = super::model::to_raw_variant(&variant);
+                let raw = super::variant::to_raw_variant(&variant);
                 unsafe {
                     *value = raw;
                 }
