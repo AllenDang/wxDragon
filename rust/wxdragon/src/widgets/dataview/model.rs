@@ -216,7 +216,7 @@ impl Drop for DataViewListModel {
             // Here the reference count is decreased; if it reaches zero, the model will be destroyed.
             let count = unsafe { ffi::wxd_DataViewModel_GetRefCount(self.ptr) };
             let text = if count == 1 { "last" } else { "not last" };
-            log::debug!("DataViewListModel::model RefCount is {count}, {text} one.");
+            log::debug!("DataViewListModel dropping, model RefCount is {count}, {text} one.");
             unsafe { ffi::wxd_DataViewModel_Release(self.ptr) };
         }
     }
@@ -355,7 +355,7 @@ impl Drop for CustomDataViewTreeModel {
             // Here the reference count is decreased; if it reaches zero, the model will be destroyed.
             let count = unsafe { ffi::wxd_DataViewModel_GetRefCount(self.model) };
             let text = if count == 1 { "last" } else { "not last" };
-            log::debug!("CustomDataViewTreeModel::model RefCount is {count}, {text} one.");
+            log::debug!("CustomDataViewTreeModel dropping, model RefCount is {count}, {text} one.");
             unsafe { ffi::wxd_DataViewModel_Release(self.model) };
         }
     }
