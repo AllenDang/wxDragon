@@ -18,6 +18,12 @@ struct Employee {
     status: String,
 }
 
+impl Drop for Employee {
+    fn drop(&mut self) {
+        log::trace!("Dropping Employee: ID={}, Name={}", self.id, self.name);
+    }
+}
+
 // Helper function to create a valid bitmap (scoped locally to this tab's creation logic)
 fn create_bitmap_for_tab(art_id: ArtId, client: ArtClient) -> Bitmap {
     match ArtProvider::get_bitmap(art_id, client, Some(Size::new(16, 16))) {
@@ -38,9 +44,6 @@ fn create_bitmap_for_tab(art_id: ArtId, client: ArtClient) -> Bitmap {
 
 pub struct DataViewVirtualTabControls {
     pub panel: Panel,
-    // Keep the model alive with the panel if it's not associated with a control that outlives this scope
-    // Or if callbacks need to live as long as the panel.
-    _model: Rc<CustomDataViewVirtualListModel>, // Removed <()>
 }
 
 pub fn create_dataview_virtual_tab(parent: &impl WxWidget) -> DataViewVirtualTabControls {
@@ -132,7 +135,10 @@ pub fn create_dataview_virtual_tab(parent: &impl WxWidget) -> DataViewVirtualTab
             status: statuses[status_index].to_string(),
         });
     }
-    let employees = Rc::new(RefCell::new(initial_employees));
+
+    type EmployeeList = Rc<RefCell<Vec<Employee>>>;
+
+    let employees: EmployeeList = Rc::new(RefCell::new(initial_employees));
     // --- End Sample Data Generation ---
 
     let dvc = DataViewCtrl::builder(&panel)
@@ -200,10 +206,9 @@ pub fn create_dataview_virtual_tab(parent: &impl WxWidget) -> DataViewVirtualTab
         DataViewColumnFlags::Resizable,
     );
 
-    let employees_ref_get = Rc::clone(&employees);
     let icon_bitmaps_for_closure_get = icon_bitmaps_master.clone();
-    let get_value = move |_userdata: &(), row: usize, col: usize| -> Variant {
-        let employees_borrow = employees_ref_get.borrow();
+    let get_value = move |employees: &EmployeeList, row: usize, col: usize| -> Variant {
+        let employees_borrow = employees.borrow();
         if row >= employees_borrow.len() {
             return "".to_string().into();
         }
@@ -225,9 +230,8 @@ pub fn create_dataview_virtual_tab(parent: &impl WxWidget) -> DataViewVirtualTab
         }
     };
 
-    let employees_ref_set = Rc::clone(&employees);
-    let set_value = move |_userdata: &(), row: usize, col: usize, value: &Variant| -> bool {
-        let mut employees_data = employees_ref_set.borrow_mut();
+    let set_value = move |data: &EmployeeList, row: usize, col: usize, value: &Variant| -> bool {
+        let mut employees_data = data.borrow_mut();
         if row >= employees_data.len() {
             return false;
         }
@@ -277,9 +281,8 @@ pub fn create_dataview_virtual_tab(parent: &impl WxWidget) -> DataViewVirtualTab
         }
     };
 
-    let employees_ref_attr = Rc::clone(&employees);
-    let get_attr = move |_userdata: &(), row: usize, col: usize| -> Option<DataViewItemAttr> {
-        let employees_borrow = employees_ref_attr.borrow();
+    let get_attr = move |data: &EmployeeList, row: usize, col: usize| -> Option<DataViewItemAttr> {
+        let employees_borrow = data.borrow();
         if row >= employees_borrow.len() {
             return None;
         }
@@ -307,23 +310,27 @@ pub fn create_dataview_virtual_tab(parent: &impl WxWidget) -> DataViewVirtualTab
         }
     };
 
-    let is_enabled = move |_userdata: &(), _row: usize, col: usize| -> bool {
+    let is_enabled = move |_data: &EmployeeList, _row: usize, col: usize| -> bool {
         match col {
             0 | 4 | 5 | 6 => false, // ID, Performance, Icon, Hire Date read-only
             _ => true,
         }
     };
 
-    let model = Rc::new(CustomDataViewVirtualListModel::new(
+    // Now reference count of the internal C++ pointer of the model is 1.
+    let model = CustomDataViewVirtualListModel::new(
         employees.borrow().len(),
-        (),
+        employees.clone(),
         get_value,
         Some(set_value),
         Some(get_attr),
         Some(is_enabled),
-    ));
+    );
 
-    dvc.associate_model(model.as_ref());
+    // After calling associate_model, the reference count of the internal C++ pointer of the model is 2.
+    // and when the model Rust struct is dropped, it will decrease the reference count of the internal C++ pointer by 1,
+    // so the model's internal pointer will remain valid as long as the DataViewCtrl is alive.
+    dvc.associate_model(&model);
 
     // Add double-click event handler to test row index reporting
     let employees_for_click = Rc::clone(&employees);
@@ -417,10 +424,7 @@ pub fn create_dataview_virtual_tab(parent: &impl WxWidget) -> DataViewVirtualTab
     sizer.add(&dvc, 1, SizerFlag::All | SizerFlag::Expand, 10);
     panel.set_sizer(sizer, true);
 
-    DataViewVirtualTabControls {
-        panel,
-        _model: model, // Keep the model alive
-    }
+    DataViewVirtualTabControls { panel }
 }
 
 impl Drop for DataViewVirtualTabControls {
