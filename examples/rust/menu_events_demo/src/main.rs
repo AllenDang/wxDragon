@@ -7,6 +7,7 @@
 //! - wxEVT_CONTEXT_MENU: Context menu requested events
 //! - wxEVT_MENU: Traditional menu selection events
 
+use std::rc::Rc;
 use wxdragon::prelude::*;
 
 const ID_NEW: i32 = 1001;
@@ -101,7 +102,7 @@ impl MenuEventsApp {
             status_bar.set_status_text(menu_info, 1);
             status_bar.set_status_text(&format!("Opens: {}", *count), 2);
 
-            println!("📂 {}", event.format_for_logging());
+            log::trace!("📂 {}", event.format_for_logging());
         });
 
         let status_bar_close = self.status_bar.clone();
@@ -116,7 +117,7 @@ impl MenuEventsApp {
 
             status_bar_close.set_status_text(menu_info, 1);
 
-            println!("📁 {}", event.format_for_logging());
+            log::trace!("📁 {}", event.format_for_logging());
         });
 
         // Re-enable other menu event handlers now that crash is fixed
@@ -138,7 +139,7 @@ impl MenuEventsApp {
 
             status_bar_highlight.set_status_text(help_text, 0);
 
-            println!(
+            log::trace!(
                 "✨ Menu Highlighted - ID: {}, Help: {}",
                 event.get_id(),
                 help_text
@@ -146,26 +147,27 @@ impl MenuEventsApp {
         });
 
         // Traditional menu selection events
+        let frame_for_exit = self.frame.clone();
         self.frame.on_menu_selected(move |event: MenuEventData| {
             match event.get_id() {
-                ID_NEW => println!("🆕 New document requested"),
-                ID_OPEN => println!("📂 Open document requested"),
-                ID_SAVE => println!("💾 Save document requested"),
+                ID_NEW => log::trace!("🆕 New document requested"),
+                ID_OPEN => log::trace!("📂 Open document requested"),
+                ID_SAVE => log::trace!("💾 Save document requested"),
                 ID_EXIT => {
-                    println!("👋 Exit requested");
-                    // Note: In a real app, you'd call frame.close(false) here
+                    log::trace!("👋 Exit requested");
+                    frame_for_exit.close(true);
                 }
-                ID_CUT => println!("✂️ Cut requested"),
-                ID_COPY => println!("📋 Copy requested"),
-                ID_PASTE => println!("📋 Paste requested"),
+                ID_CUT => log::trace!("✂️ Cut requested"),
+                ID_COPY => log::trace!("📋 Copy requested"),
+                ID_PASTE => log::trace!("📋 Paste requested"),
                 ID_ABOUT => {
-                    println!("ℹ️ About dialog should be shown");
+                    log::trace!("ℹ️ About dialog should be shown");
                     // In a real app, you'd show an About dialog here
                 }
-                _ => println!("❓ Unknown menu item selected: {}", event.get_id()),
+                _ => log::warn!("❓ Unknown menu item selected: {}", event.get_id()),
             }
 
-            println!("🎯 {}", event.format_for_logging());
+            log::trace!("🎯 {}", event.format_for_logging());
         });
     }
 
@@ -176,19 +178,19 @@ impl MenuEventsApp {
         // Context menu event handling - now test the fixed FFI functions
         let panel_clone = panel.clone();
         panel.on_context_menu(move |event: MenuEventData| {
-            println!("🖱️ Context menu event received!");
-            println!("   Event ID: {}", event.get_id());
-            println!("   Event type: {}", event.get_event_type_name());
+            log::trace!("🖱️ Context menu event received!");
+            log::trace!("   Event ID: {}", event.get_id());
+            log::trace!("   Event type: {}", event.get_event_type_name());
 
             // Test the context position accessor
             if let Some(pos) = event.get_context_position() {
-                println!("   Position: ({}, {})", pos.x, pos.y);
+                log::trace!("   Position: ({}, {})", pos.x, pos.y);
             } else {
-                println!("   Position: Not available");
+                log::trace!("   Position: Not available");
             }
 
             // Test the formatting function
-            println!("   Formatted: {}", event.format_for_logging());
+            log::trace!("   Formatted: {}", event.format_for_logging());
 
             let view_id = 3001;
             let delete_id = 3002;
@@ -209,7 +211,7 @@ impl MenuEventsApp {
         // Handle frame close event
         let frame_clone = self.frame.clone();
         self.frame.on_close(move |_| {
-            println!("🚪 Application closing...");
+            log::trace!("🚪 Application closing...");
             frame_clone.destroy();
         });
 
@@ -220,7 +222,7 @@ impl MenuEventsApp {
             } else {
                 "🔄 Closing"
             };
-            println!("{} menu lifecycle event: {}", action, event_type);
+            log::trace!("{} menu lifecycle event: {}", action, event_type);
         });
     }
 
@@ -239,11 +241,11 @@ impl MenuEventsApp {
         model.append_column("City");
         model.append_column("Status");
 
-        let demo_data = [
+        let demo_data = Rc::new(vec![
             ("Alice", 23, "Beijing", "Active"),
             ("Bob", 31, "Shanghai", "Offline"),
             ("Carol", 27, "Guangzhou", "Active"),
-        ];
+        ]);
         for (row, (name, age, city, status)) in demo_data.iter().enumerate() {
             model.append_row();
             model.set_value(row, 0, Variant::String(name.to_string()));
@@ -315,23 +317,25 @@ impl MenuEventsApp {
         sizer.add_stretch_spacer(1);
         self.frame.set_sizer(sizer, true);
         let dataview_clone = dataview.clone();
+        let demo_data_clone = demo_data.clone();
+        let frame_clone_for_dialog = self.frame.clone();
         dataview.on_item_context_menu(move |event: DataViewEventData| {
-            println!("🖱️ Context menu event received!");
-            println!("   Event ID: {}", event.get_id());
+            log::trace!("🖱️ Context menu event received!");
+            log::trace!("   Event ID: {}", event.get_id());
             let Some(item) = event.get_item() else {
-                println!("   No item associated with event");
+                log::trace!("   No item associated with event");
                 return;
             };
 
             let Some(row) = event.get_row() else {
-                println!("   No row associated with event");
+                log::trace!("   No row associated with event");
                 return;
             };
-            println!("   Item ID Pointer: {:?}", item);
-            println!("   Row Index: {}", row);
+            log::trace!("   Item ID Pointer: {:?}", item);
+            log::trace!("   Row Index: {}", row);
 
             if let Some(col) = event.get_column() {
-                println!("  Column: {}", col);
+                log::trace!("  Column: {}", col);
             }
 
             let view_id = 3001;
@@ -340,6 +344,29 @@ impl MenuEventsApp {
                 .append_item(view_id, "View", "View item")
                 .append_item(delete_id, "Delete", "Delete item")
                 .build();
+
+            // Handle popup menu selections locally so we can use the captured row
+            let demo_for_handler = demo_data_clone.clone();
+            let frame_for_handler = frame_clone_for_dialog.clone();
+            popup_menu.on_selected(move |menu_evt| {
+                let id = menu_evt.get_id();
+                if id == view_id {
+                    // Show dialog with details for this row
+                    let r = row as usize;
+                    if r < demo_for_handler.len() {
+                        let (n, age, city, status) = demo_for_handler[r];
+                        let msg = format!("Name: {n}, Age: {age}, City: {city}, Status: {status}");
+                        use MessageDialogStyle as MDS;
+                        MessageDialog::builder(&frame_for_handler, &msg, "Item Details")
+                            .with_style(MDS::OK | MDS::IconInformation)
+                            .build()
+                            .show_modal();
+                    }
+                } else if id == delete_id {
+                    log::trace!("Delete requested for row {}", row);
+                    // In a real app, you'd remove the row from the model here
+                }
+            });
 
             let pos = event.get_position();
             dataview_clone.popup_menu(&popup_menu, pos);
@@ -355,20 +382,20 @@ impl MenuEventsApp {
 
         self.frame.show(true);
 
-        println!("🚀 Menu Events Demo Started!");
-        println!("📋 Instructions:");
-        println!("   • Click on menu items in the menu bar");
-        println!("   • Hover over menu items to see highlight events");
-        println!("   • Right-click anywhere in the window for context menu");
-        println!("   • Watch the console and status bar for event information");
-        println!("   • Close the window to exit");
-        println!();
+        log::trace!("🚀 Menu Events Demo Started!");
+        log::trace!("📋 Instructions:");
+        log::trace!("   • Click on menu items in the menu bar");
+        log::trace!("   • Hover over menu items to see highlight events");
+        log::trace!("   • Right-click anywhere in the window for context menu");
+        log::trace!("   • Watch the console and status bar for event information");
+        log::trace!("   • Close the window to exit");
     }
 }
 
 fn main() {
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("trace")).init();
     SystemOptions::set_option_by_int("msw.no-manifest-check", 1);
-    let _ = wxdragon::main(|_| {
+    let _ = wxdragon::main(|_a| {
         let app = MenuEventsApp::new();
         app.run();
     });

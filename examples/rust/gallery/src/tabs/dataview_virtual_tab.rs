@@ -362,12 +362,6 @@ pub fn create_dataview_virtual_tab(parent: &impl WxWidget) -> DataViewVirtualTab
         }
     });
 
-    // Create context menu once (reused for all right-clicks)
-    let context_menu = Menu::builder()
-        .append_item(1001, "Modify", "")
-        .append_item(1002, "Delete", "")
-        .build();
-
     // Bind menu handlers once - they will read the current selection when invoked
     let employees_for_modify = Rc::downgrade(&employees);
     let dvc_for_modify = dvc.clone();
@@ -433,6 +427,13 @@ pub fn create_dataview_virtual_tab(parent: &impl WxWidget) -> DataViewVirtualTab
                 }
             }
         }
+
+        // Create context menu once (reused for all right-clicks)
+        let context_menu = Menu::builder()
+            .append_item(1001, "Modify", "")
+            .append_item(1002, "Delete", "")
+            .build();
+
         // Show the popup menu at current mouse position
         dvc_for_popup.popup_menu(&context_menu, None);
     });
