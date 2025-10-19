@@ -41,7 +41,7 @@ pub fn create_data_view_panel(parent: &Window, model: &Rc<DataViewListModel>) ->
     use std::rc::Rc;
     let timer = Rc::new(Timer::new(&panel));
     timer.start(50, false); // 50ms, repeat
-    let model_timer = Rc::downgrade(&model);
+    let model_timer = Rc::downgrade(model);
     let progress = Rc::new(RefCell::new(0));
     let progress_clone = Rc::clone(&progress);
     let dataview_timer = dataview.clone();
