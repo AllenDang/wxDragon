@@ -333,13 +333,17 @@ pub fn create_dataview_virtual_tab(parent: &impl WxWidget) -> DataViewVirtualTab
     dvc.associate_model(&model);
 
     // Add double-click event handler to test row index reporting
-    let employees_for_click = Rc::clone(&employees);
+    let employees_for_click = Rc::downgrade(&employees);
     dvc.on_item_activated(move |event| {
         match event.get_row() {
             Some(row_index) => {
                 log::info!("Double-clicked on row: {row_index}");
                 // Get employee data for the clicked row
-                let employees_borrow = employees_for_click.borrow();
+                let Some(employees) = employees_for_click.upgrade() else {
+                    log::warn!("Employee data has been released!");
+                    return;
+                };
+                let employees_borrow = employees.borrow();
                 if let Some(employee) = employees_borrow.get(row_index as usize) {
                     log::debug!("  Employee ID: {}", employee.id);
                     log::debug!("  Employee Name: {}", employee.name);
@@ -365,11 +369,15 @@ pub fn create_dataview_virtual_tab(parent: &impl WxWidget) -> DataViewVirtualTab
         .build();
 
     // Bind menu handlers once - they will read the current selection when invoked
-    let employees_for_modify = Rc::clone(&employees);
+    let employees_for_modify = Rc::downgrade(&employees);
     let dvc_for_modify = dvc.clone();
     dvc.bind_with_id_internal(EventType::MENU, 1001, move |_| {
         if let Some(row_index) = dvc_for_modify.get_selected_row() {
-            let employees_borrow = employees_for_modify.borrow();
+            let Some(employees) = employees_for_modify.upgrade() else {
+                log::warn!("Employee data has been released!");
+                return;
+            };
+            let employees_borrow = employees.borrow();
             if let Some(employee) = employees_borrow.get(row_index) {
                 log::info!(
                     "modify [ID: {}, Name: {}, Department: {}]",
@@ -381,11 +389,15 @@ pub fn create_dataview_virtual_tab(parent: &impl WxWidget) -> DataViewVirtualTab
         }
     });
 
-    let employees_for_delete = Rc::clone(&employees);
+    let employees_for_delete = Rc::downgrade(&employees);
     let dvc_for_delete = dvc.clone();
     dvc.bind_with_id_internal(EventType::MENU, 1002, move |_| {
         if let Some(row_index) = dvc_for_delete.get_selected_row() {
-            let employees_borrow = employees_for_delete.borrow();
+            let Some(employees) = employees_for_delete.upgrade() else {
+                log::warn!("Employee data has been released!");
+                return;
+            };
+            let employees_borrow = employees.borrow();
             if let Some(employee) = employees_borrow.get(row_index) {
                 log::info!(
                     "delete [ID: {}, Name: {}, Department: {}]",
@@ -400,11 +412,15 @@ pub fn create_dataview_virtual_tab(parent: &impl WxWidget) -> DataViewVirtualTab
     // Add context menu handler using DataView-specific event
     // This provides item and column information directly
     let dvc_for_popup = dvc.clone();
-    let employees_for_context = Rc::clone(&employees);
+    let employees_for_context = Rc::downgrade(&employees);
     dvc.on_item_context_menu(move |event| {
         // Get the row that was right-clicked
         if let Some(row_index) = event.get_row() {
-            let employees_borrow = employees_for_context.borrow();
+            let Some(employees) = employees_for_context.upgrade() else {
+                log::warn!("Employee data has been released!");
+                return;
+            };
+            let employees_borrow = employees.borrow();
             if let Some(employee) = employees_borrow.get(row_index as usize) {
                 log::info!(
                     "Context menu requested on: [ID: {}, Name: {}, Department: {}]",
