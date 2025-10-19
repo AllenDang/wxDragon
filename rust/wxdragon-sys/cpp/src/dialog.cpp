@@ -23,6 +23,21 @@ wxd_Dialog_t* wxd_Dialog_Create(wxd_Window_t* parent, const char* title, wxd_Sty
     return (wxd_Dialog_t*)dialog;
 }
 
+void wxd_Dialog_SetIcon(wxd_Dialog* dlg, wxd_Bitmap_t* bitmap) {
+    if (!dlg || !bitmap) return;
+
+    wxDialog* dialog = reinterpret_cast<wxDialog*>(dlg);
+    wxBitmap* bmp = reinterpret_cast<wxBitmap*>(bitmap);
+
+    if (!bmp->IsOk()) return;
+
+    wxIcon icon;
+    icon.CopyFromBitmap(*bmp);
+    if (icon.IsOk()) {
+        dialog->SetIcon(icon);
+    }
+}
+
 int wxd_Dialog_ShowModal(wxd_Dialog* self) {
     if (!self) return wxID_NONE; // Or some other error indicator, wxDialog::ShowModal returns int
     return ((wxDialog*)self)->ShowModal();

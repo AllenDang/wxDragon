@@ -1,5 +1,5 @@
-use crate::widget_style_enum;
 use crate::window::{Window, WxWidget};
+use crate::{widget_style_enum, Bitmap};
 use std::ffi::CString;
 use std::marker::PhantomData;
 use wxdragon_sys as ffi;
@@ -75,6 +75,11 @@ impl Dialog {
             parent_ptr: std::ptr::null_mut(),
             _marker: PhantomData,
         }
+    }
+
+    pub fn set_icon(&self, bitmap: &Bitmap) {
+        let dlg = self.window.as_ptr() as *mut ffi::wxd_Dialog_t;
+        unsafe { ffi::wxd_Dialog_SetIcon(dlg, bitmap.as_ptr()) }
     }
 
     /// Shows the dialog modally.
