@@ -298,14 +298,9 @@ private:
     IsEnabledCallback m_is_enabled;
 };
 
-extern "C" {
-
-// Function pointer for dropping Rust callback data
-typedef void (*DropRustFnPtr)(void*);
-
 // @brief Creates a new custom virtual list model with callbacks, the returned model has ref count 1,
 // the caller is responsible for releasing it when done with wxd_DataViewModel_Release.
-wxd_DataViewModel_t* wxd_DataViewVirtualListModel_CreateWithCallbacks(
+extern "C" wxd_DataViewModel_t* wxd_DataViewVirtualListModel_CreateWithCallbacks(
     uint64_t initial_size,
     void* userdata,
     void (*get_value_callback)(void* userdata, uint64_t row, uint64_t col, wxd_Variant_t* variant),
@@ -329,5 +324,3 @@ wxd_DataViewModel_t* wxd_DataViewVirtualListModel_CreateWithCallbacks(
 
     return reinterpret_cast<wxd_DataViewModel_t*>(model);
 }
-
-} // extern "C" 
