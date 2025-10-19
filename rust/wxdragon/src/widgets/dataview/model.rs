@@ -178,61 +178,51 @@ pub trait DataViewModel {
     }
 }
 
-/// Raw pointer to a DataViewModel
-pub(crate) struct DataViewModelPtr {
-    pub(crate) ptr: *mut ffi::wxd_DataViewModel_t,
-    owned: bool,
-}
-
-impl DataViewModelPtr {
-    /// Create a new DataViewModelPtr from a raw pointer
-    pub(crate) fn new(ptr: *mut ffi::wxd_DataViewModel_t) -> Self {
-        Self { ptr, owned: true }
-    }
-}
-
-impl Drop for DataViewModelPtr {
-    fn drop(&mut self) {
-        if self.owned && !self.ptr.is_null() {
-            // In wxWidgets, models are typically reference-counted and might be
-            // owned by the control. When a DataViewCtrl::associate_model() is called,
-            // the control increases the reference count of the model and takes partial
-            // ownership.
-            //
-            // If we were to destroy the model here, it could lead to use-after-free
-            // bugs if the control still holds a reference. The C++ side of wxWidgets
-            // will handle cleanup when the control itself is destroyed.
-            //
-            // For complete memory safety, models should be destroyed only after
-            // all controls using them are destroyed, or by explicitly calling
-            // a detach/disassociate method on the control first.
-        }
-    }
-}
-
 /// A basic list model for DataViewCtrl that stores data in a 2D array
 pub struct DataViewListModel {
-    ptr: DataViewModelPtr,
+    ptr: *mut ffi::wxd_DataViewModel_t,
+}
+
+impl AsRef<*mut ffi::wxd_DataViewModel_t> for DataViewListModel {
+    fn as_ref(&self) -> &*mut ffi::wxd_DataViewModel_t {
+        &self.ptr
+    }
+}
+
+impl std::ops::Deref for DataViewListModel {
+    type Target = *mut ffi::wxd_DataViewModel_t;
+    fn deref(&self) -> &Self::Target {
+        &self.ptr
+    }
+}
+
+// unsafe impl Send for DataViewListModel {}
+// unsafe impl Sync for DataViewListModel {}
+
+impl Clone for DataViewListModel {
+    fn clone(&self) -> Self {
+        // Increase reference count
+        unsafe { ffi::wxd_DataViewModel_AddRef(self.ptr) };
+        Self { ptr: self.ptr }
+    }
 }
 
 impl DataViewListModel {
     /// Create a new empty DataViewListModel
     pub fn new() -> Self {
         let ptr = unsafe { ffi::wxd_DataViewListModel_Create() };
-        Self {
-            ptr: DataViewModelPtr::new(ptr),
-        }
+        Self { ptr }
     }
 
     /// Add a new column to the model
     pub fn append_column(&self, name: &str) -> bool {
         let c_name = CString::new(name).unwrap_or_default();
-        unsafe { ffi::wxd_DataViewListModel_AppendColumn(self.ptr.ptr, c_name.as_ptr()) }
+        unsafe { ffi::wxd_DataViewListModel_AppendColumn(self.ptr, c_name.as_ptr()) }
     }
 
     /// Add a new row to the model
     pub fn append_row(&self) -> bool {
-        unsafe { ffi::wxd_DataViewListModel_AppendRow(self.ptr.ptr) }
+        unsafe { ffi::wxd_DataViewListModel_AppendRow(self.ptr) }
     }
 
     /// Set a value in the model
@@ -240,7 +230,7 @@ impl DataViewListModel {
         let variant = value.into();
         let variant_ptr = variant.as_raw_mut();
         let result = unsafe {
-            ffi::wxd_DataViewListModel_SetValue(self.ptr.ptr, row as u64, col as u64, variant_ptr)
+            ffi::wxd_DataViewListModel_SetValue(self.ptr, row as u64, col as u64, variant_ptr)
         };
         // The C API consumes the variant, so we don't need to free it
         let _ = variant_ptr;
@@ -248,9 +238,21 @@ impl DataViewListModel {
     }
 }
 
+impl Drop for DataViewListModel {
+    fn drop(&mut self) {
+        if !self.ptr.is_null() {
+            // Here the reference count is decreased; if it reaches zero, the model will be destroyed.
+            let count = unsafe { ffi::wxd_DataViewModel_GetRefCount(self.ptr) };
+            let text = if count == 1 { "last" } else { "not last" };
+            log::debug!("DataViewListModel::model RefCount is {count}, {text} one.");
+            unsafe { ffi::wxd_DataViewModel_Release(self.ptr) };
+        }
+    }
+}
+
 impl DataViewModel for DataViewListModel {
     fn handle_ptr(&self) -> *mut ffi::wxd_DataViewModel_t {
-        self.ptr.ptr
+        self.ptr
     }
 
     fn get_column_count(&self) -> usize {
@@ -287,7 +289,7 @@ impl Default for DataViewListModel {
 /// This model implementation doesn't store data; it just provides placeholders
 /// that should be overridden with your own data retrieval methods.
 pub struct DataViewVirtualListModel {
-    ptr: DataViewModelPtr,
+    ptr: *mut ffi::wxd_DataViewModel_t,
     size: usize,
 }
 
@@ -296,40 +298,32 @@ impl DataViewVirtualListModel {
     pub fn new(initial_size: usize) -> Self {
         let ptr = unsafe { ffi::wxd_DataViewVirtualListModel_Create(initial_size as u64) };
         Self {
-            ptr: DataViewModelPtr::new(ptr),
+            ptr,
             size: initial_size,
         }
     }
 
     /// Notify that a row has been prepended
     pub fn row_prepended(&mut self) {
-        unsafe {
-            ffi::wxd_DataViewVirtualListModel_RowPrepended(self.ptr.ptr);
-        }
+        unsafe { ffi::wxd_DataViewVirtualListModel_RowPrepended(self.ptr) };
         self.size += 1;
     }
 
     /// Notify that a row has been inserted
     pub fn row_inserted(&mut self, before: usize) {
-        unsafe {
-            ffi::wxd_DataViewVirtualListModel_RowInserted(self.ptr.ptr, before as u64);
-        }
+        unsafe { ffi::wxd_DataViewVirtualListModel_RowInserted(self.ptr, before as u64) };
         self.size += 1;
     }
 
     /// Notify that a row has been appended
     pub fn row_appended(&mut self) {
-        unsafe {
-            ffi::wxd_DataViewVirtualListModel_RowAppended(self.ptr.ptr);
-        }
+        unsafe { ffi::wxd_DataViewVirtualListModel_RowAppended(self.ptr) };
         self.size += 1;
     }
 
     /// Notify that a row has been deleted
     pub fn row_deleted(&mut self, row: usize) {
-        unsafe {
-            ffi::wxd_DataViewVirtualListModel_RowDeleted(self.ptr.ptr, row as u64);
-        }
+        unsafe { ffi::wxd_DataViewVirtualListModel_RowDeleted(self.ptr, row as u64) };
         if self.size > 0 {
             self.size -= 1;
         }
@@ -337,15 +331,11 @@ impl DataViewVirtualListModel {
 
     /// Notify that multiple rows have been deleted
     pub fn rows_deleted(&mut self, rows: &[i32]) {
+        // The C++ API expects a mutable array, so we'll need to cast away the const
+        let rows_ptr = rows.as_ptr() as *mut i32;
         unsafe {
-            // The C++ API expects a mutable array, so we'll need to cast away the const
-            let rows_ptr = rows.as_ptr() as *mut i32;
-            ffi::wxd_DataViewVirtualListModel_RowsDeleted(
-                self.ptr.ptr,
-                rows_ptr,
-                rows.len() as i32,
-            );
-        }
+            ffi::wxd_DataViewVirtualListModel_RowsDeleted(self.ptr, rows_ptr, rows.len() as i32)
+        };
         if self.size >= rows.len() {
             self.size -= rows.len();
         } else {
@@ -355,29 +345,25 @@ impl DataViewVirtualListModel {
 
     /// Notify that a row has changed
     pub fn row_changed(&self, row: usize) {
-        unsafe {
-            ffi::wxd_DataViewVirtualListModel_RowChanged(self.ptr.ptr, row as u64);
-        }
+        unsafe { ffi::wxd_DataViewVirtualListModel_RowChanged(self.ptr, row as u64) };
     }
 
     /// Notify that a specific cell value has changed
     pub fn row_value_changed(&self, row: usize, col: usize) {
         unsafe {
-            ffi::wxd_DataViewVirtualListModel_RowValueChanged(self.ptr.ptr, row as u64, col as u64);
-        }
+            ffi::wxd_DataViewVirtualListModel_RowValueChanged(self.ptr, row as u64, col as u64);
+        };
     }
 
     /// Reset the model with a new size
     pub fn reset(&mut self, new_size: usize) {
-        unsafe {
-            ffi::wxd_DataViewVirtualListModel_Reset(self.ptr.ptr, new_size as u64);
-        }
+        unsafe { ffi::wxd_DataViewVirtualListModel_Reset(self.ptr, new_size as u64) };
         self.size = new_size;
     }
 
     /// Get the native item for a row
     pub fn get_item(&self, row: usize) -> *mut std::ffi::c_void {
-        unsafe { ffi::wxd_DataViewVirtualListModel_GetItem(self.ptr.ptr, row as u64) }
+        unsafe { ffi::wxd_DataViewVirtualListModel_GetItem(self.ptr, row as u64) }
     }
 
     /// Get the row for a native item
@@ -385,7 +371,7 @@ impl DataViewVirtualListModel {
     /// # Safety
     /// The caller must ensure the item pointer is valid and comes from the same model.
     pub unsafe fn get_row(&self, item: *mut std::ffi::c_void) -> usize {
-        ffi::wxd_DataViewVirtualListModel_GetRow(self.ptr.ptr, item) as usize
+        ffi::wxd_DataViewVirtualListModel_GetRow(self.ptr, item) as usize
     }
 
     /// Get the current size of the model
@@ -396,7 +382,7 @@ impl DataViewVirtualListModel {
 
 impl DataViewModel for DataViewVirtualListModel {
     fn handle_ptr(&self) -> *mut ffi::wxd_DataViewModel_t {
-        self.ptr.ptr
+        self.ptr
     }
 
     fn get_column_count(&self) -> usize {

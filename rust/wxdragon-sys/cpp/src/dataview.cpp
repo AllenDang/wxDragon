@@ -803,6 +803,7 @@ private:
     wxVector<ColumnInfo> m_columns;
 
 public:
+    ~WxDDataViewListModel();
     // Add a column to our model
     bool AppendColumnInfo(const wxString& name, const wxString& type = "string") {
         ColumnInfo info;
@@ -817,6 +818,10 @@ public:
         return static_cast<unsigned int>(m_columns.size());
     }
 };
+
+WxDDataViewListModel::~WxDDataViewListModel() {
+    wxLogDebug("WxDDataViewListModel destroyed");
+}
 
 // Standard models
 WXD_EXPORTED wxd_DataViewModel_t* wxd_DataViewListModel_Create() {
