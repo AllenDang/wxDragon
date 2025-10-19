@@ -148,34 +148,6 @@ impl DataViewItemAttr {
 pub trait DataViewModel {
     /// Get the handle to the underlying wxDataViewModel
     fn handle_ptr(&self) -> *mut ffi::wxd_DataViewModel_t;
-
-    /// Get the number of columns in the model
-    fn get_column_count(&self) -> usize;
-
-    /// Get the number of rows in the model
-    fn get_row_count(&self) -> usize;
-
-    /// Get the value at the specified row and column
-    fn get_value(&self, row: usize, col: usize) -> Variant;
-
-    /// Set the value at the specified row and column
-    fn set_value(&self, row: usize, col: usize, value: &Variant) -> bool {
-        // Default implementation is read-only
-        let _ = (row, col, value); // Silence unused variable warnings
-        false
-    }
-
-    /// Get display attributes for a cell
-    fn get_attributes(&self, row: usize, col: usize) -> Option<DataViewItemAttr> {
-        let _ = (row, col); // Silence unused variable warnings
-        None
-    }
-
-    /// Check if a cell is enabled for editing
-    fn is_enabled(&self, row: usize, col: usize) -> bool {
-        let _ = (row, col); // Silence unused variable warnings
-        true
-    }
 }
 
 /// A basic list model for DataViewCtrl that stores data in a 2D array
@@ -253,28 +225,6 @@ impl Drop for DataViewListModel {
 impl DataViewModel for DataViewListModel {
     fn handle_ptr(&self) -> *mut ffi::wxd_DataViewModel_t {
         self.ptr
-    }
-
-    fn get_column_count(&self) -> usize {
-        // Call the C API to get the column count if available
-        // For now, just return a reasonable default
-        // In a more complete implementation, we would track this internally
-        // or provide a C API function to get it
-        10 // Maximum reasonable number of columns
-    }
-
-    fn get_row_count(&self) -> usize {
-        // Call the C API to get the row count if available
-        // For now, just return a reasonable default
-        // In a more complete implementation, we would track this internally
-        // or provide a C API function to get it
-        0 // Default to empty
-    }
-
-    fn get_value(&self, _row: usize, _col: usize) -> Variant {
-        // Default implementation returns empty string
-        // In real application code, users should set values explicitly with set_value
-        Variant::String(String::new())
     }
 }
 
@@ -383,20 +333,6 @@ impl DataViewVirtualListModel {
 impl DataViewModel for DataViewVirtualListModel {
     fn handle_ptr(&self) -> *mut ffi::wxd_DataViewModel_t {
         self.ptr
-    }
-
-    fn get_column_count(&self) -> usize {
-        // Virtual list model columns are handled by the control
-        0
-    }
-
-    fn get_row_count(&self) -> usize {
-        self.size
-    }
-
-    fn get_value(&self, _row: usize, _col: usize) -> Variant {
-        // By default return empty strings, this should be overridden
-        Variant::String(String::new())
     }
 }
 
@@ -783,16 +719,6 @@ impl DataViewModel for CustomDataViewTreeModel {
     fn handle_ptr(&self) -> *mut ffi::wxd_DataViewModel_t {
         self.model
     }
-
-    fn get_column_count(&self) -> usize {
-        0
-    }
-    fn get_row_count(&self) -> usize {
-        0
-    }
-    fn get_value(&self, _row: usize, _col: usize) -> Variant {
-        Variant::String(String::new())
-    }
 }
 
 #[no_mangle]
@@ -993,19 +919,6 @@ impl CustomDataViewVirtualListModel {
 impl DataViewModel for CustomDataViewVirtualListModel {
     fn handle_ptr(&self) -> *mut ffi::wxd_DataViewModel_t {
         self.handle
-    }
-
-    fn get_column_count(&self) -> usize {
-        // Virtual list model columns are set externally by the control
-        0
-    }
-
-    fn get_row_count(&self) -> usize {
-        self.size
-    }
-
-    fn get_value(&self, _row: usize, _col: usize) -> Variant {
-        Variant::String(String::new())
     }
 }
 
