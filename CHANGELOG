@@ -1,5 +1,51 @@
 # Changelog
 
+## 0.9.2
+
+### New Features
+- **Dialog Icon Support**: Added `set_icon()` method to Dialog widget for setting window icons
+
+### Bug Fixes
+- **Calendar Widget**: Fixed double adding month issue in calendar widget
+- **Build System**: Fixed wxWidgets source path issue in CMakeLists.txt
+
+### Enhancements
+- **DataViewModel Trait Simplification**: Simplified the DataViewModel trait for better usability
+
+- **Memory Management Improvements**: Enhanced reference counting and memory safety
+  - Corrected reference count handling for DataViewListModel struct
+  - Implemented Weak reference usage in event closures to ensure proper Drop behavior
+  - Prevents memory leaks by ensuring proper cleanup of DataView-related objects
+
+- **DataView Virtual List Refinements**: Multiple improvements to CustomDataViewVirtualListModel
+  - Cleaned up WxdCustomDataViewVirtualListModel C++ class implementation
+  - Removed unnecessary callback_data field for simplified architecture
+  - Refined CustomDataViewVirtualListModel struct for better performance
+
+- **API Improvements**: Enhanced existing APIs for better developer experience
+  - Renamed `VariantType::to_type_string` to `VariantType::as_str` for Rust conventions
+
+- **Build System Enhancements**: Improved build reliability and developer experience
+  - Enhanced SHA256 verification for downloaded wxWidgets zip archives
+  - Improved wxWidgets search path handling in C++ projects
+  - Better resource file detection (wx.rc) for gallery example
+
+### Examples
+- **neat_demo**: Added new comprehensive example showcasing wxDragon features
+  - Demonstrates modern UI patterns and best practices
+  - Clean, minimal example for getting started with wxDragon
+
+- **Gallery & Menu Events**: Refined gallery and menu_events_demo examples
+  - Improved DataView virtual tab demonstration
+  - Enhanced example code quality and documentation
+  - Better resource file handling
+
+## 0.9.1
+
+### Bug Fixes
+- **Build System**: Various build system improvements and fixes
+- **Code Quality**: General code refinements and cleanups
+
 ## 0.9.0
 
 ### New Features
