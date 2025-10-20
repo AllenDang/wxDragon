@@ -60,6 +60,54 @@ pub mod tree_helpers {
     }
 }
 
+// Helper macro to implement Clone, Drop, AsRef, Deref, Send, and Sync for models
+// that wrap a wxDataViewModel pointer with reference counting.
+macro_rules! impl_refcounted_model {
+    ($ty:ty, $ptr_field:ident $(, $other_field:ident )* ) => {
+        impl Clone for $ty {
+            fn clone(&self) -> Self {
+                unsafe { ffi::wxd_DataViewModel_AddRef(self.$ptr_field) };
+                Self {
+                    $ptr_field: self.$ptr_field,
+                    $( $other_field: self.$other_field, )*
+                }
+            }
+        }
+
+        impl Drop for $ty {
+            fn drop(&mut self) {
+                if !self.$ptr_field.is_null() {
+                    let count = unsafe { ffi::wxd_DataViewModel_GetRefCount(self.$ptr_field) };
+                    let text = if count == 1 { "last" } else { "not last" };
+                    log::debug!(
+                        "{} dropping, model RefCount is {}, {} one.",
+                        stringify!($ty),
+                        count,
+                        text
+                    );
+                    unsafe { ffi::wxd_DataViewModel_Release(self.$ptr_field) };
+                }
+            }
+        }
+
+        impl AsRef<*mut ffi::wxd_DataViewModel_t> for $ty {
+            fn as_ref(&self) -> &*mut ffi::wxd_DataViewModel_t {
+                &self.$ptr_field
+            }
+        }
+
+        impl std::ops::Deref for $ty {
+            type Target = *mut ffi::wxd_DataViewModel_t;
+            fn deref(&self) -> &Self::Target {
+                &self.$ptr_field
+            }
+        }
+
+        unsafe impl Send for $ty {}
+        unsafe impl Sync for $ty {}
+    };
+}
+
 // Type aliases to reduce complexity
 type GetValueCallback = Box<dyn for<'a> Fn(&'a dyn Any, usize, usize) -> Variant>;
 type SetValueCallback = Box<dyn for<'a, 'b> Fn(&'a dyn Any, usize, usize, &'b Variant) -> bool>;
@@ -155,29 +203,7 @@ pub struct DataViewListModel {
     ptr: *mut ffi::wxd_DataViewModel_t,
 }
 
-impl AsRef<*mut ffi::wxd_DataViewModel_t> for DataViewListModel {
-    fn as_ref(&self) -> &*mut ffi::wxd_DataViewModel_t {
-        &self.ptr
-    }
-}
-
-impl std::ops::Deref for DataViewListModel {
-    type Target = *mut ffi::wxd_DataViewModel_t;
-    fn deref(&self) -> &Self::Target {
-        &self.ptr
-    }
-}
-
-// unsafe impl Send for DataViewListModel {}
-// unsafe impl Sync for DataViewListModel {}
-
-impl Clone for DataViewListModel {
-    fn clone(&self) -> Self {
-        // Increase reference count
-        unsafe { ffi::wxd_DataViewModel_AddRef(self.ptr) };
-        Self { ptr: self.ptr }
-    }
-}
+impl_refcounted_model!(DataViewListModel, ptr);
 
 impl DataViewListModel {
     /// Create a new empty DataViewListModel
@@ -210,18 +236,6 @@ impl DataViewListModel {
     }
 }
 
-impl Drop for DataViewListModel {
-    fn drop(&mut self) {
-        if !self.ptr.is_null() {
-            // Here the reference count is decreased; if it reaches zero, the model will be destroyed.
-            let count = unsafe { ffi::wxd_DataViewModel_GetRefCount(self.ptr) };
-            let text = if count == 1 { "last" } else { "not last" };
-            log::debug!("DataViewListModel dropping, model RefCount is {count}, {text} one.");
-            unsafe { ffi::wxd_DataViewModel_Release(self.ptr) };
-        }
-    }
-}
-
 impl DataViewModel for DataViewListModel {
     fn handle_ptr(&self) -> *mut ffi::wxd_DataViewModel_t {
         self.ptr
@@ -242,6 +256,8 @@ pub struct DataViewVirtualListModel {
     ptr: *mut ffi::wxd_DataViewModel_t,
     size: usize,
 }
+
+impl_refcounted_model!(DataViewVirtualListModel, ptr, size);
 
 impl DataViewVirtualListModel {
     /// Create a new virtual list model with the specified initial size
@@ -347,24 +363,7 @@ pub struct CustomDataViewTreeModel {
     model: *mut ffi::wxd_DataViewModel_t,
 }
 
-impl Clone for CustomDataViewTreeModel {
-    fn clone(&self) -> Self {
-        unsafe { ffi::wxd_DataViewModel_AddRef(self.model) };
-        Self { model: self.model }
-    }
-}
-
-impl Drop for CustomDataViewTreeModel {
-    fn drop(&mut self) {
-        if !self.model.is_null() {
-            // Here the reference count is decreased; if it reaches zero, the model will be destroyed.
-            let count = unsafe { ffi::wxd_DataViewModel_GetRefCount(self.model) };
-            let text = if count == 1 { "last" } else { "not last" };
-            log::debug!("CustomDataViewTreeModel dropping, model RefCount is {count}, {text} one.");
-            unsafe { ffi::wxd_DataViewModel_Release(self.model) };
-        }
-    }
-}
+impl_refcounted_model!(CustomDataViewTreeModel, model);
 
 // Internal representation of the Rust-side callbacks and userdata. This is the
 // concrete type we store in `userdata` for the FFI struct.
@@ -924,20 +923,7 @@ impl DataViewModel for CustomDataViewVirtualListModel {
     }
 }
 
-impl Drop for CustomDataViewVirtualListModel {
-    fn drop(&mut self) {
-        if !self.handle.is_null() {
-            let ref_count = unsafe { ffi::wxd_DataViewModel_GetRefCount(self.handle) };
-            log::debug!(
-                "CustomDataViewVirtualListModel dropped with handle of RefCount: {ref_count}"
-            );
-
-            // This call will decreases the reference count by 1.
-            // If reference count reaches zero, the internal C++ model and its callbacks will be destroyed.
-            unsafe { ffi::wxd_DataViewModel_Release(self.handle) };
-        }
-    }
-}
+impl_refcounted_model!(CustomDataViewVirtualListModel, handle, size);
 
 // Create C++ callbacks
 unsafe extern "C" fn get_value_callback(
