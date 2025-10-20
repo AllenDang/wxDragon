@@ -50,15 +50,15 @@ WXD_EXPORTED wxd_BitmapButton_t* wxd_BitmapButton_Create(
             WXD_STR_TO_WX_STRING_UTF8_NULL_OK(name_str)
         );
     } catch (const std::exception& e) {
-        wxLogError("Exception creating wxBitmapButton: %s", e.what());
+        WXD_LOG_ERRORF("Exception creating wxBitmapButton: %s", e.what());
         return nullptr; 
     } catch (...) {
-        wxLogError("Unknown exception creating wxBitmapButton");
+        WXD_LOG_ERROR("Unknown exception creating wxBitmapButton");
         return nullptr; 
     }
 
     if (!btn) { 
-        wxLogError("wxBitmapButton creation returned null pointer unexpectedly.");
+        WXD_LOG_ERROR("wxBitmapButton creation returned null pointer unexpectedly.");
         return nullptr;
     }
 

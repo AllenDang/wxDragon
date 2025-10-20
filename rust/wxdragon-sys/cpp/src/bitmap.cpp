@@ -22,7 +22,7 @@ WXD_EXPORTED wxd_Bitmap_t* wxd_Bitmap_CreateFromRGBA(
     size_t rgb_data_size = num_pixels * 3; 
     unsigned char* rgb_data = static_cast<unsigned char*>(malloc(rgb_data_size));
     if (!rgb_data) {
-        wxLogError("Failed to allocate memory for bitmap RGB data.");
+        WXD_LOG_ERROR("Failed to allocate memory for bitmap RGB data.");
         return nullptr; 
     }
 
@@ -30,7 +30,7 @@ WXD_EXPORTED wxd_Bitmap_t* wxd_Bitmap_CreateFromRGBA(
     size_t alpha_data_size = num_pixels; // 1 byte per pixel
     unsigned char* alpha_data = static_cast<unsigned char*>(malloc(alpha_data_size));
     if (!alpha_data) {
-        wxLogError("Failed to allocate memory for bitmap Alpha data.");
+        WXD_LOG_ERROR("Failed to allocate memory for bitmap Alpha data.");
         free(rgb_data); // Clean up already allocated buffer
         return nullptr;
     }
@@ -47,7 +47,7 @@ WXD_EXPORTED wxd_Bitmap_t* wxd_Bitmap_CreateFromRGBA(
     wxImage image(width, height, rgb_data, alpha_data); // Pass both buffers
 
     if (!image.IsOk()) {
-        wxLogError("Failed to create wxImage from RGBA data.");
+        WXD_LOG_ERROR("Failed to create wxImage from RGBA data.");
         // If image creation failed, wxImage *should* have freed rgb_data and alpha_data, but double-check docs.
         // Assuming it did, we just return nullptr.
         // If it didn't free on failure (unlikely), we would need: free(rgb_data); free(alpha_data);
@@ -59,7 +59,7 @@ WXD_EXPORTED wxd_Bitmap_t* wxd_Bitmap_CreateFromRGBA(
     wxBitmap* bitmap = new wxBitmap(image, -1);
 
     if (!bitmap || !bitmap->IsOk()) {
-        wxLogError("Failed to create wxBitmap from wxImage.");
+        WXD_LOG_ERROR("Failed to create wxBitmap from wxImage.");
         delete bitmap; // Clean up partially created bitmap if possible
         return nullptr;
     }

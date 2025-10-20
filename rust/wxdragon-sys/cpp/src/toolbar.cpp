@@ -52,7 +52,7 @@ WXD_EXPORTED void* wxd_ToolBar_AddTool(
 
     wxBitmapBundle bundle = CreateBundle(bitmap, bitmapDisabled);
     if (!bundle.IsOk()) {
-        wxLogError("wxd_ToolBar_AddTool: Invalid bitmap provided.");
+        WXD_LOG_ERROR("wxd_ToolBar_AddTool: Invalid bitmap provided.");
         return nullptr;
     }
 
@@ -80,7 +80,7 @@ WXD_EXPORTED void wxd_ToolBar_AddControl(wxd_ToolBar_t* self, wxd_Window_t* cont
     if (ctrl) {
         tb->AddControl(ctrl);
     } else {
-        wxLogError("wxd_ToolBar_AddControl: Provided window is not a wxControl.");
+        WXD_LOG_ERROR("wxd_ToolBar_AddControl: Provided window is not a wxControl.");
     }
 }
 

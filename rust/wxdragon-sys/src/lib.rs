@@ -22,6 +22,8 @@ compile_error!(
     "Target OS not supported by pre-generated constants. Please add a constants file for this OS."
 );
 
+mod logging4c;
+
 // Type alias for convenience maybe?
 // pub type wxWindow_t = self::wxd_Window_t; // Example
 

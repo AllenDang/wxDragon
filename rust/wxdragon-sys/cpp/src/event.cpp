@@ -192,7 +192,7 @@ WxdHandlerClientData::~WxdHandlerClientData() {
 
 // WxdEventHandler Destructor Implementation
 WxdEventHandler::~WxdEventHandler() {
-    // wxLogDebug("WxdEventHandler destroying for handler %p. Notifying Rust to drop closures.", ownerHandler);
+    // WXD_LOG_TRACEF("WxdEventHandler destroying for handler %p. Notifying Rust to drop closures.", ownerHandler);
     for (auto const& [key, closure_vector] : closureMap) {
         for (auto const& info : closure_vector) {
             if (info.closure_ptr) {
@@ -301,7 +301,7 @@ WxdEventHandler* GetOrCreateEventHandler(wxEvtHandler* handler, wxd_EvtHandler_t
         clientData = new WxdHandlerClientData(customHandler);
         // Associate client data with the wxEvtHandler
         handler->SetClientData(clientData);
-        // wxLogDebug("Created WxdEventHandler %p and WxdHandlerClientData %p for wxEvtHandler %p (c_handle %p)", customHandler, clientData, handler, c_handle);
+        // WXD_LOG_TRACEF("Created WxdEventHandler %p and WxdHandlerClientData %p for wxEvtHandler %p (c_handle %p)", customHandler, clientData, handler, c_handle);
     } else {
         customHandler = clientData->handler;
         // Ensure c_handle is up-to-date (shouldn't change, but good practice)
@@ -336,7 +336,7 @@ public:
         param_ptr(param), 
         owned_by_wx(false) // Initialize flag
     {
-         // wxLogDebug("CxxClosureVoid %p created fn=%p, param=%p, owned=%d", this, fn, param, owned_by_wx);
+         // WXD_LOG_TRACEF("CxxClosureVoid %p created fn=%p, param=%p, owned=%d", this, fn, param, owned_by_wx);
     }
     
     // Copy Constructor: Also copies the ownership flag state.
@@ -345,17 +345,17 @@ public:
         param_ptr(other.param_ptr), 
         owned_by_wx(other.owned_by_wx) // CORRECT: Copy should inherit ownership state (initially false)
     {
-        // wxLogDebug("CxxClosureVoid %p copy constructed from %p (owned=%d)", this, &other, owned_by_wx);
+        // WXD_LOG_TRACEF("CxxClosureVoid %p copy constructed from %p (owned=%d)", this, &other, owned_by_wx);
     }
     
     // Destructor: Only the wxWidgets-managed copy should drop the Rust Box.
     ~CxxClosureVoid() {
-        // wxLogDebug("CxxClosureVoid %p destroyed. Checking ownership (owned=%d) for param=%p", this, owned_by_wx, param_ptr);
+        // WXD_LOG_TRACEF("CxxClosureVoid %p destroyed. Checking ownership (owned=%d) for param=%p", this, owned_by_wx, param_ptr);
         
         // If owned_by_wx is TRUE, this is the *original* stack-allocated functor
         // whose ownership was transferred to the wxWidgets copy. DO NOT DROP here.
         if (owned_by_wx) {
-            // wxLogDebug("CxxClosureVoid %p: Original functor (%p) destroyed, NOT dropping param=%p as owned by wx", this, param_ptr);
+            // WXD_LOG_TRACEF("CxxClosureVoid %p: Original functor (%p) destroyed, NOT dropping param=%p as owned by wx", this, param_ptr);
             return; // Don't drop if ownership was transferred
         }
 
@@ -364,7 +364,7 @@ public:
         // 2. The original functor being destroyed *because binding failed* (param_ptr should be valid).
         // In both cases where owned_by_wx is false, we *should* drop the box if the pointer is valid.
         if (param_ptr) {
-            // wxLogDebug("CxxClosureVoid %p: Dropping Rust box param=%p as NOT owned by wx", this, param_ptr);
+            // WXD_LOG_TRACEF("CxxClosureVoid %p: Dropping Rust box param=%p as NOT owned by wx", this, param_ptr);
             drop_rust_closure_box(param_ptr);
             param_ptr = nullptr; // Avoid potential double drop if destructor called again somehow
         }
@@ -380,7 +380,7 @@ public:
         if (fn_ptr && param_ptr) {
             fn_ptr(param_ptr, reinterpret_cast<void*>(&event)); 
         } else {
-             wxLogWarning("CxxClosureVoid operator() called but fn_ptr or param_ptr is null!");
+             WXD_LOG_WARN("CxxClosureVoid operator() called but fn_ptr or param_ptr is null!");
              event.Skip();
         }
     }
@@ -396,13 +396,13 @@ extern "C" void wxd_EvtHandler_Bind(
 ) {
     wxEvtHandler* wx_handler = reinterpret_cast<wxEvtHandler*>(handler);
     if (!wx_handler) {
-         wxLogWarning("wxd_EvtHandler_Bind called with null handler."); 
+         WXD_LOG_WARN("wxd_EvtHandler_Bind called with null handler."); 
          if (rust_closure_ptr) { drop_rust_closure_box(rust_closure_ptr); }
          return;
     }
 
     if (!rust_trampoline_fn || !rust_closure_ptr) {
-        wxLogWarning("wxd_EvtHandler_Bind called with null trampoline (%p) or closure (%p).", rust_trampoline_fn, rust_closure_ptr);
+        WXD_LOG_WARNF("wxd_EvtHandler_Bind called with null trampoline (%p) or closure (%p).", rust_trampoline_fn, rust_closure_ptr);
         if (rust_closure_ptr) { drop_rust_closure_box(rust_closure_ptr); } // Drop if trampoline is null but closure isn't
         return;
     }
@@ -410,7 +410,7 @@ extern "C" void wxd_EvtHandler_Bind(
     // Get or create the custom event handler
     WxdEventHandler* customHandler = GetOrCreateEventHandler(wx_handler, handler);
     if (!customHandler) {
-        wxLogWarning("wxd_EvtHandler_Bind: Failed to create custom handler.");
+        WXD_LOG_WARN("wxd_EvtHandler_Bind: Failed to create custom handler.");
         if (rust_closure_ptr) { drop_rust_closure_box(rust_closure_ptr); }
         return;
     }
@@ -418,7 +418,7 @@ extern "C" void wxd_EvtHandler_Bind(
     // Convert C enum to wxEventType
     wxEventType wx_event_type_to_bind = get_wx_event_type_for_c_enum(eventTypeC);
     if (wx_event_type_to_bind == wxEVT_NULL) {
-        wxLogWarning("wxd_EvtHandler_Bind: Unsupported WXDEventTypeCEnum value %d.", (int)eventTypeC);
+        WXD_LOG_WARNF("wxd_EvtHandler_Bind: Unsupported WXDEventTypeCEnum value %d.", (int)eventTypeC);
         if (rust_closure_ptr) { drop_rust_closure_box(rust_closure_ptr); }
         return;
     }
@@ -470,13 +470,13 @@ extern "C" void wxd_EvtHandler_BindWithId(
 ) {
     wxEvtHandler* wx_handler = reinterpret_cast<wxEvtHandler*>(handler);
     if (!wx_handler) {
-         wxLogWarning("wxd_EvtHandler_BindWithId called with null handler."); 
+         WXD_LOG_WARN("wxd_EvtHandler_BindWithId called with null handler."); 
          if (rust_closure_ptr) { drop_rust_closure_box(rust_closure_ptr); }
          return;
     }
 
     if (!rust_trampoline_fn || !rust_closure_ptr) {
-        wxLogWarning("wxd_EvtHandler_BindWithId called with null trampoline (%p) or closure (%p).", rust_trampoline_fn, rust_closure_ptr);
+        WXD_LOG_WARNF("wxd_EvtHandler_BindWithId called with null trampoline (%p) or closure (%p).", rust_trampoline_fn, rust_closure_ptr);
         if (rust_closure_ptr) { drop_rust_closure_box(rust_closure_ptr); }
         return;
     }
@@ -484,7 +484,7 @@ extern "C" void wxd_EvtHandler_BindWithId(
     // Get or create the custom event handler
     WxdEventHandler* customHandler = GetOrCreateEventHandler(wx_handler, handler);
     if (!customHandler) {
-        wxLogWarning("wxd_EvtHandler_BindWithId: Failed to create custom handler.");
+        WXD_LOG_WARN("wxd_EvtHandler_BindWithId: Failed to create custom handler.");
         if (rust_closure_ptr) { drop_rust_closure_box(rust_closure_ptr); }
         return;
     }
@@ -492,7 +492,7 @@ extern "C" void wxd_EvtHandler_BindWithId(
     // Convert C enum to wxEventType
     wxEventType wx_event_type_to_bind = get_wx_event_type_for_c_enum(eventTypeC);
     if (wx_event_type_to_bind == wxEVT_NULL) {
-        wxLogWarning("wxd_EvtHandler_BindWithId: Unsupported WXDEventTypeCEnum value %d.", (int)eventTypeC);
+        WXD_LOG_WARNF("wxd_EvtHandler_BindWithId: Unsupported WXDEventTypeCEnum value %d.", (int)eventTypeC);
         if (rust_closure_ptr) { drop_rust_closure_box(rust_closure_ptr); }
         return;
     }

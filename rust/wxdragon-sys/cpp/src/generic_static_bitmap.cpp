@@ -38,7 +38,7 @@ WXD_EXPORTED wxd_GenericStaticBitmap_t* wxd_GenericStaticBitmap_CreateWithBitmap
     wxBitmap* bmp = reinterpret_cast<wxBitmap*>(bitmap);
 
     if (!parentWin) {
-        wxLogError("wxd_GenericStaticBitmap_CreateWithBitmap: Parent window is null.");
+        WXD_LOG_ERROR("wxd_GenericStaticBitmap_CreateWithBitmap: Parent window is null.");
         return nullptr;
     }
 
@@ -47,7 +47,7 @@ WXD_EXPORTED wxd_GenericStaticBitmap_t* wxd_GenericStaticBitmap_CreateWithBitmap
     // wxGenericStaticBitmap makes a copy of the bitmap data.
     const wxBitmap& bitmap_ref = (bmp && bmp->IsOk()) ? *bmp : wxNullBitmap;
     if (!(bmp && bmp->IsOk())) {
-         wxLogWarning("wxd_GenericStaticBitmap_CreateWithBitmap: Bitmap is null or not OK. Creating GenericStaticBitmap with wxNullBitmap.");
+         WXD_LOG_WARN("wxd_GenericStaticBitmap_CreateWithBitmap: Bitmap is null or not OK. Creating GenericStaticBitmap with wxNullBitmap.");
     }
 
     wxGenericStaticBitmap* statBmp = new wxGenericStaticBitmap(
@@ -111,7 +111,7 @@ WXD_EXPORTED wxd_GenericStaticBitmap_t* wxd_GenericStaticBitmap_CreateWithBitmap
     wxBitmapBundle* bundlePtr = reinterpret_cast<wxBitmapBundle*>(bundle);
 
     if (!parentWin) {
-        wxLogError("wxd_GenericStaticBitmap_CreateWithBitmapBundle: Parent window is null.");
+        WXD_LOG_ERROR("wxd_GenericStaticBitmap_CreateWithBitmapBundle: Parent window is null.");
         return nullptr;
     }
 

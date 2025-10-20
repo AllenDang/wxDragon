@@ -14,6 +14,7 @@
 #include "array_string.h" // ArrayString helper functions
 #include "core/wxd_item.h" // Added for wxd_DataViewItem_t and its functions
 #include "wxd_sysopt.h"
+#include "wxd_logging.h" // Logging functions
 
 #ifdef __cplusplus
 // Include C++ specific utility functions and macros

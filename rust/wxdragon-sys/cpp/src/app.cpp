@@ -75,7 +75,7 @@ bool WxdApp::OnInit() {
         return success;
     } else {
         // Should not happen if wxd_Main is used correctly
-        wxLogError("wxDragon: No OnInit callback provided to wxd_Main.");
+        WXD_LOG_ERROR("wxDragon: No OnInit callback provided to wxd_Main.");
         return false;
     }
 }

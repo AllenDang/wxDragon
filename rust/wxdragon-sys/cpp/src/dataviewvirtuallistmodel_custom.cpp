@@ -30,12 +30,12 @@ public:
           m_get_attr(get_attr),
           m_is_enabled(is_enabled)
     {
-        wxLogDebug("WxdCustomDataViewVirtualListModel created with initial size %u", initial_size);
+        WXD_LOG_TRACEF("WxdCustomDataViewVirtualListModel created with initial size %u", initial_size);
     }
     
     // Destructor to clean up registry and callback data
     ~WxdCustomDataViewVirtualListModel() {
-        wxLogDebug("WxdCustomDataViewVirtualListModel destroyed");
+        WXD_LOG_TRACE("WxdCustomDataViewVirtualListModel destroyed");
         // Clean up the Rust-allocated callback data
         if (m_userdata) {
             wxd_Drop_Rust_CustomModelCallbacks(m_userdata);
@@ -106,7 +106,7 @@ public:
                                     variant << fallback_bmp_on_error;
                                 }
                             } catch (...) {
-                                wxLogError("GetValueByRow: Exception during wxBitmap copy from borrowed ptr for WXD_VARIANT_TYPE_BITMAP_RUST_BORROWED.");
+                                WXD_LOG_ERROR("GetValueByRow: Exception during wxBitmap copy from borrowed ptr for WXD_VARIANT_TYPE_BITMAP_RUST_BORROWED.");
                                 wxBitmap fallback_bmp_on_exception(16, 16); /* Create a visible fallback */
                                 wxMemoryDC dc(fallback_bmp_on_exception); 
                                 dc.SetBackground(*wxBLUE_BRUSH); dc.Clear(); 
@@ -151,7 +151,7 @@ public:
                 
             case 6: 
                 if (rust_variant_data.type == WXD_VARIANT_TYPE_DATETIME) {
-                    // wxLogDebug("C++ GetValueByRow (col 6) - Rust DateTime components: y=%d, m=%d, d=%d, h=%d, min=%d, s=%d", 
+                    // WXD_LOG_TRACEF("C++ GetValueByRow (col 6) - Rust DateTime components: y=%d, m=%d, d=%d, h=%d, min=%d, s=%d", 
                     //     rust_variant_data.data.datetime_val.year,
                     //     rust_variant_data.data.datetime_val.month,
                     //     rust_variant_data.data.datetime_val.day,

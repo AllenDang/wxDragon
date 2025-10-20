@@ -9,7 +9,6 @@
 #include <wx/datetime.h> // For wxDateTime
 #include <wx/variant.h>
 #include <cstring>
-#include <wx/log.h>  // For wxLogDebug and wxLogError
 
 // Forward declarations
 void drop_rust_custom_renderer_callbacks(void* ptr);
@@ -59,6 +58,7 @@ public:
     
     virtual ~WxdDataViewCtrlWithCleanup() {
         // No special cleanup needed - each renderer manages its own callbacks
+        WXD_LOG_TRACE("WxdDataViewCtrlWithCleanup destroyed, no global cleanup needed.");
     }
 };
 
@@ -820,7 +820,7 @@ public:
 };
 
 WxDDataViewListModel::~WxDDataViewListModel() {
-    wxLogDebug("WxDDataViewListModel destroyed");
+    WXD_LOG_TRACE("WxDDataViewListModel destroyed");
 }
 
 // Standard models

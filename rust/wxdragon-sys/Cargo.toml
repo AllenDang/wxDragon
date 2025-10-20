@@ -23,6 +23,7 @@ xrc = []
 richtext = []
 
 [dependencies]
+log = "0.4"
 # Sys crates typically have no runtime Rust dependencies
 
 [build-dependencies]
