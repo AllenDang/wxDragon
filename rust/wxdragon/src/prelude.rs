@@ -76,6 +76,7 @@ pub use crate::widgets::command_link_button::{
 }; // Added Style
    // ADDED: DataView
 pub use crate::widgets::dataview::{
+    CustomDataViewTreeModel,
     CustomDataViewVirtualListModel, // Added CustomDataViewVirtualListModel
     DataViewAlign,
     DataViewCellMode,

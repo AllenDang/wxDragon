@@ -345,8 +345,13 @@ impl Default for DataViewVirtualListModel {
 /// A callback-based DataView tree model wrapper.
 pub struct CustomDataViewTreeModel {
     model: *mut ffi::wxd_DataViewModel_t,
-    // Pointer to the FFI callbacks struct allocated and owned by C++.
-    _callback_data_ptr: *const ffi::wxd_DataViewTreeModel_Callbacks,
+}
+
+impl Clone for CustomDataViewTreeModel {
+    fn clone(&self) -> Self {
+        unsafe { ffi::wxd_DataViewModel_AddRef(self.model) };
+        Self { model: self.model }
+    }
 }
 
 impl Drop for CustomDataViewTreeModel {
@@ -580,10 +585,7 @@ impl CustomDataViewTreeModel {
         // Create the native model which reference count is 1 now.
         let model = unsafe { ffi::wxd_DataViewTreeModel_CreateWithCallbacks(cb_raw) };
 
-        Self {
-            model,
-            _callback_data_ptr: cb_raw,
-        }
+        Self { model }
     }
 }
 
