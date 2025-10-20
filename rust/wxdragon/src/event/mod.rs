@@ -489,10 +489,7 @@ impl Event {
         use bitflags::Flags;
         EventType::iter_defined_names()
             .find(|&(_, val)| {
-                let bits = val.bits();
-                bits == event_type_c
-                    && bits != ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_NULL
-                    && bits != ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_INVALID
+                val.bits() == event_type_c && val != EventType::NONE && val != EventType::INVALID
             })
             .map(|(_, val)| val)
     }
