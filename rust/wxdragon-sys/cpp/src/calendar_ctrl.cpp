@@ -84,7 +84,7 @@ WXD_EXPORTED wxd_DateTime_t* wxd_CalendarCtrl_GetDate(wxd_CalendarCtrl_t* self) 
     // Allocate on heap, Rust (DateTime::from_raw) will take ownership and free.
     return new wxd_DateTime_t{
         (short)dt.GetDay(wxDateTime::Local),
-        (unsigned short)(dt.GetMonth(wxDateTime::Local) + 1), // wxDateTime::Month is 0-indexed for GetMonth(), but constructor needs 1-12 for wxd_DateTime_t
+        (unsigned short)dt.GetMonth(wxDateTime::Local), // wxDateTime::Month is 0-indexed, wxd_DateTime_t.month is also 0-indexed
         dt.GetYear(wxDateTime::Local),
         (short)dt.GetHour(wxDateTime::Local),
         (short)dt.GetMinute(wxDateTime::Local),
