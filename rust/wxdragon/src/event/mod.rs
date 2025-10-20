@@ -253,6 +253,9 @@ pub struct EventType: ffi::WXDEventTypeCEnum { // Use the generated C enum type
     // Generic events that might not fit a specific category or are widely used
     const ANY = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_ANY;
 
+    // Just a placeholder for bindgen to ensure the enum is c_int type, not c_uint instead.
+    const INVALID = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_INVALID;
+
     // Special event type for null/None, not a real wxWidgets event type
     const NONE = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_NULL; // Assuming NULL is 0
 
@@ -483,11 +486,15 @@ impl Event {
         #[allow(clippy::useless_conversion)]
         let event_type_c = unsafe { ffi::wxd_Event_GetEventType(self.0) } as WXDEventTypeCEnum;
         // If event_type_c is WXD_EVENT_TYPE_NULL or an invalid value, return None
-        if event_type_c == ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_NULL {
-            None
-        } else {
-            EventType::from_bits(event_type_c)
-        }
+        use bitflags::Flags;
+        EventType::iter_defined_names()
+            .find(|&(_, val)| {
+                let bits = val.bits();
+                bits == event_type_c
+                    && bits != ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_NULL
+                    && bits != ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_INVALID
+            })
+            .map(|(_, val)| val)
     }
 
     /// Controls whether the event is processed further.
