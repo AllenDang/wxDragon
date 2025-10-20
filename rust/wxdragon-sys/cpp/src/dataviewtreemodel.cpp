@@ -15,10 +15,12 @@ public:
     Wxd_Callbacks_DataViewTreeModel(const wxd_DataViewTreeModel_Callbacks* cb)
     {
         m_cb = cb;
+        WXD_LOG_TRACEF("Wxd_Callbacks_DataViewTreeModel created with pointer %p", this);
     }
 
     virtual ~Wxd_Callbacks_DataViewTreeModel()
     {
+        WXD_LOG_TRACEF("Wxd_Callbacks_DataViewTreeModel destroyed with pointer %p", this);
         if (m_cb) {
             // Call into Rust to reclaim and drop the callback struct
             wxd_Drop_Rust_DataViewTreeModelCallbacks(const_cast<wxd_DataViewTreeModel_Callbacks*>(m_cb));

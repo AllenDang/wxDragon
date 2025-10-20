@@ -20,7 +20,7 @@ struct Employee {
 
 impl Drop for Employee {
     fn drop(&mut self) {
-        log::trace!("Dropping Employee: ID={}, Name={}", self.id, self.name);
+        // log::trace!("Dropping Employee: ID={}, Name={}", self.id, self.name);
     }
 }
 

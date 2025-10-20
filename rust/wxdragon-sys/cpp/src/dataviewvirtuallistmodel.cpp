@@ -8,7 +8,13 @@
 class WxdBasicDataViewVirtualListModel : public wxDataViewVirtualListModel {
 public:
     WxdBasicDataViewVirtualListModel(unsigned int initial_size)
-        : wxDataViewVirtualListModel(initial_size) {}
+        : wxDataViewVirtualListModel(initial_size)
+    {
+        WXD_LOG_TRACEF("WxdBasicDataViewVirtualListModel created with pointer %p", this);
+    }
+    ~WxdBasicDataViewVirtualListModel() {
+        WXD_LOG_TRACEF("WxdBasicDataViewVirtualListModel destroyed with pointer %p", this);
+    }
     
     // Implementation of the pure virtual methods
     virtual void GetValueByRow(wxVariant &variant, unsigned int row, unsigned int col) const override {

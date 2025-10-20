@@ -53,12 +53,14 @@ void cleanup_all_custom_renderer_callbacks_for_dataview(int dataview_id) {
 class WxdDataViewCtrlWithCleanup : public wxDataViewCtrl {
 public:
     WxdDataViewCtrlWithCleanup(wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style)
-        : wxDataViewCtrl(parent, id, pos, size, style) {
+        : wxDataViewCtrl(parent, id, pos, size, style)
+    {
+        WXD_LOG_TRACEF("WxdDataViewCtrlWithCleanup created with pointer %p", this);
     }
     
     virtual ~WxdDataViewCtrlWithCleanup() {
         // No special cleanup needed - each renderer manages its own callbacks
-        WXD_LOG_TRACE("WxdDataViewCtrlWithCleanup destroyed, no global cleanup needed.");
+        WXD_LOG_TRACEF("WxdDataViewCtrlWithCleanup destroyed with pointer %p", this);
     }
 };
 
@@ -87,6 +89,7 @@ WXD_EXPORTED wxd_Window_t* wxd_DataViewListCtrl_Create(wxd_Window_t* parent, int
     wxSize wxSizeObj = size ? wxSize(size->width, size->height) : wxDefaultSize;
     
     wxDataViewListCtrl* ctrl = new wxDataViewListCtrl(p, id, wxPos, wxSizeObj, style);
+    WXD_LOG_TRACEF("wxDataViewListCtrl created with pointer %p", ctrl);
     return reinterpret_cast<wxd_Window_t*>(ctrl);
 }
 
@@ -100,6 +103,7 @@ WXD_EXPORTED wxd_Window_t* wxd_DataViewTreeCtrl_Create(wxd_Window_t* parent, int
     wxSize wxSizeObj = size ? wxSize(size->width, size->height) : wxDefaultSize;
     
     wxDataViewTreeCtrl* ctrl = new wxDataViewTreeCtrl(p, id, wxPos, wxSizeObj, style);
+    WXD_LOG_TRACEF("wxDataViewTreeCtrl created with pointer %p", ctrl);
     return reinterpret_cast<wxd_Window_t*>(ctrl);
 }
 
@@ -120,6 +124,7 @@ WXD_EXPORTED wxd_DataViewColumn_t* wxd_DataViewColumn_Create(const char* title,
                                                  width, 
                                                  static_cast<wxAlignment>(align),
                                                  flags);
+    WXD_LOG_TRACEF("wxDataViewColumn created with pointer %p", column);
     return reinterpret_cast<wxd_DataViewColumn_t*>(column);
 }
 
@@ -329,10 +334,12 @@ public:
         m_activate_cell_callback(activate_cell_callback)
     {
         // Constructor implementation without debug logs
+        WXD_LOG_TRACEF("WxdDataViewCustomRenderer created with pointer %p", this);
     }
 
     virtual ~WxdDataViewCustomRenderer() {
         // Destructor implementation without debug logs
+        WXD_LOG_TRACEF("WxdDataViewCustomRenderer destroyed with pointer %p", this);
     }
 
     // Size calculation for custom rendering
@@ -579,7 +586,14 @@ public:
           m_get_row_count(get_row_count),
           m_get_value(get_value),
           m_set_value(set_value),
-          m_user_data(user_data) {}
+          m_user_data(user_data)
+    {
+        WXD_LOG_TRACEF("WxDDataViewModel created with pointer %p", this);
+    }
+
+    virtual ~WxDDataViewModel() {
+        WXD_LOG_TRACEF("WxDDataViewModel destroyed with pointer %p", this);
+    }
           
     // wxDataViewModel interface implementation
     virtual unsigned int GetColumnCount() const override {
@@ -803,7 +817,13 @@ private:
     wxVector<ColumnInfo> m_columns;
 
 public:
-    ~WxDDataViewListModel();
+    WxDDataViewListModel() {
+        WXD_LOG_TRACEF("WxDDataViewListModel created with pointer %p", this);
+    }
+
+    ~WxDDataViewListModel() {
+        WXD_LOG_TRACEF("WxDDataViewListModel destroyed with pointer %p", this);
+    }
     // Add a column to our model
     bool AppendColumnInfo(const wxString& name, const wxString& type = "string") {
         ColumnInfo info;
@@ -818,10 +838,6 @@ public:
         return static_cast<unsigned int>(m_columns.size());
     }
 };
-
-WxDDataViewListModel::~WxDDataViewListModel() {
-    WXD_LOG_TRACE("WxDDataViewListModel destroyed");
-}
 
 // Standard models
 WXD_EXPORTED wxd_DataViewModel_t* wxd_DataViewListModel_Create() {

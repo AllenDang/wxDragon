@@ -47,7 +47,9 @@ WXD_EXPORTED wxd_Window_t* wxd_DataViewTreeCtrl_new(
         wxDefaultValidator // Pass default validator for the 6th argument
         // name_str is not passed to this constructor
     );
-    
+
+    WXD_LOG_TRACEF("wxDataViewTreeCtrl created with pointer %p", ctrl);
+
     // If name_str needs to be set, it would be done via SetName after construction:
     // if (name_str && *name_str) { // Check if not null and not empty
     //     ctrl->SetName(WXD_STR_TO_WX_STRING_UTF8_NULL_OK(name_str));

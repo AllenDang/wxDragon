@@ -30,12 +30,12 @@ public:
           m_get_attr(get_attr),
           m_is_enabled(is_enabled)
     {
-        WXD_LOG_TRACEF("WxdCustomDataViewVirtualListModel created with initial size %u", initial_size);
+        WXD_LOG_TRACEF("WxdCustomDataViewVirtualListModel created with pointer %p", this);
     }
     
     // Destructor to clean up registry and callback data
     ~WxdCustomDataViewVirtualListModel() {
-        WXD_LOG_TRACE("WxdCustomDataViewVirtualListModel destroyed");
+        WXD_LOG_TRACEF("WxdCustomDataViewVirtualListModel destroyed with pointer %p", this);
         // Clean up the Rust-allocated callback data
         if (m_userdata) {
             wxd_Drop_Rust_CustomModelCallbacks(m_userdata);
