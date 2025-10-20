@@ -60,16 +60,25 @@ pub mod tree_helpers {
     }
 }
 
-// Helper macro to implement Clone, Drop, AsRef, Deref, Send, and Sync for models
-// that wrap a wxDataViewModel pointer with reference counting.
+// Helper macro to implement Clone, Drop, AsRef, and Deref for models that wrap a
+// wxDataViewModel pointer with reference counting.
+//
+// Usage:
+//   impl_refcounted_model!(TypeName, ptr_field);
+//   impl_refcounted_model!(TypeName, ptr_field, other1, other2, ...);
+// If you explicitly want Send/Sync (rare for GUI models), opt-in with:
+//   impl_refcounted_model!(send_sync TypeName, ptr_field, other1, ...);
 macro_rules! impl_refcounted_model {
-    ($ty:ty, $ptr_field:ident $(, $other_field:ident )* ) => {
+    // Internal arm shared by both public forms
+    (@base $ty:ty, $ptr_field:ident $(, $other_field:ident )* ) => {
         impl Clone for $ty {
             fn clone(&self) -> Self {
-                unsafe { ffi::wxd_DataViewModel_AddRef(self.$ptr_field) };
+                if !self.$ptr_field.is_null() {
+                    unsafe { ffi::wxd_DataViewModel_AddRef(self.$ptr_field) };
+                }
                 Self {
                     $ptr_field: self.$ptr_field,
-                    $( $other_field: self.$other_field, )*
+                    $( $other_field: self.$other_field.clone(), )*
                 }
             }
         }
@@ -102,7 +111,16 @@ macro_rules! impl_refcounted_model {
                 &self.$ptr_field
             }
         }
+    };
 
+    // Default: no Send/Sync (safer for GUI models)
+    ($ty:ty, $ptr_field:ident $(, $other_field:ident )* ) => {
+        impl_refcounted_model!(@base $ty, $ptr_field $(, $other_field )* );
+    };
+
+    // Opt-in for Send/Sync if the type is truly thread-safe
+    (send_sync $ty:ty, $ptr_field:ident $(, $other_field:ident )* ) => {
+        impl_refcounted_model!(@base $ty, $ptr_field $(, $other_field )* );
         unsafe impl Send for $ty {}
         unsafe impl Sync for $ty {}
     };
