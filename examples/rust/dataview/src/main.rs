@@ -1,16 +1,35 @@
-use std::rc::Rc;
 use wxdragon::prelude::*;
 use wxdragon::DataViewCtrl;
 use wxdragon::DataViewStyle;
 
+mod music_tree;
 mod mymodels;
 
 fn main() {
     SystemOptions::set_option_by_int("msw.no-manifest-check", 1);
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("trace")).init();
+
+    let file_name = "music_tree_dump.json";
+
+    let data_path: std::path::PathBuf = {
+        let base = dirs::config_dir().unwrap_or_else(|| std::env::current_dir().unwrap());
+        let base = base.join(std::env::var("CARGO_PKG_NAME").unwrap_or("wxdragon".to_string()));
+        std::fs::create_dir_all(&base).unwrap();
+        base.join(file_name)
+    };
+
+    let mut data = match music_tree::load_music_tree_from_file(&data_path) {
+        Ok(tree) => tree,
+        Err(e) => {
+            let data_path = data_path.display();
+            log::info!("Failed to load {data_path}: {e}");
+            music_tree::generate_initial_music_tree()
+        }
+    };
+    data.filepath = Some(data_path.clone());
+
     // Keep the model alive for the duration of the app
-    let model = Rc::new(mymodels::create_music_tree_model().expect("Failed to create tree model"));
-    let model_clone = model.clone();
+    let model = mymodels::create_music_tree_model(data);
     let _ = wxdragon::main(move |_| {
         let frame = Frame::builder()
             .with_title("wxDragon DataView Example")
@@ -84,7 +103,7 @@ fn main() {
         dataview.append_column(&judg_col);
 
         // Associate the model with the control
-        dataview.associate_model(&*model_clone);
+        dataview.associate_model(&model);
 
         // Expand the visible root and the first child ('Pop music') on startup.
         // The invalid/default DataViewItem represents the invisible root; its
