@@ -873,18 +873,6 @@ impl CustomDataViewVirtualListModel {
         }
     }
 
-    /// Creates a new simple custom model with defaults.
-    pub fn new_simple(initial_size: usize) -> Self {
-        Self::new(
-            initial_size,
-            (),
-            |_, row, col| Variant::String(format!("Item ({row}, {col})")),
-            None::<fn(&(), usize, usize, &Variant) -> bool>,
-            None::<fn(&(), usize, usize) -> Option<DataViewItemAttr>>,
-            None::<fn(&(), usize, usize) -> bool>,
-        )
-    }
-
     /// Notify that a row has been prepended
     pub fn row_prepended(&mut self) {
         unsafe { ffi::wxd_DataViewVirtualListModel_RowPrepended(self.handle) };
