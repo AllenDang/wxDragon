@@ -1,4 +1,5 @@
 use crate::music_tree::{MusicNode, MusicTree, NodeType};
+use std::{cell::RefCell, rc::Rc};
 use wxdragon::prelude::*;
 
 pub fn create_music_tree_model(data: MusicTree) -> CustomDataViewTreeModel {
@@ -50,7 +51,60 @@ pub fn create_music_tree_model(data: MusicTree) -> CustomDataViewTreeModel {
                 _ => Variant::String(String::new()),
             },
         },
-        Some(move |_: &MusicTree, _: Option<&MusicNode>, _: u32, _: &Variant| false),
+        Some(
+            move |data: &MusicTree, item: Option<&MusicNode>, col: u32, var: &Variant| {
+                let target_rc = match item {
+                    None => data.root.clone(),
+                    Some(n) => {
+                        let ptr: *const MusicNode = n as *const _;
+                        match find_rc(data, ptr) {
+                            Some(rc) => rc,
+                            None => return false,
+                        }
+                    }
+                };
+
+                let mut node = target_rc.borrow_mut();
+                match (col, var) {
+                    (0, Variant::String(s)) => {
+                        node.title = s.clone();
+                        true
+                    }
+                    (1, Variant::String(s)) => {
+                        if matches!(node.node_type, NodeType::Branch) {
+                            return false;
+                        }
+                        node.artist = if s.is_empty() { None } else { Some(s.clone()) };
+                        true
+                    }
+                    (2, Variant::String(s)) => {
+                        if matches!(node.node_type, NodeType::Branch) {
+                            return false;
+                        }
+                        let s_trim = s.trim();
+                        if s_trim.is_empty() {
+                            node.year = None;
+                            return true;
+                        }
+                        match s_trim.parse::<i32>() {
+                            Ok(v) => {
+                                node.year = Some(v);
+                                true
+                            }
+                            Err(_) => false,
+                        }
+                    }
+                    (3, Variant::String(s)) => {
+                        if matches!(node.node_type, NodeType::Branch) {
+                            return false;
+                        }
+                        node.quality = if s.is_empty() { None } else { Some(s.clone()) };
+                        true
+                    }
+                    _ => false,
+                }
+            },
+        ),
         Some(move |_: &MusicTree, _: Option<&MusicNode>, _: u32| true),
         Some(
             move |_: &MusicTree, a: &MusicNode, b: &MusicNode, col: u32, asc: bool| {
@@ -70,4 +124,27 @@ pub fn create_music_tree_model(data: MusicTree) -> CustomDataViewTreeModel {
             },
         ),
     )
+}
+
+// Resolve target Rc<RefCell<MusicNode>> from item pointer (or root when None)
+fn find_rc(tree: &MusicTree, needle: *const MusicNode) -> Option<Rc<RefCell<MusicNode>>> {
+    let root_ptr: *const MusicNode = &*tree.root.borrow();
+    if root_ptr == needle {
+        return Some(tree.root.clone());
+    }
+    dfs(&tree.root, needle)
+}
+
+fn dfs(cur: &Rc<RefCell<MusicNode>>, target: *const MusicNode) -> Option<Rc<RefCell<MusicNode>>> {
+    let children = cur.borrow().children.as_ref().cloned().unwrap_or_default();
+    for child in children.iter() {
+        let ptr: *const MusicNode = &*child.borrow();
+        if ptr == target {
+            return Some(child.clone());
+        }
+        if let Some(found) = dfs(child, target) {
+            return Some(found);
+        }
+    }
+    None
 }
