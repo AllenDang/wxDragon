@@ -751,12 +751,11 @@ extern "C" bool wxd_EvtHandler_UnbindByToken(
         }
     }
 
-    // Remove token from map
-    customHandler->tokenMap.erase(token_it);
-
+    // Remove token from map only if closure was found
     if (!found) {
         return false;
     }
+    customHandler->tokenMap.erase(token_it);
 
     // If no more closures for this event, unbind from wxWidgets
     if (closure_vec.empty()) {
