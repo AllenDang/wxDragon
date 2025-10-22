@@ -169,8 +169,9 @@ public:
     std::unordered_map<std::pair<wxEventType, wxd_Id>, std::vector<RustClosureInfo>, PairHash> closureMap;
 
     // NEW: Fast lookup - token -> location of closure
-    // Location = (eventType, widgetId, index in vector)
-    std::unordered_map<uint64_t, std::tuple<wxEventType, wxd_Id, size_t>> tokenMap;
+    // Location = (eventType, widgetId, closure_ptr)
+    // Note: We store closure_ptr instead of index because indices become stale after removals
+    std::unordered_map<uint64_t, std::tuple<wxEventType, wxd_Id, void*>> tokenMap;
 
     // Track whether we've already bound DispatchEvent to wxWidgets for each event key
     std::unordered_map<std::pair<wxEventType, wxd_Id>, bool, PairHash> wx_bindings_made;
@@ -544,11 +545,10 @@ extern "C" void wxd_EvtHandler_BindWithToken(
     }
 
     // Add closure to vector
-    size_t index = customHandler->closureMap[map_key].size();
     customHandler->closureMap[map_key].push_back(new_info);
 
-    // Store token mapping for fast lookup
-    customHandler->tokenMap[token] = std::make_tuple(wx_event_type, actual_id, index);
+    // Store token mapping for fast lookup (using closure_ptr instead of index)
+    customHandler->tokenMap[token] = std::make_tuple(wx_event_type, actual_id, rust_closure_ptr);
 }
 
 // ID-specific event binding implementation
@@ -707,88 +707,10 @@ extern "C" void wxd_EvtHandler_BindWithIdAndToken(
     }
 
     // Add closure to vector
-    size_t index = customHandler->closureMap[map_key].size();
     customHandler->closureMap[map_key].push_back(new_info);
 
-    // Store token mapping for fast lookup
-    customHandler->tokenMap[token] = std::make_tuple(wx_event_type, actual_id, index);
-}
-
-// Unbind a specific closure for an event type and optional id
-extern "C" void wxd_EvtHandler_Unbind(
-    wxd_EvtHandler_t* handler,
-    WXDEventTypeCEnum eventTypeC,
-    int id,
-    void* rust_closure_ptr
-) {
-    wxEvtHandler* wx_handler = reinterpret_cast<wxEvtHandler*>(handler);
-    if (!wx_handler) {
-        // If there's no handler, nothing to unbind. Closures should have been cleaned up on destruction.
-        return;
-    }
-
-    // Retrieve existing custom handler from client data (don't create a new one)
-    WxdHandlerClientData* clientData = static_cast<WxdHandlerClientData*>(wx_handler->GetClientData());
-    WxdEventHandler* customHandler = clientData ? clientData->handler : nullptr;
-    if (!customHandler) {
-        // Nothing to unbind
-        return;
-    }
-
-    // Convert C enum to wxEventType
-    wxEventType wx_event_type = get_wx_event_type_for_c_enum(eventTypeC);
-    if (wx_event_type == wxEVT_NULL) {
-        return;
-    }
-
-    wxd_Id actual_id_for_map_key = id;
-    std::pair<wxEventType, wxd_Id> map_key = {wx_event_type, actual_id_for_map_key};
-
-    auto it = customHandler->closureMap.find(map_key);
-    if (it == customHandler->closureMap.end()) {
-        return; // No handlers for this key
-    }
-
-    // Remove the specific closure pointer if found
-    auto& vec = it->second;
-    for (auto vit = vec.begin(); vit != vec.end(); ++vit) {
-        if (vit->closure_ptr == rust_closure_ptr) {
-            // Tell Rust to drop the Box corresponding to this pointer
-            if (vit->closure_ptr) {
-                drop_rust_closure_box(vit->closure_ptr);
-            }
-            vec.erase(vit);
-            break;
-        }
-    }
-
-    // If no more closures for this event key, disconnect the wx binding
-    if (vec.empty()) {
-        // Erase from map and update binding flag
-        customHandler->closureMap.erase(map_key);
-        customHandler->wx_bindings_made[map_key] = false;
-
-        if (IsVetableEventType(wx_event_type)) {
-            if (wx_event_type == wxEVT_CLOSE_WINDOW) {
-                wx_handler->Disconnect(wx_event_type,
-                                       wxCloseEventHandler(WxdEventHandler::DispatchCloseEvent),
-                                       nullptr,
-                                       customHandler);
-            } else {
-                wx_handler->Disconnect(wx_event_type,
-                                       wxEventHandler(WxdEventHandler::DispatchEvent),
-                                       nullptr,
-                                       customHandler);
-            }
-        } else {
-            // For Bind-based, we must provide id range
-            if (actual_id_for_map_key == wxID_ANY) {
-                wx_handler->Unbind(wx_event_type, &WxdEventHandler::DispatchEvent, customHandler, wxID_ANY, wxID_ANY);
-            } else {
-                wx_handler->Unbind(wx_event_type, &WxdEventHandler::DispatchEvent, customHandler, actual_id_for_map_key, actual_id_for_map_key);
-            }
-        }
-    }
+    // Store token mapping for fast lookup (using closure_ptr instead of index)
+    customHandler->tokenMap[token] = std::make_tuple(wx_event_type, actual_id, rust_closure_ptr);
 }
 
 // NEW: Unbind event handler by token
@@ -817,7 +739,7 @@ extern "C" bool wxd_EvtHandler_UnbindByToken(
     }
 
     // Extract location info
-    auto [event_type, widget_id, stored_index] = token_it->second;
+    auto [event_type, widget_id, closure_ptr] = token_it->second;
     std::pair<wxEventType, wxd_Id> map_key = {event_type, widget_id};
 
     // Find the closure vector
@@ -829,11 +751,10 @@ extern "C" bool wxd_EvtHandler_UnbindByToken(
 
     auto& closure_vec = closure_it->second;
 
-    // IMPORTANT: Don't trust stored_index! It may be stale after earlier removals.
-    // Search for the closure with this token instead.
+    // Search for the closure by pointer (more reliable than using index)
     bool found = false;
     for (auto vec_it = closure_vec.begin(); vec_it != closure_vec.end(); ++vec_it) {
-        if (vec_it->token == token) {
+        if (vec_it->closure_ptr == closure_ptr && vec_it->token == token) {
             // Found it! Drop the Rust closure
             if (vec_it->closure_ptr) {
                 drop_rust_closure_box(vec_it->closure_ptr);
@@ -1860,10 +1781,3 @@ WXD_EXPORTED wxd_Point wxd_ContextMenuEvent_GetPosition(wxd_Event_t* event) {
     return result;
 }
 
-// Gets the existing custom event handler associated with the wxEvtHandler, or nullptr if none exists.
-static WxdEventHandler* GetExistingEventHandler(wxEvtHandler* handler) {
-    if (!handler) return nullptr;
-    WxdHandlerClientData* clientData = static_cast<WxdHandlerClientData*>(handler->GetClientData());
-    if (!clientData) return nullptr;
-    return clientData->handler;
-}
