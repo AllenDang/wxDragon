@@ -9,7 +9,7 @@
 // wxd_DataViewTreeModel_Callbacks structs specifically.
 extern "C" void wxd_Drop_Rust_DataViewTreeModelCallbacks(wxd_DataViewTreeModel_Callbacks* ptr);
 
-class Wxd_Callbacks_DataViewTreeModel : public wxDataViewTreeStore
+class Wxd_Callbacks_DataViewTreeModel : public wxDataViewModel
 {
 public:
     Wxd_Callbacks_DataViewTreeModel(const wxd_DataViewTreeModel_Callbacks* cb)
