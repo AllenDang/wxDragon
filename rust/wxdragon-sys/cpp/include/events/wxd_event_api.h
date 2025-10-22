@@ -20,6 +20,10 @@ WXD_EXPORTED void wxd_EvtHandler_Bind(
 // ID-specific event binding for tools and menu items
 WXD_EXPORTED void wxd_EvtHandler_BindWithId(wxd_EvtHandler_t* evt_handler, WXDEventTypeCEnum event_type, int id, void* callback, void* user_data);
 
+// Unbind a previously bound event handler. Removes the specific closure pointer for the given event type and id.
+// If id is wxID_ANY, it targets non-ID-specific bindings.
+WXD_EXPORTED void wxd_EvtHandler_Unbind(wxd_EvtHandler_t* evt_handler, WXDEventTypeCEnum event_type, int id, void* rust_closure_ptr);
+
 WXD_EXPORTED int wxd_Event_GetId(wxd_Event_t* event);
 WXD_EXPORTED wxd_Window_t* wxd_Event_GetEventObject(wxd_Event_t* event);
 WXD_EXPORTED void wxd_Event_Skip(wxd_Event_t* event, bool skip);

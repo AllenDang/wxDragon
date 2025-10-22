@@ -4,7 +4,7 @@
 //! DataViewCtrl, DataViewListCtrl, and DataViewTreeCtrl.
 
 use super::item::DataViewItem;
-use crate::event::{Event, EventType, WxEvtHandler};
+use crate::event::{Event, EventBinding, EventType, WxEvtHandler};
 use wxdragon_sys as ffi;
 
 /// Events emitted by DataView widgets
@@ -225,6 +225,54 @@ pub trait DataViewEventHandler: WxEvtHandler {
         WxEvtHandler::bind_internal(self, event_type, wrapper);
     }
 
+    /// Bind an event handler and return an RAII EventBinding handle that will unbind on drop
+    fn bind_dataview_event_with_handle<F>(
+        &self,
+        event: DataViewEvent,
+        mut callback: F,
+    ) -> EventBinding
+    where
+        F: FnMut(DataViewEventData) + 'static,
+    {
+        // Map enum variant to EventType
+        let event_type = match event {
+            DataViewEvent::SelectionChanged => EventType::DATAVIEW_SELECTION_CHANGED,
+            DataViewEvent::ItemActivated => EventType::DATAVIEW_ITEM_ACTIVATED,
+            DataViewEvent::ItemEditingStarted => EventType::DATAVIEW_ITEM_EDITING_STARTED,
+            DataViewEvent::ItemEditingDone => EventType::DATAVIEW_ITEM_EDITING_DONE,
+            DataViewEvent::ItemEditingCancelled => EventType::DATAVIEW_ITEM_EDITING_DONE,
+            DataViewEvent::ItemExpanded => EventType::DATAVIEW_ITEM_EXPANDED,
+            DataViewEvent::ItemCollapsed => EventType::DATAVIEW_ITEM_COLLAPSED,
+            DataViewEvent::ColumnHeaderClick => EventType::DATAVIEW_COLUMN_HEADER_CLICK,
+            DataViewEvent::ColumnHeaderRightClick => EventType::DATAVIEW_COLUMN_HEADER_RIGHT_CLICK,
+            DataViewEvent::ItemExpanding => EventType::DATAVIEW_ITEM_EXPANDING,
+            DataViewEvent::ItemCollapsing => EventType::DATAVIEW_ITEM_COLLAPSING,
+            DataViewEvent::ColumnSorted => EventType::DATAVIEW_COLUMN_SORTED,
+            DataViewEvent::ColumnReordered => EventType::DATAVIEW_COLUMN_REORDERED,
+            DataViewEvent::ItemContextMenu => EventType::DATAVIEW_ITEM_CONTEXT_MENU,
+        };
+
+        // Create wrapper with special handling for editing cancelled events
+        let wrapper = move |base_event: Event| {
+            if event == DataViewEvent::ItemEditingCancelled {
+                let data = DataViewEventData::new(base_event, event);
+                if data.is_edit_cancelled() {
+                    callback(data);
+                }
+            } else if event == DataViewEvent::ItemEditingDone {
+                let data = DataViewEventData::new(base_event, event);
+                if !data.is_edit_cancelled() {
+                    callback(data);
+                }
+            } else {
+                let data = DataViewEventData::new(base_event, event);
+                callback(data);
+            }
+        };
+
+        WxEvtHandler::bind_internal_return_handle(self, event_type, wrapper)
+    }
+
     /// Binds a handler to the selection changed event
     fn on_selection_changed<F>(&self, callback: F)
     where
@@ -323,6 +371,14 @@ pub trait DataViewEventHandler: WxEvtHandler {
         F: FnMut(DataViewEventData) + 'static,
     {
         self.bind_dataview_event(DataViewEvent::ItemContextMenu, callback)
+    }
+
+    /// Binds a handler to the item context menu event and returns an EventBinding handle
+    fn on_item_context_menu_handle<F>(&self, callback: F) -> EventBinding
+    where
+        F: FnMut(DataViewEventData) + 'static,
+    {
+        self.bind_dataview_event_with_handle(DataViewEvent::ItemContextMenu, callback)
     }
 }
 

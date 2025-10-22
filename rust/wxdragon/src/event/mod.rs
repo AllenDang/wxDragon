@@ -734,6 +734,50 @@ impl Event {
 
 // --- WxEvtHandler Trait (Updated for Simple Event Handling) ---
 
+/// RAII handle for an event binding. When dropped, it will unbind the handler and free the closure.
+#[derive(Debug)]
+pub struct EventBinding {
+    handler_ptr: *mut ffi::wxd_EvtHandler_t,
+    event_type: EventType,
+    id: i32,
+    user_data: *mut c_void,
+}
+
+impl EventBinding {
+    fn new(
+        handler_ptr: *mut ffi::wxd_EvtHandler_t,
+        event_type: EventType,
+        id: i32,
+        user_data: *mut c_void,
+    ) -> Self {
+        Self {
+            handler_ptr,
+            event_type,
+            id,
+            user_data,
+        }
+    }
+}
+
+impl Drop for EventBinding {
+    fn drop(&mut self) {
+        // Safety: handler_ptr and user_data were provided by our bind methods.
+        // If handler is already destroyed, C++ side will no-op.
+        if !self.handler_ptr.is_null() && !self.user_data.is_null() {
+            unsafe {
+                ffi::wxd_EvtHandler_Unbind(
+                    self.handler_ptr,
+                    self.event_type.bits(),
+                    self.id,
+                    self.user_data,
+                );
+            }
+            // Prevent any possibility of double-unbind
+            self.user_data = std::ptr::null_mut();
+        }
+    }
+}
+
 pub trait WxEvtHandler {
     /// Returns the raw event handler pointer for this widget.
     ///
@@ -768,6 +812,38 @@ pub trait WxEvtHandler {
         unsafe { ffi::wxd_EvtHandler_Bind(handler_ptr, et, trampoline_c_void, user_data) };
     }
 
+    // Internal variant that returns an EventBinding handle for RAII-based unbinding
+    #[doc(hidden)]
+    fn bind_internal_return_handle<F>(&self, event_type: EventType, callback: F) -> EventBinding
+    where
+        F: FnMut(Event) + 'static,
+    {
+        let handler_ptr = unsafe { self.get_event_handler_ptr() };
+        if handler_ptr.is_null() {
+            // Create a dummy binding that does nothing on drop
+            return EventBinding::new(
+                std::ptr::null_mut(),
+                event_type,
+                ffi::WXD_ID_ANY as i32,
+                std::ptr::null_mut(),
+            );
+        }
+
+        let boxed_callback: Box<dyn FnMut(Event) + 'static> = Box::new(callback);
+        let double_boxed = Box::new(boxed_callback);
+        let user_data = Box::into_raw(double_boxed) as *mut c_void;
+
+        type TrampolineFn = unsafe extern "C" fn(*mut c_void, *mut c_void);
+        let trampoline_ptr: TrampolineFn = rust_event_handler_trampoline;
+        let trampoline_c_void = trampoline_ptr as *mut c_void;
+
+        let et = event_type.bits();
+        unsafe { ffi::wxd_EvtHandler_Bind(handler_ptr, et, trampoline_c_void, user_data) };
+
+        // Non-ID binding uses wxID_ANY
+        EventBinding::new(handler_ptr, event_type, ffi::WXD_ID_ANY as i32, user_data)
+    }
+
     // Internal implementation with ID support for tools and menu items
     #[doc(hidden)]
     fn bind_with_id_internal<F>(&self, event_type: EventType, id: i32, callback: F)
@@ -791,6 +867,36 @@ pub trait WxEvtHandler {
 
         let et = event_type.bits();
         unsafe { ffi::wxd_EvtHandler_BindWithId(handler_ptr, et, id, trampo_c_void, user_data) };
+    }
+
+    // Internal variant with ID that returns an EventBinding handle for RAII-based unbinding
+    #[doc(hidden)]
+    fn bind_with_id_internal_return_handle<F>(
+        &self,
+        event_type: EventType,
+        id: i32,
+        callback: F,
+    ) -> EventBinding
+    where
+        F: FnMut(Event) + 'static,
+    {
+        let handler_ptr = unsafe { self.get_event_handler_ptr() };
+        if handler_ptr.is_null() {
+            return EventBinding::new(std::ptr::null_mut(), event_type, id, std::ptr::null_mut());
+        }
+
+        let boxed_callback: Box<dyn FnMut(Event) + 'static> = Box::new(callback);
+        let double_boxed = Box::new(boxed_callback);
+        let user_data = Box::into_raw(double_boxed) as *mut c_void;
+
+        type TrampolineFn = unsafe extern "C" fn(*mut c_void, *mut c_void);
+        let trampoline_ptr: TrampolineFn = rust_event_handler_trampoline;
+        let trampo_c_void = trampoline_ptr as *mut c_void;
+
+        let et = event_type.bits();
+        unsafe { ffi::wxd_EvtHandler_BindWithId(handler_ptr, et, id, trampo_c_void, user_data) };
+
+        EventBinding::new(handler_ptr, event_type, id, user_data)
     }
 }
 

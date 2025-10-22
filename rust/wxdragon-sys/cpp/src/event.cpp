@@ -534,6 +534,83 @@ extern "C" void wxd_EvtHandler_BindWithId(
     customHandler->closureMap[map_key].push_back(new_rust_info);
 }
 
+// Unbind a specific closure for an event type and optional id
+extern "C" void wxd_EvtHandler_Unbind(
+    wxd_EvtHandler_t* handler,
+    WXDEventTypeCEnum eventTypeC,
+    int id,
+    void* rust_closure_ptr
+) {
+    wxEvtHandler* wx_handler = reinterpret_cast<wxEvtHandler*>(handler);
+    if (!wx_handler) {
+        // If there's no handler, nothing to unbind. Closures should have been cleaned up on destruction.
+        return;
+    }
+
+    // Retrieve existing custom handler from client data (don't create a new one)
+    WxdHandlerClientData* clientData = static_cast<WxdHandlerClientData*>(wx_handler->GetClientData());
+    WxdEventHandler* customHandler = clientData ? clientData->handler : nullptr;
+    if (!customHandler) {
+        // Nothing to unbind
+        return;
+    }
+
+    // Convert C enum to wxEventType
+    wxEventType wx_event_type = get_wx_event_type_for_c_enum(eventTypeC);
+    if (wx_event_type == wxEVT_NULL) {
+        return;
+    }
+
+    wxd_Id actual_id_for_map_key = id;
+    std::pair<wxEventType, wxd_Id> map_key = {wx_event_type, actual_id_for_map_key};
+
+    auto it = customHandler->closureMap.find(map_key);
+    if (it == customHandler->closureMap.end()) {
+        return; // No handlers for this key
+    }
+
+    // Remove the specific closure pointer if found
+    auto& vec = it->second;
+    for (auto vit = vec.begin(); vit != vec.end(); ++vit) {
+        if (vit->closure_ptr == rust_closure_ptr) {
+            // Tell Rust to drop the Box corresponding to this pointer
+            if (vit->closure_ptr) {
+                drop_rust_closure_box(vit->closure_ptr);
+            }
+            vec.erase(vit);
+            break;
+        }
+    }
+
+    // If no more closures for this event key, disconnect the wx binding
+    if (vec.empty()) {
+        // Erase from map and update binding flag
+        customHandler->closureMap.erase(map_key);
+        customHandler->wx_bindings_made[map_key] = false;
+
+        if (IsVetableEventType(wx_event_type)) {
+            if (wx_event_type == wxEVT_CLOSE_WINDOW) {
+                wx_handler->Disconnect(wx_event_type,
+                                       wxCloseEventHandler(WxdEventHandler::DispatchCloseEvent),
+                                       nullptr,
+                                       customHandler);
+            } else {
+                wx_handler->Disconnect(wx_event_type,
+                                       wxEventHandler(WxdEventHandler::DispatchEvent),
+                                       nullptr,
+                                       customHandler);
+            }
+        } else {
+            // For Bind-based, we must provide id range
+            if (actual_id_for_map_key == wxID_ANY) {
+                wx_handler->Unbind(wx_event_type, &WxdEventHandler::DispatchEvent, customHandler, wxID_ANY, wxID_ANY);
+            } else {
+                wx_handler->Unbind(wx_event_type, &WxdEventHandler::DispatchEvent, customHandler, actual_id_for_map_key, actual_id_for_map_key);
+            }
+        }
+    }
+}
+
 // --- Event Accessors (Unchanged) ---
 
 // Implementation for wxd_Event_GetId
@@ -1492,4 +1569,12 @@ WXD_EXPORTED wxd_Point wxd_ContextMenuEvent_GetPosition(wxd_Event_t* event) {
     }
 
     return result;
+}
+
+// Gets the existing custom event handler associated with the wxEvtHandler, or nullptr if none exists.
+static WxdEventHandler* GetExistingEventHandler(wxEvtHandler* handler) {
+    if (!handler) return nullptr;
+    WxdHandlerClientData* clientData = static_cast<WxdHandlerClientData*>(handler->GetClientData());
+    if (!clientData) return nullptr;
+    return clientData->handler;
 }
