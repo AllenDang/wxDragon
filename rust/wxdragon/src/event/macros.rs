@@ -8,7 +8,7 @@ macro_rules! implement_window_event_handlers {
         impl $widget {
             // Internal binding method
             #[doc(hidden)]
-            pub(crate) fn bind_window_event<F>(&self, event_type: $crate::event::WindowEvent, mut callback: F)
+            pub(crate) fn bind_window_event<F>(&self, event_type: $crate::event::WindowEvent, mut callback: F) -> $crate::event::EventToken
             where
                 F: FnMut($crate::event::WindowEventData) + 'static
             {
@@ -28,15 +28,16 @@ macro_rules! implement_window_event_handlers {
                     callback(typed_event);
                 };
 
-                // Use internal bind method
-                $crate::event::WxEvtHandler::bind_internal(self, event_type_ffi, wrapper);
+                // Use internal bind method and return token
+                $crate::event::WxEvtHandler::bind_internal(self, event_type_ffi, wrapper)
             }
 
             // Generate public on_* methods
             $(
                 paste::paste! {
-                    /// Binds a handler to a window event
-                    pub fn [<on_ $method_name>]<F>(&self, mut callback: F)
+                    /// Binds a handler to a window event.
+                    /// Returns an EventToken that can be used to unbind the handler later.
+                    pub fn [<on_ $method_name>]<F>(&self, mut callback: F) -> $crate::event::EventToken
                     where
                         F: FnMut($crate::event::[<$event_data Event>]) + 'static
                     {
@@ -44,7 +45,7 @@ macro_rules! implement_window_event_handlers {
                             if let $crate::event::WindowEventData::$event_data(typed_event) = event {
                                 callback(typed_event);
                             }
-                        });
+                        })
                     }
                 }
             )*
@@ -61,7 +62,7 @@ macro_rules! implement_category_event_handlers {
         pub trait $trait_name: $crate::event::WxEvtHandler {
             // Internal binding method
             #[doc(hidden)]
-            fn bind_category_event<F>(&self, event: $crate::event::$event_enum, mut callback: F)
+            fn bind_category_event<F>(&self, event: $crate::event::$event_enum, mut callback: F) -> $crate::event::EventToken
             where
                 F: FnMut($crate::event::$event_data) + 'static
             {
@@ -76,15 +77,16 @@ macro_rules! implement_category_event_handlers {
                     callback(typed_event);
                 };
 
-                // Use internal bind method
-                $crate::event::WxEvtHandler::bind_internal(self, event_type, wrapper);
+                // Use internal bind method and return token
+                $crate::event::WxEvtHandler::bind_internal(self, event_type, wrapper)
             }
 
             // Public helper methods
             $(
                 paste::paste! {
-                    /// Binds a handler to a category-specific event
-                    fn [<on_ $method_name>]<F>(&self, callback: F)
+                    /// Binds a handler to a category-specific event.
+                    /// Returns an EventToken that can be used to unbind the handler later.
+                    fn [<on_ $method_name>]<F>(&self, callback: F) -> $crate::event::EventToken
                     where
                         F: FnMut($crate::event::$event_data) + 'static
                     {
@@ -104,7 +106,7 @@ macro_rules! implement_widget_local_event_handlers {
         impl $widget {
             // Internal binding method
             #[doc(hidden)]
-            pub(crate) fn bind_widget_event<F>(&self, event: $event_enum, mut callback: F)
+            pub(crate) fn bind_widget_event<F>(&self, event: $event_enum, mut callback: F) -> $crate::event::EventToken
             where
                 F: FnMut($event_data) + 'static
             {
@@ -119,15 +121,16 @@ macro_rules! implement_widget_local_event_handlers {
                     callback(typed_event);
                 };
 
-                // Use internal bind method
-                $crate::event::WxEvtHandler::bind_internal(self, event_type, wrapper);
+                // Use internal bind method and return token
+                $crate::event::WxEvtHandler::bind_internal(self, event_type, wrapper)
             }
 
             // Public helper methods
             $(
                 paste::paste! {
-                    /// Binds a handler to a widget-specific event
-                    pub fn [<on_ $method_name>]<F>(&self, callback: F)
+                    /// Binds a handler to a widget-specific event.
+                    /// Returns an EventToken that can be used to unbind the handler later.
+                    pub fn [<on_ $method_name>]<F>(&self, callback: F) -> $crate::event::EventToken
                     where
                         F: FnMut($event_data) + 'static
                     {

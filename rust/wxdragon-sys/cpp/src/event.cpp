@@ -67,9 +67,8 @@ struct PairHash {
 // Structure to hold the Rust closure information
 struct RustClosureInfo {
     void* closure_ptr = nullptr;
-    // We might need the trampoline pointer here too if it varies,
-    // but for now, assume a single global trampoline `rust_event_handler_trampoline`.
     wxd_ClosureCallback rust_trampoline = nullptr; // Store the trampoline func ptr
+    uint64_t token = 0; // NEW: Unique identifier for unbinding
 };
 
 // Forward declarations
@@ -167,7 +166,12 @@ public:
 class WxdEventHandler : public wxEvtHandler {
 public:
     // Map (eventType, widgetId) pair to a vector of Rust closure info
-    std::unordered_map<std::pair<wxEventType, wxd_Id>, std::vector<RustClosureInfo>, PairHash> closureMap; 
+    std::unordered_map<std::pair<wxEventType, wxd_Id>, std::vector<RustClosureInfo>, PairHash> closureMap;
+
+    // NEW: Fast lookup - token -> location of closure
+    // Location = (eventType, widgetId, index in vector)
+    std::unordered_map<uint64_t, std::tuple<wxEventType, wxd_Id, size_t>> tokenMap;
+
     // Track whether we've already bound DispatchEvent to wxWidgets for each event key
     std::unordered_map<std::pair<wxEventType, wxd_Id>, bool, PairHash> wx_bindings_made;
     wxd_EvtHandler_t* c_handle = nullptr; // Changed type to wxd_EvtHandler_t*
@@ -460,6 +464,93 @@ extern "C" void wxd_EvtHandler_Bind(
     customHandler->closureMap[map_key].push_back(new_rust_info);
 }
 
+// NEW: Token-based event binding implementation
+extern "C" void wxd_EvtHandler_BindWithToken(
+    wxd_EvtHandler_t* handler,
+    WXDEventTypeCEnum eventTypeC,
+    void* rust_trampoline_fn,
+    void* rust_closure_ptr,
+    uint64_t token
+) {
+    wxEvtHandler* wx_handler = reinterpret_cast<wxEvtHandler*>(handler);
+    if (!wx_handler) {
+        WXD_LOG_WARN("wxd_EvtHandler_BindWithToken: null handler");
+        if (rust_closure_ptr) { drop_rust_closure_box(rust_closure_ptr); }
+        return;
+    }
+
+    if (!rust_trampoline_fn || !rust_closure_ptr) {
+        WXD_LOG_WARNF("wxd_EvtHandler_BindWithToken: null trampoline (%p) or closure (%p)",
+                      rust_trampoline_fn, rust_closure_ptr);
+        if (rust_closure_ptr) { drop_rust_closure_box(rust_closure_ptr); }
+        return;
+    }
+
+    // Get or create the custom event handler
+    WxdEventHandler* customHandler = GetOrCreateEventHandler(wx_handler, handler);
+    if (!customHandler) {
+        WXD_LOG_WARN("wxd_EvtHandler_BindWithToken: Failed to create custom handler");
+        if (rust_closure_ptr) { drop_rust_closure_box(rust_closure_ptr); }
+        return;
+    }
+
+    // Convert C enum to wxEventType
+    wxEventType wx_event_type = get_wx_event_type_for_c_enum(eventTypeC);
+    if (wx_event_type == wxEVT_NULL) {
+        WXD_LOG_WARNF("wxd_EvtHandler_BindWithToken: unsupported event type %d", (int)eventTypeC);
+        if (rust_closure_ptr) { drop_rust_closure_box(rust_closure_ptr); }
+        return;
+    }
+
+    // Map key for non-ID-specific binding
+    wxd_Id actual_id = wxID_ANY;
+    std::pair<wxEventType, wxd_Id> map_key = {wx_event_type, actual_id};
+
+    // Create closure info with token
+    RustClosureInfo new_info = {
+        rust_closure_ptr,
+        reinterpret_cast<wxd_ClosureCallback>(rust_trampoline_fn),
+        token
+    };
+
+    // First binding for this event? Connect to wxWidgets
+    if (!customHandler->wx_bindings_made[map_key]) {
+        if (IsVetableEventType(wx_event_type)) {
+            if (wx_event_type == wxEVT_CLOSE_WINDOW) {
+                wx_handler->Connect(
+                    wx_event_type,
+                    wxCloseEventHandler(WxdEventHandler::DispatchCloseEvent),
+                    nullptr,
+                    customHandler
+                );
+            } else {
+                wx_handler->Connect(
+                    wx_event_type,
+                    wxEventHandler(WxdEventHandler::DispatchEvent),
+                    nullptr,
+                    customHandler
+                );
+            }
+        } else {
+            wx_handler->Bind(
+                wx_event_type,
+                &WxdEventHandler::DispatchEvent,
+                customHandler,
+                wxID_ANY,
+                wxID_ANY
+            );
+        }
+        customHandler->wx_bindings_made[map_key] = true;
+    }
+
+    // Add closure to vector
+    size_t index = customHandler->closureMap[map_key].size();
+    customHandler->closureMap[map_key].push_back(new_info);
+
+    // Store token mapping for fast lookup
+    customHandler->tokenMap[token] = std::make_tuple(wx_event_type, actual_id, index);
+}
+
 // ID-specific event binding implementation
 extern "C" void wxd_EvtHandler_BindWithId(
     wxd_EvtHandler_t* handler,
@@ -532,6 +623,95 @@ extern "C" void wxd_EvtHandler_BindWithId(
     
     // Add the closure to the vector (do this after binding to ensure cleanup on failure)
     customHandler->closureMap[map_key].push_back(new_rust_info);
+}
+
+// NEW: ID-specific event binding with token
+extern "C" void wxd_EvtHandler_BindWithIdAndToken(
+    wxd_EvtHandler_t* handler,
+    WXDEventTypeCEnum eventTypeC,
+    int id,
+    void* rust_trampoline_fn,
+    void* rust_closure_ptr,
+    uint64_t token
+) {
+    wxEvtHandler* wx_handler = reinterpret_cast<wxEvtHandler*>(handler);
+    if (!wx_handler) {
+        WXD_LOG_WARN("wxd_EvtHandler_BindWithIdAndToken: null handler");
+        if (rust_closure_ptr) { drop_rust_closure_box(rust_closure_ptr); }
+        return;
+    }
+
+    if (!rust_trampoline_fn || !rust_closure_ptr) {
+        WXD_LOG_WARNF("wxd_EvtHandler_BindWithIdAndToken: null trampoline (%p) or closure (%p)",
+                      rust_trampoline_fn, rust_closure_ptr);
+        if (rust_closure_ptr) { drop_rust_closure_box(rust_closure_ptr); }
+        return;
+    }
+
+    // Get or create the custom event handler
+    WxdEventHandler* customHandler = GetOrCreateEventHandler(wx_handler, handler);
+    if (!customHandler) {
+        WXD_LOG_WARN("wxd_EvtHandler_BindWithIdAndToken: Failed to create custom handler");
+        if (rust_closure_ptr) { drop_rust_closure_box(rust_closure_ptr); }
+        return;
+    }
+
+    // Convert C enum to wxEventType
+    wxEventType wx_event_type = get_wx_event_type_for_c_enum(eventTypeC);
+    if (wx_event_type == wxEVT_NULL) {
+        WXD_LOG_WARNF("wxd_EvtHandler_BindWithIdAndToken: unsupported event type %d", (int)eventTypeC);
+        if (rust_closure_ptr) { drop_rust_closure_box(rust_closure_ptr); }
+        return;
+    }
+
+    // Use the specific ID for ID-specific binding
+    wxd_Id actual_id = id;
+    std::pair<wxEventType, wxd_Id> map_key = {wx_event_type, actual_id};
+
+    // Create closure info with token
+    RustClosureInfo new_info = {
+        rust_closure_ptr,
+        reinterpret_cast<wxd_ClosureCallback>(rust_trampoline_fn),
+        token
+    };
+
+    // First binding for this event? Connect to wxWidgets
+    if (!customHandler->wx_bindings_made[map_key]) {
+        if (IsVetableEventType(wx_event_type)) {
+            if (wx_event_type == wxEVT_CLOSE_WINDOW) {
+                wx_handler->Connect(
+                    wx_event_type,
+                    wxCloseEventHandler(WxdEventHandler::DispatchCloseEvent),
+                    nullptr,
+                    customHandler
+                );
+            } else {
+                wx_handler->Connect(
+                    wx_event_type,
+                    wxEventHandler(WxdEventHandler::DispatchEvent),
+                    nullptr,
+                    customHandler
+                );
+            }
+        } else {
+            // Non-vetable events: use Bind with specific ID
+            wx_handler->Bind(
+                wx_event_type,
+                &WxdEventHandler::DispatchEvent,
+                customHandler,
+                id,
+                id
+            );
+        }
+        customHandler->wx_bindings_made[map_key] = true;
+    }
+
+    // Add closure to vector
+    size_t index = customHandler->closureMap[map_key].size();
+    customHandler->closureMap[map_key].push_back(new_info);
+
+    // Store token mapping for fast lookup
+    customHandler->tokenMap[token] = std::make_tuple(wx_event_type, actual_id, index);
 }
 
 // Unbind a specific closure for an event type and optional id
@@ -609,6 +789,115 @@ extern "C" void wxd_EvtHandler_Unbind(
             }
         }
     }
+}
+
+// NEW: Unbind event handler by token
+extern "C" bool wxd_EvtHandler_UnbindByToken(
+    wxd_EvtHandler_t* handler,
+    uint64_t token
+) {
+    wxEvtHandler* wx_handler = reinterpret_cast<wxEvtHandler*>(handler);
+    if (!wx_handler) {
+        return false;
+    }
+
+    // Get existing handler (don't create new one)
+    WxdHandlerClientData* clientData =
+        static_cast<WxdHandlerClientData*>(wx_handler->GetClientData());
+    if (!clientData || !clientData->handler) {
+        return false; // No handlers bound yet
+    }
+
+    WxdEventHandler* customHandler = clientData->handler;
+
+    // Look up token in map
+    auto token_it = customHandler->tokenMap.find(token);
+    if (token_it == customHandler->tokenMap.end()) {
+        return false; // Token doesn't exist or already unbound
+    }
+
+    // Extract location info
+    auto [event_type, widget_id, stored_index] = token_it->second;
+    std::pair<wxEventType, wxd_Id> map_key = {event_type, widget_id};
+
+    // Find the closure vector
+    auto closure_it = customHandler->closureMap.find(map_key);
+    if (closure_it == customHandler->closureMap.end()) {
+        customHandler->tokenMap.erase(token_it); // Clean up orphaned token
+        return false;
+    }
+
+    auto& closure_vec = closure_it->second;
+
+    // IMPORTANT: Don't trust stored_index! It may be stale after earlier removals.
+    // Search for the closure with this token instead.
+    bool found = false;
+    for (auto vec_it = closure_vec.begin(); vec_it != closure_vec.end(); ++vec_it) {
+        if (vec_it->token == token) {
+            // Found it! Drop the Rust closure
+            if (vec_it->closure_ptr) {
+                drop_rust_closure_box(vec_it->closure_ptr);
+            }
+
+            // Remove from vector
+            closure_vec.erase(vec_it);
+            found = true;
+            break;
+        }
+    }
+
+    // Remove token from map
+    customHandler->tokenMap.erase(token_it);
+
+    if (!found) {
+        return false;
+    }
+
+    // If no more closures for this event, unbind from wxWidgets
+    if (closure_vec.empty()) {
+        customHandler->closureMap.erase(closure_it);
+        customHandler->wx_bindings_made.erase(map_key);
+
+        // Disconnect from wxWidgets event system
+        if (IsVetableEventType(event_type)) {
+            if (event_type == wxEVT_CLOSE_WINDOW) {
+                wx_handler->Disconnect(
+                    event_type,
+                    wxCloseEventHandler(WxdEventHandler::DispatchCloseEvent),
+                    nullptr,
+                    customHandler
+                );
+            } else {
+                wx_handler->Disconnect(
+                    event_type,
+                    wxEventHandler(WxdEventHandler::DispatchEvent),
+                    nullptr,
+                    customHandler
+                );
+            }
+        } else {
+            // For Bind-based events, provide ID range for Unbind
+            if (widget_id == wxID_ANY) {
+                wx_handler->Unbind(
+                    event_type,
+                    &WxdEventHandler::DispatchEvent,
+                    customHandler,
+                    wxID_ANY,
+                    wxID_ANY
+                );
+            } else {
+                wx_handler->Unbind(
+                    event_type,
+                    &WxdEventHandler::DispatchEvent,
+                    customHandler,
+                    widget_id,
+                    widget_id
+                );
+            }
+        }
+    }
+
+    return true;
 }
 
 // --- Event Accessors (Unchanged) ---
