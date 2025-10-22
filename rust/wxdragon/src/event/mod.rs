@@ -73,8 +73,8 @@ static NEXT_TOKEN: AtomicU64 = AtomicU64::new(1);
 impl EventToken {
     /// Create a new unique token (private - only library can create tokens)
     fn new() -> Self {
-        // fetch_add is atomic: guarantees uniqueness even with multiple threads
-        // Ordering::Relaxed is sufficient since we only care about uniqueness, not ordering
+        // fetch_add is atomic: it guarantees each thread gets a distinct value, regardless of interleaving.
+        // Ordering::Relaxed is correct here because atomicity ensures uniqueness; ordering is not required for correctness.
         EventToken(NEXT_TOKEN.fetch_add(1, Ordering::Relaxed))
     }
 
