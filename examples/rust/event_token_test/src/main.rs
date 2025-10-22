@@ -3,6 +3,8 @@ use std::rc::Rc;
 use wxdragon::prelude::*;
 
 fn main() {
+    SystemOptions::set_option_by_int("msw.no-manifest-check", 1);
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("trace")).init();
     let _ = wxdragon::main(|_| {
         let frame = Frame::builder()
             .with_title("Event Token Unbind Demo")

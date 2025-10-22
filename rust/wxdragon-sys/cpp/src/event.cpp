@@ -158,7 +158,9 @@ class WxdHandlerClientData : public wxClientData {
 public:
     WxdEventHandler* handler; // Pointer to the handler associated with the window
 
-    WxdHandlerClientData(WxdEventHandler* h) : handler(h) {}
+    WxdHandlerClientData(WxdEventHandler* h) : handler(h) {
+        WXD_LOG_TRACEF("WxdHandlerClientData created for handler %p", handler);
+    }
     virtual ~WxdHandlerClientData(); // Defined after WxdEventHandler
 };
 
@@ -192,6 +194,7 @@ public:
 
 // Define WxdHandlerClientData destructor (no change needed here, it still just deletes the handler)
 WxdHandlerClientData::~WxdHandlerClientData() {
+    WXD_LOG_TRACEF("WxdHandlerClientData destroying for handler %p", handler);
     delete handler;
 }
 
