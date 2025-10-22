@@ -685,7 +685,17 @@ extern "C" void wxd_EvtHandler_BindWithIdAndToken(
                                rust_trampoline_fn, rust_closure_ptr, token);
 }
 
-// NEW: Unbind event handler by token
+/**
+ * Unbinds (removes) an event handler associated with the given token from the specified wxEvtHandler.
+ *
+ * Cleanup behavior:
+ * - If a handler matching the token is found, the associated Rust closure is dropped (freed).
+ * - If this was the last handler for a given event type and ID, the corresponding wxWidgets event connection is disconnected.
+ *
+ * Return value:
+ * - Returns true if a handler was found and removed (and cleanup performed).
+ * - Returns false if no handler was found for the given token (no cleanup performed).
+ */
 extern "C" bool wxd_EvtHandler_UnbindByToken(
     wxd_EvtHandler_t* handler,
     uint64_t token
