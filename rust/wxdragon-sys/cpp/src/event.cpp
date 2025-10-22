@@ -729,7 +729,7 @@ extern "C" bool wxd_EvtHandler_UnbindByToken(
     // Find the closure vector
     auto closure_it = customHandler->closureMap.find(map_key);
     if (closure_it == customHandler->closureMap.end()) {
-        customHandler->tokenMap.erase(token_it); // Clean up orphaned token
+        customHandler->tokenMap.erase(token_it); // Remove stale token mapping (closure vector not found)
         return false;
     }
 
