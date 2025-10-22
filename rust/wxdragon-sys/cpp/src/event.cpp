@@ -301,7 +301,8 @@ void WxdEventHandler::DispatchCloseEvent(wxCloseEvent& event) {
 WxdEventHandler* GetOrCreateEventHandler(wxEvtHandler* handler, wxd_EvtHandler_t* c_handle) {
     if (!handler) return nullptr;
 
-    WxdHandlerClientData* clientData = static_cast<WxdHandlerClientData*>(handler->GetClientData());
+    // Use ClientObject so wxWidgets owns the lifetime and will delete it
+    WxdHandlerClientData* clientData = static_cast<WxdHandlerClientData*>(handler->GetClientObject());
     WxdEventHandler* customHandler = nullptr;
 
     if (!clientData) {
@@ -309,8 +310,8 @@ WxdEventHandler* GetOrCreateEventHandler(wxEvtHandler* handler, wxd_EvtHandler_t
         customHandler = new WxdEventHandler(c_handle, handler);
         // Create the client data wrapper to manage the handler's lifetime
         clientData = new WxdHandlerClientData(customHandler);
-        // Associate client data with the wxEvtHandler
-        handler->SetClientData(clientData);
+        // Associate client object with the wxEvtHandler (ownership transferred to wxWidgets)
+        handler->SetClientObject(clientData);
         // WXD_LOG_TRACEF("Created WxdEventHandler %p and WxdHandlerClientData %p for wxEvtHandler %p (c_handle %p)", customHandler, clientData, handler, c_handle);
     } else {
         customHandler = clientData->handler;
@@ -711,8 +712,9 @@ extern "C" bool wxd_EvtHandler_UnbindByToken(
     }
 
     // Get existing handler (don't create new one)
+    // Retrieve our client object (owned by wxWidgets)
     WxdHandlerClientData* clientData =
-        static_cast<WxdHandlerClientData*>(wx_handler->GetClientData());
+        static_cast<WxdHandlerClientData*>(wx_handler->GetClientObject());
     if (!clientData || !clientData->handler) {
         return false; // No handlers bound yet
     }
