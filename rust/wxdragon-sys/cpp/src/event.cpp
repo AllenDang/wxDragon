@@ -68,7 +68,7 @@ struct PairHash {
 struct RustClosureInfo {
     void* closure_ptr = nullptr;
     wxd_ClosureCallback rust_trampoline = nullptr; // Store the trampoline func ptr
-    uint64_t token = 0; // NEW: Unique identifier for unbinding
+    size_t token = 0; // NEW: Unique identifier for unbinding
 };
 
 // Forward declarations
@@ -173,14 +173,16 @@ public:
     // NEW: Fast lookup - token -> location of closure
     // Location = (eventType, widgetId, closure_ptr)
     // Note: We store closure_ptr instead of index because indices become stale after removals
-    std::unordered_map<uint64_t, std::tuple<wxEventType, wxd_Id, void*>> tokenMap;
+    std::unordered_map<size_t, std::tuple<wxEventType, wxd_Id, void*>> tokenMap;
 
     // Track whether we've already bound DispatchEvent to wxWidgets for each event key
     std::unordered_map<std::pair<wxEventType, wxd_Id>, bool, PairHash> wx_bindings_made;
     wxd_EvtHandler_t* c_handle = nullptr; // Changed type to wxd_EvtHandler_t*
     wxEvtHandler* ownerHandler = nullptr; // Store the actual wxEvtHandler*
 
-    WxdEventHandler(wxd_EvtHandler_t* handle, wxEvtHandler* owner) : c_handle(handle), ownerHandler(owner) {}
+    WxdEventHandler(wxd_EvtHandler_t* handle, wxEvtHandler* owner) : c_handle(handle), ownerHandler(owner) {
+        WXD_LOG_TRACEF("WxdEventHandler created for wxEvtHandler %p (c_handle %p)", ownerHandler, c_handle);
+    }
 
     // Destructor - Now needs to notify Rust to drop closures via drop_rust_closure_box
     ~WxdEventHandler(); // Declaration moved, definition below
@@ -200,7 +202,7 @@ WxdHandlerClientData::~WxdHandlerClientData() {
 
 // WxdEventHandler Destructor Implementation
 WxdEventHandler::~WxdEventHandler() {
-    // WXD_LOG_TRACEF("WxdEventHandler destroying for handler %p. Notifying Rust to drop closures.", ownerHandler);
+    WXD_LOG_TRACEF("WxdEventHandler destroying for handler %p. Notifying Rust to drop closures.", ownerHandler);
     for (auto const& [key, closure_vector] : closureMap) {
         for (auto const& info : closure_vector) {
             if (info.closure_ptr) {
@@ -476,7 +478,7 @@ static void BindEventWithTokenInternal(
     wxd_Id actual_id,
     void* rust_trampoline_fn,
     void* rust_closure_ptr,
-    uint64_t token
+    size_t token
 ) {
     // Convert C enum to wxEventType
     wxEventType wx_event_type = get_wx_event_type_for_c_enum(eventTypeC);
@@ -549,7 +551,7 @@ extern "C" void wxd_EvtHandler_BindWithToken(
     WXDEventTypeCEnum eventTypeC,
     void* rust_trampoline_fn,
     void* rust_closure_ptr,
-    uint64_t token
+    size_t token
 ) {
     wxEvtHandler* wx_handler = reinterpret_cast<wxEvtHandler*>(handler);
     if (!wx_handler) {
@@ -659,7 +661,7 @@ extern "C" void wxd_EvtHandler_BindWithIdAndToken(
     int id,
     void* rust_trampoline_fn,
     void* rust_closure_ptr,
-    uint64_t token
+    size_t token
 ) {
     wxEvtHandler* wx_handler = reinterpret_cast<wxEvtHandler*>(handler);
     if (!wx_handler) {
@@ -701,7 +703,7 @@ extern "C" void wxd_EvtHandler_BindWithIdAndToken(
  */
 extern "C" bool wxd_EvtHandler_UnbindByToken(
     wxd_EvtHandler_t* handler,
-    uint64_t token
+    size_t token
 ) {
     wxEvtHandler* wx_handler = reinterpret_cast<wxEvtHandler*>(handler);
     if (!wx_handler) {

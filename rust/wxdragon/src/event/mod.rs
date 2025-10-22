@@ -6,7 +6,6 @@ use std::boxed::Box;
 use std::ffi::c_void;
 use std::ffi::CStr;
 use std::os::raw::c_char;
-use std::sync::atomic::{AtomicU64, Ordering};
 use wxdragon_sys as ffi;
 pub mod app_events;
 pub mod button_events;
@@ -65,38 +64,29 @@ pub use ffi::WXDEventTypeCEnum;
 /// button.unbind(token);  // Unbind this specific handler
 /// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct EventToken(u64);
+pub struct EventToken(usize);
 
-// Global counter for generating unique tokens (thread-safe)
-static NEXT_TOKEN: AtomicU64 = AtomicU64::new(1);
-
-impl EventToken {
-    /// Create a new unique token (private - only library can create tokens)
-    fn new() -> Self {
-        // fetch_add is atomic: it guarantees each thread gets a distinct value, regardless of interleaving.
-        // Ordering::Relaxed is correct here because atomicity ensures uniqueness; ordering is not required for correctness.
-        EventToken(NEXT_TOKEN.fetch_add(1, Ordering::Relaxed))
-    }
-
-    /// Check if this token is valid (non-zero)
-    pub fn is_valid(&self) -> bool {
-        self.0 != 0
-    }
-
-    /// Get the raw u64 value (for FFI)
-    pub(crate) fn raw(self) -> u64 {
-        self.0
-    }
-
-    /// Create a token from a raw u64 (for FFI)
-    #[allow(dead_code)]
-    pub(crate) fn from_raw(raw: u64) -> Self {
-        EventToken(raw)
+impl From<usize> for EventToken {
+    fn from(value: usize) -> Self {
+        EventToken(value)
     }
 }
 
-/// Constant representing an invalid/null token
-pub const INVALID_TOKEN: EventToken = EventToken(0);
+impl From<EventToken> for usize {
+    fn from(token: EventToken) -> Self {
+        token.0
+    }
+}
+
+impl EventToken {
+    /// Check if this token is valid (non-zero)
+    pub fn is_valid(&self) -> bool {
+        *self != Self::INVALID_TOKEN
+    }
+
+    /// Constant representing an invalid/null token
+    pub const INVALID_TOKEN: EventToken = EventToken(0);
+}
 
 // --- EventType Enum ---
 
@@ -801,11 +791,8 @@ pub trait WxEvtHandler {
         let handler_ptr = unsafe { self.get_event_handler_ptr() };
         if handler_ptr.is_null() {
             /* ... error handling ... */
-            return INVALID_TOKEN;
+            return EventToken::INVALID_TOKEN;
         }
-
-        // Generate token before boxing
-        let token = EventToken::new();
 
         // Double-box the callback to match trampoline expectations
         let boxed_callback: Box<dyn FnMut(Event) + 'static> = Box::new(callback);
@@ -816,6 +803,9 @@ pub trait WxEvtHandler {
         let trampoline_ptr: TrampolineFn = rust_event_handler_trampoline;
         let trampoline_c_void = trampoline_ptr as *mut c_void;
 
+        // use the callback closure pointer as the token identifier
+        let token = EventToken::from(user_data as usize);
+
         let et = event_type.bits();
         unsafe {
             ffi::wxd_EvtHandler_BindWithToken(
@@ -823,7 +813,7 @@ pub trait WxEvtHandler {
                 et,
                 trampoline_c_void,
                 user_data,
-                token.raw(),
+                token.into(),
             )
         };
 
@@ -847,7 +837,7 @@ pub trait WxEvtHandler {
             return false;
         }
 
-        unsafe { ffi::wxd_EvtHandler_UnbindByToken(handler_ptr, token.raw()) }
+        unsafe { ffi::wxd_EvtHandler_UnbindByToken(handler_ptr, token.into()) }
     }
 
     // Internal implementation with ID support for tools and menu items
@@ -859,11 +849,8 @@ pub trait WxEvtHandler {
         let handler_ptr = unsafe { self.get_event_handler_ptr() };
         if handler_ptr.is_null() {
             /* ... error handling ... */
-            return INVALID_TOKEN;
+            return EventToken::INVALID_TOKEN;
         }
-
-        // Generate token before boxing
-        let token = EventToken::new();
 
         // Double-box the callback to match trampoline expectations
         let boxed_callback: Box<dyn FnMut(Event) + 'static> = Box::new(callback);
@@ -874,6 +861,9 @@ pub trait WxEvtHandler {
         let trampoline_ptr: TrampolineFn = rust_event_handler_trampoline;
         let trampo_c_void = trampoline_ptr as *mut c_void;
 
+        // use the callback closure pointer as the token identifier
+        let token = EventToken::from(user_data as usize);
+
         let et = event_type.bits();
         unsafe {
             ffi::wxd_EvtHandler_BindWithIdAndToken(
@@ -882,7 +872,7 @@ pub trait WxEvtHandler {
                 id,
                 trampo_c_void,
                 user_data,
-                token.raw(),
+                token.into(),
             )
         };
 

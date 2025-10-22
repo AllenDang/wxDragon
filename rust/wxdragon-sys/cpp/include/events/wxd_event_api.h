@@ -26,7 +26,7 @@ WXD_EXPORTED void wxd_EvtHandler_BindWithToken(
     WXDEventTypeCEnum event_type,
     void* rust_trampoline_fn,
     void* rust_closure_ptr,
-    uint64_t token
+    size_t token
 );
 
 // Bind event handler with ID and token
@@ -36,14 +36,14 @@ WXD_EXPORTED void wxd_EvtHandler_BindWithIdAndToken(
     int id,
     void* rust_trampoline_fn,
     void* rust_closure_ptr,
-    uint64_t token
+    size_t token
 );
 
 // Unbind event handler by token
 // Returns true if handler was found and removed, false otherwise
 WXD_EXPORTED bool wxd_EvtHandler_UnbindByToken(
     wxd_EvtHandler_t* handler,
-    uint64_t token
+    size_t token
 );
 
 WXD_EXPORTED int wxd_Event_GetId(wxd_Event_t* event);
