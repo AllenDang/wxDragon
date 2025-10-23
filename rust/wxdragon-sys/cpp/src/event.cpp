@@ -162,6 +162,8 @@ public:
         WXD_LOG_TRACEF("WxdHandlerClientData created for handler %p", handler);
     }
     virtual ~WxdHandlerClientData(); // Defined after WxdEventHandler
+
+    bool UnbindClosure(size_t token);
 };
 
 // Custom Event Handler class to connect wx events to Rust closures
@@ -187,6 +189,8 @@ public:
     // Destructor - Now needs to notify Rust to drop closures via drop_rust_closure_box
     ~WxdEventHandler(); // Declaration moved, definition below
 
+    bool UnbindClosure(size_t token);
+
     // The new dispatch method that handles multiple closures per event
     void DispatchEvent(wxEvent& event);
     
@@ -198,6 +202,13 @@ public:
 WxdHandlerClientData::~WxdHandlerClientData() {
     WXD_LOG_TRACEF("WxdHandlerClientData destroying for handler %p", handler);
     delete handler;
+}
+
+bool WxdHandlerClientData::UnbindClosure(size_t token) {
+    if (handler) {
+        return handler->UnbindClosure(token);
+    }
+    return false;
 }
 
 // WxdEventHandler Destructor Implementation
@@ -214,6 +225,73 @@ WxdEventHandler::~WxdEventHandler() {
     // Clear the maps (optional, as the handler is being destroyed)
     closureMap.clear();
     wx_bindings_made.clear();
+}
+
+bool WxdEventHandler::UnbindClosure(size_t token) {
+    // Look up token in map
+    auto token_it = this->tokenMap.find(token);
+    if (token_it == this->tokenMap.end()) {
+        return false; // Token doesn't exist or already unbound
+    }
+
+    // Extract location info (C++11 compatible)
+    wxEventType event_type = std::get<0>(token_it->second);
+    wxd_Id widget_id = std::get<1>(token_it->second);
+    void* closure_ptr = std::get<2>(token_it->second);
+    std::pair<wxEventType, wxd_Id> map_key = {event_type, widget_id};
+
+    // Find the closure vector
+    auto closure_it = this->closureMap.find(map_key);
+    if (closure_it == this->closureMap.end()) {
+        this->tokenMap.erase(token_it); // Remove stale token mapping (closure vector not found)
+        return false;
+    }
+
+    auto& closure_vec = closure_it->second;
+
+    // Search for the closure by token (tokens are unique)
+    bool found = false;
+    for (auto vec_it = closure_vec.begin(); vec_it != closure_vec.end(); ++vec_it) {
+        if (vec_it->token == token) {
+            // Found it! Drop the Rust closure
+            if (vec_it->closure_ptr) {
+                drop_rust_closure_box(vec_it->closure_ptr);
+            }
+
+            // Remove from vector
+            closure_vec.erase(vec_it);
+            found = true;
+            break;
+        }
+    }
+
+    // Remove token from map only if closure was found
+    if (!found) {
+        return false;
+    }
+    this->tokenMap.erase(token_it);
+
+    // If no more closures for this event, unbind from wxWidgets
+    if (closure_vec.empty()) {
+        this->closureMap.erase(closure_it);
+        this->wx_bindings_made.erase(map_key);
+
+        // Disconnect from wxWidgets event system
+        if (IsVetableEventType(event_type)) {
+            wxEventFunction event_func;
+            if (event_type == wxEVT_CLOSE_WINDOW) {
+                event_func = wxCloseEventHandler(WxdEventHandler::DispatchCloseEvent);
+            } else {
+                event_func = wxEventHandler(WxdEventHandler::DispatchEvent);
+            }
+            this->ownerHandler->Disconnect(event_type, event_func, nullptr, this);
+        } else {
+            // For Bind-based events, provide ID range for Unbind
+            this->ownerHandler->Unbind(event_type, &WxdEventHandler::DispatchEvent, this, widget_id, widget_id);
+        }
+    }
+
+    return true;
 }
 
 // New DispatchEvent method that handles multiple closures per event
@@ -719,96 +797,7 @@ extern "C" bool wxd_EvtHandler_UnbindByToken(
         return false; // No handlers bound yet
     }
 
-    WxdEventHandler* customHandler = clientData->handler;
-
-    // Look up token in map
-    auto token_it = customHandler->tokenMap.find(token);
-    if (token_it == customHandler->tokenMap.end()) {
-        return false; // Token doesn't exist or already unbound
-    }
-
-    // Extract location info (C++11 compatible)
-    wxEventType event_type = std::get<0>(token_it->second);
-    wxd_Id widget_id = std::get<1>(token_it->second);
-    void* closure_ptr = std::get<2>(token_it->second);
-    std::pair<wxEventType, wxd_Id> map_key = {event_type, widget_id};
-
-    // Find the closure vector
-    auto closure_it = customHandler->closureMap.find(map_key);
-    if (closure_it == customHandler->closureMap.end()) {
-        customHandler->tokenMap.erase(token_it); // Remove stale token mapping (closure vector not found)
-        return false;
-    }
-
-    auto& closure_vec = closure_it->second;
-
-    // Search for the closure by token (tokens are unique)
-    bool found = false;
-    for (auto vec_it = closure_vec.begin(); vec_it != closure_vec.end(); ++vec_it) {
-        if (vec_it->token == token) {
-            // Found it! Drop the Rust closure
-            if (vec_it->closure_ptr) {
-                drop_rust_closure_box(vec_it->closure_ptr);
-            }
-
-            // Remove from vector
-            closure_vec.erase(vec_it);
-            found = true;
-            break;
-        }
-    }
-
-    // Remove token from map only if closure was found
-    if (!found) {
-        return false;
-    }
-    customHandler->tokenMap.erase(token_it);
-
-    // If no more closures for this event, unbind from wxWidgets
-    if (closure_vec.empty()) {
-        customHandler->closureMap.erase(closure_it);
-        customHandler->wx_bindings_made.erase(map_key);
-
-        // Disconnect from wxWidgets event system
-        if (IsVetableEventType(event_type)) {
-            if (event_type == wxEVT_CLOSE_WINDOW) {
-                wx_handler->Disconnect(
-                    event_type,
-                    wxCloseEventHandler(WxdEventHandler::DispatchCloseEvent),
-                    nullptr,
-                    customHandler
-                );
-            } else {
-                wx_handler->Disconnect(
-                    event_type,
-                    wxEventHandler(WxdEventHandler::DispatchEvent),
-                    nullptr,
-                    customHandler
-                );
-            }
-        } else {
-            // For Bind-based events, provide ID range for Unbind
-            if (widget_id == wxID_ANY) {
-                wx_handler->Unbind(
-                    event_type,
-                    &WxdEventHandler::DispatchEvent,
-                    customHandler,
-                    wxID_ANY,
-                    wxID_ANY
-                );
-            } else {
-                wx_handler->Unbind(
-                    event_type,
-                    &WxdEventHandler::DispatchEvent,
-                    customHandler,
-                    widget_id,
-                    widget_id
-                );
-            }
-        }
-    }
-
-    return true;
+    return clientData->UnbindClosure(token);
 }
 
 // --- Event Accessors (Unchanged) ---
