@@ -17,6 +17,12 @@ pub struct Menu {
     ptr: *mut ffi::wxd_Menu_t,
 }
 
+impl Drop for Menu {
+    fn drop(&mut self) {
+        // unsafe { ffi::wxd_Menu_Destroy(self.ptr) };
+    }
+}
+
 impl Menu {
     /// Creates a new, empty menu using the builder pattern.
     pub fn builder() -> MenuBuilder {
@@ -29,7 +35,7 @@ impl Menu {
     /// Safety: Do NOT call this if the menu was appended to a MenuBar, as the menubar
     /// takes ownership and will delete it, leading to double free.
     pub fn destroy(self) {
-        // Move out the pointer and prevent Drop (there is no Drop impl currently).
+        // Move out the pointer and prevent Drop.
         let ptr = self.ptr;
         // Prevent use-after-move: forget self without dropping
         std::mem::forget(self);
