@@ -932,6 +932,7 @@ pub unsafe extern "C" fn rust_event_handler_trampoline(
 pub unsafe extern "C" fn drop_rust_event_closure_box(ptr: *mut c_void) {
     if !ptr.is_null() {
         // Drop the Box<dyn FnMut(Event)>
+        log::trace!("Dropping Rust event closure box at ptr: {ptr:?}");
         let _ = Box::from_raw(ptr as *mut Box<dyn FnMut(Event) + 'static>);
     }
 }

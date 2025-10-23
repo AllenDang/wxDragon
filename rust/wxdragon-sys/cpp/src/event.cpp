@@ -6,6 +6,7 @@
 #include <vector>  // For std::vector used in closureMap
 #include <memory> // For std::unique_ptr if we want safer memory management
 #include <tuple>  // For std::pair used in map key
+#include <inttypes.h> // for PRIxPTR to format pointers as 0x...
 #include <wx/event.h>
 #include <wx/app.h>
 #include <wx/window.h> // For wxCloseEvent
@@ -50,6 +51,15 @@
 #if wxdUSE_RICHTEXT
 #include <wx/richtext/richtextctrl.h> // ADDED: For richtext events
 #endif
+
+static inline std::string wx_cls(const wxEvtHandler* h) {
+    if (!h) return std::string("<null>");
+    const wxChar* w = h->GetClassInfo() ? h->GetClassInfo()->GetClassName() : wxS("<null>");
+    wxString ws(w);
+    wxCharBuffer buf = ws.ToUTF8();
+    if (!buf.data()) return std::string("<conv-failed>");
+    return std::string(buf.data());
+}
 
 // --- Internal C++ Structures/Classes (Not exposed in C API) ---
 
@@ -179,11 +189,10 @@ public:
 
     // Track whether we've already bound DispatchEvent to wxWidgets for each event key
     std::unordered_map<std::pair<wxEventType, wxd_Id>, bool, PairHash> wx_bindings_made;
-    wxd_EvtHandler_t* c_handle = nullptr; // Changed type to wxd_EvtHandler_t*
     wxEvtHandler* ownerHandler = nullptr; // Store the actual wxEvtHandler*
 
-    WxdEventHandler(wxd_EvtHandler_t* handle, wxEvtHandler* owner) : c_handle(handle), ownerHandler(owner) {
-        WXD_LOG_TRACEF("WxdEventHandler created for wxEvtHandler %p (c_handle %p)", ownerHandler, c_handle);
+    WxdEventHandler(wxEvtHandler* owner) : ownerHandler(owner) {
+        WXD_LOG_TRACEF("WxdEventHandler 0x%" PRIxPTR " created for wxEvtHandler 0x%p cls=%s", (uintptr_t)this, ownerHandler, wx_cls(ownerHandler).c_str());
     }
 
     // Destructor - Now needs to notify Rust to drop closures via drop_rust_event_closure_box
@@ -215,7 +224,7 @@ bool WxdHandlerClientData::UnbindClosure(size_t token) {
 
 // WxdEventHandler Destructor Implementation
 WxdEventHandler::~WxdEventHandler() {
-    WXD_LOG_TRACEF("WxdEventHandler destroying for handler %p. Notifying Rust to drop closures.", ownerHandler);
+    WXD_LOG_TRACEF("WxdEventHandler 0x%" PRIxPTR " destroying. cls=%s", (uintptr_t)this, wx_cls(ownerHandler).c_str());
     for (auto const& [key, closure_vector] : closureMap) {
         for (auto const& info : closure_vector) {
             if (info.closure_ptr) {
@@ -394,7 +403,7 @@ void WxdEventHandler::DispatchCloseEvent(wxCloseEvent& event) {
 
 // Gets the handler associated with the wxEvtHandler via client data,
 // creating it if it doesn't exist.
-WxdEventHandler* GetOrCreateEventHandler(wxEvtHandler* handler, wxd_EvtHandler_t* c_handle) {
+WxdEventHandler* GetOrCreateEventHandler(wxEvtHandler* handler) {
     if (!handler) return nullptr;
 
     // Use ClientObject so wxWidgets owns the lifetime and will delete it
@@ -403,19 +412,18 @@ WxdEventHandler* GetOrCreateEventHandler(wxEvtHandler* handler, wxd_EvtHandler_t
 
     if (!clientData) {
         // Create the handler
-        customHandler = new WxdEventHandler(c_handle, handler);
+        customHandler = new WxdEventHandler(handler);
         // Create the client data wrapper to manage the handler's lifetime
         clientData = new WxdHandlerClientData(customHandler);
         // Associate client object with the wxEvtHandler (ownership transferred to wxWidgets)
         handler->SetClientObject(clientData);
-        // WXD_LOG_TRACEF("Created WxdEventHandler %p and WxdHandlerClientData %p for wxEvtHandler %p (c_handle %p)", customHandler, clientData, handler, c_handle);
+        WXD_LOG_TRACEF("GetOrCreateEventHandler: created clientData %p with handler %p for wxEvtHandler %p", clientData, customHandler, handler);
     } else {
         customHandler = clientData->handler;
-        // Ensure c_handle is up-to-date (shouldn't change, but good practice)
         if (customHandler) {
-            customHandler->c_handle = c_handle; // Update C handle if needed
             customHandler->ownerHandler = handler; // Update owner pointer
         }
+        WXD_LOG_TRACEF("GetOrCreateEventHandler: reused existing clientData %p with handler %p for wxEvtHandler %p", clientData, customHandler, handler);
     }
 
     return customHandler;
@@ -553,7 +561,7 @@ extern "C" void wxd_EvtHandler_Bind(
     }
 
     // Get or create the custom event handler
-    WxdEventHandler* customHandler = GetOrCreateEventHandler(wx_handler, handler);
+    WxdEventHandler* customHandler = GetOrCreateEventHandler(wx_handler);
     if (!customHandler) {
         WXD_LOG_WARN("wxd_EvtHandler_Bind: Failed to create custom handler");
         if (rust_closure_ptr) { drop_rust_event_closure_box(rust_closure_ptr); }
@@ -594,7 +602,7 @@ extern "C" void wxd_EvtHandler_BindWithId(
     }
 
     // Get or create the custom event handler
-    WxdEventHandler* customHandler = GetOrCreateEventHandler(wx_handler, handler);
+    WxdEventHandler* customHandler = GetOrCreateEventHandler(wx_handler);
     if (!customHandler) {
         WXD_LOG_WARN("wxd_EvtHandler_BindWithId: Failed to create custom handler");
         if (rust_closure_ptr) { drop_rust_event_closure_box(rust_closure_ptr); }
