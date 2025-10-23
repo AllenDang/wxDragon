@@ -1,3 +1,5 @@
+use std::cell::RefCell;
+use std::rc::Rc;
 use wxdragon::prelude::*;
 use wxdragon::DataViewCtrl;
 use wxdragon::DataViewStyle;
@@ -28,8 +30,8 @@ fn main() {
     };
     data.filepath = Some(data_path.clone());
 
-    // Keep the model alive for the duration of the app
-    let model = mymodels::create_music_tree_model(data);
+    let data_rc: Rc<RefCell<music_tree::MusicTree>> = Rc::new(RefCell::new(data));
+    let model = mymodels::create_music_tree_model(data_rc);
     let _ = wxdragon::main(move |_| {
         let frame = Frame::builder()
             .with_title("wxDragon DataView Example")
@@ -132,6 +134,67 @@ fn main() {
         sizer.add(&dataview, 1, SizerFlag::Expand | SizerFlag::All, 8);
         panel.set_sizer(sizer, true);
 
+        // Right-click item context menu with an "Edit" entry
+        let dataview_for_menu = dataview.clone();
+        let frame_for_dialog = frame.clone();
+        let mtm_for_edit = model.clone();
+
+        dataview.on_item_context_menu(move |event| {
+            // Keep the model alive as long as frame/control lives by holding it in mtm_slot.
+            // Nothing to do here; mtm_slot captures the Rc. It will be cleared on frame destroy.
+            if let Some(item) = event.get_item() {
+                // Ensure the item is selected so we can retrieve it later from the menu handler
+                dataview_for_menu.select(&item);
+
+                // Build a simple context menu
+                let edit_id = ID_HIGHEST + 1;
+                let menu = Menu::builder()
+                    .append_item(edit_id, "Edit", "Edit this item")
+                    .build();
+
+                // Handle menu selection
+                let dataview_for_selected = dataview_for_menu.clone();
+                let frame_for_selected = frame_for_dialog.clone();
+                let mtm_for_selected = mtm_for_edit.clone();
+                menu.on_selected(move |ev| {
+                    match ev.get_id() {
+                        id if id == edit_id => {
+                            // Get the currently selected item
+                            if let Some(sel_item) = dataview_for_selected.get_selection() {
+                                if let Some(ptr) = sel_item.get_id::<music_tree::MusicNode>() {
+                                    // SAFETY: ptr is an opaque model ID set by us to a MusicNode address
+                                    let node: &music_tree::MusicNode = unsafe { &*ptr };
+                                    let current_title = node.title.clone();
+
+                                    // Show a simple text entry dialog to edit the title
+                                    let dlg = TextEntryDialog::builder(
+                                        &frame_for_selected,
+                                        "Edit title",
+                                        "Edit",
+                                    )
+                                    .with_default_value(&current_title)
+                                    .build();
+                                    let ret = dlg.show_modal();
+                                    if ret == ID_OK {
+                                        if let Some(new_val) = dlg.get_value() {
+                                            let val = Variant::String(new_val);
+                                            mtm_for_selected.set_value(ptr, 0, &val);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        _ => {}
+                    }
+                });
+
+                // Show popup menu at mouse position
+                dataview_for_menu.popup_menu(&menu, None);
+
+                // Explicitly destroy the standalone popup menu to release its wxEvtHandler and closures
+                menu.destroy();
+            }
+        });
         frame.show(true);
         frame.centre();
     });

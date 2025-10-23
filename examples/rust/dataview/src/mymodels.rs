@@ -2,12 +2,13 @@ use crate::music_tree::{MusicNode, MusicTree, NodeType};
 use std::{cell::RefCell, rc::Rc};
 use wxdragon::prelude::*;
 
-pub fn create_music_tree_model(data: MusicTree) -> CustomDataViewTreeModel {
+pub fn create_music_tree_model(data: Rc<RefCell<MusicTree>>) -> CustomDataViewTreeModel {
     CustomDataViewTreeModel::new(
         data,
-        move |data: &MusicTree, item: Option<&MusicNode>| match item {
+        move |data: &Rc<RefCell<MusicTree>>, item: Option<&MusicNode>| match item {
             None => None,
             Some(node) => data
+                .borrow()
                 .parent_of(node)
                 .map(|rc| &*rc.borrow() as *const MusicNode as *mut MusicNode),
         },
@@ -15,8 +16,8 @@ pub fn create_music_tree_model(data: MusicTree) -> CustomDataViewTreeModel {
             None => true,
             Some(node) => matches!(node.node_type, NodeType::Branch),
         },
-        move |data: &MusicTree, item: Option<&MusicNode>| match item {
-            None => vec![&*data.root.borrow() as *const MusicNode as *mut MusicNode],
+        move |data: &Rc<RefCell<MusicTree>>, item: Option<&MusicNode>| match item {
+            None => vec![&*data.borrow().root.borrow() as *const MusicNode as *mut MusicNode],
             Some(node) => node
                 .children
                 .as_ref()
@@ -25,9 +26,10 @@ pub fn create_music_tree_model(data: MusicTree) -> CustomDataViewTreeModel {
                 .map(|b| &*b.borrow() as *const MusicNode as *mut MusicNode)
                 .collect(),
         },
-        move |data: &MusicTree, item: Option<&MusicNode>, col| match item {
+        move |data: &Rc<RefCell<MusicTree>>, item: Option<&MusicNode>, col| match item {
             None => {
-                let r_b = data.root.borrow();
+                let tree = data.borrow();
+                let r_b = tree.root.borrow();
                 let r = &*r_b;
                 match col {
                     0 => Variant::String(r.title.clone()),
@@ -52,9 +54,12 @@ pub fn create_music_tree_model(data: MusicTree) -> CustomDataViewTreeModel {
             },
         },
         Some(
-            move |data: &MusicTree, item: Option<&MusicNode>, col: u32, var: &Variant| {
+            move |data: &Rc<RefCell<MusicTree>>,
+                  item: Option<&MusicNode>,
+                  col: u32,
+                  var: &Variant| {
                 let target_rc = match item {
-                    None => data.root.clone(),
+                    None => data.borrow().root.clone(),
                     Some(n) => {
                         let ptr: *const MusicNode = n as *const _;
                         match find_rc(data, ptr) {
@@ -105,9 +110,9 @@ pub fn create_music_tree_model(data: MusicTree) -> CustomDataViewTreeModel {
                 }
             },
         ),
-        Some(move |_: &MusicTree, _: Option<&MusicNode>, _: u32| true),
+        Some(move |_: &Rc<RefCell<MusicTree>>, _: Option<&MusicNode>, _: u32| true),
         Some(
-            move |_: &MusicTree, a: &MusicNode, b: &MusicNode, col: u32, asc: bool| {
+            move |_: &Rc<RefCell<MusicTree>>, a: &MusicNode, b: &MusicNode, col: u32, asc: bool| {
                 if col == 2 {
                     let va = a.year.unwrap_or(0);
                     let vb = b.year.unwrap_or(0);
@@ -127,7 +132,11 @@ pub fn create_music_tree_model(data: MusicTree) -> CustomDataViewTreeModel {
 }
 
 // Resolve target Rc<RefCell<MusicNode>> from item pointer (or root when None)
-fn find_rc(tree: &MusicTree, needle: *const MusicNode) -> Option<Rc<RefCell<MusicNode>>> {
+fn find_rc(
+    tree: &Rc<RefCell<MusicTree>>,
+    needle: *const MusicNode,
+) -> Option<Rc<RefCell<MusicNode>>> {
+    let tree = tree.borrow();
     let root_ptr: *const MusicNode = &*tree.root.borrow();
     if root_ptr == needle {
         return Some(tree.root.clone());

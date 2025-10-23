@@ -79,6 +79,7 @@ impl Drop for MusicTree {
     fn drop(&mut self) {
         log::trace!("Dropping MusicTree {self:p}");
         if let Some(path) = &self.filepath {
+            log::info!("Auto-saving MusicTree to {}", path.display());
             save_music_tree_to_file(self, path).ok();
         }
     }
