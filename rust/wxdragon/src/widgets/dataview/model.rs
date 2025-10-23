@@ -60,72 +60,6 @@ pub mod tree_helpers {
     }
 }
 
-// Helper macro to implement Clone, Drop, AsRef, and Deref for models that wrap a
-// wxDataViewModel pointer with reference counting.
-//
-// Usage:
-//   impl_refcounted_model!(TypeName, ptr_field);
-//   impl_refcounted_model!(TypeName, ptr_field, other1, other2, ...);
-// If you explicitly want Send/Sync (rare for GUI models), opt-in with:
-//   impl_refcounted_model!(send_sync TypeName, ptr_field, other1, ...);
-macro_rules! impl_refcounted_model {
-    // Internal arm shared by both public forms
-    (@base $ty:ty, $ptr_field:ident $(, $other_field:ident )* ) => {
-        impl Clone for $ty {
-            fn clone(&self) -> Self {
-                if !self.$ptr_field.is_null() {
-                    unsafe { ffi::wxd_DataViewModel_AddRef(self.$ptr_field) };
-                }
-                Self {
-                    $ptr_field: self.$ptr_field,
-                    $( $other_field: self.$other_field.clone(), )*
-                }
-            }
-        }
-
-        impl Drop for $ty {
-            fn drop(&mut self) {
-                if !self.$ptr_field.is_null() {
-                    let count = unsafe { ffi::wxd_DataViewModel_GetRefCount(self.$ptr_field) };
-                    let text = if count == 1 { "last" } else { "not last" };
-                    log::debug!(
-                        "{} dropping, model RefCount is {}, {} one.",
-                        stringify!($ty),
-                        count,
-                        text
-                    );
-                    unsafe { ffi::wxd_DataViewModel_Release(self.$ptr_field) };
-                }
-            }
-        }
-
-        impl AsRef<*mut ffi::wxd_DataViewModel_t> for $ty {
-            fn as_ref(&self) -> &*mut ffi::wxd_DataViewModel_t {
-                &self.$ptr_field
-            }
-        }
-
-        impl std::ops::Deref for $ty {
-            type Target = *mut ffi::wxd_DataViewModel_t;
-            fn deref(&self) -> &Self::Target {
-                &self.$ptr_field
-            }
-        }
-    };
-
-    // Default: no Send/Sync (safer for GUI models)
-    ($ty:ty, $ptr_field:ident $(, $other_field:ident )* ) => {
-        impl_refcounted_model!(@base $ty, $ptr_field $(, $other_field )* );
-    };
-
-    // Opt-in for Send/Sync if the type is truly thread-safe
-    (send_sync $ty:ty, $ptr_field:ident $(, $other_field:ident )* ) => {
-        impl_refcounted_model!(@base $ty, $ptr_field $(, $other_field )* );
-        unsafe impl Send for $ty {}
-        unsafe impl Sync for $ty {}
-    };
-}
-
 // Type aliases to reduce complexity
 type GetValueCallback = Box<dyn for<'a> Fn(&'a dyn Any, usize, usize) -> Variant>;
 type SetValueCallback = Box<dyn for<'a, 'b> Fn(&'a dyn Any, usize, usize, &'b Variant) -> bool>;
@@ -221,7 +155,14 @@ pub struct DataViewListModel {
     ptr: *mut ffi::wxd_DataViewModel_t,
 }
 
-impl_refcounted_model!(DataViewListModel, ptr);
+impl_refcounted_object!(
+    DataViewListModel,
+    ptr,
+    ffi::wxd_DataViewModel_t,
+    ffi::wxd_DataViewModel_AddRef,
+    ffi::wxd_DataViewModel_GetRefCount,
+    ffi::wxd_DataViewModel_Release
+);
 
 impl DataViewListModel {
     /// Create a new empty DataViewListModel
@@ -275,7 +216,15 @@ pub struct DataViewVirtualListModel {
     size: usize,
 }
 
-impl_refcounted_model!(DataViewVirtualListModel, ptr, size);
+impl_refcounted_object!(
+    DataViewVirtualListModel,
+    ptr,
+    ffi::wxd_DataViewModel_t,
+    ffi::wxd_DataViewModel_AddRef,
+    ffi::wxd_DataViewModel_GetRefCount,
+    ffi::wxd_DataViewModel_Release,
+    size
+);
 
 impl DataViewVirtualListModel {
     /// Create a new virtual list model with the specified initial size
@@ -381,7 +330,14 @@ pub struct CustomDataViewTreeModel {
     model: *mut ffi::wxd_DataViewModel_t,
 }
 
-impl_refcounted_model!(CustomDataViewTreeModel, model);
+impl_refcounted_object!(
+    CustomDataViewTreeModel,
+    model,
+    ffi::wxd_DataViewModel_t,
+    ffi::wxd_DataViewModel_AddRef,
+    ffi::wxd_DataViewModel_GetRefCount,
+    ffi::wxd_DataViewModel_Release
+);
 
 // Internal representation of the Rust-side callbacks and userdata. This is the
 // concrete type we store in `userdata` for the FFI struct.
@@ -929,7 +885,15 @@ impl DataViewModel for CustomDataViewVirtualListModel {
     }
 }
 
-impl_refcounted_model!(CustomDataViewVirtualListModel, handle, size);
+impl_refcounted_object!(
+    CustomDataViewVirtualListModel,
+    handle,
+    ffi::wxd_DataViewModel_t,
+    ffi::wxd_DataViewModel_AddRef,
+    ffi::wxd_DataViewModel_GetRefCount,
+    ffi::wxd_DataViewModel_Release,
+    size
+);
 
 // Create C++ callbacks
 unsafe extern "C" fn get_value_callback(

@@ -642,3 +642,97 @@ macro_rules! impl_widget_cast {
         }
     };
 }
+
+/// Helper macro to implement Clone, Drop, AsRef, and Deref for models that wrap a
+/// refcounted native pointer.
+///
+/// Usage (explicit native pointer type and refcount functions are required):
+/// ```ignore
+///   impl_refcounted_object!(
+///       TypeName,
+///       ptr_field,
+///       ffi::wxd_DataViewModel_t,
+///       ffi::wxd_DataViewModel_AddRef,
+///       ffi::wxd_DataViewModel_GetRefCount,
+///       ffi::wxd_DataViewModel_Release
+///   );
+///   impl_refcounted_object!(
+///       TypeName,
+///       ptr_field,
+///       ffi::wxd_DataViewModel_t,
+///       ffi::wxd_DataViewModel_AddRef,
+///       ffi::wxd_DataViewModel_GetRefCount,
+///       ffi::wxd_DataViewModel_Release,
+///       other1, other2, ...
+///   );
+/// ```
+/// If you explicitly want Send/Sync (rare for GUI models), opt-in with:
+/// ```ignore
+///   impl_refcounted_object!(
+///       send_sync TypeName,
+///       ptr_field,
+///       ffi::wxd_DataViewModel_t,
+///       ffi::wxd_DataViewModel_AddRef,
+///       ffi::wxd_DataViewModel_GetRefCount,
+///       ffi::wxd_DataViewModel_Release,
+///       other1, ...
+///   );
+/// ```
+#[macro_export]
+macro_rules! impl_refcounted_object {
+    // Internal arm shared by both public forms
+    (@base $ty:ty, $ptr_field:ident, $ptr_ty:ty, $add_ref:path, $get_refcount:path, $release:path $(, $other_field:ident )* ) => {
+        impl Clone for $ty {
+            fn clone(&self) -> Self {
+                if !self.$ptr_field.is_null() {
+                    unsafe { $add_ref(self.$ptr_field) };
+                }
+                Self {
+                    $ptr_field: self.$ptr_field,
+                    $( $other_field: self.$other_field.clone(), )*
+                }
+            }
+        }
+
+        impl Drop for $ty {
+            fn drop(&mut self) {
+                if !self.$ptr_field.is_null() {
+                    let count = unsafe { $get_refcount(self.$ptr_field) } - 1;
+                    let text = if count == 0 { "last" } else { "not last" };
+                    log::debug!(
+                        "{} dropped, object RefCount is {} now, {} one.",
+                        stringify!($ty),
+                        count,
+                        text
+                    );
+                    unsafe { $release(self.$ptr_field) };
+                }
+            }
+        }
+
+        impl AsRef<*mut $ptr_ty> for $ty {
+            fn as_ref(&self) -> &*mut $ptr_ty {
+                &self.$ptr_field
+            }
+        }
+
+        impl std::ops::Deref for $ty {
+            type Target = *mut $ptr_ty;
+            fn deref(&self) -> &Self::Target {
+                &self.$ptr_field
+            }
+        }
+    };
+
+    // Default: no Send/Sync (safer for GUI models) - requires explicit ptr type and refcount fns
+    ($ty:ty, $ptr_field:ident, $ptr_ty:ty, $add_ref:path, $get_refcount:path, $release:path $(, $other_field:ident )* ) => {
+        impl_refcounted_object!(@base $ty, $ptr_field, $ptr_ty, $add_ref, $get_refcount, $release $(, $other_field )* );
+    };
+
+    // Opt-in for Send/Sync with explicit native pointer type and refcount fns (only if truly thread-safe)
+    (send_sync $ty:ty, $ptr_field:ident, $ptr_ty:ty, $add_ref:path, $get_refcount:path, $release:path $(, $other_field:ident )* ) => {
+        impl_refcounted_object!(@base $ty, $ptr_field, $ptr_ty, $add_ref, $get_refcount, $release $(, $other_field )* );
+        unsafe impl Send for $ty {}
+        unsafe impl Sync for $ty {}
+    };
+}
