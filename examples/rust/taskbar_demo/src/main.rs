@@ -88,8 +88,7 @@ fn main() {
         });
 
         // Create system icon
-        let icon =
-            ArtProvider::get_bitmap(ArtId::Warning, ArtClient::Menu, Some(Size::new(16, 16)));
+        let icon = ArtProvider::get_bitmap(ArtId::Help, ArtClient::Menu, Some(Size::new(16, 16)));
 
         if let Some(icon) = icon {
             let success = taskbar.set_icon(&icon, "TaskBar Demo - wxDragon");
