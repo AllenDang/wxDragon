@@ -193,6 +193,9 @@ public:
             free(rust_variant.data.string_val);
         }
 
+        if (result) {
+            this->ValueChanged(item, col);
+        }
         return result;
     }
 
