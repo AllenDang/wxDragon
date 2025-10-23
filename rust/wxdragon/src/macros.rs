@@ -698,9 +698,9 @@ macro_rules! impl_refcounted_object {
             fn drop(&mut self) {
                 if !self.$ptr_field.is_null() {
                     let count = unsafe { $get_refcount(self.$ptr_field) } - 1;
-                    let text = if count == 0 { "inner object destroyed" } else { "inner object still alive" };
+                    let text = if count == 0 { "it destroyed" } else { "it still alive" };
                     log::debug!(
-                        "{} dropped, object RefCount is {} now, {}.",
+                        "{} dropped, inner object RefCount is {} now, {}.",
                         stringify!($ty),
                         count,
                         text
