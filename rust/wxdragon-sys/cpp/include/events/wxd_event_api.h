@@ -35,6 +35,12 @@ WXD_EXPORTED bool wxd_EvtHandler_Unbind(
     size_t token
 );
 
+// Unbind all event handlers currently bound to this handler.
+// Returns the number of handlers removed.
+WXD_EXPORTED size_t wxd_EvtHandler_UnbindAll(
+    wxd_EvtHandler_t* handler
+);
+
 WXD_EXPORTED int wxd_Event_GetId(wxd_Event_t* event);
 WXD_EXPORTED wxd_Window_t* wxd_Event_GetEventObject(wxd_Event_t* event);
 WXD_EXPORTED void wxd_Event_Skip(wxd_Event_t* event, bool skip);

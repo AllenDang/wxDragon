@@ -191,6 +191,7 @@ public:
 
     void BindClosure(wxEventType wx_event_type, wxd_Id actual_id, void* rust_trampoline_fn, void* rust_closure_ptr, size_t token);
     bool UnbindClosure(size_t token);
+    size_t UnbindAll();
 
     // The new dispatch method that handles multiple closures per event
     void DispatchEvent(wxEvent& event);
@@ -293,6 +294,22 @@ bool WxdEventHandler::UnbindClosure(size_t token) {
     }
 
     return true;
+}
+
+size_t WxdEventHandler::UnbindAll() {
+    // Copy tokens to avoid iterator invalidation
+    std::vector<size_t> tokens;
+    tokens.reserve(this->tokenMap.size());
+    for (const auto& kv : this->tokenMap) {
+        tokens.push_back(kv.first);
+    }
+    size_t removed = 0;
+    for (size_t t : tokens) {
+        if (this->UnbindClosure(t)) {
+            ++removed;
+        }
+    }
+    return removed;
 }
 
 // New DispatchEvent method that handles multiple closures per event
@@ -623,6 +640,24 @@ extern "C" bool wxd_EvtHandler_Unbind(
     }
 
     return clientData->UnbindClosure(token);
+}
+
+// NEW: Unbind all closures for the given handler. Returns count removed.
+extern "C" size_t wxd_EvtHandler_UnbindAll(
+    wxd_EvtHandler_t* handler
+) {
+    wxEvtHandler* wx_handler = reinterpret_cast<wxEvtHandler*>(handler);
+    if (!wx_handler) {
+        return 0;
+    }
+
+    WxdHandlerClientData* clientData =
+        static_cast<WxdHandlerClientData*>(wx_handler->GetClientObject());
+    if (!clientData || !clientData->handler) {
+        return 0; // Nothing to unbind
+    }
+
+    return clientData->handler->UnbindAll();
 }
 
 // --- Event Accessors (Unchanged) ---

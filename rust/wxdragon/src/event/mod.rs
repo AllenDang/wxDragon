@@ -834,6 +834,17 @@ pub trait WxEvtHandler {
         unsafe { ffi::wxd_EvtHandler_Unbind(handler_ptr, token.into()) }
     }
 
+    /// Unbind all event handlers currently attached to this handler.
+    ///
+    /// Returns the number of handlers removed.
+    fn unbind_all(&self) -> usize {
+        let handler_ptr = unsafe { self.get_event_handler_ptr() };
+        if handler_ptr.is_null() {
+            return 0;
+        }
+        unsafe { ffi::wxd_EvtHandler_UnbindAll(handler_ptr) as usize }
+    }
+
     // Internal implementation with ID support for tools and menu items
     #[doc(hidden)]
     fn bind_with_id_internal<F>(&self, event_type: EventType, id: i32, callback: F) -> EventToken
