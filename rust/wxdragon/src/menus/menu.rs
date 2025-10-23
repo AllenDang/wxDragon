@@ -23,6 +23,19 @@ impl Menu {
         MenuBuilder::new()
     }
 
+    /// Explicitly destroy this Menu. Use this for standalone/popup menus that are not
+    /// appended to a MenuBar. After calling this method, the Menu must not be used.
+    ///
+    /// Safety: Do NOT call this if the menu was appended to a MenuBar, as the menubar
+    /// takes ownership and will delete it, leading to double free.
+    pub fn destroy(self) {
+        // Move out the pointer and prevent Drop (there is no Drop impl currently).
+        let ptr = self.ptr;
+        // Prevent use-after-move: forget self without dropping
+        std::mem::forget(self);
+        unsafe { ffi::wxd_Menu_Destroy(ptr) };
+    }
+
     /// Appends a menu item.
     /// Returns a wrapper for the created item (for potential modification), but ownership remains with the menu.
     pub fn append(

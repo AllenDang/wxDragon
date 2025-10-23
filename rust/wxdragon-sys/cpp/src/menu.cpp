@@ -26,6 +26,15 @@ WXD_EXPORTED wxd_Menu_t* wxd_Menu_Create(const char* title, wxd_Style_t style) {
     return reinterpret_cast<wxd_Menu_t*>(menu);
 }
 
+WXD_EXPORTED void wxd_Menu_Destroy(wxd_Menu_t* menu) {
+    if (!menu) return;
+    wxMenu* wx_menu = reinterpret_cast<wxMenu*>(menu);
+    // WARNING: Only destroy standalone menus not owned by a wxMenuBar.
+    // If a wxMenu has been appended to a wxMenuBar, the menubar owns it and
+    // will delete it; destroying here would cause double free.
+    delete wx_menu;
+}
+
 WXD_EXPORTED wxd_MenuItem_t* wxd_Menu_Append(wxd_Menu_t* menu, wxd_Id id, const char* item, const char* helpString, int kind) {
     if (!menu) return nullptr;
     wxMenu* wx_menu = reinterpret_cast<wxMenu*>(menu);
