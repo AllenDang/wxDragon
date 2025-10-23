@@ -9,19 +9,8 @@ extern "C" {
 
 typedef int wxEventType;
 
-// --- Event Handling & Data Access --- 
-WXD_EXPORTED void wxd_EvtHandler_Bind(
-    wxd_EvtHandler_t* handler, 
-    WXDEventTypeCEnum eventTypeC,
-    void* rust_trampoline_fn,          
-    void* rust_closure_ptr             
-);
-
-// ID-specific event binding for tools and menu items
-WXD_EXPORTED void wxd_EvtHandler_BindWithId(wxd_EvtHandler_t* evt_handler, WXDEventTypeCEnum event_type, int id, void* callback, void* user_data);
-
 // Bind event handler with token for later unbinding
-WXD_EXPORTED void wxd_EvtHandler_BindWithToken(
+WXD_EXPORTED void wxd_EvtHandler_Bind(
     wxd_EvtHandler_t* handler,
     WXDEventTypeCEnum event_type,
     void* rust_trampoline_fn,
@@ -30,7 +19,7 @@ WXD_EXPORTED void wxd_EvtHandler_BindWithToken(
 );
 
 // Bind event handler with ID and token
-WXD_EXPORTED void wxd_EvtHandler_BindWithIdAndToken(
+WXD_EXPORTED void wxd_EvtHandler_BindWithId(
     wxd_EvtHandler_t* handler,
     WXDEventTypeCEnum event_type,
     int id,
@@ -41,7 +30,7 @@ WXD_EXPORTED void wxd_EvtHandler_BindWithIdAndToken(
 
 // Unbind event handler by token
 // Returns true if handler was found and removed, false otherwise
-WXD_EXPORTED bool wxd_EvtHandler_UnbindByToken(
+WXD_EXPORTED bool wxd_EvtHandler_Unbind(
     wxd_EvtHandler_t* handler,
     size_t token
 );

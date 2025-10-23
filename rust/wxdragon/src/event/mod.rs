@@ -808,13 +808,7 @@ pub trait WxEvtHandler {
 
         let et = event_type.bits();
         unsafe {
-            ffi::wxd_EvtHandler_BindWithToken(
-                handler_ptr,
-                et,
-                trampoline_c_void,
-                user_data,
-                token.into(),
-            )
+            ffi::wxd_EvtHandler_Bind(handler_ptr, et, trampoline_c_void, user_data, token.into())
         };
 
         token
@@ -837,7 +831,7 @@ pub trait WxEvtHandler {
             return false;
         }
 
-        unsafe { ffi::wxd_EvtHandler_UnbindByToken(handler_ptr, token.into()) }
+        unsafe { ffi::wxd_EvtHandler_Unbind(handler_ptr, token.into()) }
     }
 
     // Internal implementation with ID support for tools and menu items
@@ -859,18 +853,18 @@ pub trait WxEvtHandler {
 
         type TrampolineFn = unsafe extern "C" fn(*mut c_void, *mut c_void);
         let trampoline_ptr: TrampolineFn = rust_event_handler_trampoline;
-        let trampo_c_void = trampoline_ptr as *mut c_void;
+        let trampoline_c_void = trampoline_ptr as *mut c_void;
 
         // use the callback closure pointer as the token identifier
         let token = EventToken::from(user_data as usize);
 
         let et = event_type.bits();
         unsafe {
-            ffi::wxd_EvtHandler_BindWithIdAndToken(
+            ffi::wxd_EvtHandler_BindWithId(
                 handler_ptr,
                 et,
                 id,
-                trampo_c_void,
+                trampoline_c_void,
                 user_data,
                 token.into(),
             )

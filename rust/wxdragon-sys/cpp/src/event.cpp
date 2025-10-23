@@ -477,78 +477,6 @@ public:
 
 // --- C API Implementation ---
 
-extern "C" void wxd_EvtHandler_Bind(
-    wxd_EvtHandler_t* handler,
-    WXDEventTypeCEnum eventTypeC, 
-    void* rust_trampoline_fn, 
-    void* rust_closure_ptr   
-) {
-    wxEvtHandler* wx_handler = reinterpret_cast<wxEvtHandler*>(handler);
-    if (!wx_handler) {
-         WXD_LOG_WARN("wxd_EvtHandler_Bind called with null handler."); 
-         if (rust_closure_ptr) { drop_rust_closure_box(rust_closure_ptr); }
-         return;
-    }
-
-    if (!rust_trampoline_fn || !rust_closure_ptr) {
-        WXD_LOG_WARNF("wxd_EvtHandler_Bind called with null trampoline (%p) or closure (%p).", rust_trampoline_fn, rust_closure_ptr);
-        if (rust_closure_ptr) { drop_rust_closure_box(rust_closure_ptr); } // Drop if trampoline is null but closure isn't
-        return;
-    }
-
-    // Get or create the custom event handler
-    WxdEventHandler* customHandler = GetOrCreateEventHandler(wx_handler, handler);
-    if (!customHandler) {
-        WXD_LOG_WARN("wxd_EvtHandler_Bind: Failed to create custom handler.");
-        if (rust_closure_ptr) { drop_rust_closure_box(rust_closure_ptr); }
-        return;
-    }
-
-    // Convert C enum to wxEventType
-    wxEventType wx_event_type_to_bind = get_wx_event_type_for_c_enum(eventTypeC);
-    if (wx_event_type_to_bind == wxEVT_NULL) {
-        WXD_LOG_WARNF("wxd_EvtHandler_Bind: Unsupported WXDEventTypeCEnum value %d.", (int)eventTypeC);
-        if (rust_closure_ptr) { drop_rust_closure_box(rust_closure_ptr); }
-        return;
-    }
-
-    // Use wxID_ANY for wxd_EvtHandler_Bind (non-ID-specific binding)
-    wxd_Id actual_id_for_map_key = wxID_ANY;
-    
-    // Create map key
-    std::pair<wxEventType, wxd_Id> map_key = {wx_event_type_to_bind, actual_id_for_map_key};
-    
-    // Create Rust closure info
-    RustClosureInfo new_rust_info = {rust_closure_ptr, reinterpret_cast<wxd_ClosureCallback>(rust_trampoline_fn)};
-    
-    // Check if we need to bind DispatchEvent to wxWidgets
-    if (!customHandler->wx_bindings_made[map_key]) {
-        // For vetable events, use Connect() with higher priority to intercept before default handlers
-        if (IsVetableEventType(wx_event_type_to_bind)) {
-            if (wx_event_type_to_bind == wxEVT_CLOSE_WINDOW) {
-                // Close events need special handler signature
-                wx_handler->Connect(wx_event_type_to_bind, 
-                                  wxCloseEventHandler(WxdEventHandler::DispatchCloseEvent), 
-                                  nullptr, 
-                                  customHandler);
-            } else {
-                // Other vetable events can use general handler
-                wx_handler->Connect(wx_event_type_to_bind, 
-                                  wxEventHandler(WxdEventHandler::DispatchEvent), 
-                                  nullptr, 
-                                  customHandler);
-            }
-        } else {
-            // Non-vetable events can use regular Bind()
-            wx_handler->Bind(wx_event_type_to_bind, &WxdEventHandler::DispatchEvent, customHandler, wxID_ANY, wxID_ANY);
-        }
-        customHandler->wx_bindings_made[map_key] = true;
-    }
-    
-    // Add the closure to the vector (do this after binding to ensure cleanup on failure)
-    customHandler->closureMap[map_key].push_back(new_rust_info);
-}
-
 // Helper function to handle common token-based binding logic
 static void BindEventWithTokenInternal(
     wxEvtHandler* wx_handler,
@@ -625,7 +553,7 @@ static void BindEventWithTokenInternal(
 }
 
 // NEW: Token-based event binding implementation
-extern "C" void wxd_EvtHandler_BindWithToken(
+extern "C" void wxd_EvtHandler_Bind(
     wxd_EvtHandler_t* handler,
     WXDEventTypeCEnum eventTypeC,
     void* rust_trampoline_fn,
@@ -634,13 +562,13 @@ extern "C" void wxd_EvtHandler_BindWithToken(
 ) {
     wxEvtHandler* wx_handler = reinterpret_cast<wxEvtHandler*>(handler);
     if (!wx_handler) {
-        WXD_LOG_WARN("wxd_EvtHandler_BindWithToken: null handler");
+        WXD_LOG_WARN("wxd_EvtHandler_Bind: null handler");
         if (rust_closure_ptr) { drop_rust_closure_box(rust_closure_ptr); }
         return;
     }
 
     if (!rust_trampoline_fn || !rust_closure_ptr) {
-        WXD_LOG_WARNF("wxd_EvtHandler_BindWithToken: null trampoline (%p) or closure (%p)",
+        WXD_LOG_WARNF("wxd_EvtHandler_Bind: null trampoline (%p) or closure (%p)",
                       rust_trampoline_fn, rust_closure_ptr);
         if (rust_closure_ptr) { drop_rust_closure_box(rust_closure_ptr); }
         return;
@@ -649,7 +577,7 @@ extern "C" void wxd_EvtHandler_BindWithToken(
     // Get or create the custom event handler
     WxdEventHandler* customHandler = GetOrCreateEventHandler(wx_handler, handler);
     if (!customHandler) {
-        WXD_LOG_WARN("wxd_EvtHandler_BindWithToken: Failed to create custom handler");
+        WXD_LOG_WARN("wxd_EvtHandler_Bind: Failed to create custom handler");
         if (rust_closure_ptr) { drop_rust_closure_box(rust_closure_ptr); }
         return;
     }
@@ -659,82 +587,8 @@ extern "C" void wxd_EvtHandler_BindWithToken(
                                rust_trampoline_fn, rust_closure_ptr, token);
 }
 
-// ID-specific event binding implementation
-extern "C" void wxd_EvtHandler_BindWithId(
-    wxd_EvtHandler_t* handler,
-    WXDEventTypeCEnum eventTypeC, 
-    int id,
-    void* rust_trampoline_fn, 
-    void* rust_closure_ptr   
-) {
-    wxEvtHandler* wx_handler = reinterpret_cast<wxEvtHandler*>(handler);
-    if (!wx_handler) {
-         WXD_LOG_WARN("wxd_EvtHandler_BindWithId called with null handler."); 
-         if (rust_closure_ptr) { drop_rust_closure_box(rust_closure_ptr); }
-         return;
-    }
-
-    if (!rust_trampoline_fn || !rust_closure_ptr) {
-        WXD_LOG_WARNF("wxd_EvtHandler_BindWithId called with null trampoline (%p) or closure (%p).", rust_trampoline_fn, rust_closure_ptr);
-        if (rust_closure_ptr) { drop_rust_closure_box(rust_closure_ptr); }
-        return;
-    }
-
-    // Get or create the custom event handler
-    WxdEventHandler* customHandler = GetOrCreateEventHandler(wx_handler, handler);
-    if (!customHandler) {
-        WXD_LOG_WARN("wxd_EvtHandler_BindWithId: Failed to create custom handler.");
-        if (rust_closure_ptr) { drop_rust_closure_box(rust_closure_ptr); }
-        return;
-    }
-
-    // Convert C enum to wxEventType
-    wxEventType wx_event_type_to_bind = get_wx_event_type_for_c_enum(eventTypeC);
-    if (wx_event_type_to_bind == wxEVT_NULL) {
-        WXD_LOG_WARNF("wxd_EvtHandler_BindWithId: Unsupported WXDEventTypeCEnum value %d.", (int)eventTypeC);
-        if (rust_closure_ptr) { drop_rust_closure_box(rust_closure_ptr); }
-        return;
-    }
-
-    // Use the specific ID for ID-specific binding
-    wxd_Id actual_id_for_map_key = id;
-    
-    // Create map key
-    std::pair<wxEventType, wxd_Id> map_key = {wx_event_type_to_bind, actual_id_for_map_key};
-    
-    // Create Rust closure info
-    RustClosureInfo new_rust_info = {rust_closure_ptr, reinterpret_cast<wxd_ClosureCallback>(rust_trampoline_fn)};
-    
-    // Check if we need to bind DispatchEvent to wxWidgets
-    if (!customHandler->wx_bindings_made[map_key]) {
-        // For vetable events, use Connect() with higher priority to intercept before default handlers
-        if (IsVetableEventType(wx_event_type_to_bind)) {
-            if (wx_event_type_to_bind == wxEVT_CLOSE_WINDOW) {
-                // Close events need special handler signature
-                wx_handler->Connect(wx_event_type_to_bind, 
-                                  wxCloseEventHandler(WxdEventHandler::DispatchCloseEvent), 
-                                  nullptr, 
-                                  customHandler);
-            } else {
-                // Other vetable events can use general handler
-                wx_handler->Connect(wx_event_type_to_bind, 
-                                  wxEventHandler(WxdEventHandler::DispatchEvent), 
-                                  nullptr, 
-                                  customHandler);
-            }
-        } else {
-            // Non-vetable events can use regular Bind() with specific ID
-            wx_handler->Bind(wx_event_type_to_bind, &WxdEventHandler::DispatchEvent, customHandler, id, id);
-        }
-        customHandler->wx_bindings_made[map_key] = true;
-    }
-    
-    // Add the closure to the vector (do this after binding to ensure cleanup on failure)
-    customHandler->closureMap[map_key].push_back(new_rust_info);
-}
-
 // NEW: ID-specific event binding with token
-extern "C" void wxd_EvtHandler_BindWithIdAndToken(
+extern "C" void wxd_EvtHandler_BindWithId(
     wxd_EvtHandler_t* handler,
     WXDEventTypeCEnum eventTypeC,
     int id,
@@ -744,13 +598,13 @@ extern "C" void wxd_EvtHandler_BindWithIdAndToken(
 ) {
     wxEvtHandler* wx_handler = reinterpret_cast<wxEvtHandler*>(handler);
     if (!wx_handler) {
-        WXD_LOG_WARN("wxd_EvtHandler_BindWithIdAndToken: null handler");
+        WXD_LOG_WARN("wxd_EvtHandler_BindWithId: null handler");
         if (rust_closure_ptr) { drop_rust_closure_box(rust_closure_ptr); }
         return;
     }
 
     if (!rust_trampoline_fn || !rust_closure_ptr) {
-        WXD_LOG_WARNF("wxd_EvtHandler_BindWithIdAndToken: null trampoline (%p) or closure (%p)",
+        WXD_LOG_WARNF("wxd_EvtHandler_BindWithId: null trampoline (%p) or closure (%p)",
                       rust_trampoline_fn, rust_closure_ptr);
         if (rust_closure_ptr) { drop_rust_closure_box(rust_closure_ptr); }
         return;
@@ -759,7 +613,7 @@ extern "C" void wxd_EvtHandler_BindWithIdAndToken(
     // Get or create the custom event handler
     WxdEventHandler* customHandler = GetOrCreateEventHandler(wx_handler, handler);
     if (!customHandler) {
-        WXD_LOG_WARN("wxd_EvtHandler_BindWithIdAndToken: Failed to create custom handler");
+        WXD_LOG_WARN("wxd_EvtHandler_BindWithId: Failed to create custom handler");
         if (rust_closure_ptr) { drop_rust_closure_box(rust_closure_ptr); }
         return;
     }
@@ -780,7 +634,7 @@ extern "C" void wxd_EvtHandler_BindWithIdAndToken(
  * - Returns true if a handler was found and removed (and cleanup performed).
  * - Returns false if no handler was found for the given token (no cleanup performed).
  */
-extern "C" bool wxd_EvtHandler_UnbindByToken(
+extern "C" bool wxd_EvtHandler_Unbind(
     wxd_EvtHandler_t* handler,
     size_t token
 ) {
