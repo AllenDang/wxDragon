@@ -189,6 +189,7 @@ public:
     // Destructor - Now needs to notify Rust to drop closures via drop_rust_event_closure_box
     ~WxdEventHandler(); // Declaration moved, definition below
 
+    void BindClosure(wxEventType wx_event_type, wxd_Id actual_id, void* rust_trampoline_fn, void* rust_closure_ptr, size_t token);
     bool UnbindClosure(size_t token);
 
     // The new dispatch method that handles multiple closures per event
@@ -475,26 +476,9 @@ public:
     }
 };
 
-// --- C API Implementation ---
-
-// Helper function to handle common token-based binding logic
-static void BindEventWithTokenInternal(
-    wxEvtHandler* wx_handler,
-    WxdEventHandler* customHandler,
-    WXDEventTypeCEnum eventTypeC,
-    wxd_Id actual_id,
-    void* rust_trampoline_fn,
-    void* rust_closure_ptr,
-    size_t token
-) {
-    // Convert C enum to wxEventType
-    wxEventType wx_event_type = get_wx_event_type_for_c_enum(eventTypeC);
-    if (wx_event_type == wxEVT_NULL) {
-        WXD_LOG_WARNF("BindEventWithTokenInternal: unsupported event type %d", (int)eventTypeC);
-        if (rust_closure_ptr) { drop_rust_event_closure_box(rust_closure_ptr); }
-        return;
-    }
-
+void WxdEventHandler::BindClosure(wxEventType wx_event_type, wxd_Id actual_id,
+    void* rust_trampoline_fn, void* rust_closure_ptr, size_t token)
+{
     std::pair<wxEventType, wxd_Id> map_key = {wx_event_type, actual_id};
 
     // Create closure info with token
@@ -505,52 +489,29 @@ static void BindEventWithTokenInternal(
     };
 
     // First binding for this event? Connect to wxWidgets
-    if (!customHandler->wx_bindings_made[map_key]) {
+    if (!this->wx_bindings_made[map_key]) {
         if (IsVetableEventType(wx_event_type)) {
+            wxEventFunction event_func;
             if (wx_event_type == wxEVT_CLOSE_WINDOW) {
-                wx_handler->Connect(
-                    wx_event_type,
-                    wxCloseEventHandler(WxdEventHandler::DispatchCloseEvent),
-                    nullptr,
-                    customHandler
-                );
+                event_func = wxCloseEventHandler(WxdEventHandler::DispatchCloseEvent);
             } else {
-                wx_handler->Connect(
-                    wx_event_type,
-                    wxEventHandler(WxdEventHandler::DispatchEvent),
-                    nullptr,
-                    customHandler
-                );
+                event_func = wxEventHandler(WxdEventHandler::DispatchEvent);
             }
+            this->ownerHandler->Connect(wx_event_type, event_func, nullptr, this);
         } else {
-            // Non-vetable events: use Bind
-            if (actual_id == wxID_ANY) {
-                wx_handler->Bind(
-                    wx_event_type,
-                    &WxdEventHandler::DispatchEvent,
-                    customHandler,
-                    wxID_ANY,
-                    wxID_ANY
-                );
-            } else {
-                wx_handler->Bind(
-                    wx_event_type,
-                    &WxdEventHandler::DispatchEvent,
-                    customHandler,
-                    actual_id,
-                    actual_id
-                );
-            }
+            this->ownerHandler->Bind(wx_event_type, &WxdEventHandler::DispatchEvent, this, actual_id, actual_id);
         }
-        customHandler->wx_bindings_made[map_key] = true;
+        this->wx_bindings_made[map_key] = true;
     }
 
     // Add closure to vector
-    customHandler->closureMap[map_key].push_back(new_info);
+    this->closureMap[map_key].push_back(new_info);
 
     // Store token mapping for fast lookup
-    customHandler->tokenMap[token] = std::make_tuple(wx_event_type, actual_id, rust_closure_ptr);
+    this->tokenMap[token] = std::make_tuple(wx_event_type, actual_id, rust_closure_ptr);
 }
+
+// --- C API Implementation ---
 
 // NEW: Token-based event binding implementation
 extern "C" void wxd_EvtHandler_Bind(
@@ -582,9 +543,14 @@ extern "C" void wxd_EvtHandler_Bind(
         return;
     }
 
-    // Delegate to common helper (use wxID_ANY for non-ID-specific binding)
-    BindEventWithTokenInternal(wx_handler, customHandler, eventTypeC, wxID_ANY,
-                               rust_trampoline_fn, rust_closure_ptr, token);
+    wxEventType wx_event_type = get_wx_event_type_for_c_enum(eventTypeC);
+    if (wx_event_type == wxEVT_NULL) {
+        WXD_LOG_WARNF("wxd_EvtHandler_Bind: unsupported event type %d", (int)eventTypeC);
+        if (rust_closure_ptr) { drop_rust_event_closure_box(rust_closure_ptr); }
+        return;
+    }
+
+    customHandler->BindClosure(wx_event_type, wxID_ANY, rust_trampoline_fn, rust_closure_ptr, token);
 }
 
 // NEW: ID-specific event binding with token
@@ -618,9 +584,14 @@ extern "C" void wxd_EvtHandler_BindWithId(
         return;
     }
 
-    // Delegate to common helper (use specific ID for ID-specific binding)
-    BindEventWithTokenInternal(wx_handler, customHandler, eventTypeC, id,
-                               rust_trampoline_fn, rust_closure_ptr, token);
+    wxEventType wx_event_type = get_wx_event_type_for_c_enum(eventTypeC);
+    if (wx_event_type == wxEVT_NULL) {
+        WXD_LOG_WARNF("wxd_EvtHandler_BindWithId: unsupported event type %d", (int)eventTypeC);
+        if (rust_closure_ptr) { drop_rust_event_closure_box(rust_closure_ptr); }
+        return;
+    }
+
+    customHandler->BindClosure(wx_event_type, id, rust_trampoline_fn, rust_closure_ptr, token);
 }
 
 /**
