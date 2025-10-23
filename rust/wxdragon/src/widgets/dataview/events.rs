@@ -4,7 +4,7 @@
 //! DataViewCtrl, DataViewListCtrl, and DataViewTreeCtrl.
 
 use super::item::DataViewItem;
-use crate::event::{Event, EventType, WxEvtHandler};
+use crate::event::{Event, EventToken, EventType, WxEvtHandler};
 use wxdragon_sys as ffi;
 
 /// Events emitted by DataView widgets
@@ -177,8 +177,9 @@ impl DataViewEventData {
 
 /// Trait for DataView event handling
 pub trait DataViewEventHandler: WxEvtHandler {
-    /// Bind an event handler for DataView events
-    fn bind_dataview_event<F>(&self, event: DataViewEvent, mut callback: F)
+    /// Bind an event handler for DataView events.
+    /// Returns an EventToken that can be used to unbind the handler later.
+    fn bind_dataview_event<F>(&self, event: DataViewEvent, mut callback: F) -> EventToken
     where
         F: FnMut(DataViewEventData) + 'static,
     {
@@ -221,83 +222,93 @@ pub trait DataViewEventHandler: WxEvtHandler {
             }
         };
 
-        // Use internal bind method
-        WxEvtHandler::bind_internal(self, event_type, wrapper);
+        // Use internal bind method and return the token
+        WxEvtHandler::bind_internal(self, event_type, wrapper)
     }
 
-    /// Binds a handler to the selection changed event
-    fn on_selection_changed<F>(&self, callback: F)
+    /// Binds a handler to the selection changed event.
+    /// Returns an EventToken that can be used to unbind the handler later.
+    fn on_selection_changed<F>(&self, callback: F) -> EventToken
     where
         F: FnMut(DataViewEventData) + 'static,
     {
         self.bind_dataview_event(DataViewEvent::SelectionChanged, callback)
     }
 
-    /// Binds a handler to the item activated event
-    fn on_item_activated<F>(&self, callback: F)
+    /// Binds a handler to the item activated event.
+    /// Returns an EventToken that can be used to unbind the handler later.
+    fn on_item_activated<F>(&self, callback: F) -> EventToken
     where
         F: FnMut(DataViewEventData) + 'static,
     {
         self.bind_dataview_event(DataViewEvent::ItemActivated, callback)
     }
 
-    /// Binds a handler to the item editing started event
-    fn on_item_editing_started<F>(&self, callback: F)
+    /// Binds a handler to the item editing started event.
+    /// Returns an EventToken that can be used to unbind the handler later.
+    fn on_item_editing_started<F>(&self, callback: F) -> EventToken
     where
         F: FnMut(DataViewEventData) + 'static,
     {
         self.bind_dataview_event(DataViewEvent::ItemEditingStarted, callback)
     }
 
-    /// Binds a handler to the item editing done event
-    fn on_item_editing_done<F>(&self, callback: F)
+    /// Binds a handler to the item editing done event.
+    /// Returns an EventToken that can be used to unbind the handler later.
+    fn on_item_editing_done<F>(&self, callback: F) -> EventToken
     where
         F: FnMut(DataViewEventData) + 'static,
     {
         self.bind_dataview_event(DataViewEvent::ItemEditingDone, callback)
     }
 
-    /// Binds a handler to the item editing cancelled event
-    fn on_item_editing_cancelled<F>(&self, callback: F)
+    /// Binds a handler to the item editing cancelled event.
+    /// Returns an EventToken that can be used to unbind the handler later.
+    fn on_item_editing_cancelled<F>(&self, callback: F) -> EventToken
     where
         F: FnMut(DataViewEventData) + 'static,
     {
         self.bind_dataview_event(DataViewEvent::ItemEditingCancelled, callback)
     }
 
-    /// Binds a handler to the column header click event
-    fn on_column_header_click<F>(&self, callback: F)
+    /// Binds a handler to the column header click event.
+    /// Returns an EventToken that can be used to unbind the handler later.
+    fn on_column_header_click<F>(&self, callback: F) -> EventToken
     where
         F: FnMut(DataViewEventData) + 'static,
     {
         self.bind_dataview_event(DataViewEvent::ColumnHeaderClick, callback)
     }
 
-    /// Binds a handler to the column header right click event
-    fn on_column_header_right_click<F>(&self, callback: F)
+    /// Binds a handler to the column header right click event.
+    /// Returns an EventToken that can be used to unbind the handler later.
+    fn on_column_header_right_click<F>(&self, callback: F) -> EventToken
     where
         F: FnMut(DataViewEventData) + 'static,
     {
         self.bind_dataview_event(DataViewEvent::ColumnHeaderRightClick, callback)
     }
 
-    /// Binds a handler to the column sorted event
-    fn on_column_sorted<F>(&self, callback: F)
+    /// Binds a handler to the column sorted event.
+    /// Returns an EventToken that can be used to unbind the handler later.
+    fn on_column_sorted<F>(&self, callback: F) -> EventToken
     where
         F: FnMut(DataViewEventData) + 'static,
     {
         self.bind_dataview_event(DataViewEvent::ColumnSorted, callback)
     }
 
-    /// Binds a handler to the column reordered event
-    fn on_column_reordered<F>(&self, callback: F)
+    /// Binds a handler to the column reordered event.
+    /// Returns an EventToken that can be used to unbind the handler later.
+    fn on_column_reordered<F>(&self, callback: F) -> EventToken
     where
         F: FnMut(DataViewEventData) + 'static,
     {
         self.bind_dataview_event(DataViewEvent::ColumnReordered, callback)
     }
 
-    /// Binds a handler to the item context menu event
+    /// Binds a handler to the item context menu event.
+    /// Returns an EventToken that can be used to unbind the handler later.
     ///
     /// This event is emitted when a context menu is requested on an item
     /// (e.g., via right-click or keyboard). The event provides direct access
@@ -318,7 +329,7 @@ pub trait DataViewEventHandler: WxEvtHandler {
     ///     }
     /// });
     /// ```
-    fn on_item_context_menu<F>(&self, callback: F)
+    fn on_item_context_menu<F>(&self, callback: F) -> EventToken
     where
         F: FnMut(DataViewEventData) + 'static,
     {
@@ -328,32 +339,36 @@ pub trait DataViewEventHandler: WxEvtHandler {
 
 /// Extension trait for TreeView-specific events
 pub trait TreeViewEventHandler: DataViewEventHandler {
-    /// Binds a handler to the item expanded event
-    fn on_item_expanded<F>(&self, callback: F)
+    /// Binds a handler to the item expanded event.
+    /// Returns an EventToken that can be used to unbind the handler later.
+    fn on_item_expanded<F>(&self, callback: F) -> EventToken
     where
         F: FnMut(DataViewEventData) + 'static,
     {
         self.bind_dataview_event(DataViewEvent::ItemExpanded, callback)
     }
 
-    /// Binds a handler to the item collapsed event
-    fn on_item_collapsed<F>(&self, callback: F)
+    /// Binds a handler to the item collapsed event.
+    /// Returns an EventToken that can be used to unbind the handler later.
+    fn on_item_collapsed<F>(&self, callback: F) -> EventToken
     where
         F: FnMut(DataViewEventData) + 'static,
     {
         self.bind_dataview_event(DataViewEvent::ItemCollapsed, callback)
     }
 
-    /// Binds a handler to the item expanding event
-    fn on_item_expanding<F>(&self, callback: F)
+    /// Binds a handler to the item expanding event.
+    /// Returns an EventToken that can be used to unbind the handler later.
+    fn on_item_expanding<F>(&self, callback: F) -> EventToken
     where
         F: FnMut(DataViewEventData) + 'static,
     {
         self.bind_dataview_event(DataViewEvent::ItemExpanding, callback)
     }
 
-    /// Binds a handler to the item collapsing event
-    fn on_item_collapsing<F>(&self, callback: F)
+    /// Binds a handler to the item collapsing event.
+    /// Returns an EventToken that can be used to unbind the handler later.
+    fn on_item_collapsing<F>(&self, callback: F) -> EventToken
     where
         F: FnMut(DataViewEventData) + 'static,
     {

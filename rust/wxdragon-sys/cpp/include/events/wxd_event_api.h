@@ -9,16 +9,31 @@ extern "C" {
 
 typedef int wxEventType;
 
-// --- Event Handling & Data Access --- 
+// Bind event handler with token for later unbinding
 WXD_EXPORTED void wxd_EvtHandler_Bind(
-    wxd_EvtHandler_t* handler, 
-    WXDEventTypeCEnum eventTypeC,
-    void* rust_trampoline_fn,          
-    void* rust_closure_ptr             
+    wxd_EvtHandler_t* handler,
+    WXDEventTypeCEnum event_type,
+    void* rust_trampoline_fn,
+    void* rust_closure_ptr,
+    size_t token
 );
 
-// ID-specific event binding for tools and menu items
-WXD_EXPORTED void wxd_EvtHandler_BindWithId(wxd_EvtHandler_t* evt_handler, WXDEventTypeCEnum event_type, int id, void* callback, void* user_data);
+// Bind event handler with ID and token
+WXD_EXPORTED void wxd_EvtHandler_BindWithId(
+    wxd_EvtHandler_t* handler,
+    WXDEventTypeCEnum event_type,
+    int id,
+    void* rust_trampoline_fn,
+    void* rust_closure_ptr,
+    size_t token
+);
+
+// Unbind event handler by token
+// Returns true if handler was found and removed, false otherwise
+WXD_EXPORTED bool wxd_EvtHandler_Unbind(
+    wxd_EvtHandler_t* handler,
+    size_t token
+);
 
 WXD_EXPORTED int wxd_Event_GetId(wxd_Event_t* event);
 WXD_EXPORTED wxd_Window_t* wxd_Event_GetEventObject(wxd_Event_t* event);
@@ -74,7 +89,7 @@ WXD_EXPORTED int wxd_TreeListEvent_GetColumn(wxd_Event_t* event);
 WXD_EXPORTED int wxd_TreeListEvent_GetOldCheckedState(wxd_Event_t* event);
 
 // Callback implemented in Rust to drop the Box<dyn FnMut(Event)>.
-void drop_rust_closure_box(void* ptr);
+void drop_rust_event_closure_box(void* ptr);
 
 // Rust callback for cleanup notifier
 WXD_EXPORTED void notify_rust_of_cleanup(wxd_Window_t* win_ptr);

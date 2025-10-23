@@ -7,6 +7,7 @@ members = [
   "examples/rust/dataview",
   "examples/rust/dc_example",
   "examples/rust/dnd_advanced",
+  "examples/rust/event_token_test",
   "examples/rust/events_test",
   "examples/rust/gallery",
   "examples/rust/generic_dialog_test",
