@@ -247,6 +247,11 @@ typedef struct wxd_DataViewTreeModel_Callbacks {
  */
 WXD_EXPORTED wxd_DataViewModel_t* wxd_DataViewTreeModel_CreateWithCallbacks(const wxd_DataViewTreeModel_Callbacks* callbacks);
 
+// Notifications and helpers for custom tree models
+WXD_EXPORTED void wxd_DataViewTreeModel_ValueChanged(wxd_DataViewModel_t* model, void* item, unsigned int col);
+WXD_EXPORTED void wxd_DataViewTreeModel_ItemChanged(wxd_DataViewModel_t* model, void* item);
+WXD_EXPORTED bool wxd_DataViewTreeModel_SetValue(wxd_DataViewModel_t* model, void* item, unsigned int col, const wxd_Variant_t* variant);
+
 // DataViewCtrl functions
 WXD_EXPORTED wxd_DataViewColumn_t* wxd_DataViewCtrl_CreateTextColumn(wxd_Window_t* ctrl, const char* label, 
                                                      uint32_t model_column, wxd_DataViewCellModeCEnum mode, 

@@ -560,6 +560,23 @@ impl CustomDataViewTreeModel {
 
         Self { model }
     }
+
+    /// Programmatically set a value via the model's SetValue callback and refresh on success.
+    pub fn set_value<N>(&self, item: *const N, col: u32, value: &Variant) -> bool {
+        if self.model.is_null() {
+            return false;
+        }
+        let raw = super::variant::to_raw_variant(value);
+        let item = item as *mut std::ffi::c_void;
+        let ok =
+            unsafe { ffi::wxd_DataViewTreeModel_SetValue(self.model, item, col, &raw as *const _) };
+        // IMPORTANT: Do NOT call wxd_Variant_Free on a stack-allocated variant.
+        // Only free inner allocations we own (e.g., Rust string for String variants).
+        if matches!(value, Variant::String(_)) {
+            unsafe { ffi::wxd_Variant_Free_Rust_String(raw.data.string_val) };
+        }
+        ok
+    }
 }
 
 // Extern "C" trampolines and helpers used by the FFI callbacks

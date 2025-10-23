@@ -223,3 +223,52 @@ extern "C" wxd_DataViewModel_t* wxd_DataViewTreeModel_CreateWithCallbacks(const 
     Wxd_Callbacks_DataViewTreeModel* model = new Wxd_Callbacks_DataViewTreeModel(cb);
     return reinterpret_cast<wxd_DataViewModel_t*>(model);
 }
+
+extern "C" void wxd_DataViewTreeModel_ValueChanged(wxd_DataViewModel_t* model, void* item, unsigned int col)
+{
+    if (!model) return;
+    auto* m = reinterpret_cast<Wxd_Callbacks_DataViewTreeModel*>(model);
+    m->ValueChanged(wxDataViewItem(item), col);
+}
+
+extern "C" void wxd_DataViewTreeModel_ItemChanged(wxd_DataViewModel_t* model, void* item)
+{
+    if (!model) return;
+    auto* m = reinterpret_cast<Wxd_Callbacks_DataViewTreeModel*>(model);
+    m->ItemChanged(wxDataViewItem(item));
+}
+
+extern "C" bool wxd_DataViewTreeModel_SetValue(wxd_DataViewModel_t* model, void* item, unsigned int col, const wxd_Variant_t* variant)
+{
+    if (!model || !variant) return false;
+    auto* m = reinterpret_cast<Wxd_Callbacks_DataViewTreeModel*>(model);
+
+    // Convert wxd_Variant_t back to wxVariant
+    wxVariant v;
+    switch (variant->type) {
+        case WXD_VARIANT_TYPE_BOOL:
+            v = wxVariant(variant->data.bool_val != 0);
+            break;
+        case WXD_VARIANT_TYPE_INT32:
+            v = wxVariant(static_cast<long>(variant->data.int32_val));
+            break;
+        case WXD_VARIANT_TYPE_INT64:
+            v = wxVariant(wxLongLong(variant->data.int64_val));
+            break;
+        case WXD_VARIANT_TYPE_DOUBLE:
+            v = wxVariant(variant->data.double_val);
+            break;
+        case WXD_VARIANT_TYPE_STRING:
+            if (variant->data.string_val) {
+                v = wxVariant(wxString::FromUTF8(variant->data.string_val));
+            } else {
+                v = wxVariant(wxString());
+            }
+            break;
+        default:
+            v = wxVariant();
+            break;
+    }
+
+    return m->SetValue(v, wxDataViewItem(item), col);
+}
