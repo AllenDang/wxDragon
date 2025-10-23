@@ -108,7 +108,7 @@ public:
     virtual ~WxdTextDropTarget() {
         // Free the closure data when the drop target is destroyed
         if (m_closure_ptr) {
-            drop_rust_closure_box(m_closure_ptr);
+            drop_rust_event_closure_box(m_closure_ptr);
             m_closure_ptr = nullptr;
         }
     }
@@ -159,7 +159,7 @@ public:
     virtual ~WxdFileDropTarget() {
         // Free the closure data when the drop target is destroyed
         if (m_closure_ptr) {
-            drop_rust_closure_box(m_closure_ptr);
+            drop_rust_event_closure_box(m_closure_ptr);
             m_closure_ptr = nullptr;
         }
     }

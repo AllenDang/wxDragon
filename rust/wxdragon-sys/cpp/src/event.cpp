@@ -186,7 +186,7 @@ public:
         WXD_LOG_TRACEF("WxdEventHandler created for wxEvtHandler %p (c_handle %p)", ownerHandler, c_handle);
     }
 
-    // Destructor - Now needs to notify Rust to drop closures via drop_rust_closure_box
+    // Destructor - Now needs to notify Rust to drop closures via drop_rust_event_closure_box
     ~WxdEventHandler(); // Declaration moved, definition below
 
     bool UnbindClosure(size_t token);
@@ -218,7 +218,7 @@ WxdEventHandler::~WxdEventHandler() {
         for (auto const& info : closure_vector) {
             if (info.closure_ptr) {
                 // Tell Rust to drop the Box corresponding to this pointer
-                drop_rust_closure_box(info.closure_ptr);
+                drop_rust_event_closure_box(info.closure_ptr);
             }
         }
     }
@@ -255,7 +255,7 @@ bool WxdEventHandler::UnbindClosure(size_t token) {
         if (vec_it->token == token) {
             // Found it! Drop the Rust closure
             if (vec_it->closure_ptr) {
-                drop_rust_closure_box(vec_it->closure_ptr);
+                drop_rust_event_closure_box(vec_it->closure_ptr);
             }
 
             // Remove from vector
@@ -454,7 +454,7 @@ public:
         // In both cases where owned_by_wx is false, we *should* drop the box if the pointer is valid.
         if (param_ptr) {
             // WXD_LOG_TRACEF("CxxClosureVoid %p: Dropping Rust box param=%p as NOT owned by wx", this, param_ptr);
-            drop_rust_closure_box(param_ptr);
+            drop_rust_event_closure_box(param_ptr);
             param_ptr = nullptr; // Avoid potential double drop if destructor called again somehow
         }
         // else: Warning if param_ptr is null when not owned? Might indicate logic error elsewhere.
@@ -491,7 +491,7 @@ static void BindEventWithTokenInternal(
     wxEventType wx_event_type = get_wx_event_type_for_c_enum(eventTypeC);
     if (wx_event_type == wxEVT_NULL) {
         WXD_LOG_WARNF("BindEventWithTokenInternal: unsupported event type %d", (int)eventTypeC);
-        if (rust_closure_ptr) { drop_rust_closure_box(rust_closure_ptr); }
+        if (rust_closure_ptr) { drop_rust_event_closure_box(rust_closure_ptr); }
         return;
     }
 
@@ -563,14 +563,14 @@ extern "C" void wxd_EvtHandler_Bind(
     wxEvtHandler* wx_handler = reinterpret_cast<wxEvtHandler*>(handler);
     if (!wx_handler) {
         WXD_LOG_WARN("wxd_EvtHandler_Bind: null handler");
-        if (rust_closure_ptr) { drop_rust_closure_box(rust_closure_ptr); }
+        if (rust_closure_ptr) { drop_rust_event_closure_box(rust_closure_ptr); }
         return;
     }
 
     if (!rust_trampoline_fn || !rust_closure_ptr) {
         WXD_LOG_WARNF("wxd_EvtHandler_Bind: null trampoline (%p) or closure (%p)",
                       rust_trampoline_fn, rust_closure_ptr);
-        if (rust_closure_ptr) { drop_rust_closure_box(rust_closure_ptr); }
+        if (rust_closure_ptr) { drop_rust_event_closure_box(rust_closure_ptr); }
         return;
     }
 
@@ -578,7 +578,7 @@ extern "C" void wxd_EvtHandler_Bind(
     WxdEventHandler* customHandler = GetOrCreateEventHandler(wx_handler, handler);
     if (!customHandler) {
         WXD_LOG_WARN("wxd_EvtHandler_Bind: Failed to create custom handler");
-        if (rust_closure_ptr) { drop_rust_closure_box(rust_closure_ptr); }
+        if (rust_closure_ptr) { drop_rust_event_closure_box(rust_closure_ptr); }
         return;
     }
 
@@ -599,14 +599,14 @@ extern "C" void wxd_EvtHandler_BindWithId(
     wxEvtHandler* wx_handler = reinterpret_cast<wxEvtHandler*>(handler);
     if (!wx_handler) {
         WXD_LOG_WARN("wxd_EvtHandler_BindWithId: null handler");
-        if (rust_closure_ptr) { drop_rust_closure_box(rust_closure_ptr); }
+        if (rust_closure_ptr) { drop_rust_event_closure_box(rust_closure_ptr); }
         return;
     }
 
     if (!rust_trampoline_fn || !rust_closure_ptr) {
         WXD_LOG_WARNF("wxd_EvtHandler_BindWithId: null trampoline (%p) or closure (%p)",
                       rust_trampoline_fn, rust_closure_ptr);
-        if (rust_closure_ptr) { drop_rust_closure_box(rust_closure_ptr); }
+        if (rust_closure_ptr) { drop_rust_event_closure_box(rust_closure_ptr); }
         return;
     }
 
@@ -614,7 +614,7 @@ extern "C" void wxd_EvtHandler_BindWithId(
     WxdEventHandler* customHandler = GetOrCreateEventHandler(wx_handler, handler);
     if (!customHandler) {
         WXD_LOG_WARN("wxd_EvtHandler_BindWithId: Failed to create custom handler");
-        if (rust_closure_ptr) { drop_rust_closure_box(rust_closure_ptr); }
+        if (rust_closure_ptr) { drop_rust_event_closure_box(rust_closure_ptr); }
         return;
     }
 

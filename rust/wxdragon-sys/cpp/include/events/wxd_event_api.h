@@ -89,7 +89,7 @@ WXD_EXPORTED int wxd_TreeListEvent_GetColumn(wxd_Event_t* event);
 WXD_EXPORTED int wxd_TreeListEvent_GetOldCheckedState(wxd_Event_t* event);
 
 // Callback implemented in Rust to drop the Box<dyn FnMut(Event)>.
-void drop_rust_closure_box(void* ptr);
+void drop_rust_event_closure_box(void* ptr);
 
 // Rust callback for cleanup notifier
 WXD_EXPORTED void notify_rust_of_cleanup(wxd_Window_t* win_ptr);
