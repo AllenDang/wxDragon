@@ -51,7 +51,7 @@ widget_style_enum!(
 ///
 /// ```no_run
 /// # use wxdragon::prelude::*;
-/// # wxdragon::main(|handle| {
+/// # wxdragon::main(|_app| {
 /// # let main_frame = Frame::builder().build();
 /// // Example of a manually managed frame
 /// let secondary_frame = Frame::builder()
@@ -63,9 +63,8 @@ widget_style_enum!(
 /// // When done with secondary_frame, explicitly destroy it:
 /// secondary_frame.destroy();
 /// // After calling destroy(), `secondary_frame` should not be used further.
-/// # handle.preserve(main_frame);
-/// # true
-/// # });
+/// # main_frame.show(true);
+/// # }).unwrap();
 /// ```
 /// Calling `.close()` on a frame initiates the closing process, which typically also
 /// leads to the frame's destruction by wxWidgets, unless the close event is vetoed.

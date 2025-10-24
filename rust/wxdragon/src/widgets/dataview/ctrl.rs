@@ -47,14 +47,15 @@ widget_style_enum!(
 ///
 /// # Example
 ///
-/// ```
-/// use wxdragon::{DataViewCtrl, DataViewStyle, Panel, Window, Id};
+/// ```rust,no_run
+/// use wxdragon::prelude::*;
+/// # let frame = Frame::builder().build();
 ///
 /// let panel = Panel::builder(&frame)
 ///     .build();
 ///
 /// let data_view = DataViewCtrl::builder(&panel)
-///     .with_id(Id::new(100))
+///     .with_id(100)
 ///     .with_style(DataViewStyle::RowLines | DataViewStyle::VerticalRules)
 ///     .build();
 /// ```

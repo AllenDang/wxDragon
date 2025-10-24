@@ -22,7 +22,9 @@ pub enum DataViewEvent {
     ///
     /// This uses the same underlying wxWidgets event as ItemEditingDone.
     /// To check if editing was canceled in your handler, use:
-    /// ```
+    /// ```rust,no_run
+    /// # use wxdragon::prelude::*;
+    /// # let data_view: DataViewCtrl = todo!();
     /// data_view.on_item_editing_cancelled(|event| {
     ///     if event.is_edit_cancelled() {
     ///         // Handle cancellation

@@ -30,16 +30,18 @@
 //!         age: 52,
 //!         role: "CEO".to_string(),
 //!     };
-//!     let root = tree.add_root_with_data("Company", ceo).unwrap();
+//!     let root = tree.add_root_with_data("Company", ceo, None, None).unwrap();
 //!
 //!     // Add child with different data type
-//!     tree.append_item_with_data(&root, "Budget", 1000000).unwrap();
+//!     tree.append_item_with_data(&root, "Budget", 1000000, None, None).unwrap();
 //!
 //!     // Add another child with string data
 //!     tree.append_item_with_data(
 //!         &root,
 //!         "Mission",
-//!         "To create amazing products".to_string()
+//!         "To create amazing products".to_string(),
+//!         None,
+//!         None,
 //!     ).unwrap();
 //!
 //!     // Later, when handling selection events:

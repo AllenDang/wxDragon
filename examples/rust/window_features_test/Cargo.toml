@@ -2,6 +2,7 @@
 name = "window_features_test"
 version.workspace = true
 edition.workspace = true
+publish = false
 
 [dependencies]
 wxdragon = { path = "../../../rust/wxdragon" }

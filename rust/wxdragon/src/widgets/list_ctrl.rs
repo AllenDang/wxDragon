@@ -370,7 +370,12 @@ impl ListCtrl {
     /// * `text` - The text to set.
     ///
     /// # Example
-    /// ```
+    /// ```no_run
+    /// # use wxdragon::prelude::*;
+    /// # let parent = Frame::builder().build();
+    /// # let list_ctrl = ListCtrl::builder(&parent)
+    /// #     .with_style(ListCtrlStyle::Report)
+    /// #     .build();
     /// list_ctrl.set_item_text_by_column(0, 1, "Column 1 text");
     /// ```
     pub fn set_item_text_by_column(&self, index: i64, col: i32, text: &str) {
@@ -447,7 +452,12 @@ impl ListCtrl {
     /// * `state_mask` - The state flags to modify (only bits set in mask will be changed).
     ///
     /// # Example
-    /// ```
+    /// ```no_run
+    /// # use wxdragon::prelude::*;
+    /// # let parent = Frame::builder().build();
+    /// # let list_ctrl = ListCtrl::builder(&parent)
+    /// #     .with_style(ListCtrlStyle::Report)
+    /// #     .build();
     /// // To select an item:
     /// list_ctrl.set_item_state(0, ListItemState::Selected, ListItemState::Selected);
     /// // To deselect an item:
@@ -479,7 +489,12 @@ impl ListCtrl {
     /// Returns true if the state specified by state_mask is set, false otherwise.
     ///
     /// # Example
-    /// ```
+    /// ```no_run
+    /// # use wxdragon::prelude::*;
+    /// # let parent = Frame::builder().build();
+    /// # let list_ctrl = ListCtrl::builder(&parent)
+    /// #     .with_style(ListCtrlStyle::Report)
+    /// #     .build();
     /// // Check if an item is selected:
     /// let is_selected = list_ctrl.get_item_state(0, ListItemState::Selected);
     /// ```

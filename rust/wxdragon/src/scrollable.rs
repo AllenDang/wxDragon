@@ -23,11 +23,13 @@ use wxdragon_sys as ffi;
 /// # Example
 ///
 /// ```ignore
-/// use wxdragon::prelude::*;
-/// use wxdragon::scrollable::WxScrollable;
+/// # use wxdragon::prelude::*;
+/// # use wxdragon::scrollable::WxScrollable;
+///
+/// # let parent: Frame = Frame::builder().build();
 ///
 /// // Any widget that implements WxScrollable gets these methods automatically
-/// let rich_text = RichTextCtrl::builder(parent).build();
+/// let rich_text = RichTextCtrl::builder(&parent).build();
 ///
 /// // Scroll to end (useful for log displays)
 /// rich_text.scroll_to_end();

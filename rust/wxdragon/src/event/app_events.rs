@@ -44,7 +44,8 @@
 ///         .with_title("My App")
 ///         .build();
 ///     frame.show(true);
-/// });
+/// })
+/// .unwrap();
 /// ```
 pub trait AppEvents {
     /// Binds a handler for when files are opened with the application
@@ -76,7 +77,8 @@ pub trait AppEvents {
     ///
     ///     let frame = Frame::builder().with_title("My App").build();
     ///     frame.show(true);
-    /// });
+    /// })
+    /// .unwrap();
     /// ```
     fn on_open_files<F>(&self, callback: F)
     where
@@ -136,16 +138,12 @@ pub trait AppEvents {
     /// use wxdragon::prelude::*;
     ///
     /// wxdragon::main(|app| {
-    ///     let frame = Frame::builder().with_title("My App").build();
-    ///     frame.show(true);
-    ///
-    ///     let frame_clone = frame.clone();
-    ///     app.on_reopen_app(move || {
-    ///         // Show and raise the window when user reactivates the app
-    ///         frame_clone.show(true);
-    ///         frame_clone.raise();
+    ///     // Register a reopen handler
+    ///     app.on_reopen_app(|| {
+    ///         println!("App reopened");
     ///     });
-    /// });
+    /// })
+    /// .unwrap();
     /// ```
     fn on_reopen_app<F>(&self, callback: F)
     where

@@ -12,8 +12,14 @@ use crate::window::WxWidget;
 /// # Usage
 ///
 /// ```rust,no_run
-/// use wxdragon::prelude::*;
+/// # use wxdragon::prelude::*;
 ///
+/// # let frame = Frame::builder()
+/// #     .with_title("AutoBufferedPaintDC Example")
+/// #     .with_size(Size::new(400, 300))
+/// #     .build();
+/// # let panel = Panel::builder(&frame).build();
+/// # let panel_clone = panel.clone();
 /// panel.on_paint(move |_event| {
 ///     let dc = AutoBufferedPaintDC::new(&panel_clone);
 ///     

@@ -43,7 +43,7 @@ use std::os::raw::c_void;
 // Type placeholder for user data until a proper type is defined in the safe wrapper
 type WindowUserData = (); // Replace with actual user data type later if needed
 
-/// Function called by C++ (WxdRustClientData destructor) to drop the Rust Box<RefCell<T>>.
+/// Function called by C++ (WxdRustClientData destructor) to drop the Rust `Box<RefCell<T>>`.
 /// # Safety
 /// The caller (C++) must ensure `user_data_ptr` is a valid pointer obtained
 /// from `Box::into_raw(Box::new(RefCell::new(data)))` and that it hasn't been

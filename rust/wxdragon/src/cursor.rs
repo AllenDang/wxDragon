@@ -62,14 +62,18 @@ pub enum BitmapType {
 ///
 /// # Examples
 ///
-/// ```rust
+/// ```rust,no_run
 /// use wxdragon::prelude::*;
+/// # // Minimal stub so the snippet compiles in doctests
+/// # struct DummyWindow;
+/// # impl DummyWindow { fn set_cursor(&self, _c: Option<&Cursor>) {} }
+/// # let window = DummyWindow;
 ///
 /// // Create a stock cursor
-/// let hand_cursor = Cursor::from_stock(StockCursor::Hand);
+/// let hand_cursor = Cursor::from_stock(StockCursor::Hand).unwrap();
 ///
 /// // Create a cursor from a file
-/// let custom_cursor = Cursor::from_file("my_cursor.cur", BitmapType::Cur, 8, 8);
+/// let custom_cursor = Cursor::from_file("my_cursor.cur", BitmapType::Cur, 8, 8).unwrap();
 ///
 /// // Use the cursor on a window
 /// window.set_cursor(Some(&hand_cursor));
@@ -87,9 +91,10 @@ impl Cursor {
     /// A new `Cursor` instance, or `None` if creation failed
     ///
     /// # Examples
-    /// ```rust
-    /// let cursor = Cursor::from_stock(StockCursor::Hand);
-    /// let wait_cursor = Cursor::from_stock(StockCursor::Wait);
+    /// ```rust,no_run
+    /// use wxdragon::prelude::*;
+    /// let _cursor = Cursor::from_stock(StockCursor::Hand).unwrap();
+    /// let _wait_cursor = Cursor::from_stock(StockCursor::Wait).unwrap();
     /// ```
     pub fn from_stock(cursor_type: StockCursor) -> Option<Self> {
         let ffi_cursor_type = match cursor_type {
@@ -143,9 +148,10 @@ impl Cursor {
     /// A new `Cursor` instance, or `None` if creation failed
     ///
     /// # Examples
-    /// ```rust
-    /// let cursor = Cursor::from_file("cursor.cur", BitmapType::Cur, 8, 8);
-    /// let png_cursor = Cursor::from_file("cursor.png", BitmapType::Png, 16, 16);
+    /// ```rust,no_run
+    /// use wxdragon::prelude::*;
+    /// let _cursor = Cursor::from_file("cursor.cur", BitmapType::Cur, 8, 8).unwrap();
+    /// let _png_cursor = Cursor::from_file("cursor.png", BitmapType::Png, 16, 16).unwrap();
     /// ```
     pub fn from_file(
         filename: &str,
@@ -361,8 +367,9 @@ unsafe impl Sync for Cursor {}
 /// * `cursor` - The cursor to set globally, or `None` to reset to default
 ///
 /// # Examples
-/// ```rust
-/// let wait_cursor = Cursor::from_stock(StockCursor::Wait);
+/// ```rust,no_run
+/// use wxdragon::prelude::*;
+/// let wait_cursor = Cursor::from_stock(StockCursor::Wait).unwrap();
 /// set_cursor(Some(&wait_cursor));
 ///
 /// // Reset to default
@@ -384,12 +391,13 @@ pub fn set_cursor(cursor: Option<&Cursor>) {
 /// * `cursor` - Optional custom busy cursor. If `None`, uses the default wait cursor
 ///
 /// # Examples
-/// ```rust
+/// ```rust,no_run
+/// use wxdragon::prelude::*;
 /// // Use default wait cursor
 /// begin_busy_cursor(None);
 ///
 /// // Use custom busy cursor
-/// let custom_wait = Cursor::from_stock(StockCursor::Watch);
+/// let custom_wait = Cursor::from_stock(StockCursor::Watch).unwrap();
 /// begin_busy_cursor(Some(&custom_wait));
 ///
 /// // Don't forget to end the busy state
@@ -407,7 +415,8 @@ pub fn begin_busy_cursor(cursor: Option<&Cursor>) {
 /// This function restores the cursor that was active before the last call to [`begin_busy_cursor`].
 ///
 /// # Examples
-/// ```rust
+/// ```rust,no_run
+/// use wxdragon::prelude::*;
 /// begin_busy_cursor(None);
 /// // ... do some work ...
 /// end_busy_cursor();
@@ -424,7 +433,8 @@ pub fn end_busy_cursor() {
 /// `true` if a busy cursor is currently being displayed, `false` otherwise
 ///
 /// # Examples
-/// ```rust
+/// ```rust,no_run
+/// use wxdragon::prelude::*;
 /// assert!(!is_busy());
 /// begin_busy_cursor(None);
 /// assert!(is_busy());
@@ -441,7 +451,8 @@ pub fn is_busy() -> bool {
 /// ensuring proper cleanup even if an error occurs.
 ///
 /// # Examples
-/// ```rust
+/// ```rust,no_run
+/// use wxdragon::prelude::*;
 /// {
 ///     let _busy = BusyCursor::new(None);
 ///     // Busy cursor is active here

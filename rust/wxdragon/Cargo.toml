@@ -10,6 +10,9 @@ readme = "README.md"
 keywords = ["wxwidgets", "gui", "ui", "cross-platform", "bindings"]
 categories = ["gui", "api-bindings"] # Already good
 
+[package.metadata.docs.rs]
+features = ["aui", "stc", "xrc", "richtext"]
+
 [features]
 default = []
 aui = ["wxdragon-sys/aui"]

@@ -404,7 +404,10 @@ impl DataViewRenderer for DataViewCheckIconTextRenderer {
 ///
 /// # Complete Example: Editable Text Renderer
 ///
-/// ```ignore
+/// ```no_run
+/// # use wxdragon::prelude::*;
+/// # use wxdragon::DeviceContext;
+/// # use wxdragon::DataViewColumnFlags;
 /// use wxdragon::window::WxWidgetDowncast;
 /// use wxdragon::widgets::TextCtrl;
 /// use wxdragon::widgets::dataview::{DataViewCustomRenderer, VariantType, DataViewCellMode, DataViewAlign, Variant};
@@ -449,13 +452,14 @@ impl DataViewRenderer for DataViewCheckIconTextRenderer {
 ///     .build();
 ///
 /// // Use in multiple columns
-/// let col1 = DataViewColumn::new("Name", &text_renderer, 0, 120, ...);
-/// let col2 = DataViewColumn::new("Description", &text_renderer, 1, 200, ...);
+/// let col1 = DataViewColumn::new("Name", &text_renderer, 0, 120, DataViewAlign::Left, DataViewColumnFlags::Resizable);
+/// let col2 = DataViewColumn::new("Description", &text_renderer, 1, 200, DataViewAlign::Left, DataViewColumnFlags::Resizable);
 /// ```
 ///
 /// # Examples
 ///
-/// ```rust
+/// ```no_run
+/// # use wxdragon::prelude::*;
 /// // Create a progress bar renderer
 /// let progress_renderer = DataViewCustomRenderer::builder()
 ///     .variant_type(VariantType::Int32)
@@ -471,8 +475,8 @@ impl DataViewRenderer for DataViewCheckIconTextRenderer {
 ///     .build();
 ///
 /// // Use in multiple columns
-/// let col1 = DataViewColumn::new("Progress 1", &progress_renderer, 1, 120, ...);
-/// let col2 = DataViewColumn::new("Progress 2", &progress_renderer, 3, 120, ...);
+/// let col1 = DataViewColumn::new("Progress 1", &progress_renderer, 1, 120, DataViewAlign::Left, DataViewColumnFlags::Resizable);
+/// let col2 = DataViewColumn::new("Progress 2", &progress_renderer, 3, 120, DataViewAlign::Left, DataViewColumnFlags::Resizable);
 /// ```
 pub struct DataViewCustomRenderer {
     raw: *mut ffi::wxd_DataViewRenderer_t,
@@ -544,7 +548,7 @@ impl DataViewCustomRendererBuilder {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```ignore
     /// .with_get_size(|variant, default_size| {
     ///     match variant {
     ///         Variant::String(s) => {
@@ -573,7 +577,7 @@ impl DataViewCustomRendererBuilder {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```ignore
     /// .with_render(|rect, ctx, state, variant| {
     ///     match variant {
     ///         Variant::String(s) => {

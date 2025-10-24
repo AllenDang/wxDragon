@@ -121,7 +121,7 @@ impl WxdArrayString {
         }
     }
 
-    /// Converts this WxdArrayString into a Vec<String>.
+    /// Converts this WxdArrayString into a `Vec<String>`.
     /// This consumes the WxdArrayString if it owns the pointer.
     pub fn into_vec(self) -> Vec<String> {
         let count = self.get_count();
@@ -143,7 +143,7 @@ impl WxdArrayString {
         vec
     }
 
-    /// Gets all strings from the array as a Vec<String> without consuming the WxdArrayString.
+    /// Gets all strings from the array as a `Vec<String>` without consuming the WxdArrayString.
     pub fn get_strings(&self) -> Vec<String> {
         let count = self.get_count();
         let mut vec = Vec::with_capacity(count);

@@ -20,7 +20,7 @@ use wxdragon_sys as ffi;
 /// use wxdragon::timer::Timer;
 ///
 /// let frame = Frame::builder()
-///     .title("Timer Example")
+///     .with_title("Timer Example")
 ///     .build();
 ///
 /// // Create a timer connected to the frame

@@ -22,8 +22,12 @@ static MAIN_THREAD_QUEUE: LazyLock<CallbackQueue> =
 /// The callback will be executed during the next event loop iteration.
 ///
 /// # Example
-/// ```
+/// ```rust,no_run
 /// use wxdragon::prelude::*;
+/// # // Minimal stub so the snippet compiles in doctests
+/// # struct DummyLabel;
+/// # impl DummyLabel { fn set_label(&self, _s: &str) {} }
+/// # let my_label = DummyLabel;
 ///
 /// // In a background thread:
 /// wxdragon::call_after(Box::new(move || {
@@ -99,12 +103,12 @@ pub fn process_callbacks() {
 /// macOS-specific events.
 ///
 /// # Example
-/// ```no_run
+/// ```rust,no_run
 /// use wxdragon::prelude::*;
 ///
 /// wxdragon::main(|app| {
 ///     // Use app to register event handlers
-///     app.on_mac_open_files(|files| {
+///     app.on_open_files(|files| {
 ///         println!("Files opened: {:?}", files);
 ///     });
 ///
@@ -112,7 +116,8 @@ pub fn process_callbacks() {
 ///         .with_title("My App")
 ///         .build();
 ///     frame.show(true);
-/// });
+/// })
+/// .unwrap();
 /// ```
 #[derive(Clone)]
 pub struct App {
@@ -179,7 +184,8 @@ where
 ///         .with_title("Dark Mode App")
 ///         .build();
 ///     frame.show(true);
-/// });
+/// })
+/// .unwrap();
 /// ```
 pub fn get_app() -> Option<crate::appearance::App> {
     crate::appearance::get_app()
@@ -215,7 +221,8 @@ pub fn get_app() -> Option<crate::appearance::App> {
 ///         .with_title("My App")
 ///         .build();
 ///     frame.show(true);
-/// });
+/// })
+/// .unwrap();
 /// ```
 pub fn set_appearance(
     appearance: crate::appearance::Appearance,
@@ -458,7 +465,7 @@ unsafe extern "C" fn mac_print_files_trampoline<F>(
 ///
 /// wxdragon::main(|app| {
 ///     // app is the App handle for registering event handlers
-///     app.on_mac_open_files(|files| {
+///     app.on_open_files(|files| {
 ///         println!("Files: {:?}", files);
 ///     });
 ///
@@ -468,7 +475,8 @@ unsafe extern "C" fn mac_print_files_trampoline<F>(
 ///     frame.show(true);
 ///
 ///     // No need to preserve the frame - wxWidgets manages it
-/// });
+/// })
+/// .unwrap();
 /// ```
 pub fn main<F>(on_init: F) -> Result<(), Box<dyn std::error::Error>>
 where

@@ -21,7 +21,7 @@ impl Default for DataViewItem {
     ///
     /// The default implementation calls `wxd_DataViewItem_Clone` with a null pointer,
     /// which results in an invalid/empty DataViewItem.
-    /// Use [`is_valid()`](DataViewItem::is_valid) to check if the item is valid.
+    /// Use [`is_ok()`](DataViewItem::is_ok) to check if the item is valid.
     fn default() -> Self {
         let inner = unsafe { ffi::wxd_DataViewItem_Clone(std::ptr::null()) };
         Self { inner }

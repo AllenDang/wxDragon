@@ -19,19 +19,19 @@
 //!
 //! ## Example
 //!
-//! ```rust
+//! ```rust,no_run
 //! use wxdragon::prelude::*;
 //!
 //! let taskbar = TaskBarIcon::builder().build();
 //!
 //! // Cross-platform events (Windows and Linux)
-//! taskbar.on_taskbar_left_down(|event| {
+//! taskbar.on_left_down(|_| {
 //!     println!("Left click on taskbar icon");
 //! });
 //!
 //! // Windows-only events (conditional compilation)
 //! #[cfg(target_os = "windows")]
-//! taskbar.on_taskbar_balloon_click(|event| {
+//! taskbar.on_balloon_click(|_| {
 //!     println!("Balloon tooltip clicked");
 //! });
 //! ```
