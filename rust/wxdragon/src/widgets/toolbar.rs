@@ -106,14 +106,14 @@ impl ToolBar {
         let c_longlong_help = CString::new(config.long_help).unwrap_or_default();
         let bmp_disabled_ptr = config
             .bitmap_disabled
-            .map_or(std::ptr::null_mut(), |bmp| bmp.as_ptr());
+            .map_or(std::ptr::null_mut(), |bmp| **bmp);
 
         unsafe {
             let tool_ptr = ffi::wxd_ToolBar_AddTool(
                 self.window.as_ptr() as *mut _,
                 config.tool_id,
                 c_label.as_ptr(),
-                config.bitmap.as_ptr(),
+                **config.bitmap,
                 bmp_disabled_ptr,
                 config.kind as c_int,
                 c_short_help.as_ptr(),

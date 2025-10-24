@@ -4,47 +4,6 @@
 use std::os::raw::{c_int, c_uchar};
 use wxdragon_sys as ffi;
 
-/// A constant reference to wxNullBitmap, representing an invalid/empty bitmap.
-/// This is useful when you need to pass an empty bitmap to wxWidgets functions.
-///
-/// # Example
-/// ```rust
-/// # use wxdragon::prelude::*;
-/// // Convert NULL_BITMAP to Bitmap when needed
-/// let empty: Bitmap = NULL_BITMAP.into();
-/// assert!(!empty.is_ok());
-///
-/// // Or use it inline:
-/// // static_bitmap.set_bitmap(&NULL_BITMAP.into());
-/// ```
-pub const NULL_BITMAP: NullBitmap = NullBitmap;
-
-/// Wrapper type for wxNullBitmap constant.
-#[derive(Debug, Clone, Copy)]
-pub struct NullBitmap;
-
-impl NullBitmap {
-    /// Returns a const pointer to wxNullBitmap.
-    pub fn as_ptr(&self) -> *const ffi::wxd_Bitmap_t {
-        unsafe { ffi::wxd_Bitmap_GetNull() }
-    }
-}
-
-/// Convert NullBitmap to Bitmap.
-/// This creates an unowned Bitmap wrapper around wxNullBitmap.
-impl From<NullBitmap> for Bitmap {
-    fn from(null_bitmap: NullBitmap) -> Self {
-        unsafe { Bitmap::from_ptr_unowned(null_bitmap.as_ptr() as *mut _) }
-    }
-}
-
-/// Convert &NullBitmap to Bitmap.
-impl From<&NullBitmap> for Bitmap {
-    fn from(null_bitmap: &NullBitmap) -> Self {
-        unsafe { Bitmap::from_ptr_unowned(null_bitmap.as_ptr() as *mut _) }
-    }
-}
-
 /// Represents a platform-dependent bitmap image.
 #[derive(Debug)] // Keep Debug if useful, or remove if pointer isn't meaningful for debug
 pub struct Bitmap {
@@ -52,7 +11,43 @@ pub struct Bitmap {
     is_owned: bool, // Tracks whether Rust owns this bitmap and should destroy it
 }
 
+impl AsRef<*mut ffi::wxd_Bitmap_t> for Bitmap {
+    /// Returns a reference to the raw bitmap pointer.
+    fn as_ref(&self) -> &*mut ffi::wxd_Bitmap_t {
+        &self.ptr
+    }
+}
+
+impl std::ops::Deref for Bitmap {
+    type Target = *mut ffi::wxd_Bitmap_t;
+
+    /// Dereferences to the raw bitmap pointer.
+    fn deref(&self) -> &Self::Target {
+        &self.ptr
+    }
+}
+
 impl Bitmap {
+    /// Using wxNullBitmap to represent an invalid/empty bitmap.
+    ///
+    /// # Example
+    /// ```rust
+    /// # use wxdragon::prelude::*;
+    /// // Get an empty bitmap (non-owning wrapper; Drop will not free it)
+    /// let empty = Bitmap::null_bitmap();
+    /// assert!(!empty.is_ok());
+    /// ```
+    /// Returns a non-owning wrapper around wxNullBitmap.
+    /// This value will not free the underlying object on Drop.
+    pub fn null_bitmap() -> Self {
+        unsafe { Bitmap::from_ptr_unowned(ffi::wxd_Bitmap_GetNull() as *mut _) }
+    }
+
+    /// Checks if this bitmap is wxNullBitmap.
+    pub fn is_null_bitmap(&self) -> bool {
+        std::ptr::eq(self.ptr, unsafe { ffi::wxd_Bitmap_GetNull() })
+    }
+
     /// Creates a new empty bitmap with the specified width and height.
     pub fn new(width: i32, height: i32) -> Option<Self> {
         if width <= 0 || height <= 0 {
@@ -84,13 +79,8 @@ impl Bitmap {
             return None;
         }
 
-        let ptr = unsafe {
-            ffi::wxd_Bitmap_CreateFromRGBA(
-                data.as_ptr() as *const c_uchar,
-                width as c_int,
-                height as c_int,
-            )
-        };
+        let data = data.as_ptr() as *const c_uchar;
+        let ptr = unsafe { ffi::wxd_Bitmap_CreateFromRGBA(data, width as c_int, height as c_int) };
 
         if ptr.is_null() {
             None
@@ -127,22 +117,6 @@ impl Bitmap {
         Bitmap {
             ptr,
             is_owned: false,
-        }
-    }
-
-    /// Returns the raw underlying bitmap pointer.
-    /// Use with caution, primarily for internal FFI calls.
-    pub fn as_ptr(&self) -> *mut ffi::wxd_Bitmap_t {
-        self.ptr
-    }
-
-    /// Returns a pointer suitable for borrowing by C++ (e.g., for DataViewCtrl).
-    /// If the bitmap is not ok or its internal pointer is null, this returns null.
-    pub fn as_borrowable_ptr(&self) -> *mut ffi::wxd_Bitmap_t {
-        if self.is_ok() && !self.ptr.is_null() {
-            self.ptr
-        } else {
-            std::ptr::null_mut()
         }
     }
 
@@ -244,9 +218,7 @@ impl Drop for Bitmap {
     /// Destroys the associated C++ wxBitmap object if Rust owns the bitmap.
     fn drop(&mut self) {
         if !self.ptr.is_null() && self.is_owned {
-            unsafe {
-                ffi::wxd_Bitmap_Destroy(self.ptr);
-            }
+            unsafe { ffi::wxd_Bitmap_Destroy(self.ptr) };
         }
     }
 }

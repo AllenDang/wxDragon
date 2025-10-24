@@ -139,7 +139,7 @@ impl Button {
         unsafe {
             ffi::wxd_Button_SetBitmap(
                 self.window.as_ptr() as *mut ffi::wxd_Button_t,
-                bitmap.as_ptr(),
+                **bitmap,
                 dir as ffi::wxd_ButtonBitmapPosition_t,
             );
         }
@@ -155,7 +155,7 @@ impl Button {
         unsafe {
             ffi::wxd_Button_SetBitmapDisabled(
                 self.window.as_ptr() as *mut ffi::wxd_Button_t,
-                bitmap.as_ptr(),
+                **bitmap,
             );
         }
     }
@@ -165,7 +165,7 @@ impl Button {
         unsafe {
             ffi::wxd_Button_SetBitmapFocus(
                 self.window.as_ptr() as *mut ffi::wxd_Button_t,
-                bitmap.as_ptr(),
+                **bitmap,
             );
         }
     }
@@ -175,7 +175,7 @@ impl Button {
         unsafe {
             ffi::wxd_Button_SetBitmapCurrent(
                 self.window.as_ptr() as *mut ffi::wxd_Button_t,
-                bitmap.as_ptr(),
+                **bitmap,
             );
         }
     }
@@ -185,7 +185,7 @@ impl Button {
         unsafe {
             ffi::wxd_Button_SetBitmapPressed(
                 self.window.as_ptr() as *mut ffi::wxd_Button_t,
-                bitmap.as_ptr(),
+                **bitmap,
             );
         }
     }

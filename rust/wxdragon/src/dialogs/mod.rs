@@ -79,7 +79,7 @@ impl Dialog {
 
     pub fn set_icon(&self, bitmap: &Bitmap) {
         let dlg = self.window.as_ptr() as *mut ffi::wxd_Dialog_t;
-        unsafe { ffi::wxd_Dialog_SetIcon(dlg, bitmap.as_ptr()) }
+        unsafe { ffi::wxd_Dialog_SetIcon(dlg, **bitmap) }
     }
 
     /// Shows the dialog modally.

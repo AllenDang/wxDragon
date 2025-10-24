@@ -215,7 +215,7 @@ pub use crate::widgets::ItemKind as WidgetItemKind;
 
 // --- Bitmaps & Art ---
 pub use crate::art_provider::{ArtClient, ArtId, ArtProvider};
-pub use crate::bitmap::{Bitmap, NullBitmap, NULL_BITMAP};
+pub use crate::bitmap::Bitmap;
 pub use crate::bitmap_bundle::BitmapBundle; // Added BitmapBundle
 
 // --- Dialogs ---

@@ -44,7 +44,7 @@ impl GenericStaticBitmap {
             let ptr = ffi::wxd_GenericStaticBitmap_CreateWithBitmap(
                 parent.handle_ptr(),
                 id as c_int,
-                bitmap.as_ptr(),
+                **bitmap,
                 ffi::wxd_Point { x: -1, y: -1 }, // DEFAULT_POSITION
                 ffi::wxd_Size {
                     width: -1,
@@ -91,7 +91,7 @@ impl GenericStaticBitmap {
         unsafe {
             ffi::wxd_GenericStaticBitmap_SetBitmap(
                 self.window.handle_ptr() as *mut ffi::wxd_GenericStaticBitmap_t,
-                bitmap.as_ptr(),
+                **bitmap,
             );
         }
 
@@ -203,7 +203,7 @@ widget_builder!(
                 let ptr = ffi::wxd_GenericStaticBitmap_CreateWithBitmap(
                     slf.parent.handle_ptr(),
                     slf.id as c_int,
-                    bmp.as_ptr(),
+                    **bmp,
                     slf.pos.into(),
                     slf.size.into(),
                     slf.style.bits() as ffi::wxd_Style_t,

@@ -72,7 +72,7 @@ impl StaticBitmap {
             let ptr = ffi::wxd_StaticBitmap_CreateWithBitmap(
                 parent.handle_ptr(),
                 id as c_int,
-                bitmap.as_ptr(),
+                **bitmap,
                 ffi::wxd_Point { x: -1, y: -1 }, // DEFAULT_POSITION
                 ffi::wxd_Size {
                     width: -1,
@@ -116,7 +116,7 @@ impl StaticBitmap {
 
     /// Sets or replaces the bitmap shown in the control.
     ///
-    /// Accepts either a `&Bitmap` or anything convertible to `Bitmap` (like `NullBitmap`).
+    /// Accepts a `&Bitmap`. Use `Bitmap::null_bitmap()` to clear the image.
     ///
     /// # Example
     /// ```rust
@@ -125,15 +125,15 @@ impl StaticBitmap {
     /// // Set a normal bitmap
     /// sb.set_bitmap(bmp);
     ///
-    /// // Clear with NullBitmap
-    /// sb.set_bitmap(&NULL_BITMAP.into());
+    /// // Clear using a null/empty bitmap
+    /// sb.set_bitmap(&Bitmap::null_bitmap());
     /// # }
     /// ```
     pub fn set_bitmap(&self, bitmap: &Bitmap) {
         unsafe {
             ffi::wxd_StaticBitmap_SetBitmap(
                 self.window.handle_ptr() as *mut ffi::wxd_StaticBitmap_t,
-                bitmap.as_ptr(),
+                **bitmap,
             );
         }
 
@@ -245,7 +245,7 @@ widget_builder!(
                 let ptr = ffi::wxd_StaticBitmap_CreateWithBitmap(
                     slf.parent.handle_ptr(),
                     slf.id as c_int,
-                    bmp.as_ptr(),
+                    **bmp,
                     slf.pos.into(),
                     slf.size.into(),
                     slf.style.bits() as ffi::wxd_Style_t,

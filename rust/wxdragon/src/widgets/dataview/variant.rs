@@ -116,7 +116,7 @@ impl Variant {
             }
             Variant::Bitmap(value) => {
                 variant.type_ = ffi::WXD_VARIANT_TYPE_BITMAP_RUST_BORROWED as i32;
-                variant.data.bitmap_val = value.as_ptr();
+                variant.data.bitmap_val = **value;
             }
             Variant::BitmapBorrowed(ptr) => {
                 variant.type_ = ffi::WXD_VARIANT_TYPE_BITMAP_RUST_BORROWED as i32;
@@ -326,7 +326,13 @@ impl From<Bitmap> for Variant {
 
 impl<'a> From<&'a Bitmap> for Variant {
     fn from(value: &'a Bitmap) -> Self {
-        Variant::BitmapBorrowed(value.as_borrowable_ptr())
+        // For borrowed bitmaps, pass a null pointer when the bitmap is invalid,
+        // preserving previous semantics and avoiding use of non-ok wxBitmap.
+        if value.is_ok() {
+            Variant::BitmapBorrowed(**value)
+        } else {
+            Variant::BitmapBorrowed(std::ptr::null_mut())
+        }
     }
 }
 
@@ -369,7 +375,7 @@ pub fn to_raw_variant(value: &Variant) -> ffi::wxd_Variant_t {
         Variant::Bitmap(val) => {
             // This path is for an owned Bitmap, uses the FFI-cloned mechanism
             result.type_ = ffi::WXD_VARIANT_TYPE_BITMAP as i32;
-            let original_rust_owned_ptr = val.as_ptr();
+            let original_rust_owned_ptr = **val;
             if original_rust_owned_ptr.is_null() {
                 result.data.bitmap_val = std::ptr::null_mut();
             } else {

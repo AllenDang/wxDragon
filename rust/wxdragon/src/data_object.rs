@@ -290,7 +290,7 @@ pub struct BitmapDataObject {
 impl BitmapDataObject {
     /// Creates a new bitmap data object with the specified bitmap.
     pub fn new(bitmap: &crate::bitmap::Bitmap) -> Self {
-        let ptr = unsafe { ffi::wxd_BitmapDataObject_Create(bitmap.as_ptr()) };
+        let ptr = unsafe { ffi::wxd_BitmapDataObject_Create(**bitmap) };
         Self {
             data_object: DataObjectBase::from_ptr(ptr as *mut ffi::wxd_DataObject_t, true),
         }

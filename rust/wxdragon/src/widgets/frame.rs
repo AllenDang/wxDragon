@@ -347,7 +347,7 @@ impl Frame {
         unsafe {
             ffi::wxd_Frame_SetIconFromBitmap(
                 self.window.as_ptr() as *mut ffi::wxd_Frame_t,
-                bitmap.as_ptr(),
+                **bitmap,
             );
         }
     }

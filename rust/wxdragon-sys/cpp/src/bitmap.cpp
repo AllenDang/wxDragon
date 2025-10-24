@@ -56,7 +56,8 @@ WXD_EXPORTED wxd_Bitmap_t* wxd_Bitmap_CreateFromRGBA(
 
     // Now create the wxBitmap from the wxImage.
     // Use depth -1 for default screen depth.
-    wxBitmap* bitmap = new wxBitmap(image, -1);
+    // Use nothrow to avoid throwing across the FFI boundary.
+    wxBitmap* bitmap = new (std::nothrow) wxBitmap(image, -1);
 
     if (!bitmap || !bitmap->IsOk()) {
         WXD_LOG_ERROR("Failed to create wxBitmap from wxImage.");
@@ -70,6 +71,9 @@ WXD_EXPORTED wxd_Bitmap_t* wxd_Bitmap_CreateFromRGBA(
 // Implementation for wxd_Bitmap_Destroy
 WXD_EXPORTED void wxd_Bitmap_Destroy(wxd_Bitmap_t* bitmap) {
     wxBitmap* bmp = reinterpret_cast<wxBitmap*>(bitmap);
+    if (!bmp) return;
+    // Never delete the global wxNullBitmap.
+    if (bmp == &wxNullBitmap) return;
     delete bmp;
 }
 
@@ -101,14 +105,8 @@ WXD_EXPORTED wxd_Bitmap_t* wxd_Bitmap_Clone(wxd_Bitmap_t* bitmap) {
         return nullptr; // Don't clone an invalid bitmap
     }
 
-    wxBitmap* cloned_bmp = nullptr;
-    try {
-        cloned_bmp = new wxBitmap(*original_bmp); // Use copy constructor
-    } catch (const std::exception& e) {
-        // cloned_bmp will remain nullptr
-    } catch (...) {
-        // cloned_bmp will remain nullptr
-    }
+    // Use nothrow to avoid throwing across the FFI boundary.
+    wxBitmap* cloned_bmp = new (std::nothrow) wxBitmap(*original_bmp); // shallow copy (ref-counted)
 
     if (!cloned_bmp || !cloned_bmp->IsOk()) {
         delete cloned_bmp; // Safe to call delete on nullptr

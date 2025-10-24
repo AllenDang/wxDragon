@@ -556,7 +556,7 @@ pub trait DeviceContext {
     /// Draw a bitmap at the specified position
     fn draw_bitmap(&self, bitmap: &Bitmap, x: i32, y: i32, transparent: bool) {
         unsafe {
-            wxdragon_sys::wxd_DC_DrawBitmap(self.dc_ptr(), bitmap.as_ptr(), x, y, transparent);
+            wxdragon_sys::wxd_DC_DrawBitmap(self.dc_ptr(), **bitmap, x, y, transparent);
         }
     }
 

@@ -110,19 +110,19 @@ widget_builder!(
     build_impl: |slf| {
         let parent_ptr = slf.parent.handle_ptr();
         let bitmap_ptr = match &slf.bitmap {
-            Some(bitmap) => bitmap.as_ptr(),
+            Some(bitmap) => **bitmap,
             None => panic!("BitmapButton requires a bitmap to be set"),
         };
 
         let bmp_disabled_ptr = slf.bitmap_disabled
             .as_ref()
-            .map_or(std::ptr::null_mut(), |b| b.as_ptr());
+            .map_or(std::ptr::null_mut(), |b| **b);
         let bmp_focus_ptr = slf.bitmap_focus
             .as_ref()
-            .map_or(std::ptr::null_mut(), |b| b.as_ptr());
+            .map_or(std::ptr::null_mut(), |b| **b);
         let bmp_hover_ptr = slf.bitmap_hover
             .as_ref()
-            .map_or(std::ptr::null_mut(), |b| b.as_ptr());
+            .map_or(std::ptr::null_mut(), |b| **b);
 
         // For BitmapButton, size is often best derived from the bitmap if not explicitly set
         // and if a bitmap is provided
