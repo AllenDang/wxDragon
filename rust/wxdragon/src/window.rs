@@ -178,7 +178,7 @@ impl Window {
 }
 
 /// Trait for common wxWidget operations.
-pub trait WxWidget {
+pub trait WxWidget: std::any::Any {
     /// Returns the raw underlying window pointer.
     /// Unsafe because the lifetime is not tied to self.
     /// Primarily for internal use or passing back to FFI.
@@ -1673,6 +1673,22 @@ impl<W> WxWidgetDowncast for W
 where
     W: WxWidget + std::any::Any,
 {
+    fn downcast_ref<T: WxWidget + 'static>(&self) -> Option<&T> {
+        (&*self as &dyn std::any::Any).downcast_ref::<T>()
+    }
+
+    fn downcast_mut<T: WxWidget + 'static>(&mut self) -> Option<&mut T> {
+        (&mut *self as &mut dyn std::any::Any).downcast_mut::<T>()
+    }
+
+    fn widget_type_name(&self) -> &'static str {
+        std::any::type_name::<Self>()
+    }
+}
+
+// Provide downcasting for trait objects `dyn WxWidget` as well, so callers holding
+// `&dyn WxWidget` or `&mut dyn WxWidget` (e.g., editor widgets) can downcast safely.
+impl WxWidgetDowncast for dyn WxWidget {
     fn downcast_ref<T: WxWidget + 'static>(&self) -> Option<&T> {
         (self as &dyn std::any::Any).downcast_ref::<T>()
     }
