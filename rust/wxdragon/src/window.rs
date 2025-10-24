@@ -1674,7 +1674,7 @@ where
     W: WxWidget + std::any::Any,
 {
     fn downcast_ref<T: WxWidget + 'static>(&self) -> Option<&T> {
-        (&*self as &dyn std::any::Any).downcast_ref::<T>()
+        (self as &dyn std::any::Any).downcast_ref::<T>()
     }
 
     fn downcast_mut<T: WxWidget + 'static>(&mut self) -> Option<&mut T> {
