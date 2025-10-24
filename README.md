@@ -1,5 +1,11 @@
 # wxDragon - Cross-Platform Native GUI for Rust
 
+[![Crates.io](https://img.shields.io/crates/v/wxdragon.svg)](https://crates.io/crates/wxdragon)
+[![wxdragon](https://docs.rs/wxdragon/badge.svg)](https://docs.rs/wxdragon)
+[![Documentation](https://img.shields.io/badge/docs-release-brightgreen.svg?style=flat)](https://docs.rs/wxdragon)
+[![Download](https://img.shields.io/crates/d/wxdragon.svg)](https://crates.io/crates/wxdragon)
+[![License](https://img.shields.io/crates/l/wxdragon.svg?style=flat)](https://github.com/AllenDang/wxDragon/blob/master/LICENSE)
+
 **wxDragon** brings the power of wxWidgets to Rust, enabling you to build beautiful, native desktop applications that run seamlessly across Windows, macOS, and Linux. With wxDragon, your applications will look and feel native on every platform while maintaining a single Rust codebase.
 
 ## Why Choose wxDragon?
