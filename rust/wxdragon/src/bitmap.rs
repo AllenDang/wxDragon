@@ -120,6 +120,16 @@ impl Bitmap {
         }
     }
 
+    /// Consumes the Bitmap and returns the raw pointer, transferring ownership to the caller.
+    #[allow(dead_code)]
+    pub(crate) fn into_raw(mut self) -> *mut ffi::wxd_Bitmap_t {
+        let ptr = self.ptr;
+        // Prevent Drop from freeing the pointer we are returning.
+        self.ptr = std::ptr::null_mut();
+        self.is_owned = false;
+        ptr
+    }
+
     /// Returns the width of the bitmap in pixels.
     pub fn get_width(&self) -> i32 {
         if self.ptr.is_null() {
