@@ -248,10 +248,10 @@ impl MenuEventsApp {
         ]);
         for (row, (name, age, city, status)) in demo_data.iter().enumerate() {
             model.append_row();
-            model.set_value(row, 0, Variant::String(name.to_string()));
-            model.set_value(row, 1, Variant::Int32(*age));
-            model.set_value(row, 2, Variant::String(city.to_string()));
-            model.set_value(row, 3, Variant::String(status.to_string()));
+            model.set_value(row, 0, Variant::from_string(name));
+            model.set_value(row, 1, Variant::from_i32(*age));
+            model.set_value(row, 2, Variant::from_string(city));
+            model.set_value(row, 3, Variant::from_string(status));
         }
 
         // Create columns

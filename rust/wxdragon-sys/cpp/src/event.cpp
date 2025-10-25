@@ -1650,21 +1650,18 @@ wxd_DataViewEvent_GetRow(wxd_Event_t* event, int64_t* row)
     return false;
 }
 
-// Header: WXD_EXPORTED bool wxd_DataViewEvent_GetValue(wxd_Event_t* event, wxd_Variant_t* value);
-WXD_EXPORTED bool
-wxd_DataViewEvent_GetValue(wxd_Event_t* event, wxd_Variant_t* value)
+WXD_EXPORTED const wxd_Variant_t*
+wxd_DataViewEvent_GetValue(wxd_Event_t* event)
 {
-    if (!event || !value)
-        return false;
+    if (!event)
+        return nullptr;
     wxEvent* wx_event = reinterpret_cast<wxEvent*>(event);
     wxDataViewEvent* dve = dynamic_cast<wxDataViewEvent*>(wx_event);
     if (!dve)
-        return false;
+        return nullptr;
 
     wxVariant var = dve->GetValue();
-    // Copy variant data - this needs proper implementation based on wxd_Variant_t structure
-    // For now, just mark as valid
-    return true;
+    return wxd_Variant_Clone(reinterpret_cast<const wxd_Variant_t*>(&var));
 }
 
 // Header: WXD_EXPORTED bool wxd_DataViewEvent_SetValue(wxd_Event_t* event, const wxd_Variant_t* value);

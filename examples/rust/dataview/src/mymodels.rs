@@ -32,25 +32,25 @@ pub fn create_music_tree_model(data: Rc<RefCell<MusicTree>>) -> CustomDataViewTr
                 let r_b = tree.root.borrow();
                 let r = &*r_b;
                 match col {
-                    0 => Variant::String(r.title.clone()),
-                    1 => Variant::String(r.artist.clone().unwrap_or_default()),
+                    0 => Variant::from_string(r.title.clone()),
+                    1 => Variant::from_string(r.artist.clone().unwrap_or_default()),
                     2 => match r.year {
-                        Some(v) => Variant::String(v.to_string()),
-                        None => Variant::String(String::new()),
+                        Some(v) => Variant::from_string(v.to_string()),
+                        None => Variant::from_string(String::new()),
                     },
-                    3 => Variant::String(r.quality.clone().unwrap_or_default()),
-                    _ => Variant::String(String::new()),
+                    3 => Variant::from_string(r.quality.clone().unwrap_or_default()),
+                    _ => Variant::from_string(String::new()),
                 }
             }
             Some(n) => match col {
-                0 => Variant::String(n.title.clone()),
-                1 => Variant::String(n.artist.clone().unwrap_or_default()),
+                0 => Variant::from_string(n.title.clone()),
+                1 => Variant::from_string(n.artist.clone().unwrap_or_default()),
                 2 => match n.year {
-                    Some(v) => Variant::String(v.to_string()),
-                    None => Variant::String(String::new()),
+                    Some(v) => Variant::from_string(v.to_string()),
+                    None => Variant::from_string(String::new()),
                 },
-                3 => Variant::String(n.quality.clone().unwrap_or_default()),
-                _ => Variant::String(String::new()),
+                3 => Variant::from_string(n.quality.clone().unwrap_or_default()),
+                _ => Variant::from_string(String::new()),
             },
         },
         Some(
@@ -70,41 +70,57 @@ pub fn create_music_tree_model(data: Rc<RefCell<MusicTree>>) -> CustomDataViewTr
                 };
 
                 let mut node = target_rc.borrow_mut();
-                match (col, var) {
-                    (0, Variant::String(s)) => {
-                        node.title = s.clone();
-                        true
+                match col {
+                    0 => {
+                        if let Some(s) = var.get_string() {
+                            node.title = s;
+                            true
+                        } else {
+                            false
+                        }
                     }
-                    (1, Variant::String(s)) => {
+                    1 => {
                         if matches!(node.node_type, NodeType::Branch) {
                             return false;
                         }
-                        node.artist = if s.is_empty() { None } else { Some(s.clone()) };
-                        true
+                        if let Some(s) = var.get_string() {
+                            node.artist = if s.is_empty() { None } else { Some(s) };
+                            true
+                        } else {
+                            false
+                        }
                     }
-                    (2, Variant::String(s)) => {
+                    2 => {
                         if matches!(node.node_type, NodeType::Branch) {
                             return false;
                         }
-                        let s_trim = s.trim();
-                        if s_trim.is_empty() {
-                            node.year = None;
-                            return true;
-                        }
-                        match s_trim.parse::<i32>() {
-                            Ok(v) => {
-                                node.year = Some(v);
-                                true
+                        if let Some(s) = var.get_string() {
+                            let s_trim = s.trim().to_string();
+                            if s_trim.is_empty() {
+                                node.year = None;
+                                return true;
                             }
-                            Err(_) => false,
+                            match s_trim.parse::<i32>() {
+                                Ok(v) => {
+                                    node.year = Some(v);
+                                    true
+                                }
+                                Err(_) => false,
+                            }
+                        } else {
+                            false
                         }
                     }
-                    (3, Variant::String(s)) => {
+                    3 => {
                         if matches!(node.node_type, NodeType::Branch) {
                             return false;
                         }
-                        node.quality = if s.is_empty() { None } else { Some(s.clone()) };
-                        true
+                        if let Some(s) = var.get_string() {
+                            node.quality = if s.is_empty() { None } else { Some(s) };
+                            true
+                        } else {
+                            false
+                        }
                     }
                     _ => false,
                 }

@@ -177,7 +177,7 @@ fn main() {
                                     let ret = dlg.show_modal();
                                     if ret == ID_OK {
                                         if let Some(new_val) = dlg.get_value() {
-                                            let val = Variant::String(new_val);
+                                            let val = Variant::from_string(new_val);
                                             mtm_for_selected.set_value(ptr, 0, &val);
                                         }
                                     }

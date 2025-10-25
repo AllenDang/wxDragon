@@ -1,34 +1,23 @@
-//! VariantType implementation.
+//! Variant wrapper for typed wxVariant C API.
 
 use crate::{Bitmap, DateTime};
-use std::ffi::CString;
 use wxdragon_sys as ffi;
 
 /// Represents the type of data stored in a variant.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum VariantType {
-    /// Boolean value (true/false)
     Bool,
-    /// 32-bit integer
     Int32,
-    /// 64-bit integer
     Int64,
-    /// Floating point number
     Double,
-    /// Text string
     String,
-    /// Date and time value
     DateTime,
-    /// Bitmap image
     Bitmap,
-    /// Progress value (typically 0-100)
     Progress,
-    /// wxDataViewIconText
     IconText,
 }
 
 impl VariantType {
-    /// Converts the enum variant to a C string compatible with wxWidgets
     pub fn as_str(&self) -> &'static str {
         match self {
             VariantType::Bool => "bool",
@@ -44,215 +33,227 @@ impl VariantType {
     }
 }
 
-/// A wrapper for wxd_Variant_t that provides a safe Rust interface.
+/// Safe Rust wrapper over a wxVariant pointer (wxd_Variant_t).
 ///
-/// Variant is used to store and pass data of different types between
-/// the application and the DataViewModel.
-pub enum Variant {
-    /// Boolean value
-    Bool(bool),
-    /// 32-bit integer value
-    Int32(i32),
-    /// 64-bit integer value
-    Int64(i64),
-    /// Floating point value
-    Double(f64),
-    /// String value
-    String(String),
-    /// Date and time value
-    DateTime(DateTime),
-    /// Bitmap image data
-    Bitmap(Bitmap),
-    /// Raw, borrowed pointer to a wxBitmap for FFI (used by DataViewCtrl GetValue)
-    BitmapBorrowed(*mut ffi::wxd_Bitmap_t),
+/// Owns the underlying wxVariant by default and destroys it in Drop.
+pub struct Variant {
+    ptr: *const ffi::wxd_Variant_t,
+    owned: bool,
+}
+
+impl AsRef<*const ffi::wxd_Variant_t> for Variant {
+    fn as_ref(&self) -> &*const ffi::wxd_Variant_t {
+        // unsafe { &*((&self.ptr) as *const *mut ffi::wxd_Variant_t as *const *const ffi::wxd_Variant_t) }
+        &self.ptr
+    }
+}
+
+impl std::ops::Deref for Variant {
+    type Target = *const ffi::wxd_Variant_t;
+
+    fn deref(&self) -> &Self::Target {
+        self.as_ref()
+    }
 }
 
 impl Variant {
-    /// Creates a new empty variant.
+    /// Create an empty variant.
     pub fn new() -> Self {
-        Variant::Int32(0)
+        let ptr = unsafe { ffi::wxd_Variant_CreateEmpty() };
+        Self { ptr, owned: true }
     }
 
-    /// Gets the raw pointer to the native wxd_Variant_t.
-    ///
-    /// IMPORTANT: Caller must ensure the returned pointer is freed using
-    /// wxd_Variant_Free when no longer needed to avoid memory leaks.
-    /// This function allocates heap memory for both the variant structure
-    /// and any string data it contains.
-    pub fn as_raw(&self) -> *const ffi::wxd_Variant_t {
-        // Create a heap-allocated wxd_Variant_t to ensure it doesn't get dropped
-        let mut variant = Box::new(ffi::wxd_Variant_t {
-            type_: ffi::WXD_VARIANT_TYPE_INVALID as i32,
-            data: unsafe { std::mem::zeroed() },
-        });
-
-        // Set the value based on the variant type
-        match self {
-            Variant::Bool(value) => {
-                variant.type_ = ffi::WXD_VARIANT_TYPE_BOOL as i32;
-                variant.data.bool_val = *value;
-            }
-            Variant::Int32(value) => {
-                variant.type_ = ffi::WXD_VARIANT_TYPE_INT32 as i32;
-                variant.data.int32_val = *value;
-            }
-            Variant::Int64(value) => {
-                variant.type_ = ffi::WXD_VARIANT_TYPE_INT64 as i32;
-                variant.data.int64_val = *value;
-            }
-            Variant::Double(value) => {
-                variant.type_ = ffi::WXD_VARIANT_TYPE_DOUBLE as i32;
-                variant.data.double_val = *value;
-            }
-            Variant::String(value) => {
-                variant.type_ = ffi::WXD_VARIANT_TYPE_STRING as i32;
-                variant.data.string_val =
-                    CString::new(value.as_str()).unwrap_or_default().into_raw();
-            }
-            Variant::DateTime(value) => {
-                variant.type_ = ffi::WXD_VARIANT_TYPE_DATETIME as i32;
-                // Convert DateTime to raw datetime struct
-                variant.data.datetime_val = unsafe { *(value.as_ptr()) };
-            }
-            Variant::Bitmap(value) => {
-                variant.type_ = ffi::WXD_VARIANT_TYPE_BITMAP_RUST_BORROWED as i32;
-                variant.data.bitmap_val = **value;
-            }
-            Variant::BitmapBorrowed(ptr) => {
-                variant.type_ = ffi::WXD_VARIANT_TYPE_BITMAP_RUST_BORROWED as i32;
-                variant.data.bitmap_val = *ptr;
-            }
-        }
-
-        // Leak the Box to ensure the memory lives long enough
-        Box::into_raw(variant)
+    /// Create a new variant and set it to a bool value.
+    pub fn from_bool(v: bool) -> Self {
+        let var = Self::new();
+        unsafe { ffi::wxd_Variant_SetBool(var.ptr, v) };
+        var
     }
 
-    /// Gets a mutable raw pointer to the native wxd_Variant_t.
-    ///
-    /// This is primarily used by event.rs for event data.
-    ///
-    /// IMPORTANT: Caller must ensure the returned pointer is freed using
-    /// wxd_Variant_Free when no longer needed to avoid memory leaks.
-    pub fn as_raw_mut(&self) -> *mut ffi::wxd_Variant_t {
-        self.as_raw() as *mut _
+    pub fn from_i32(v: i32) -> Self {
+        let var = Self::new();
+        unsafe { ffi::wxd_Variant_SetInt32(var.ptr, v) };
+        var
     }
 
-    /// Consumes the variant and transfers ownership to C++.
-    /// Returns a raw pointer that must be freed by C++ code using wxd_Variant_Free.
-    ///
-    /// This is preferred over as_raw() when transferring ownership to C++ code
-    /// to make the ownership transfer explicit in the code.
-    pub fn into_raw(self) -> *mut ffi::wxd_Variant_t {
-        self.as_raw() as *mut _
+    pub fn from_i64(v: i64) -> Self {
+        let var = Self::new();
+        unsafe { ffi::wxd_Variant_SetInt64(var.ptr, v) };
+        var
     }
 
-    /// Creates a Variant from a raw pointer, taking ownership and freeing the C++ resources.
-    ///
+    pub fn from_f64(v: f64) -> Self {
+        let var = Self::new();
+        unsafe { ffi::wxd_Variant_SetDouble(var.ptr, v) };
+        var
+    }
+
+    pub fn from_string<S: AsRef<str>>(s: S) -> Self {
+        let var = Self::new();
+        let b = s.as_ref().as_bytes();
+        unsafe { ffi::wxd_Variant_SetString_Utf8(var.ptr, b.as_ptr() as _, b.len() as i32) };
+        var
+    }
+
+    pub fn from_datetime(dt: DateTime) -> Self {
+        let var = Self::new();
+        let raw = unsafe { *dt.as_ptr() };
+        unsafe { ffi::wxd_Variant_SetDateTime(var.ptr, raw) };
+        var
+    }
+
+    pub fn from_bitmap(bmp: &Bitmap) -> Self {
+        let var = Self::new();
+        let p = **bmp as *const ffi::wxd_Bitmap_t;
+        unsafe { ffi::wxd_Variant_SetBitmap(var.ptr, p) };
+        var
+    }
+
+    /// Returns const pointer for passing to FFI where C++ does not take ownership.
+    pub fn as_const_ptr(&self) -> *const ffi::wxd_Variant_t {
+        self.ptr as *const _
+    }
+
+    /// Transfers ownership to the caller (typically C++). After this call,
+    /// Drop will not destroy the variant.
+    pub fn into_raw(mut self) -> *const ffi::wxd_Variant_t {
+        let p = self.ptr;
+        self.owned = false;
+        self.ptr = std::ptr::null();
+        p
+    }
+
     /// # Safety
-    /// The pointer must be valid and must not be used after this call.
-    /// The caller must ensure this pointer was allocated by as_raw() or into_raw().
-    pub unsafe fn from_raw(ptr: *mut ffi::wxd_Variant_t) -> Option<Self> {
+    /// Clone from a const wxd_Variant_t* by calling the C++ Clone helper.
+    pub unsafe fn from_const_ptr_clone(ptr: *const ffi::wxd_Variant_t) -> Option<Self> {
         if ptr.is_null() {
             return None;
         }
-
-        let variant_ref = &*ptr;
-        let result = match variant_ref.type_ {
-            t if t == ffi::WXD_VARIANT_TYPE_BOOL as i32 => Variant::Bool(variant_ref.data.bool_val),
-            t if t == ffi::WXD_VARIANT_TYPE_INT32 as i32 => {
-                Variant::Int32(variant_ref.data.int32_val)
-            }
-            t if t == ffi::WXD_VARIANT_TYPE_INT64 as i32 => {
-                Variant::Int64(variant_ref.data.int64_val)
-            }
-            t if t == ffi::WXD_VARIANT_TYPE_DOUBLE as i32 => {
-                Variant::Double(variant_ref.data.double_val)
-            }
-            t if t == ffi::WXD_VARIANT_TYPE_STRING as i32 => {
-                if variant_ref.data.string_val.is_null() {
-                    Variant::String(String::new())
-                } else {
-                    let c_str = std::ffi::CStr::from_ptr(variant_ref.data.string_val);
-                    let string = c_str.to_string_lossy().into_owned();
-                    Variant::String(string)
-                }
-            }
-            t if t == ffi::WXD_VARIANT_TYPE_DATETIME as i32 => {
-                // Create a DateTime from the raw data
-                let dt = crate::DateTime::from_raw(variant_ref.data.datetime_val);
-                Variant::DateTime(dt)
-            }
-            t if t == ffi::WXD_VARIANT_TYPE_BITMAP as i32 => {
-                if variant_ref.data.bitmap_val.is_null() {
-                    // Since there's no default constructor, create a minimal 1x1 bitmap
-                    // or return a special case that represents "no bitmap"
-                    let data = vec![0u8, 0, 0, 0]; // 1x1 transparent pixel
-                    match crate::Bitmap::from_rgba(&data, 1, 1) {
-                        Some(bitmap) => Variant::Bitmap(bitmap),
-                        None => {
-                            // If even this fails, we're in trouble, but let's try to recover
-                            // by using a default variant type instead of failing completely
-                            log::warn!(
-                                "Warning: Failed to create empty bitmap for null bitmap pointer"
-                            );
-                            Variant::String("".to_string())
-                        }
-                    }
-                } else {
-                    // Use from_ptr_owned to take ownership of the bitmap
-                    let bitmap = crate::Bitmap::from_ptr_owned(variant_ref.data.bitmap_val);
-                    // Set the pointer to null to avoid double-free since we've taken ownership
-                    // Note: This is safe because we're working with a local temporary copy
-                    // of the variant_ref in memory that will be freed by wxd_Variant_Free
-                    Variant::Bitmap(bitmap)
-                }
-            }
-            _ => {
-                // Invalid type, free the memory and return None
-                ffi::wxd_Variant_Free(ptr);
-                return None;
-            }
-        };
-
-        // Free the C++ resources
-        ffi::wxd_Variant_Free(ptr);
-
-        Some(result)
+        let cloned = ffi::wxd_Variant_Clone(ptr);
+        if cloned.is_null() {
+            None
+        } else {
+            Some(Self {
+                ptr: cloned,
+                owned: true,
+            })
+        }
     }
 
-    /// Gets the type of the variant
-    pub fn get_type(&self) -> VariantType {
-        match self {
-            Variant::Bool(_) => VariantType::Bool,
-            Variant::Int32(_) => VariantType::Int32,
-            Variant::Int64(_) => VariantType::Int64,
-            Variant::Double(_) => VariantType::Double,
-            Variant::String(_) => VariantType::String,
-            Variant::DateTime(_) => VariantType::DateTime,
-            Variant::Bitmap(_) => VariantType::Bitmap,
-            Variant::BitmapBorrowed(_) => VariantType::Bitmap,
+    /// Returns the wxVariant type name (e.g., "string", "bool").
+    pub fn type_name(&self) -> String {
+        // Query required length first by calling with out_len=0
+        let needed = unsafe { ffi::wxd_Variant_GetTypeName_Utf8(**self, std::ptr::null_mut(), 0) };
+        if needed == 0 {
+            return String::new();
+        }
+        let mut b = vec![0u8; needed as usize + 1];
+        let w = unsafe { ffi::wxd_Variant_GetTypeName_Utf8(**self, b.as_mut_ptr() as _, b.len()) };
+        if w == 0 {
+            return String::new();
+        }
+        // Ensure we drop trailing NUL, if any
+        if let Some(pos) = b.iter().position(|&b| b == 0) {
+            b.truncate(pos);
+        }
+        String::from_utf8_lossy(&b).into_owned()
+    }
+
+    pub fn get_bool(&self) -> Option<bool> {
+        let mut out = false;
+        let ok = unsafe { ffi::wxd_Variant_GetBool(self.as_const_ptr(), &mut out) };
+        if ok {
+            Some(out)
+        } else {
+            None
+        }
+    }
+
+    pub fn get_i32(&self) -> Option<i32> {
+        let mut out = 0i32;
+        let ok = unsafe { ffi::wxd_Variant_GetInt32(self.as_const_ptr(), &mut out) };
+        if ok {
+            Some(out)
+        } else {
+            None
+        }
+    }
+
+    pub fn get_i64(&self) -> Option<i64> {
+        let mut out = 0i64;
+        let ok = unsafe { ffi::wxd_Variant_GetInt64(self.as_const_ptr(), &mut out) };
+        if ok {
+            Some(out)
+        } else {
+            None
+        }
+    }
+
+    pub fn get_f64(&self) -> Option<f64> {
+        let mut out = 0f64;
+        let ok = unsafe { ffi::wxd_Variant_GetDouble(self.as_const_ptr(), &mut out) };
+        if ok {
+            Some(out)
+        } else {
+            None
+        }
+    }
+
+    pub fn get_string(&self) -> Option<String> {
+        let needed = unsafe { ffi::wxd_Variant_GetString_Utf8(**self, std::ptr::null_mut(), 0) };
+        if needed == 0 {
+            return None;
+        }
+        let mut buf = vec![0_u8; needed + 1];
+        let written =
+            unsafe { ffi::wxd_Variant_GetString_Utf8(**self, buf.as_mut_ptr() as _, buf.len()) };
+        if written == 0 {
+            return Some(String::new());
+        }
+        if let Some(pos) = buf.iter().position(|&b| b == 0) {
+            buf.truncate(pos);
+        }
+        Some(String::from_utf8_lossy(&buf).into_owned())
+    }
+
+    pub fn get_datetime(&self) -> Option<DateTime> {
+        let mut raw = unsafe { std::mem::zeroed::<ffi::wxd_DateTime_t>() };
+        let ok = unsafe { ffi::wxd_Variant_GetDateTime(self.ptr, &mut raw) };
+        if ok {
+            Some(DateTime::from_raw(raw))
+        } else {
+            None
+        }
+    }
+
+    pub fn get_bitmap(&self) -> Option<Bitmap> {
+        let ptr = unsafe { ffi::wxd_Variant_GetBitmapClone(**self) };
+        if ptr.is_null() {
+            None
+        } else {
+            Some(Bitmap::from_ptr_owned(ptr))
         }
     }
 }
 
 impl Clone for Variant {
     fn clone(&self) -> Self {
-        match self {
-            Variant::Bool(value) => Variant::Bool(*value),
-            Variant::Int32(value) => Variant::Int32(*value),
-            Variant::Int64(value) => Variant::Int64(*value),
-            Variant::Double(value) => Variant::Double(*value),
-            Variant::String(value) => Variant::String(value.clone()),
-            Variant::DateTime(value) => Variant::DateTime(*value),
-            Variant::Bitmap(bitmap) => Variant::Bitmap(bitmap.clone()),
-            Variant::BitmapBorrowed(ptr) => Variant::BitmapBorrowed(*ptr),
+        let cloned = unsafe { ffi::wxd_Variant_Clone(self.as_const_ptr()) };
+        Self {
+            ptr: cloned,
+            owned: true,
         }
     }
 }
 
 impl Drop for Variant {
-    fn drop(&mut self) {}
+    fn drop(&mut self) {
+        if self.owned && !self.ptr.is_null() {
+            unsafe { ffi::wxd_Variant_Destroy(self.ptr) };
+        }
+        self.ptr = std::ptr::null_mut();
+        self.owned = false;
+    }
 }
 
 impl Default for Variant {
@@ -263,192 +264,139 @@ impl Default for Variant {
 
 impl std::fmt::Debug for Variant {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Variant::Bool(val) => write!(f, "Bool({val})"),
-            Variant::Int32(val) => write!(f, "Int32({val})"),
-            Variant::Int64(val) => write!(f, "Int64({val})"),
-            Variant::Double(val) => write!(f, "Double({val})"),
-            Variant::String(val) => write!(f, "String({val})"),
-            Variant::DateTime(val) => write!(f, "DateTime({val:?})"),
-            Variant::Bitmap(_) => write!(f, "Bitmap(...)"),
-            Variant::BitmapBorrowed(ptr) => write!(f, "BitmapBorrowed({ptr:?})"),
-        }
+        write!(f, "Variant(type={})", self.type_name())
     }
 }
 
 impl From<bool> for Variant {
     fn from(value: bool) -> Self {
-        Variant::Bool(value)
+        Self::from_bool(value)
     }
 }
 
 impl From<i32> for Variant {
     fn from(value: i32) -> Self {
-        Variant::Int32(value)
+        Self::from_i32(value)
     }
 }
 
 impl From<i64> for Variant {
     fn from(value: i64) -> Self {
-        Variant::Int64(value)
+        Self::from_i64(value)
     }
 }
 
 impl From<f64> for Variant {
     fn from(value: f64) -> Self {
-        Variant::Double(value)
+        Self::from_f64(value)
     }
 }
 
 impl From<&str> for Variant {
     fn from(value: &str) -> Self {
-        Variant::String(value.to_string())
+        Self::from_string(value)
     }
 }
 
 impl From<String> for Variant {
     fn from(value: String) -> Self {
-        Variant::String(value)
+        Self::from_string(value)
     }
 }
 
 impl From<DateTime> for Variant {
     fn from(value: DateTime) -> Self {
-        Variant::DateTime(value)
+        Self::from_datetime(value)
     }
 }
 
 impl From<Bitmap> for Variant {
     fn from(value: Bitmap) -> Self {
-        Variant::Bitmap(value)
+        Self::from_bitmap(&value)
     }
 }
 
 impl<'a> From<&'a Bitmap> for Variant {
     fn from(value: &'a Bitmap) -> Self {
-        // For borrowed bitmaps, pass a null pointer when the bitmap is invalid,
-        // preserving previous semantics and avoiding use of non-ok wxBitmap.
-        if value.is_ok() {
-            Variant::BitmapBorrowed(**value)
-        } else {
-            Variant::BitmapBorrowed(std::ptr::null_mut())
-        }
+        Self::from_bitmap(value)
     }
 }
 
-/// Converts a Variant to a C wxd_Variant_t
-pub fn to_raw_variant(value: &Variant) -> ffi::wxd_Variant_t {
-    let mut result = ffi::wxd_Variant_t {
-        type_: 0,
-        data: unsafe { std::mem::zeroed() },
-    };
+use std::io::{Error, ErrorKind::InvalidData};
 
-    match value {
-        Variant::Bool(val) => {
-            result.type_ = ffi::WXD_VARIANT_TYPE_BOOL as i32;
-            result.data.bool_val = *val;
-        }
-        Variant::Int32(val) => {
-            result.type_ = ffi::WXD_VARIANT_TYPE_INT32 as i32;
-            result.data.int32_val = *val;
-        }
-        Variant::Int64(val) => {
-            result.type_ = ffi::WXD_VARIANT_TYPE_INT64 as i32;
-            result.data.int64_val = *val;
-        }
-        Variant::Double(val) => {
-            result.type_ = ffi::WXD_VARIANT_TYPE_DOUBLE as i32;
-            result.data.double_val = *val;
-        }
-        Variant::String(val) => {
-            result.type_ = ffi::WXD_VARIANT_TYPE_STRING as i32;
+impl TryFrom<Variant> for bool {
+    type Error = std::io::Error;
 
-            // Use proper string duplication to ensure C++ can safely free it
-            result.data.string_val = CString::new(val.as_str()).unwrap_or_default().into_raw();
-        }
-        Variant::DateTime(val) => {
-            result.type_ = ffi::WXD_VARIANT_TYPE_DATETIME as i32;
-            unsafe {
-                result.data.datetime_val = *val.as_ptr();
-            }
-        }
-        Variant::Bitmap(val) => {
-            // This path is for an owned Bitmap, uses the FFI-cloned mechanism
-            result.type_ = ffi::WXD_VARIANT_TYPE_BITMAP as i32;
-            let original_rust_owned_ptr = **val;
-            if original_rust_owned_ptr.is_null() {
-                result.data.bitmap_val = std::ptr::null_mut();
-            } else {
-                // Ask C++ to clone the bitmap. This new bitmap is on the C++ heap.
-                // C++ GetValueByRow will be responsible for Destroying this clone later.
-                let cloned_ptr_on_cpp_heap =
-                    unsafe { ffi::wxd_Bitmap_Clone(original_rust_owned_ptr) };
-                result.data.bitmap_val = cloned_ptr_on_cpp_heap;
-            }
-        }
-        Variant::BitmapBorrowed(borrowed_ptr) => {
-            // New path for borrowed bitmap pointer
-            result.type_ = ffi::WXD_VARIANT_TYPE_BITMAP_RUST_BORROWED as i32;
-            result.data.bitmap_val = *borrowed_ptr; // Pass the borrowed pointer directly
-        }
+    fn try_from(value: Variant) -> Result<Self, Self::Error> {
+        value.get_bool().ok_or(Error::new(
+            InvalidData,
+            format!("Not a bool, it's a {}", value.type_name()),
+        ))
     }
-
-    result
 }
 
-/// Converts a C wxd_Variant_t to a Variant
-///
-/// # Safety
-/// The caller must ensure the raw pointer is valid and points to a properly initialized wxd_Variant_t.
-pub unsafe fn from_raw_variant(raw: *const ffi::wxd_Variant_t) -> Variant {
-    if raw.is_null() {
-        return Variant::String(String::new());
-    }
+impl TryFrom<Variant> for i32 {
+    type Error = std::io::Error;
 
-    match (*raw).type_ {
-        t if t == ffi::WXD_VARIANT_TYPE_BOOL as i32 => Variant::Bool((*raw).data.bool_val),
-        t if t == ffi::WXD_VARIANT_TYPE_INT32 as i32 => Variant::Int32((*raw).data.int32_val),
-        t if t == ffi::WXD_VARIANT_TYPE_INT64 as i32 => Variant::Int64((*raw).data.int64_val),
-        t if t == ffi::WXD_VARIANT_TYPE_DOUBLE as i32 => Variant::Double((*raw).data.double_val),
-        t if t == ffi::WXD_VARIANT_TYPE_STRING as i32 => {
-            if (*raw).data.string_val.is_null() {
-                Variant::String(String::new())
-            } else {
-                let c_str = std::ffi::CStr::from_ptr((*raw).data.string_val);
-                Variant::String(c_str.to_string_lossy().to_string())
-            }
-        }
-        t if t == ffi::WXD_VARIANT_TYPE_DATETIME as i32 => {
-            // Create a DateTime from the raw data
-            let dt = crate::DateTime::from_raw((*raw).data.datetime_val);
-            Variant::DateTime(dt)
-        }
-        t if t == ffi::WXD_VARIANT_TYPE_BITMAP as i32 => {
-            if (*raw).data.bitmap_val.is_null() {
-                // Create a minimal 1x1 transparent bitmap as fallback
-                match crate::Bitmap::from_rgba(&[0, 0, 0, 0], 1, 1) {
-                    Some(bitmap) => Variant::Bitmap(bitmap),
-                    None => Variant::String(String::new()), // Last resort fallback
-                }
-            } else {
-                // For bitmaps from C++, we need to clone them as we don't own them
-                let ptr = (*raw).data.bitmap_val;
-                let cloned_ptr = ffi::wxd_Bitmap_Clone(ptr);
-                if !cloned_ptr.is_null() {
-                    let bitmap = crate::Bitmap::from_ptr_owned(cloned_ptr);
-                    Variant::Bitmap(bitmap)
-                } else {
-                    // If clone fails, fallback to a small placeholder
-                    match crate::Bitmap::from_rgba(&[255, 0, 0, 255], 1, 1) {
-                        Some(bitmap) => Variant::Bitmap(bitmap),
-                        None => Variant::String(String::new()),
-                    }
-                }
-            }
-        }
-        _ => {
-            // Default for unknown/unsupported types
-            Variant::String(String::new())
-        }
+    fn try_from(value: Variant) -> Result<Self, Self::Error> {
+        value.get_i32().ok_or(Error::new(
+            InvalidData,
+            format!("Not an i32, it's a {}", value.type_name()),
+        ))
+    }
+}
+
+impl TryFrom<Variant> for i64 {
+    type Error = std::io::Error;
+
+    fn try_from(value: Variant) -> Result<Self, Self::Error> {
+        value.get_i64().ok_or(Error::new(
+            InvalidData,
+            format!("Not an i64, it's a {}", value.type_name()),
+        ))
+    }
+}
+
+impl TryFrom<Variant> for f64 {
+    type Error = std::io::Error;
+
+    fn try_from(value: Variant) -> Result<Self, Self::Error> {
+        value.get_f64().ok_or(Error::new(
+            InvalidData,
+            format!("Not an f64, it's a {}", value.type_name()),
+        ))
+    }
+}
+
+impl TryFrom<Variant> for String {
+    type Error = std::io::Error;
+
+    fn try_from(value: Variant) -> Result<Self, Self::Error> {
+        value.get_string().ok_or(Error::new(
+            InvalidData,
+            format!("Not a String, it's a {}", value.type_name()),
+        ))
+    }
+}
+
+impl TryFrom<Variant> for DateTime {
+    type Error = std::io::Error;
+
+    fn try_from(value: Variant) -> Result<Self, Self::Error> {
+        value.get_datetime().ok_or(Error::new(
+            InvalidData,
+            format!("Not a DateTime, it's a {}", value.type_name()),
+        ))
+    }
+}
+
+impl TryFrom<Variant> for Bitmap {
+    type Error = std::io::Error;
+
+    fn try_from(value: Variant) -> Result<Self, Self::Error> {
+        value.get_bitmap().ok_or(Error::new(
+            InvalidData,
+            format!("Not a Bitmap, it's a {}", value.type_name()),
+        ))
     }
 }

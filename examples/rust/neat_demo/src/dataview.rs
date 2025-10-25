@@ -18,9 +18,9 @@ pub fn create_data_model() -> DataViewListModel {
 
     for (row, (name, progress, status)) in data.iter().enumerate() {
         model.append_row();
-        model.set_value(row, 0, Variant::String(name.to_string()));
-        model.set_value(row, 1, Variant::Int32(*progress));
-        model.set_value(row, 2, Variant::String(status.to_string()));
+        model.set_value(row, 0, Variant::from_string(name));
+        model.set_value(row, 1, Variant::from_i32(*progress));
+        model.set_value(row, 2, Variant::from_string(status));
     }
 
     model
@@ -52,7 +52,7 @@ pub fn create_data_view_panel(parent: &Window, model: &Rc<DataViewListModel>) ->
             Some(m) => m,
             None => return,
         };
-        model.set_value(0, 1, Variant::Int32(*p));
+        model.set_value(0, 1, Variant::from_i32(*p));
         dataview_timer.refresh(false, None);
         // log::trace!("Progress updated to {}%", *p);
     });
@@ -67,13 +67,13 @@ pub fn create_data_view_panel(parent: &Window, model: &Rc<DataViewListModel>) ->
         .align(DataViewAlign::Center)
         .with_get_size(|_variant, _default_size| Size::new(100, 20))
         .with_render(|rect, ctx, _state, variant| {
-            if let Variant::Int32(progress) = variant {
+            if let Some(progress) = variant.get_i32() {
                 ctx.set_brush(Colour::rgb(240, 240, 240), BrushStyle::Solid);
                 ctx.draw_rectangle(rect.x, rect.y, rect.width, rect.height);
-                let fill_width = (rect.width as f32 * (*progress as f32 / 100.0)) as i32;
-                let color = if *progress >= 100 {
+                let fill_width = (rect.width as f32 * (progress as f32 / 100.0)) as i32;
+                let color = if progress >= 100 {
                     Colour::rgb(76, 175, 80)
-                } else if *progress >= 50 {
+                } else if progress >= 50 {
                     Colour::rgb(255, 193, 7)
                 } else {
                     Colour::rgb(244, 67, 54)
@@ -97,7 +97,7 @@ pub fn create_data_view_panel(parent: &Window, model: &Rc<DataViewListModel>) ->
         .mode(DataViewCellMode::Inert)
         .align(DataViewAlign::Center)
         .with_get_size(|variant, default_size| {
-            if let Variant::String(status) = variant {
+            if let Some(status) = variant.get_string() {
                 let base_width = 120;
                 let extra_width = status.len().saturating_sub(8) as i32 * 8;
                 Size::new(base_width + extra_width, default_size.height)
@@ -106,7 +106,7 @@ pub fn create_data_view_panel(parent: &Window, model: &Rc<DataViewListModel>) ->
             }
         })
         .with_render(|rect, ctx, _state, variant| {
-            if let Variant::String(status) = variant {
+            if let Some(status) = variant.get_string() {
                 let (bg_color, text_color) = match status.as_str() {
                     "Complete" => (Colour::rgb(200, 230, 201), Colour::rgb(27, 94, 32)),
                     "Almost Done" => (Colour::rgb(255, 236, 179), Colour::rgb(230, 81, 0)),
@@ -115,10 +115,10 @@ pub fn create_data_view_panel(parent: &Window, model: &Rc<DataViewListModel>) ->
                 ctx.set_brush(bg_color, BrushStyle::Solid);
                 ctx.draw_rectangle(rect.x, rect.y, rect.width, rect.height);
                 ctx.set_text_foreground(text_color);
-                let (text_width, text_height) = ctx.get_text_extent(status);
+                let (text_width, text_height) = ctx.get_text_extent(&status);
                 let text_x = rect.x + (rect.width - text_width) / 2;
                 let text_y = rect.y + (rect.height - text_height) / 2;
-                ctx.draw_text(status, text_x, text_y);
+                ctx.draw_text(&status, text_x, text_y);
             }
             true
         })
