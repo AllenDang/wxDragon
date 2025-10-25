@@ -2,11 +2,11 @@
 #define WXD_TYPES_H
 
 // Use standard C types
-#include <stdbool.h> 
+#include <stdbool.h>
 #include <stdint.h> // For integer types if needed
 #include <stddef.h> // For size_t
 
-// --- Basic Types --- 
+// --- Basic Types ---
 typedef int wxd_Id;
 
 typedef struct {
@@ -51,15 +51,15 @@ typedef struct {
 } wxd_DateTime_t;
 
 // Variant type codes for DataView
-#define WXD_VARIANT_TYPE_INVALID 0
-#define WXD_VARIANT_TYPE_BOOL 1
-#define WXD_VARIANT_TYPE_INT32 2
-#define WXD_VARIANT_TYPE_INT64 3
-#define WXD_VARIANT_TYPE_DOUBLE 4
-#define WXD_VARIANT_TYPE_STRING 5
-#define WXD_VARIANT_TYPE_BITMAP 6
-#define WXD_VARIANT_TYPE_DATETIME 7
-#define WXD_VARIANT_TYPE_VOID_PTR 8
+#define WXD_VARIANT_TYPE_INVALID              0
+#define WXD_VARIANT_TYPE_BOOL                 1
+#define WXD_VARIANT_TYPE_INT32                2
+#define WXD_VARIANT_TYPE_INT64                3
+#define WXD_VARIANT_TYPE_DOUBLE               4
+#define WXD_VARIANT_TYPE_STRING               5
+#define WXD_VARIANT_TYPE_BITMAP               6
+#define WXD_VARIANT_TYPE_DATETIME             7
+#define WXD_VARIANT_TYPE_VOID_PTR             8
 #define WXD_VARIANT_TYPE_BITMAP_RUST_BORROWED 9 // New type for bitmaps borrowed from Rust
 
 // C-compatible variant type for DataView
@@ -176,17 +176,17 @@ typedef enum {
     WXD_EVENT_TYPE_LIST_INSERT_ITEM = 84,
     WXD_EVENT_TYPE_LIST_COL_RIGHT_CLICK = 85,
     WXD_EVENT_TYPE_LIST_COL_BEGIN_DRAG = 86,
-    
-    // Media events - only available when media-ctrl feature is enabled
-    #if wxdUSE_MEDIACTRL
+
+// Media events - only available when media-ctrl feature is enabled
+#if wxdUSE_MEDIACTRL
     WXD_EVENT_TYPE_MEDIA_LOADED = 87,
     WXD_EVENT_TYPE_MEDIA_STOP = 88,
     WXD_EVENT_TYPE_MEDIA_FINISHED = 89,
     WXD_EVENT_TYPE_MEDIA_STATECHANGED = 90,
     WXD_EVENT_TYPE_MEDIA_PLAY = 91,
     WXD_EVENT_TYPE_MEDIA_PAUSE = 92,
-    #endif
-    
+#endif
+
     // DataView Events
     WXD_EVENT_TYPE_DATAVIEW_SELECTION_CHANGED = 93,
     WXD_EVENT_TYPE_DATAVIEW_ITEM_ACTIVATED = 94,
@@ -203,57 +203,60 @@ typedef enum {
     WXD_EVENT_TYPE_DATAVIEW_ITEM_CONTEXT_MENU = 220, // wxEVT_DATAVIEW_ITEM_CONTEXT_MENU
 
     // New TreeCtrl Event Types
-    WXD_EVENT_TYPE_TREE_SEL_CHANGING = 105,      // wxEVT_TREE_SEL_CHANGING
-    WXD_EVENT_TYPE_TREE_ITEM_COLLAPSING = 106,   // wxEVT_TREE_ITEM_COLLAPSING
-    WXD_EVENT_TYPE_TREE_ITEM_COLLAPSED = 107,    // wxEVT_TREE_ITEM_COLLAPSED
-    WXD_EVENT_TYPE_TREE_ITEM_EXPANDING = 108,    // wxEVT_TREE_ITEM_EXPANDING
-    WXD_EVENT_TYPE_TREE_ITEM_EXPANDED = 109,     // wxEVT_TREE_ITEM_EXPANDED
-    WXD_EVENT_TYPE_TREE_ITEM_RIGHT_CLICK = 110,  // wxEVT_TREE_ITEM_RIGHT_CLICK
-    WXD_EVENT_TYPE_TREE_ITEM_MIDDLE_CLICK = 111, // wxEVT_TREE_ITEM_MIDDLE_CLICK
-    WXD_EVENT_TYPE_TREE_KEY_DOWN = 112,          // wxEVT_TREE_KEY_DOWN
-    WXD_EVENT_TYPE_TREE_DELETE_ITEM = 113,       // wxEVT_TREE_DELETE_ITEM
-    WXD_EVENT_TYPE_TREE_ITEM_MENU = 114,         // wxEVT_TREE_ITEM_MENU
-    WXD_EVENT_TYPE_TREE_BEGIN_DRAG = 115,        // wxEVT_TREE_BEGIN_DRAG
-    WXD_EVENT_TYPE_TREE_BEGIN_RDRAG = 116,       // wxEVT_TREE_BEGIN_RDRAG
-    WXD_EVENT_TYPE_TREE_END_DRAG = 117,          // wxEVT_TREE_END_DRAG
-    WXD_EVENT_TYPE_TREE_STATE_IMAGE_CLICK = 118, // wxEVT_TREE_STATE_IMAGE_CLICK
+    WXD_EVENT_TYPE_TREE_SEL_CHANGING = 105,             // wxEVT_TREE_SEL_CHANGING
+    WXD_EVENT_TYPE_TREE_ITEM_COLLAPSING = 106,          // wxEVT_TREE_ITEM_COLLAPSING
+    WXD_EVENT_TYPE_TREE_ITEM_COLLAPSED = 107,           // wxEVT_TREE_ITEM_COLLAPSED
+    WXD_EVENT_TYPE_TREE_ITEM_EXPANDING = 108,           // wxEVT_TREE_ITEM_EXPANDING
+    WXD_EVENT_TYPE_TREE_ITEM_EXPANDED = 109,            // wxEVT_TREE_ITEM_EXPANDED
+    WXD_EVENT_TYPE_TREE_ITEM_RIGHT_CLICK = 110,         // wxEVT_TREE_ITEM_RIGHT_CLICK
+    WXD_EVENT_TYPE_TREE_ITEM_MIDDLE_CLICK = 111,        // wxEVT_TREE_ITEM_MIDDLE_CLICK
+    WXD_EVENT_TYPE_TREE_KEY_DOWN = 112,                 // wxEVT_TREE_KEY_DOWN
+    WXD_EVENT_TYPE_TREE_DELETE_ITEM = 113,              // wxEVT_TREE_DELETE_ITEM
+    WXD_EVENT_TYPE_TREE_ITEM_MENU = 114,                // wxEVT_TREE_ITEM_MENU
+    WXD_EVENT_TYPE_TREE_BEGIN_DRAG = 115,               // wxEVT_TREE_BEGIN_DRAG
+    WXD_EVENT_TYPE_TREE_BEGIN_RDRAG = 116,              // wxEVT_TREE_BEGIN_RDRAG
+    WXD_EVENT_TYPE_TREE_END_DRAG = 117,                 // wxEVT_TREE_END_DRAG
+    WXD_EVENT_TYPE_TREE_STATE_IMAGE_CLICK = 118,        // wxEVT_TREE_STATE_IMAGE_CLICK
     WXD_EVENT_TYPE_COMMAND_LISTBOX_DOUBLECLICKED = 119, // wxEVT_LISTBOX_DCLICK
 
     // ADDED: Additional event types missing from enum
-    WXD_EVENT_TYPE_TOOL = 123, // ToolBar Tool clicked event (wxEVT_TOOL)
-    WXD_EVENT_TYPE_TOOL_ENTER = 124, // ToolBar Enter event
+    WXD_EVENT_TYPE_TOOL = 123,                 // ToolBar Tool clicked event (wxEVT_TOOL)
+    WXD_EVENT_TYPE_TOOL_ENTER = 124,           // ToolBar Enter event
     WXD_EVENT_TYPE_TREE_ITEM_GETTOOLTIP = 125, // TreeCtrl tooltip event
-    WXD_EVENT_TYPE_ANY = 126, // Generic event type
-    
+    WXD_EVENT_TYPE_ANY = 126,                  // Generic event type
+
     // ADDED: Window event types
-    WXD_EVENT_TYPE_MOVE = 127, // Window move event
-    WXD_EVENT_TYPE_ERASE = 128, // Window erase background event
-    WXD_EVENT_TYPE_SET_FOCUS = 129, // Window set focus event
+    WXD_EVENT_TYPE_MOVE = 127,       // Window move event
+    WXD_EVENT_TYPE_ERASE = 128,      // Window erase background event
+    WXD_EVENT_TYPE_SET_FOCUS = 129,  // Window set focus event
     WXD_EVENT_TYPE_KILL_FOCUS = 130, // Window kill focus event
 
-    // AUI Manager event types
-    #if wxdUSE_AUI
-    WXD_EVENT_TYPE_AUI_PANE_BUTTON = 135, // wxEVT_AUI_PANE_BUTTON
-    WXD_EVENT_TYPE_AUI_PANE_CLOSE = 136, // wxEVT_AUI_PANE_CLOSE
-    WXD_EVENT_TYPE_AUI_PANE_MAXIMIZE = 137, // wxEVT_AUI_PANE_MAXIMIZE
-    WXD_EVENT_TYPE_AUI_PANE_RESTORE = 138, // wxEVT_AUI_PANE_RESTORE
+// AUI Manager event types
+#if wxdUSE_AUI
+    WXD_EVENT_TYPE_AUI_PANE_BUTTON = 135,    // wxEVT_AUI_PANE_BUTTON
+    WXD_EVENT_TYPE_AUI_PANE_CLOSE = 136,     // wxEVT_AUI_PANE_CLOSE
+    WXD_EVENT_TYPE_AUI_PANE_MAXIMIZE = 137,  // wxEVT_AUI_PANE_MAXIMIZE
+    WXD_EVENT_TYPE_AUI_PANE_RESTORE = 138,   // wxEVT_AUI_PANE_RESTORE
     WXD_EVENT_TYPE_AUI_PANE_ACTIVATED = 139, // wxEVT_AUI_PANE_ACTIVATED
-    WXD_EVENT_TYPE_AUI_RENDER = 140, // wxEVT_AUI_RENDER
-    #endif
+    WXD_EVENT_TYPE_AUI_RENDER = 140,         // wxEVT_AUI_RENDER
+#endif
 
     // ADDED: RearrangeList event
-    WXD_EVENT_TYPE_COMMAND_REARRANGE_LIST = 141, // Event for RearrangeList when items are rearranged
+    WXD_EVENT_TYPE_COMMAND_REARRANGE_LIST =
+        141, // Event for RearrangeList when items are rearranged
 
     // ADDED: CollapsiblePane event
-    WXD_EVENT_TYPE_COLLAPSIBLEPANE_CHANGED = 142, // Event for CollapsiblePane when expanded/collapsed
+    WXD_EVENT_TYPE_COLLAPSIBLEPANE_CHANGED =
+        142, // Event for CollapsiblePane when expanded/collapsed
 
     // ADDED: TreeListCtrl event types
     WXD_EVENT_TYPE_TREELIST_SELECTION_CHANGED = 143, // Event for TreeListCtrl selection changed
-    WXD_EVENT_TYPE_TREELIST_ITEM_CHECKED = 144,      // Event for TreeListCtrl item checked/unchecked
-    WXD_EVENT_TYPE_TREELIST_ITEM_ACTIVATED = 145,    // Event for TreeListCtrl item activated (double-click)
-    WXD_EVENT_TYPE_TREELIST_COLUMN_SORTED = 146,     // Event for TreeListCtrl column header clicked
-    WXD_EVENT_TYPE_TREELIST_ITEM_EXPANDING = 147,    // Event for TreeListCtrl item expanding
-    WXD_EVENT_TYPE_TREELIST_ITEM_EXPANDED = 148,     // Event for TreeListCtrl item expanded
+    WXD_EVENT_TYPE_TREELIST_ITEM_CHECKED = 144, // Event for TreeListCtrl item checked/unchecked
+    WXD_EVENT_TYPE_TREELIST_ITEM_ACTIVATED =
+        145, // Event for TreeListCtrl item activated (double-click)
+    WXD_EVENT_TYPE_TREELIST_COLUMN_SORTED = 146,  // Event for TreeListCtrl column header clicked
+    WXD_EVENT_TYPE_TREELIST_ITEM_EXPANDING = 147, // Event for TreeListCtrl item expanding
+    WXD_EVENT_TYPE_TREELIST_ITEM_EXPANDED = 148,  // Event for TreeListCtrl item expanded
 
     WXD_EVENT_TYPE_TIMER = 200, // Added wxTimer event
 
@@ -261,73 +264,73 @@ typedef enum {
     WXD_EVENT_TYPE_ENTER_WINDOW = 201, // wxEVT_ENTER_WINDOW
     WXD_EVENT_TYPE_LEAVE_WINDOW = 202, // wxEVT_LEAVE_WINDOW
 
-    // RichText events
-    #if wxdUSE_RICHTEXT
-    WXD_EVENT_TYPE_RICHTEXT_LEFT_CLICK = 250,       // wxEVT_RICHTEXT_LEFT_CLICK
-    WXD_EVENT_TYPE_RICHTEXT_RIGHT_CLICK = 251,      // wxEVT_RICHTEXT_RIGHT_CLICK
-    WXD_EVENT_TYPE_RICHTEXT_MIDDLE_CLICK = 252,     // wxEVT_RICHTEXT_MIDDLE_CLICK
-    WXD_EVENT_TYPE_RICHTEXT_LEFT_DCLICK = 253,      // wxEVT_RICHTEXT_LEFT_DCLICK
-    WXD_EVENT_TYPE_RICHTEXT_RETURN = 254,           // wxEVT_RICHTEXT_RETURN
-    WXD_EVENT_TYPE_RICHTEXT_CHARACTER = 255,        // wxEVT_RICHTEXT_CHARACTER
-    WXD_EVENT_TYPE_RICHTEXT_DELETE = 256,           // wxEVT_RICHTEXT_DELETE
-    WXD_EVENT_TYPE_RICHTEXT_CONTENT_INSERTED = 257, // wxEVT_RICHTEXT_CONTENT_INSERTED
-    WXD_EVENT_TYPE_RICHTEXT_CONTENT_DELETED = 258,  // wxEVT_RICHTEXT_CONTENT_DELETED
-    WXD_EVENT_TYPE_RICHTEXT_STYLE_CHANGED = 259,    // wxEVT_RICHTEXT_STYLE_CHANGED
-    WXD_EVENT_TYPE_RICHTEXT_SELECTION_CHANGED = 260, // wxEVT_RICHTEXT_SELECTION_CHANGED
-    WXD_EVENT_TYPE_RICHTEXT_STYLESHEET_CHANGING = 261, // wxEVT_RICHTEXT_STYLESHEET_CHANGING
-    WXD_EVENT_TYPE_RICHTEXT_STYLESHEET_CHANGED = 262, // wxEVT_RICHTEXT_STYLESHEET_CHANGED
+// RichText events
+#if wxdUSE_RICHTEXT
+    WXD_EVENT_TYPE_RICHTEXT_LEFT_CLICK = 250,           // wxEVT_RICHTEXT_LEFT_CLICK
+    WXD_EVENT_TYPE_RICHTEXT_RIGHT_CLICK = 251,          // wxEVT_RICHTEXT_RIGHT_CLICK
+    WXD_EVENT_TYPE_RICHTEXT_MIDDLE_CLICK = 252,         // wxEVT_RICHTEXT_MIDDLE_CLICK
+    WXD_EVENT_TYPE_RICHTEXT_LEFT_DCLICK = 253,          // wxEVT_RICHTEXT_LEFT_DCLICK
+    WXD_EVENT_TYPE_RICHTEXT_RETURN = 254,               // wxEVT_RICHTEXT_RETURN
+    WXD_EVENT_TYPE_RICHTEXT_CHARACTER = 255,            // wxEVT_RICHTEXT_CHARACTER
+    WXD_EVENT_TYPE_RICHTEXT_DELETE = 256,               // wxEVT_RICHTEXT_DELETE
+    WXD_EVENT_TYPE_RICHTEXT_CONTENT_INSERTED = 257,     // wxEVT_RICHTEXT_CONTENT_INSERTED
+    WXD_EVENT_TYPE_RICHTEXT_CONTENT_DELETED = 258,      // wxEVT_RICHTEXT_CONTENT_DELETED
+    WXD_EVENT_TYPE_RICHTEXT_STYLE_CHANGED = 259,        // wxEVT_RICHTEXT_STYLE_CHANGED
+    WXD_EVENT_TYPE_RICHTEXT_SELECTION_CHANGED = 260,    // wxEVT_RICHTEXT_SELECTION_CHANGED
+    WXD_EVENT_TYPE_RICHTEXT_STYLESHEET_CHANGING = 261,  // wxEVT_RICHTEXT_STYLESHEET_CHANGING
+    WXD_EVENT_TYPE_RICHTEXT_STYLESHEET_CHANGED = 262,   // wxEVT_RICHTEXT_STYLESHEET_CHANGED
     WXD_EVENT_TYPE_RICHTEXT_STYLESHEET_REPLACING = 263, // wxEVT_RICHTEXT_STYLESHEET_REPLACING
-    WXD_EVENT_TYPE_RICHTEXT_STYLESHEET_REPLACED = 264, // wxEVT_RICHTEXT_STYLESHEET_REPLACED
-    #endif
+    WXD_EVENT_TYPE_RICHTEXT_STYLESHEET_REPLACED = 264,  // wxEVT_RICHTEXT_STYLESHEET_REPLACED
+#endif
 
-    // StyledTextCtrl events - only available when stc feature is enabled
-    #if wxdUSE_STC
-    WXD_EVENT_TYPE_STC_CHANGE = 300,                    // wxEVT_STC_CHANGE
-    WXD_EVENT_TYPE_STC_STYLENEEDED = 301,               // wxEVT_STC_STYLENEEDED
-    WXD_EVENT_TYPE_STC_CHARADDED = 302,                 // wxEVT_STC_CHARADDED
-    WXD_EVENT_TYPE_STC_SAVEPOINTREACHED = 303,          // wxEVT_STC_SAVEPOINTREACHED
-    WXD_EVENT_TYPE_STC_SAVEPOINTLEFT = 304,             // wxEVT_STC_SAVEPOINTLEFT
-    WXD_EVENT_TYPE_STC_ROMODIFYATTEMPT = 305,           // wxEVT_STC_ROMODIFYATTEMPT
-    WXD_EVENT_TYPE_STC_DOUBLECLICK = 306,               // wxEVT_STC_DOUBLECLICK
-    WXD_EVENT_TYPE_STC_UPDATEUI = 307,                  // wxEVT_STC_UPDATEUI
-    WXD_EVENT_TYPE_STC_MODIFIED = 308,                  // wxEVT_STC_MODIFIED
-    WXD_EVENT_TYPE_STC_MACRORECORD = 309,               // wxEVT_STC_MACRORECORD
-    WXD_EVENT_TYPE_STC_MARGINCLICK = 310,               // wxEVT_STC_MARGINCLICK
-    WXD_EVENT_TYPE_STC_NEEDSHOWN = 311,                 // wxEVT_STC_NEEDSHOWN
-    WXD_EVENT_TYPE_STC_PAINTED = 312,                   // wxEVT_STC_PAINTED
-    WXD_EVENT_TYPE_STC_USERLISTSELECTION = 313,         // wxEVT_STC_USERLISTSELECTION
-    WXD_EVENT_TYPE_STC_DWELLSTART = 314,                // wxEVT_STC_DWELLSTART
-    WXD_EVENT_TYPE_STC_DWELLEND = 315,                  // wxEVT_STC_DWELLEND
-    WXD_EVENT_TYPE_STC_START_DRAG = 316,                // wxEVT_STC_START_DRAG
-    WXD_EVENT_TYPE_STC_DRAG_OVER = 317,                 // wxEVT_STC_DRAG_OVER
-    WXD_EVENT_TYPE_STC_DO_DROP = 318,                   // wxEVT_STC_DO_DROP
-    WXD_EVENT_TYPE_STC_ZOOM = 319,                      // wxEVT_STC_ZOOM
-    WXD_EVENT_TYPE_STC_HOTSPOT_CLICK = 320,             // wxEVT_STC_HOTSPOT_CLICK
-    WXD_EVENT_TYPE_STC_HOTSPOT_DCLICK = 321,            // wxEVT_STC_HOTSPOT_DCLICK
-    WXD_EVENT_TYPE_STC_CALLTIP_CLICK = 322,             // wxEVT_STC_CALLTIP_CLICK
-    WXD_EVENT_TYPE_STC_AUTOCOMP_SELECTION = 323,        // wxEVT_STC_AUTOCOMP_SELECTION
-    WXD_EVENT_TYPE_STC_INDICATOR_CLICK = 324,           // wxEVT_STC_INDICATOR_CLICK
-    WXD_EVENT_TYPE_STC_INDICATOR_RELEASE = 325,         // wxEVT_STC_INDICATOR_RELEASE
-    WXD_EVENT_TYPE_STC_AUTOCOMP_CANCELLED = 326,        // wxEVT_STC_AUTOCOMP_CANCELLED
-    WXD_EVENT_TYPE_STC_AUTOCOMP_CHAR_DELETED = 327,     // wxEVT_STC_AUTOCOMP_CHAR_DELETED
-    #endif
+// StyledTextCtrl events - only available when stc feature is enabled
+#if wxdUSE_STC
+    WXD_EVENT_TYPE_STC_CHANGE = 300,                // wxEVT_STC_CHANGE
+    WXD_EVENT_TYPE_STC_STYLENEEDED = 301,           // wxEVT_STC_STYLENEEDED
+    WXD_EVENT_TYPE_STC_CHARADDED = 302,             // wxEVT_STC_CHARADDED
+    WXD_EVENT_TYPE_STC_SAVEPOINTREACHED = 303,      // wxEVT_STC_SAVEPOINTREACHED
+    WXD_EVENT_TYPE_STC_SAVEPOINTLEFT = 304,         // wxEVT_STC_SAVEPOINTLEFT
+    WXD_EVENT_TYPE_STC_ROMODIFYATTEMPT = 305,       // wxEVT_STC_ROMODIFYATTEMPT
+    WXD_EVENT_TYPE_STC_DOUBLECLICK = 306,           // wxEVT_STC_DOUBLECLICK
+    WXD_EVENT_TYPE_STC_UPDATEUI = 307,              // wxEVT_STC_UPDATEUI
+    WXD_EVENT_TYPE_STC_MODIFIED = 308,              // wxEVT_STC_MODIFIED
+    WXD_EVENT_TYPE_STC_MACRORECORD = 309,           // wxEVT_STC_MACRORECORD
+    WXD_EVENT_TYPE_STC_MARGINCLICK = 310,           // wxEVT_STC_MARGINCLICK
+    WXD_EVENT_TYPE_STC_NEEDSHOWN = 311,             // wxEVT_STC_NEEDSHOWN
+    WXD_EVENT_TYPE_STC_PAINTED = 312,               // wxEVT_STC_PAINTED
+    WXD_EVENT_TYPE_STC_USERLISTSELECTION = 313,     // wxEVT_STC_USERLISTSELECTION
+    WXD_EVENT_TYPE_STC_DWELLSTART = 314,            // wxEVT_STC_DWELLSTART
+    WXD_EVENT_TYPE_STC_DWELLEND = 315,              // wxEVT_STC_DWELLEND
+    WXD_EVENT_TYPE_STC_START_DRAG = 316,            // wxEVT_STC_START_DRAG
+    WXD_EVENT_TYPE_STC_DRAG_OVER = 317,             // wxEVT_STC_DRAG_OVER
+    WXD_EVENT_TYPE_STC_DO_DROP = 318,               // wxEVT_STC_DO_DROP
+    WXD_EVENT_TYPE_STC_ZOOM = 319,                  // wxEVT_STC_ZOOM
+    WXD_EVENT_TYPE_STC_HOTSPOT_CLICK = 320,         // wxEVT_STC_HOTSPOT_CLICK
+    WXD_EVENT_TYPE_STC_HOTSPOT_DCLICK = 321,        // wxEVT_STC_HOTSPOT_DCLICK
+    WXD_EVENT_TYPE_STC_CALLTIP_CLICK = 322,         // wxEVT_STC_CALLTIP_CLICK
+    WXD_EVENT_TYPE_STC_AUTOCOMP_SELECTION = 323,    // wxEVT_STC_AUTOCOMP_SELECTION
+    WXD_EVENT_TYPE_STC_INDICATOR_CLICK = 324,       // wxEVT_STC_INDICATOR_CLICK
+    WXD_EVENT_TYPE_STC_INDICATOR_RELEASE = 325,     // wxEVT_STC_INDICATOR_RELEASE
+    WXD_EVENT_TYPE_STC_AUTOCOMP_CANCELLED = 326,    // wxEVT_STC_AUTOCOMP_CANCELLED
+    WXD_EVENT_TYPE_STC_AUTOCOMP_CHAR_DELETED = 327, // wxEVT_STC_AUTOCOMP_CHAR_DELETED
+#endif
 
     // TaskBarIcon event types
-    WXD_EVENT_TYPE_TASKBAR_MOVE = 330,                  // wxEVT_TASKBAR_MOVE
-    WXD_EVENT_TYPE_TASKBAR_LEFT_DOWN = 331,             // wxEVT_TASKBAR_LEFT_DOWN
-    WXD_EVENT_TYPE_TASKBAR_LEFT_UP = 332,               // wxEVT_TASKBAR_LEFT_UP
-    WXD_EVENT_TYPE_TASKBAR_RIGHT_DOWN = 333,            // wxEVT_TASKBAR_RIGHT_DOWN
-    WXD_EVENT_TYPE_TASKBAR_RIGHT_UP = 334,              // wxEVT_TASKBAR_RIGHT_UP
-    WXD_EVENT_TYPE_TASKBAR_LEFT_DCLICK = 335,           // wxEVT_TASKBAR_LEFT_DCLICK
-    WXD_EVENT_TYPE_TASKBAR_RIGHT_DCLICK = 336,          // wxEVT_TASKBAR_RIGHT_DCLICK
-    WXD_EVENT_TYPE_TASKBAR_BALLOON_TIMEOUT = 337,       // wxEVT_TASKBAR_BALLOON_TIMEOUT
-    WXD_EVENT_TYPE_TASKBAR_BALLOON_CLICK = 338,         // wxEVT_TASKBAR_BALLOON_CLICK
+    WXD_EVENT_TYPE_TASKBAR_MOVE = 330,            // wxEVT_TASKBAR_MOVE
+    WXD_EVENT_TYPE_TASKBAR_LEFT_DOWN = 331,       // wxEVT_TASKBAR_LEFT_DOWN
+    WXD_EVENT_TYPE_TASKBAR_LEFT_UP = 332,         // wxEVT_TASKBAR_LEFT_UP
+    WXD_EVENT_TYPE_TASKBAR_RIGHT_DOWN = 333,      // wxEVT_TASKBAR_RIGHT_DOWN
+    WXD_EVENT_TYPE_TASKBAR_RIGHT_UP = 334,        // wxEVT_TASKBAR_RIGHT_UP
+    WXD_EVENT_TYPE_TASKBAR_LEFT_DCLICK = 335,     // wxEVT_TASKBAR_LEFT_DCLICK
+    WXD_EVENT_TYPE_TASKBAR_RIGHT_DCLICK = 336,    // wxEVT_TASKBAR_RIGHT_DCLICK
+    WXD_EVENT_TYPE_TASKBAR_BALLOON_TIMEOUT = 337, // wxEVT_TASKBAR_BALLOON_TIMEOUT
+    WXD_EVENT_TYPE_TASKBAR_BALLOON_CLICK = 338,   // wxEVT_TASKBAR_BALLOON_CLICK
 
     // NEW: Menu event types
-    WXD_EVENT_TYPE_MENU_OPEN = 350,                     // wxEVT_MENU_OPEN
-    WXD_EVENT_TYPE_MENU_CLOSE = 351,                    // wxEVT_MENU_CLOSE
-    WXD_EVENT_TYPE_MENU_HIGHLIGHT = 352,                // wxEVT_MENU_HIGHLIGHT
-    WXD_EVENT_TYPE_CONTEXT_MENU = 353,                  // wxEVT_CONTEXT_MENU
+    WXD_EVENT_TYPE_MENU_OPEN = 350,      // wxEVT_MENU_OPEN
+    WXD_EVENT_TYPE_MENU_CLOSE = 351,     // wxEVT_MENU_CLOSE
+    WXD_EVENT_TYPE_MENU_HIGHLIGHT = 352, // wxEVT_MENU_HIGHLIGHT
+    WXD_EVENT_TYPE_CONTEXT_MENU = 353,   // wxEVT_CONTEXT_MENU
 
     WXD_EVENT_TYPE_MAX // Keep this last for count if needed, or remove if not used for iteration
 } WXDEventTypeCEnum;
@@ -337,7 +340,7 @@ typedef int wxd_Direction_t;
 typedef int wxd_Orientation_t;
 typedef int wxd_SizerFlags_t;
 
-// --- Opaque Struct Typedefs --- 
+// --- Opaque Struct Typedefs ---
 typedef struct wxd_App_t wxd_App_t;
 typedef struct wxd_Window_t wxd_Window_t;
 typedef struct wxd_Event_t wxd_Event_t;
@@ -399,7 +402,9 @@ typedef struct wxd_ScrollBar_t wxd_ScrollBar_t;
 typedef struct wxd_CommandLinkButton_t wxd_CommandLinkButton_t;
 typedef struct wxd_Dialog wxd_Dialog_t;
 typedef struct wxd_MessageDialog wxd_MessageDialog_t;
-typedef struct wxd_ArrayString { void* internal_data; } wxd_ArrayString_t;
+typedef struct wxd_ArrayString {
+    void* internal_data;
+} wxd_ArrayString_t;
 typedef struct wxd_FileDialog wxd_FileDialog_t;
 typedef struct wxd_ColourData wxd_ColourData_t;
 typedef struct wxd_ColourDialog wxd_ColourDialog_t;
@@ -457,10 +462,10 @@ typedef struct wxd_AutoBufferedPaintDC_t wxd_AutoBufferedPaintDC_t;
 
 // wxItemKind C Enum (for wxAuiToolBar, wxMenu, etc.)
 typedef enum {
-    WXD_ITEM_NORMAL = 0,     // wxITEM_NORMAL
-    WXD_ITEM_CHECK = 1,      // wxITEM_CHECK
-    WXD_ITEM_RADIO = 2,      // wxITEM_RADIO
-    WXD_ITEM_SEPARATOR = 3,  // wxITEM_SEPARATOR
+    WXD_ITEM_NORMAL = 0,    // wxITEM_NORMAL
+    WXD_ITEM_CHECK = 1,     // wxITEM_CHECK
+    WXD_ITEM_RADIO = 2,     // wxITEM_RADIO
+    WXD_ITEM_SEPARATOR = 3, // wxITEM_SEPARATOR
     // wxITEM_DROPDOWN (specific to wxToolBar and wxRibbonBar, might add later if needed)
     // wxITEM_MAX is not typically used directly as a kind
 } WXDItemKindCEnum;
@@ -478,28 +483,28 @@ typedef void (*wxd_MacPrintFilesCallback)(void* userData, const char** files, in
 
 // wxDragResult C Enum (for drag and drop operations)
 typedef enum {
-    WXD_DRAG_NONE = 0,      // wxDragNone - No drag operation
-    WXD_DRAG_COPY = 1,      // wxDragCopy - Copy the data
-    WXD_DRAG_MOVE = 2,      // wxDragMove - Move the data
-    WXD_DRAG_LINK = 3,      // wxDragLink - Link to the data
-    WXD_DRAG_CANCEL = 4,    // wxDragCancel - Cancel the drag
-    WXD_DRAG_ERROR = 5      // wxDragError - Error in drag operation
+    WXD_DRAG_NONE = 0,   // wxDragNone - No drag operation
+    WXD_DRAG_COPY = 1,   // wxDragCopy - Copy the data
+    WXD_DRAG_MOVE = 2,   // wxDragMove - Move the data
+    WXD_DRAG_LINK = 3,   // wxDragLink - Link to the data
+    WXD_DRAG_CANCEL = 4, // wxDragCancel - Cancel the drag
+    WXD_DRAG_ERROR = 5   // wxDragError - Error in drag operation
 } wxd_DragResult;
 
 // Define a long integer type for positions, lengths, etc.
 typedef long long wxd_Long_t;
 
 // ListCtrl constants
-#define WXD_LIST_MASK_STATE         0x0001
-#define WXD_LIST_MASK_TEXT          0x0002
-#define WXD_LIST_MASK_IMAGE         0x0004
-#define WXD_LIST_MASK_DATA          0x0008
-#define WXD_LIST_MASK_WIDTH         0x0010
-#define WXD_LIST_MASK_FORMAT        0x0020
+#define WXD_LIST_MASK_STATE  0x0001
+#define WXD_LIST_MASK_TEXT   0x0002
+#define WXD_LIST_MASK_IMAGE  0x0004
+#define WXD_LIST_MASK_DATA   0x0008
+#define WXD_LIST_MASK_WIDTH  0x0010
+#define WXD_LIST_MASK_FORMAT 0x0020
 
 // DataView item type
 typedef struct {
-    void* id;  // Internally, wxDataViewItem wraps a void* as an id
+    void* id; // Internally, wxDataViewItem wraps a void* as an id
 } wxd_DataViewItemWithID_t;
 
 // DataView types
@@ -509,13 +514,13 @@ typedef void wxd_DataViewColumn_t;
 // DataViewCell mode enum (for cell renderers)
 typedef enum {
     WXD_DATAVIEW_CELL_INERT,
-    WXD_DATAVIEW_CELL_ACTIVATABLE, 
+    WXD_DATAVIEW_CELL_ACTIVATABLE,
     WXD_DATAVIEW_CELL_EDITABLE
 } wxd_DataViewCellModeCEnum;
 
 // Image related opaque types
-typedef void wxd_Image_t;          // Added if not present
-typedef void wxd_ImageList_t;      // Added
+typedef void wxd_Image_t;             // Added if not present
+typedef void wxd_ImageList_t;         // Added
 typedef struct wxd_Icon_t wxd_Icon_t; // Assuming this pattern from Bitmap_t
 
 // --- Cursor type ---
@@ -574,7 +579,8 @@ typedef enum {
 // We will pass this void* directly as an opaque pointer type for Rust.
 // struct wxd_TreeItemId_s; // Remove old forward declaration
 // typedef struct wxd_TreeItemId_s wxd_TreeItemId_t; // Remove old typedef
-typedef struct wxd_TreeItemId_Opaque_ForBindgen wxd_TreeItemId_t; // Define as opaque struct for bindgen
+typedef struct wxd_TreeItemId_Opaque_ForBindgen
+    wxd_TreeItemId_t; // Define as opaque struct for bindgen
 
 // Define wxd_DropResult enum (ensure this is defined if used)
 // ... existing code ...
@@ -614,9 +620,9 @@ typedef struct wxd_AppProgressIndicator_t wxd_AppProgressIndicator_t;
 
 // Appearance modes for dark mode support
 typedef enum {
-    WXD_APPEARANCE_LIGHT = 0,   // Force light mode
-    WXD_APPEARANCE_DARK = 1,    // Force dark mode
-    WXD_APPEARANCE_SYSTEM = 2   // Follow system appearance
+    WXD_APPEARANCE_LIGHT = 0, // Force light mode
+    WXD_APPEARANCE_DARK = 1,  // Force dark mode
+    WXD_APPEARANCE_SYSTEM = 2 // Follow system appearance
 } wxd_Appearance;
 
 // AppearanceResult for SetAppearance method
@@ -635,4 +641,4 @@ typedef struct wxd_SystemAppearance_t wxd_SystemAppearance_t;
 typedef struct wxd_RichTextCtrl_t wxd_RichTextCtrl_t;
 typedef struct wxd_TreeListCtrl_t wxd_TreeListCtrl_t;
 
-#endif // WXD_TYPES_H 
+#endif // WXD_TYPES_H

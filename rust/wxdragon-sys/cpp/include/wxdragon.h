@@ -2,16 +2,16 @@
 #define WXDRAGON_H
 
 // Define WXDRAGON_API for export/import
-        #define WXDRAGON_API
+#define WXDRAGON_API
 
 // Define export macro (used by all sub-headers indirectly via wxd_types.h or if they need it themselves)
 #ifndef WXD_EXPORTED
-    #define WXD_EXPORTED WXDRAGON_API
+#define WXD_EXPORTED WXDRAGON_API
 #endif
 
 // Include all fundamental types first
-#include "wxd_types.h" // Contains all basic C types and opaque struct typedefs
-#include "array_string.h" // ArrayString helper functions
+#include "wxd_types.h"     // Contains all basic C types and opaque struct typedefs
+#include "array_string.h"  // ArrayString helper functions
 #include "core/wxd_item.h" // Added for wxd_DataViewItem_t and its functions
 #include "wxd_sysopt.h"
 #include "wxd_logging.h" // Logging functions
@@ -20,7 +20,7 @@
 // Include C++ specific utility functions and macros
 // This should make WXD_STR_TO_WX_STRING_UTF8_NULL_OK and GET_WX_STRING_RESULT available
 // as well as the declaration for wxd_cpp_utils::copy_wxstring_to_buffer
-#include "../src/wxd_utils.h" 
+#include "../src/wxd_utils.h"
 #endif
 
 // Main C API block
@@ -107,7 +107,7 @@ extern "C" {
 // Other widgets
 #include "widgets/wxd_pickers.h"
 #include "widgets/wxd_file_ctrl.h"
-#include "widgets/wxd_adv_ui.h" // For wxNotificationMessage etc.
+#include "widgets/wxd_adv_ui.h"          // For wxNotificationMessage etc.
 #include "widgets/wxd_editablelistbox.h" // For wxEditableListBox
 #include "widgets/wxd_aui.h"
 
@@ -120,7 +120,7 @@ extern "C" {
 // Other categories
 #include "sizers/wxd_sizers.h"
 #include "dialogs/wxd_dialogs.h"
-#include "dnd/wxd_dnd.h" // Drag and drop functionality
+#include "dnd/wxd_dnd.h"     // Drag and drop functionality
 #include "graphics/wxd_dc.h" // Device context functionality
 
 // DataView related includes.
