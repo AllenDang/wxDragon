@@ -144,8 +144,8 @@ wxd_DataViewCheckIconTextRenderer_Create(const char* varianttype, int64_t mode, 
 // Model callback types
 typedef uint64_t (*wxd_DataViewModel_GetColumnCountCallback)(void* user_data);
 typedef uint64_t (*wxd_DataViewModel_GetRowCountCallback)(void* user_data);
-typedef void (*wxd_DataViewModel_GetValueCallback)(void* user_data, uint64_t row, uint64_t col,
-                                                   wxd_Variant_t* variant);
+typedef const wxd_Variant_t* (*wxd_DataViewModel_GetValueCallback)(void* user_data, uint64_t row,
+                                                                   uint64_t col);
 typedef bool (*wxd_DataViewModel_SetValueCallback)(void* user_data, uint64_t row, uint64_t col,
                                                    const wxd_Variant_t* variant);
 
@@ -184,10 +184,6 @@ WXD_EXPORTED int64_t
 wxd_DataViewCtrl_GetSelectedRow(wxd_Window_t* self);
 WXD_EXPORTED void
 wxd_DataViewCtrl_UnselectAll(wxd_Window_t* self);
-
-// Free a wxd_Variant_t and its contents, including any dynamically allocated string memory
-WXD_EXPORTED void
-wxd_Variant_Free(wxd_Variant_t* variant);
 
 // DataViewVirtualListModel functions
 WXD_EXPORTED wxd_DataViewModel_t*
@@ -232,19 +228,24 @@ typedef struct {
     bool italic;
 } wxd_DataViewItemAttr_t;
 
+typedef const wxd_Variant_t* (*wxd_dataview_model_get_value_callback)(void* userdata, uint64_t row,
+                                                                      uint64_t col);
+typedef bool (*wxd_dataview_model_set_value_callback)(void* userdata, const wxd_Variant_t* variant,
+                                                      uint64_t row, uint64_t col);
+typedef bool (*wxd_dataview_model_get_attr_callback)(void* userdata, uint64_t row, uint64_t col,
+                                                     wxd_DataViewItemAttr_t* attr);
+typedef bool (*wxd_dataview_model_is_enabled_callback)(void* userdata, uint64_t row, uint64_t col);
+
 /**
  * @brief Creates a new custom virtual list model with callbacks, the returned model has ref count 1,
  * the caller is responsible for releasing it when done with wxd_DataViewModel_Release.
  */
 WXD_EXPORTED wxd_DataViewModel_t*
 wxd_DataViewVirtualListModel_CreateWithCallbacks(
-    uint64_t initial_size, void* userdata,
-    void (*get_value_callback)(void* userdata, uint64_t row, uint64_t col, wxd_Variant_t* variant),
-    bool (*set_value_callback)(void* userdata, const wxd_Variant_t* variant, uint64_t row,
-                               uint64_t col),
-    bool (*get_attr_callback)(void* userdata, uint64_t row, uint64_t col,
-                              wxd_DataViewItemAttr_t* attr),
-    bool (*is_enabled_callback)(void* userdata, uint64_t row, uint64_t col));
+    uint64_t initial_size, void* userdata, wxd_dataview_model_get_value_callback get_value_callback,
+    wxd_dataview_model_set_value_callback set_value_callback,
+    wxd_dataview_model_get_attr_callback get_attr_callback,
+    wxd_dataview_model_is_enabled_callback is_enabled_callback);
 
 // Custom tree model with callbacks: create a wxDataViewModel subclass that
 // forwards GetParent/IsContainer/GetChildren/GetValue/SetValue/IsEnabled/Compare
@@ -257,8 +258,8 @@ typedef void (*wxd_dataview_tree_model_get_children_fn)(void* userdata, void* it
                                                         void*** out_items, int* out_count);
 typedef void (*wxd_dataview_tree_model_free_children_fn)(void** items, int count);
 // Use the C-compatible wxd_Variant_t bridge (same as virtual list helper)
-typedef void (*wxd_dataview_tree_model_get_value_fn)(void* userdata, void* item, unsigned int col,
-                                                     wxd_Variant_t* out_variant);
+typedef const wxd_Variant_t* (*wxd_dataview_tree_model_get_value_fn)(void* userdata, void* item,
+                                                                     unsigned int col);
 typedef bool (*wxd_dataview_tree_model_set_value_fn)(void* userdata, void* item, unsigned int col,
                                                      const wxd_Variant_t* variant);
 typedef bool (*wxd_dataview_tree_model_is_enabled_fn)(void* userdata, void* item, unsigned int col);
@@ -337,13 +338,13 @@ typedef wxd_Size_t (*wxd_CustomRenderer_GetSizeCallback)(void* user_data);
 typedef bool (*wxd_CustomRenderer_RenderCallback)(void* user_data, wxd_Rect_t cell, void* dc,
                                                   int state);
 typedef bool (*wxd_CustomRenderer_SetValueCallback)(void* user_data, const wxd_Variant_t* value);
-typedef void (*wxd_CustomRenderer_GetValueCallback)(void* user_data, wxd_Variant_t* value);
+typedef const wxd_Variant_t* (*wxd_CustomRenderer_GetValueCallback)(void* user_data);
 typedef bool (*wxd_CustomRenderer_HasEditorCtrlCallback)(void* user_data);
 typedef void* (*wxd_CustomRenderer_CreateEditorCtrlCallback)(void* user_data, void* parent,
                                                              wxd_Rect_t label_rect,
                                                              const wxd_Variant_t* value);
-typedef bool (*wxd_CustomRenderer_GetValueFromEditorCtrlCallback)(void* user_data, void* editor,
-                                                                  wxd_Variant_t* value);
+typedef const wxd_Variant_t* (*wxd_CustomRenderer_GetValueFromEditorCtrlCallback)(void* user_data,
+                                                                                  void* editor);
 typedef bool (*wxd_CustomRenderer_ActivateCellCallback)(void* user_data, wxd_Rect_t cell,
                                                         void* model, void* item, unsigned int col,
                                                         void* mouse_event);

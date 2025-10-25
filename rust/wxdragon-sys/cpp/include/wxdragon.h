@@ -15,6 +15,7 @@
 #include "core/wxd_item.h" // Added for wxd_DataViewItem_t and its functions
 #include "wxd_sysopt.h"
 #include "wxd_logging.h" // Logging functions
+#include "wxd_variant.h" // Variant type and functions
 
 #ifdef __cplusplus
 // Include C++ specific utility functions and macros
@@ -145,7 +146,6 @@ extern "C" {
 
 #ifdef __cplusplus
 } // extern "C"
-
 #endif // __cplusplus
 
 #endif // WXDRAGON_H

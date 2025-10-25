@@ -32,9 +32,9 @@ fn main() {
 
         for (row, (name, progress, status)) in data.iter().enumerate() {
             model.append_row();
-            model.set_value(row, 0, Variant::String(name.to_string()));
-            model.set_value(row, 1, Variant::Int32(*progress));
-            model.set_value(row, 2, Variant::String(status.to_string()));
+            model.set_value(row, 0, Variant::from_string(name));
+            model.set_value(row, 1, Variant::from_i32(*progress));
+            model.set_value(row, 2, Variant::from_string(status));
         }
 
         // Create reusable custom renderers using auto-generated IDs
@@ -45,19 +45,18 @@ fn main() {
             .align(DataViewAlign::Center)
             .with_get_size(|_variant, _default_size| Size::new(100, 20))
             .with_render(|rect, ctx, _state, variant| {
-                // Pattern match on the variant to get the progress value
-                if let Variant::Int32(progress) = variant {
+                if let Some(progress) = variant.get_i32() {
                     // Draw progress bar background
                     ctx.set_brush(Colour::rgb(240, 240, 240), BrushStyle::Solid);
                     ctx.draw_rectangle(rect.x, rect.y, rect.width, rect.height);
 
                     // Draw progress bar fill
-                    let fill_width = (rect.width as f32 * (*progress as f32 / 100.0)) as i32;
+                    let fill_width = (rect.width as f32 * (progress as f32 / 100.0)) as i32;
 
                     // Color based on progress
-                    let color = if *progress >= 100 {
+                    let color = if progress >= 100 {
                         Colour::rgb(76, 175, 80) // Green for complete
-                    } else if *progress >= 50 {
+                    } else if progress >= 50 {
                         Colour::rgb(255, 193, 7) // Yellow for in progress
                     } else {
                         Colour::rgb(244, 67, 54) // Red for low progress
@@ -83,8 +82,7 @@ fn main() {
             .mode(DataViewCellMode::Inert)
             .align(DataViewAlign::Center)
             .with_get_size(|variant, default_size| {
-                // Size based on content - longer status strings get more width
-                if let Variant::String(status) = variant {
+                if let Some(status) = variant.get_string() {
                     let base_width = 120;
                     let extra_width = status.len().saturating_sub(8) as i32 * 8; // 8 pixels per extra char
                     Size::new(base_width + extra_width, default_size.height)
@@ -93,8 +91,7 @@ fn main() {
                 }
             })
             .with_render(|rect, ctx, _state, variant| {
-                // Pattern match on the variant to get the status string
-                if let Variant::String(status) = variant {
+                if let Some(status) = variant.get_string() {
                     // Choose colors based on status
                     let (bg_color, text_color) = match status.as_str() {
                         "Complete" => (Colour::rgb(200, 230, 201), Colour::rgb(27, 94, 32)),
@@ -108,10 +105,10 @@ fn main() {
 
                     // Draw text
                     ctx.set_text_foreground(text_color);
-                    let (text_width, text_height) = ctx.get_text_extent(status);
+                    let (text_width, text_height) = ctx.get_text_extent(&status);
                     let text_x = rect.x + (rect.width - text_width) / 2;
                     let text_y = rect.y + (rect.height - text_height) / 2;
-                    ctx.draw_text(status, text_x, text_y);
+                    ctx.draw_text(&status, text_x, text_y);
                 }
                 true
             })

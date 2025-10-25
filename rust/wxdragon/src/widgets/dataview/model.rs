@@ -184,14 +184,15 @@ impl DataViewListModel {
 
     /// Set a value in the model
     pub fn set_value<T: Into<Variant>>(&self, row: usize, col: usize, value: T) -> bool {
-        let variant = value.into();
-        let variant_ptr = variant.as_raw_mut();
-        let result = unsafe {
-            ffi::wxd_DataViewListModel_SetValue(self.ptr, row as u64, col as u64, variant_ptr)
-        };
-        // The C API consumes the variant, so we don't need to free it
-        let _ = variant_ptr;
-        result
+        let variant: Variant = value.into();
+        unsafe {
+            ffi::wxd_DataViewListModel_SetValue(
+                self.ptr,
+                row as u64,
+                col as u64,
+                variant.as_const_ptr(),
+            )
+        }
     }
 }
 
@@ -566,16 +567,8 @@ impl CustomDataViewTreeModel {
         if self.model.is_null() {
             return false;
         }
-        let raw = super::variant::to_raw_variant(value);
         let item = item as *mut std::ffi::c_void;
-        let ok =
-            unsafe { ffi::wxd_DataViewTreeModel_SetValue(self.model, item, col, &raw as *const _) };
-        // IMPORTANT: Do NOT call wxd_Variant_Free on a stack-allocated variant.
-        // Only free inner allocations we own (e.g., Rust string for String variants).
-        if matches!(value, Variant::String(_)) {
-            unsafe { ffi::wxd_Variant_Free_Rust_String(raw.data.string_val) };
-        }
-        ok
+        unsafe { ffi::wxd_DataViewTreeModel_SetValue(self.model, item, col, value.as_const_ptr()) }
     }
 }
 
@@ -634,15 +627,14 @@ extern "C" fn trampoline_get_value(
     userdata: *mut std::ffi::c_void,
     item: *mut std::ffi::c_void,
     col: u32,
-    out_variant: *mut ffi::wxd_Variant_t,
-) {
-    if out_variant.is_null() || userdata.is_null() {
-        return;
+) -> *const ffi::wxd_Variant_t {
+    if userdata.is_null() {
+        return std::ptr::null();
     }
     let cb = unsafe { &*(userdata as *mut OwnedTreeCallbacks) };
     let val = (cb.get_value)(&*cb.userdata, item, col);
-    let raw = super::variant::to_raw_variant(&val);
-    unsafe { *out_variant = raw };
+    // Transfer ownership to C++ side, which will destroy it when done.
+    val.into_raw()
 }
 
 extern "C" fn trampoline_set_value(
@@ -656,9 +648,12 @@ extern "C" fn trampoline_set_value(
     }
     let cb = unsafe { &*(userdata as *mut OwnedTreeCallbacks) };
     if let Some(f) = &cb.set_value {
-        // Convert incoming raw variant to Variant
-        let v = unsafe { super::variant::from_raw_variant(variant) };
-        f(&*cb.userdata, item, col, &v)
+        // Clone the incoming wxVariant so we own a safe Rust wrapper
+        if let Some(v) = unsafe { super::variant::Variant::from_const_ptr_clone(variant) } {
+            f(&*cb.userdata, item, col, &v)
+        } else {
+            false
+        }
     } else {
         false
     }
@@ -917,32 +912,17 @@ unsafe extern "C" fn get_value_callback(
     userdata: *mut ::std::os::raw::c_void,
     row: u64,
     col: u64,
-    variant: *mut ffi::wxd_Variant_t,
-) {
-    if variant.is_null() {
-        return;
-    }
-
+) -> *const ffi::wxd_Variant_t {
     if userdata.is_null() {
-        unsafe {
-            (*variant).type_ = ffi::WXD_VARIANT_TYPE_STRING as i32;
-            let error_message = "Error: null userdata".to_string();
-            (*variant).data.string_val = CString::new(error_message).unwrap_or_default().into_raw();
-        }
-        return;
+        // Return an owned empty string variant to satisfy the API, C++ will destroy it.
+        let v = super::variant::Variant::from_string("");
+        return v.into_raw();
     }
 
-    // Safety: This cast should be valid if the userdata was properly created
-    let callbacks = unsafe { &*(userdata as *const CustomModelCallbacks) };
-
-    // Call the user's callback
+    let callbacks = &*(userdata as *const CustomModelCallbacks);
     let value = (callbacks.get_value)(&*callbacks.userdata, row as usize, col as usize);
-
-    // Convert Variant to wxd_Variant_t
-    let raw_variant = super::variant::to_raw_variant(&value);
-
-    // Copy the result to the provided variant
-    unsafe { *variant = raw_variant };
+    // Transfer ownership to C++ side.
+    value.into_raw()
 }
 
 unsafe extern "C" fn set_value_callback(
@@ -951,13 +931,13 @@ unsafe extern "C" fn set_value_callback(
     row: u64,
     col: u64,
 ) -> bool {
-    let callbacks = unsafe { &*(userdata as *const CustomModelCallbacks) };
+    let callbacks = &*(userdata as *const CustomModelCallbacks);
     if let Some(set_value) = &callbacks.set_value {
-        // Convert wxd_Variant_t to Variant
-        let value = unsafe { super::variant::from_raw_variant(variant) };
-
-        // Call the user's callback
-        (set_value)(&*callbacks.userdata, row as usize, col as usize, &value)
+        if let Some(value) = unsafe { super::variant::Variant::from_const_ptr_clone(variant) } {
+            (set_value)(&*callbacks.userdata, row as usize, col as usize, &value)
+        } else {
+            false
+        }
     } else {
         false
     }
