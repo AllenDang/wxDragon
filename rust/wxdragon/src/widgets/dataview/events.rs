@@ -151,7 +151,8 @@ impl DataViewEventData {
         if p.is_null() {
             return None;
         }
-        unsafe { super::Variant::from_const_ptr_clone(p) }
+        // Wrap the returned pointer in a Variant; Rust takes ownership
+        Some(super::Variant::from(p))
     }
 
     /// Set the value for editing events
@@ -160,7 +161,7 @@ impl DataViewEventData {
             return false;
         }
 
-        unsafe { ffi::wxd_DataViewEvent_SetValue(self.event.0, value.as_const_ptr()) }
+        unsafe { ffi::wxd_DataViewEvent_SetValue(self.event.0, **value) }
     }
 }
 

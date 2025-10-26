@@ -121,7 +121,9 @@ wxd_Variant_CreateEmpty(void)
     return reinterpret_cast<const wxd_Variant_t*>(v);
 }
 
-extern "C" WXD_EXPORTED const wxd_Variant_t*
+// Clone the variant. Returns nullptr if input is nullptr.
+// If not nullptr, the caller is responsible for destroying the returned variant.
+extern "C" WXD_EXPORTED wxd_Variant_t*
 wxd_Variant_Clone(const wxd_Variant_t* variant)
 {
     if (!variant) {
@@ -129,7 +131,7 @@ wxd_Variant_Clone(const wxd_Variant_t* variant)
     }
     const wxVariant* src = as_wx_const(variant);
     wxVariant* v = new (std::nothrow) wxVariant(*src);
-    return reinterpret_cast<const wxd_Variant_t*>(v);
+    return reinterpret_cast<wxd_Variant_t*>(v);
 }
 
 extern "C" WXD_EXPORTED void
@@ -231,6 +233,7 @@ wxd_Variant_SetString_Utf8(const wxd_Variant_t* variant, const char* s, int len)
         *v = wxString();
         return;
     }
+    // If len < 0, treat s as null-terminated
     int n = len >= 0 ? len : static_cast<int>(std::strlen(s));
     wxString ws = wxString::FromUTF8(s, n);
     *v = ws;

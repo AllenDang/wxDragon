@@ -1,6 +1,6 @@
 //! DataViewRenderer implementation.
 
-use super::{DataViewAlign, DataViewCellMode, VariantType};
+use super::{DataViewAlign, DataViewCellMode, Variant, VariantType};
 use std::ffi::CString;
 use wxdragon_sys as ffi;
 
@@ -862,10 +862,7 @@ extern "C" fn set_value_trampoline(
     }
 
     let callbacks = unsafe { &*(user_data as *const CustomRendererCallbacks) };
-    let variant = match unsafe { super::variant::Variant::from_const_ptr_clone(value) } {
-        Some(v) => v,
-        None => return false,
-    };
+    let variant = Variant::from(value).clone();
 
     // Store the value internally in the renderer
     let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
@@ -950,10 +947,9 @@ extern "C" fn create_editor_trampoline(
             label_rect.width,
             label_rect.height,
         );
-        let variant = match unsafe { super::variant::Variant::from_const_ptr_clone(value) } {
-            Some(v) => v,
-            None => return std::ptr::null_mut(),
-        };
+
+        // Just convert the variant, no holding the ownership here
+        let variant = Variant::from(value);
 
         // Create a wrapper for the parent widget
         // Note: This is a simplified implementation. In a full implementation,

@@ -38,6 +38,8 @@ impl VariantType {
 /// Owns the underlying wxVariant by default and destroys it in Drop.
 pub struct Variant {
     ptr: *const ffi::wxd_Variant_t,
+    /// If the input pointer is const, the owned flag is false.
+    /// If the input pointer is mutable, the owned flag is true.
     owned: bool,
 }
 
@@ -61,6 +63,10 @@ impl Variant {
     pub fn new() -> Self {
         let ptr = unsafe { ffi::wxd_Variant_CreateEmpty() };
         Self { ptr, owned: true }
+    }
+
+    pub fn is_owned(&self) -> bool {
+        self.owned
     }
 
     /// Create a new variant and set it to a bool value.
@@ -109,11 +115,6 @@ impl Variant {
         var
     }
 
-    /// Returns const pointer for passing to FFI where C++ does not take ownership.
-    pub fn as_const_ptr(&self) -> *const ffi::wxd_Variant_t {
-        self.ptr as *const _
-    }
-
     /// Transfers ownership to the caller (typically C++). After this call,
     /// Drop will not destroy the variant.
     pub fn into_raw(mut self) -> *const ffi::wxd_Variant_t {
@@ -121,23 +122,6 @@ impl Variant {
         self.owned = false;
         self.ptr = std::ptr::null();
         p
-    }
-
-    /// # Safety
-    /// Clone from a const wxd_Variant_t* by calling the C++ Clone helper.
-    pub unsafe fn from_const_ptr_clone(ptr: *const ffi::wxd_Variant_t) -> Option<Self> {
-        if ptr.is_null() {
-            return None;
-        }
-        let cloned = ffi::wxd_Variant_Clone(ptr);
-        if cloned.is_null() {
-            None
-        } else {
-            Some(Self {
-                ptr: cloned,
-                owned: true,
-            })
-        }
     }
 
     /// Returns the wxVariant type name (e.g., "string", "bool").
@@ -161,7 +145,7 @@ impl Variant {
 
     pub fn get_bool(&self) -> Option<bool> {
         let mut out = false;
-        let ok = unsafe { ffi::wxd_Variant_GetBool(self.as_const_ptr(), &mut out) };
+        let ok = unsafe { ffi::wxd_Variant_GetBool(**self, &mut out) };
         if ok {
             Some(out)
         } else {
@@ -170,8 +154,8 @@ impl Variant {
     }
 
     pub fn get_i32(&self) -> Option<i32> {
-        let mut out = 0i32;
-        let ok = unsafe { ffi::wxd_Variant_GetInt32(self.as_const_ptr(), &mut out) };
+        let mut out = 0_i32;
+        let ok = unsafe { ffi::wxd_Variant_GetInt32(**self, &mut out) };
         if ok {
             Some(out)
         } else {
@@ -180,8 +164,8 @@ impl Variant {
     }
 
     pub fn get_i64(&self) -> Option<i64> {
-        let mut out = 0i64;
-        let ok = unsafe { ffi::wxd_Variant_GetInt64(self.as_const_ptr(), &mut out) };
+        let mut out = 0_i64;
+        let ok = unsafe { ffi::wxd_Variant_GetInt64(**self, &mut out) };
         if ok {
             Some(out)
         } else {
@@ -190,8 +174,8 @@ impl Variant {
     }
 
     pub fn get_f64(&self) -> Option<f64> {
-        let mut out = 0f64;
-        let ok = unsafe { ffi::wxd_Variant_GetDouble(self.as_const_ptr(), &mut out) };
+        let mut out = 0_f64;
+        let ok = unsafe { ffi::wxd_Variant_GetDouble(**self, &mut out) };
         if ok {
             Some(out)
         } else {
@@ -205,9 +189,9 @@ impl Variant {
             return None;
         }
         let mut buf = vec![0_u8; needed + 1];
-        let written =
-            unsafe { ffi::wxd_Variant_GetString_Utf8(**self, buf.as_mut_ptr() as _, buf.len()) };
-        if written == 0 {
+        let len = buf.len();
+        let w = unsafe { ffi::wxd_Variant_GetString_Utf8(**self, buf.as_mut_ptr() as _, len) };
+        if w == 0 {
             return Some(String::new());
         }
         if let Some(pos) = buf.iter().position(|&b| b == 0) {
@@ -238,21 +222,16 @@ impl Variant {
 
 impl Clone for Variant {
     fn clone(&self) -> Self {
-        let cloned = unsafe { ffi::wxd_Variant_Clone(self.as_const_ptr()) };
-        Self {
-            ptr: cloned,
-            owned: true,
-        }
+        let cloned = unsafe { ffi::wxd_Variant_Clone(**self) };
+        Self::from(cloned)
     }
 }
 
 impl Drop for Variant {
     fn drop(&mut self) {
-        if self.owned && !self.ptr.is_null() {
+        if self.is_owned() && !self.ptr.is_null() {
             unsafe { ffi::wxd_Variant_Destroy(self.ptr) };
         }
-        self.ptr = std::ptr::null_mut();
-        self.owned = false;
     }
 }
 
@@ -265,6 +244,56 @@ impl Default for Variant {
 impl std::fmt::Debug for Variant {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "Variant(type={})", self.type_name())
+    }
+}
+
+impl From<*const ffi::wxd_Variant_t> for Variant {
+    /// # Safety
+    /// Does not take ownership of the raw pointer.
+    fn from(ptr: *const ffi::wxd_Variant_t) -> Self {
+        Variant { ptr, owned: false }
+    }
+}
+
+impl From<*mut ffi::wxd_Variant_t> for Variant {
+    /// # Safety
+    /// Takes ownership of the raw pointer.
+    fn from(ptr: *mut ffi::wxd_Variant_t) -> Self {
+        let ptr = ptr as *const _;
+        Variant { ptr, owned: true }
+    }
+}
+
+impl TryFrom<Variant> for *const ffi::wxd_Variant_t {
+    type Error = std::io::Error;
+    fn try_from(value: Variant) -> Result<Self, Self::Error> {
+        if value.ptr.is_null() {
+            return Err(Error::new(InvalidInput, "Variant pointer is null"));
+        }
+        if value.is_owned() {
+            return Err(Error::new(
+                InvalidData,
+                "Variant owns the pointer, please use mutable version",
+            ));
+        }
+        Ok(value.ptr)
+    }
+}
+
+impl TryFrom<Variant> for *mut ffi::wxd_Variant_t {
+    type Error = std::io::Error;
+    fn try_from(mut value: Variant) -> Result<Self, Self::Error> {
+        if value.ptr.is_null() {
+            return Err(Error::new(InvalidInput, "Variant pointer is null"));
+        }
+        if !value.is_owned() {
+            return Err(Error::new(
+                InvalidData,
+                "Variant does not own the pointer, please use const version",
+            ));
+        }
+        value.owned = false;
+        Ok(value.ptr as *mut _)
     }
 }
 
@@ -322,15 +351,16 @@ impl<'a> From<&'a Bitmap> for Variant {
     }
 }
 
-use std::io::{Error, ErrorKind::InvalidData};
+use std::io::{Error, ErrorKind::InvalidData, ErrorKind::InvalidInput};
 
 impl TryFrom<Variant> for bool {
     type Error = std::io::Error;
 
     fn try_from(value: Variant) -> Result<Self, Self::Error> {
+        let type_name = value.type_name();
         value.get_bool().ok_or(Error::new(
             InvalidData,
-            format!("Not a bool, it's a {}", value.type_name()),
+            format!("Not a bool, it's a {type_name}"),
         ))
     }
 }
@@ -339,9 +369,10 @@ impl TryFrom<Variant> for i32 {
     type Error = std::io::Error;
 
     fn try_from(value: Variant) -> Result<Self, Self::Error> {
+        let type_name = value.type_name();
         value.get_i32().ok_or(Error::new(
             InvalidData,
-            format!("Not an i32, it's a {}", value.type_name()),
+            format!("Not an i32, it's a {type_name}"),
         ))
     }
 }
@@ -350,9 +381,10 @@ impl TryFrom<Variant> for i64 {
     type Error = std::io::Error;
 
     fn try_from(value: Variant) -> Result<Self, Self::Error> {
+        let type_name = value.type_name();
         value.get_i64().ok_or(Error::new(
             InvalidData,
-            format!("Not an i64, it's a {}", value.type_name()),
+            format!("Not an i64, it's a {type_name}"),
         ))
     }
 }
@@ -361,9 +393,10 @@ impl TryFrom<Variant> for f64 {
     type Error = std::io::Error;
 
     fn try_from(value: Variant) -> Result<Self, Self::Error> {
+        let type_name = value.type_name();
         value.get_f64().ok_or(Error::new(
             InvalidData,
-            format!("Not an f64, it's a {}", value.type_name()),
+            format!("Not an f64, it's a {type_name}"),
         ))
     }
 }
@@ -372,9 +405,10 @@ impl TryFrom<Variant> for String {
     type Error = std::io::Error;
 
     fn try_from(value: Variant) -> Result<Self, Self::Error> {
+        let type_name = value.type_name();
         value.get_string().ok_or(Error::new(
             InvalidData,
-            format!("Not a String, it's a {}", value.type_name()),
+            format!("Not a String, it's a {type_name}"),
         ))
     }
 }
@@ -383,9 +417,10 @@ impl TryFrom<Variant> for DateTime {
     type Error = std::io::Error;
 
     fn try_from(value: Variant) -> Result<Self, Self::Error> {
+        let type_name = value.type_name();
         value.get_datetime().ok_or(Error::new(
             InvalidData,
-            format!("Not a DateTime, it's a {}", value.type_name()),
+            format!("Not a DateTime, it's a {type_name}"),
         ))
     }
 }
@@ -394,9 +429,10 @@ impl TryFrom<Variant> for Bitmap {
     type Error = std::io::Error;
 
     fn try_from(value: Variant) -> Result<Self, Self::Error> {
+        let type_name = value.type_name();
         value.get_bitmap().ok_or(Error::new(
             InvalidData,
-            format!("Not a Bitmap, it's a {}", value.type_name()),
+            format!("Not a Bitmap, it's a {type_name}"),
         ))
     }
 }

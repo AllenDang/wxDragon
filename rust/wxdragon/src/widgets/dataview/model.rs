@@ -184,15 +184,8 @@ impl DataViewListModel {
 
     /// Set a value in the model
     pub fn set_value<T: Into<Variant>>(&self, row: usize, col: usize, value: T) -> bool {
-        let variant: Variant = value.into();
-        unsafe {
-            ffi::wxd_DataViewListModel_SetValue(
-                self.ptr,
-                row as u64,
-                col as u64,
-                variant.as_const_ptr(),
-            )
-        }
+        let v: Variant = value.into();
+        unsafe { ffi::wxd_DataViewListModel_SetValue(self.ptr, row, col, *v.as_ref()) }
     }
 }
 
@@ -568,7 +561,7 @@ impl CustomDataViewTreeModel {
             return false;
         }
         let item = item as *mut std::ffi::c_void;
-        unsafe { ffi::wxd_DataViewTreeModel_SetValue(self.model, item, col, value.as_const_ptr()) }
+        unsafe { ffi::wxd_DataViewTreeModel_SetValue(self.model, item, col, **value) }
     }
 }
 
@@ -648,12 +641,8 @@ extern "C" fn trampoline_set_value(
     }
     let cb = unsafe { &*(userdata as *mut OwnedTreeCallbacks) };
     if let Some(f) = &cb.set_value {
-        // Clone the incoming wxVariant so we own a safe Rust wrapper
-        if let Some(v) = unsafe { super::variant::Variant::from_const_ptr_clone(variant) } {
-            f(&*cb.userdata, item, col, &v)
-        } else {
-            false
-        }
+        let v = Variant::from(variant); // Here we just wrap the raw pointer, no ownership transfer
+        f(&*cb.userdata, item, col, &v)
     } else {
         false
     }
@@ -933,11 +922,8 @@ unsafe extern "C" fn set_value_callback(
 ) -> bool {
     let callbacks = &*(userdata as *const CustomModelCallbacks);
     if let Some(set_value) = &callbacks.set_value {
-        if let Some(value) = unsafe { super::variant::Variant::from_const_ptr_clone(variant) } {
-            (set_value)(&*callbacks.userdata, row as usize, col as usize, &value)
-        } else {
-            false
-        }
+        let value = Variant::from(variant); // Here we just wrap the raw pointer, no ownership transfer
+        (set_value)(&*callbacks.userdata, row as usize, col as usize, &value)
     } else {
         false
     }

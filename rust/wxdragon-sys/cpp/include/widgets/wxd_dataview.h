@@ -174,7 +174,7 @@ wxd_DataViewListModel_AppendColumn(wxd_DataViewModel_t* self, const char* name);
 WXD_EXPORTED bool
 wxd_DataViewListModel_AppendRow(wxd_DataViewModel_t* self);
 WXD_EXPORTED bool
-wxd_DataViewListModel_SetValue(wxd_DataViewModel_t* self, uint64_t row, uint64_t col,
+wxd_DataViewListModel_SetValue(wxd_DataViewModel_t* self, size_t row, size_t col,
                                const wxd_Variant_t* variant);
 
 // Selection management

@@ -15,7 +15,11 @@ extern "C" {
 WXD_EXPORTED const wxd_Variant_t*
 wxd_Variant_CreateEmpty(void);
 
-WXD_EXPORTED const wxd_Variant_t*
+/**
+ * Clone the variant. Returns nullptr if input is nullptr.
+ * If not nullptr, the caller is responsible for destroying the returned variant.
+ */
+WXD_EXPORTED wxd_Variant_t*
 wxd_Variant_Clone(const wxd_Variant_t* variant);
 
 WXD_EXPORTED void

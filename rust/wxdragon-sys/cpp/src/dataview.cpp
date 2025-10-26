@@ -821,7 +821,7 @@ wxd_DataViewListModel_AppendRow(wxd_DataViewModel_t* self)
 }
 
 WXD_EXPORTED bool
-wxd_DataViewListModel_SetValue(wxd_DataViewModel_t* self, uint64_t row, uint64_t col,
+wxd_DataViewListModel_SetValue(wxd_DataViewModel_t* self, size_t row, size_t col,
                                const wxd_Variant_t* variant)
 {
     if (!self || !variant)
@@ -836,7 +836,7 @@ wxd_DataViewListModel_SetValue(wxd_DataViewModel_t* self, uint64_t row, uint64_t
 
     // Create a wxVariant from our wxd_Variant_t
     wxVariant wxVariantValue = *reinterpret_cast<const wxVariant*>(variant);
-    // Create a wxDataViewItem for the row
+    // FIXME: Create a wxDataViewItem for the row
     wxDataViewItem item(reinterpret_cast<void*>(static_cast<uintptr_t>(row + 1)));
 
     // Set the value
