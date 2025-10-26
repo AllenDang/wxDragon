@@ -74,7 +74,7 @@ public:
     wxString
     GetType() const override
     {
-        return wxString("bitmap");
+        return wxString("wxBitmap");
     }
 
     wxVariantData*
@@ -104,7 +104,7 @@ wxd_GetBitmapFromVariant(const wxVariant& v)
 {
     if (v.IsNull())
         return nullptr;
-    if (v.GetType() != wxString("bitmap"))
+    if (v.GetType() != wxString("wxBitmap"))
         return nullptr;
     wxVariantData* data = v.GetData();
     auto* bd = static_cast<wxd_BitmapVariantData*>(data);

@@ -204,8 +204,8 @@ impl DataViewBitmapRenderer {
     /// * `mode` - The cell mode
     /// * `align` - The alignment
     pub fn new(mode: DataViewCellMode, align: DataViewAlign) -> Self {
-        // Bitmap renderer always uses the "bitmap" type
-        let variant_type_cstr = CString::new("bitmap").unwrap();
+        // Bitmap renderer uses the standard wxVariant type name for bitmaps
+        let variant_type_cstr = CString::new("wxBitmap").unwrap();
         let handle = unsafe {
             ffi::wxd_DataViewBitmapRenderer_Create(
                 variant_type_cstr.as_ptr(),

@@ -26,7 +26,7 @@ impl VariantType {
             VariantType::Double => "double",
             VariantType::String => "string",
             VariantType::DateTime => "datetime",
-            VariantType::Bitmap => "bitmap",
+            VariantType::Bitmap => "wxBitmap",
             VariantType::Progress => "long",
             VariantType::IconText => "wxDataViewIconText",
         }
