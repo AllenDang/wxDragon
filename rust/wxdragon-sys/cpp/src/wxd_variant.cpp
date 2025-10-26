@@ -234,8 +234,12 @@ wxd_Variant_SetString_Utf8(const wxd_Variant_t* variant, const char* s, int len)
         return;
     }
     // If len < 0, treat s as null-terminated
-    int n = len >= 0 ? len : static_cast<int>(std::strlen(s));
-    wxString ws = wxString::FromUTF8(s, n);
+    size_t n = len >= 0 ? static_cast<size_t>(len) : std::strlen(s);
+    if (n > static_cast<size_t>(INT_MAX)) {
+        // Truncate to INT_MAX to avoid overflow
+        n = static_cast<size_t>(INT_MAX);
+    }
+    wxString ws = wxString::FromUTF8(s, static_cast<int>(n));
     *v = ws;
 }
 

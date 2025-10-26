@@ -463,8 +463,8 @@ impl DataViewRenderer for DataViewCheckIconTextRenderer {
 ///     .mode(DataViewCellMode::Inert)
 ///     .with_render(|rect, ctx, _state, variant| {
 ///         if let Some(progress) = variant.get_i32() {
-///             // Draw progress bar...
-///             let _ = (rect, ctx, progress); // placeholder to silence unused warnings in doctest
+///             // Here you would draw the progress bar using the context and rect.
+///             // For example: ctx.draw_progress_bar(rect, progress);
 ///             true
 ///         } else {
 ///             false
@@ -599,12 +599,25 @@ impl DataViewCustomRendererBuilder {
     ///         ctx.draw_text(&text, rect.x, rect.y);
     ///         true
     ///     } else if let Some(progress) = variant.get_i32() {
-    ///         // Render integer as progress bar (placeholder)
-    ///         let _ = (state, progress); // silence unused warnings
+    ///         // Render integer as a simple progress bar using basic DC ops
+    ///         // Frame
+    ///         ctx.set_pen(colours::BLACK, 1, PenStyle::Solid);
+    ///         ctx.set_brush(colours::LIGHT_GRAY, BrushStyle::Solid);
+    ///         ctx.draw_rectangle(rect.x, rect.y, rect.width, rect.height);
+    ///         // Fill according to progress (0..=100)
+    ///         let fill_w = (rect.width * progress / 100).clamp(0, rect.width);
+    ///         ctx.set_brush(colours::BLUE, BrushStyle::Solid);
+    ///         ctx.draw_rectangle(rect.x + 1, rect.y + 1, (fill_w - 2).max(0), rect.height - 2);
     ///         true
     ///     } else if let Some(checked) = variant.get_bool() {
-    ///         // Render boolean as checkbox (placeholder)
-    ///         let _ = checked; // silence unused warnings
+    ///         // Render boolean as a minimal checkbox: draw a box and an X when checked
+    ///         let box_size = rect.height.min(16);
+    ///         ctx.set_pen(colours::BLACK, 1, PenStyle::Solid);
+    ///         ctx.set_brush(colours::WHITE, BrushStyle::Solid);
+    ///         ctx.draw_rectangle(rect.x, rect.y, box_size, box_size);
+    ///         if checked {
+    ///             ctx.draw_text("X", rect.x + 3, rect.y + 1);
+    ///         }
     ///         true
     ///     } else {
     ///         // Handle other variant types or ignore

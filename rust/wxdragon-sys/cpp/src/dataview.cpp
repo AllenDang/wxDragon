@@ -837,7 +837,7 @@ wxd_DataViewListModel_SetValue(wxd_DataViewModel_t* self, size_t row, size_t col
     // Create a wxVariant from our wxd_Variant_t
     wxVariant wxVariantValue = *reinterpret_cast<const wxVariant*>(variant);
     // FIXME: Create a wxDataViewItem for the row
-    wxDataViewItem item(reinterpret_cast<void*>(static_cast<uintptr_t>(row + 1)));
+    wxDataViewItem item(reinterpret_cast<void*>(static_cast<size_t>(row + 1)));
 
     // Set the value
     return model->SetValue(wxVariantValue, item, static_cast<unsigned int>(col));

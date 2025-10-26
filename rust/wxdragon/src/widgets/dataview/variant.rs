@@ -131,7 +131,13 @@ impl Variant {
         if needed == 0 {
             return String::new();
         }
-        let mut b = vec![0u8; needed as usize + 1];
+        let mut b = vec![
+            0_u8;
+            match needed.checked_add(1) {
+                Some(len) => len,
+                None => return String::new(),
+            }
+        ];
         let w = unsafe { ffi::wxd_Variant_GetTypeName_Utf8(**self, b.as_mut_ptr() as _, b.len()) };
         if w == 0 {
             return String::new();
@@ -188,7 +194,13 @@ impl Variant {
         if needed == 0 {
             return None;
         }
-        let mut buf = vec![0_u8; needed + 1];
+        let mut buf = vec![
+            0_u8;
+            match needed.checked_add(1) {
+                Some(len) => len,
+                None => return Some(String::new()),
+            }
+        ];
         let len = buf.len();
         let w = unsafe { ffi::wxd_Variant_GetString_Utf8(**self, buf.as_mut_ptr() as _, len) };
         if w == 0 {
