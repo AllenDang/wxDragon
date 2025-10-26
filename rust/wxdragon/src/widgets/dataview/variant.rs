@@ -38,8 +38,8 @@ impl VariantType {
 /// Owns the underlying wxVariant by default and destroys it in Drop.
 pub struct Variant {
     ptr: *const ffi::wxd_Variant_t,
-    /// If the input pointer is const, the owned flag is false.
-    /// If the input pointer is mutable, the owned flag is true.
+    /// Indicates whether this Rust wrapper owns the underlying wxVariant and is responsible for destroying it.
+    /// Ownership is determined by how the pointer was obtained (e.g., from `From<*mut>` vs `From<*const>`), not by the pointer's type.
     owned: bool,
 }
 
@@ -113,15 +113,6 @@ impl Variant {
         let p = **bmp as *const ffi::wxd_Bitmap_t;
         unsafe { ffi::wxd_Variant_SetBitmap(var.ptr, p) };
         var
-    }
-
-    /// Transfers ownership to the caller (typically C++). After this call,
-    /// Drop will not destroy the variant.
-    pub fn into_raw(mut self) -> *const ffi::wxd_Variant_t {
-        let p = self.ptr;
-        self.owned = false;
-        self.ptr = std::ptr::null();
-        p
     }
 
     /// Returns the wxVariant type name (e.g., "string", "bool").
@@ -260,7 +251,6 @@ impl std::fmt::Debug for Variant {
 }
 
 impl From<*const ffi::wxd_Variant_t> for Variant {
-    /// # Safety
     /// Does not take ownership of the raw pointer.
     fn from(ptr: *const ffi::wxd_Variant_t) -> Self {
         Variant { ptr, owned: false }
@@ -268,7 +258,6 @@ impl From<*const ffi::wxd_Variant_t> for Variant {
 }
 
 impl From<*mut ffi::wxd_Variant_t> for Variant {
-    /// # Safety
     /// Takes ownership of the raw pointer.
     fn from(ptr: *mut ffi::wxd_Variant_t) -> Self {
         let ptr = ptr as *const _;

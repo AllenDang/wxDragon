@@ -329,11 +329,11 @@ public:
     typedef wxd_Size_t (*GetSizeCallback)(void* user_data);
     typedef bool (*RenderCallback)(void* user_data, wxd_Rect_t cell, void* dc, int state);
     typedef bool (*SetValueCallback)(void* user_data, const wxd_Variant_t* value);
-    typedef const wxd_Variant_t* (*GetValueCallback)(void* user_data);
+    typedef wxd_Variant_t* (*GetValueCallback)(void* user_data);
     typedef bool (*HasEditorCtrlCallback)(void* user_data);
     typedef void* (*CreateEditorCtrlCallback)(void* user_data, void* parent, wxd_Rect_t label_rect,
                                               const wxd_Variant_t* value);
-    typedef const wxd_Variant_t* (*GetValueFromEditorCtrlCallback)(void* user_data, void* editor);
+    typedef wxd_Variant_t* (*GetValueFromEditorCtrlCallback)(void* user_data, void* editor);
     typedef bool (*ActivateCellCallback)(void* user_data, wxd_Rect_t cell, void* model, void* item,
                                          unsigned int col, void* mouse_event);
 
@@ -399,11 +399,12 @@ public:
     GetValue(wxVariant& value) const override
     {
         if (m_get_value_callback && m_user_data) {
-            const wxd_Variant_t* var_data = m_get_value_callback(m_user_data);
+            wxd_Variant_t* var_data = m_get_value_callback(m_user_data);
             if (!var_data)
                 return false;
 
-            value = *reinterpret_cast<const wxVariant*>(var_data);
+            value = *reinterpret_cast<wxVariant*>(var_data);
+            delete reinterpret_cast<wxVariant*>(var_data);
             return true;
         }
         // No callback available, return an empty string variant
@@ -440,9 +441,10 @@ public:
     GetValueFromEditorCtrl(wxWindow* editor, wxVariant& value) override
     {
         if (m_get_value_from_editor_callback && m_user_data && editor) {
-            const wxd_Variant_t* var_data = m_get_value_from_editor_callback(m_user_data, editor);
+            wxd_Variant_t* var_data = m_get_value_from_editor_callback(m_user_data, editor);
             if (var_data) {
-                value = *reinterpret_cast<const wxVariant*>(var_data);
+                value = *reinterpret_cast<wxVariant*>(var_data);
+                delete reinterpret_cast<wxVariant*>(var_data);
                 return true;
             }
         }
@@ -581,11 +583,12 @@ public:
                 0;
 
         // Create wxd_Variant_t for the callback
-        const wxd_Variant_t* wxd_variant = m_get_value(m_user_data, row, col);
+        wxd_Variant_t* wxd_variant = m_get_value(m_user_data, row, col);
         if (!wxd_variant)
             return;
         // Convert wxd_Variant_t to wxVariant
-        variant = *reinterpret_cast<const wxVariant*>(wxd_variant);
+        variant = *reinterpret_cast<wxVariant*>(wxd_variant);
+        delete reinterpret_cast<wxVariant*>(wxd_variant);
     }
 
     virtual bool

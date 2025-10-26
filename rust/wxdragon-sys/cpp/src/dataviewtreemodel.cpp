@@ -73,12 +73,13 @@ public:
             return;
 
         // Ask Rust to populate a C-compatible variant structure
-        const wxd_Variant_t* rust_variant_data =
+        wxd_Variant_t* rust_variant_data =
             m_cb->get_value(m_cb->userdata, (void*)item.GetID(), col);
         if (!rust_variant_data)
             return;
         // Convert wxd_Variant_t to wxVariant
-        variant = *reinterpret_cast<const wxVariant*>(rust_variant_data);
+        variant = *reinterpret_cast<wxVariant*>(rust_variant_data);
+        delete reinterpret_cast<wxVariant*>(rust_variant_data);
     }
 
     bool

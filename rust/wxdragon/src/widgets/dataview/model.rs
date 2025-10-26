@@ -620,14 +620,17 @@ extern "C" fn trampoline_get_value(
     userdata: *mut std::ffi::c_void,
     item: *mut std::ffi::c_void,
     col: u32,
-) -> *const ffi::wxd_Variant_t {
+) -> *mut ffi::wxd_Variant_t {
     if userdata.is_null() {
-        return std::ptr::null();
+        return std::ptr::null_mut();
     }
     let cb = unsafe { &*(userdata as *mut OwnedTreeCallbacks) };
     let val = (cb.get_value)(&*cb.userdata, item, col);
     // Transfer ownership to C++ side, which will destroy it when done.
-    val.into_raw()
+    match val.try_into() {
+        Ok(raw_ptr) => raw_ptr,
+        Err(_) => std::ptr::null_mut(),
+    }
 }
 
 extern "C" fn trampoline_set_value(
@@ -901,17 +904,20 @@ unsafe extern "C" fn get_value_callback(
     userdata: *mut ::std::os::raw::c_void,
     row: u64,
     col: u64,
-) -> *const ffi::wxd_Variant_t {
+) -> *mut ffi::wxd_Variant_t {
     if userdata.is_null() {
         // Return an owned empty string variant to satisfy the API, C++ will destroy it.
-        let v = super::variant::Variant::from_string("");
-        return v.into_raw();
+        let v = Variant::from_string("");
+        return v.try_into().unwrap();
     }
 
     let callbacks = &*(userdata as *const CustomModelCallbacks);
     let value = (callbacks.get_value)(&*callbacks.userdata, row as usize, col as usize);
     // Transfer ownership to C++ side.
-    value.into_raw()
+    match value.try_into() {
+        Ok(raw_ptr) => raw_ptr,
+        Err(_) => std::ptr::null_mut(),
+    }
 }
 
 unsafe extern "C" fn set_value_callback(

@@ -886,21 +886,21 @@ extern "C" fn set_value_trampoline(
     result.unwrap_or(false)
 }
 
-extern "C" fn get_value_trampoline(user_data: *mut std::ffi::c_void) -> *const ffi::wxd_Variant_t {
+extern "C" fn get_value_trampoline(user_data: *mut std::ffi::c_void) -> *mut ffi::wxd_Variant_t {
     if user_data.is_null() {
-        return std::ptr::null();
+        return std::ptr::null_mut();
     }
 
     let callbacks = unsafe { &*(user_data as *const CustomRendererCallbacks) };
     let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
         let current_value = callbacks.current_value.borrow();
         let owned = current_value.clone();
-        owned.into_raw()
+        owned.try_into().unwrap()
     }));
 
     match result {
         Ok(ptr) => ptr,
-        Err(_) => super::Variant::from_string("").into_raw(),
+        Err(_) => super::Variant::from_string("").try_into().unwrap(),
     }
 }
 
@@ -995,9 +995,9 @@ extern "C" fn create_editor_trampoline(
 extern "C" fn get_value_from_editor_trampoline(
     user_data: *mut std::ffi::c_void,
     editor: *mut std::ffi::c_void,
-) -> *const ffi::wxd_Variant_t {
+) -> *mut ffi::wxd_Variant_t {
     if user_data.is_null() || editor.is_null() {
-        return std::ptr::null();
+        return std::ptr::null_mut();
     }
 
     let callbacks = unsafe { &*(user_data as *const CustomRendererCallbacks) };
@@ -1018,11 +1018,11 @@ extern "C" fn get_value_from_editor_trampoline(
             std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| callback(&editor_wrapper)));
 
         match result {
-            Ok(Some(variant)) => variant.into_raw(),
-            _ => std::ptr::null(),
+            Ok(Some(variant)) => variant.try_into().unwrap_or(std::ptr::null_mut()),
+            _ => std::ptr::null_mut(),
         }
     } else {
-        std::ptr::null()
+        std::ptr::null_mut()
     }
 }
 

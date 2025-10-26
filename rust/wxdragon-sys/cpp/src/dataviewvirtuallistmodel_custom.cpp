@@ -39,11 +39,12 @@ public:
     GetValueByRow(wxVariant& variant, unsigned int row, unsigned int col) const override
     {
         if (m_get_value) {
-            const wxd_Variant_t* rust_variant_data =
+            wxd_Variant_t* rust_variant_data =
                 m_get_value(m_userdata, static_cast<uint64_t>(row), static_cast<uint64_t>(col));
             if (rust_variant_data) {
                 // Convert wxd_Variant_t to wxVariant
-                variant = *reinterpret_cast<const wxVariant*>(rust_variant_data);
+                variant = *reinterpret_cast<wxVariant*>(rust_variant_data);
+                delete reinterpret_cast<wxVariant*>(rust_variant_data);
             }
             else {
                 // Handle null return from Rust
