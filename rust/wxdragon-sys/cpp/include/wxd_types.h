@@ -50,32 +50,6 @@ typedef struct {
     short second;
 } wxd_DateTime_t;
 
-// Variant type codes for DataView
-#define WXD_VARIANT_TYPE_INVALID              0
-#define WXD_VARIANT_TYPE_BOOL                 1
-#define WXD_VARIANT_TYPE_INT32                2
-#define WXD_VARIANT_TYPE_INT64                3
-#define WXD_VARIANT_TYPE_DOUBLE               4
-#define WXD_VARIANT_TYPE_STRING               5
-#define WXD_VARIANT_TYPE_BITMAP               6
-#define WXD_VARIANT_TYPE_DATETIME             7
-#define WXD_VARIANT_TYPE_VOID_PTR             8
-#define WXD_VARIANT_TYPE_BITMAP_RUST_BORROWED 9 // New type for bitmaps borrowed from Rust
-
-// C-compatible variant type for DataView
-typedef struct wxd_Variant_t {
-    int32_t type;
-    union {
-        bool bool_val;
-        int32_t int32_val;
-        int64_t int64_val;
-        double double_val;
-        char* string_val;
-        struct wxd_Bitmap_t* bitmap_val;
-        wxd_DateTime_t datetime_val;
-    } data;
-} wxd_Variant_t;
-
 /// @brief Event types represented by stable integer values in C.
 typedef enum {
     WXD_EVENT_TYPE_INVALID = -1,

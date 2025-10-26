@@ -1,6 +1,6 @@
 //! DataViewRenderer implementation.
 
-use super::{DataViewAlign, DataViewCellMode, VariantType};
+use super::{DataViewAlign, DataViewCellMode, Variant, VariantType};
 use std::ffi::CString;
 use wxdragon_sys as ffi;
 
@@ -204,8 +204,8 @@ impl DataViewBitmapRenderer {
     /// * `mode` - The cell mode
     /// * `align` - The alignment
     pub fn new(mode: DataViewCellMode, align: DataViewAlign) -> Self {
-        // Bitmap renderer always uses the "bitmap" type
-        let variant_type_cstr = CString::new("bitmap").unwrap();
+        // Bitmap renderer uses the standard wxVariant type name for bitmaps
+        let variant_type_cstr = CString::new("wxBitmap").unwrap();
         let handle = unsafe {
             ffi::wxd_DataViewBitmapRenderer_Create(
                 variant_type_cstr.as_ptr(),
@@ -418,8 +418,8 @@ impl DataViewRenderer for DataViewCheckIconTextRenderer {
 ///     .mode(DataViewCellMode::Editable)
 ///     .align(DataViewAlign::Left)
 ///     .with_render(|rect, ctx, _state, variant| {
-///         if let Variant::String(text) = variant {
-///             ctx.draw_text(text, rect.x + 2, rect.y + 2);
+///         if let Some(text) = variant.get_string() {
+///             ctx.draw_text(&text, rect.x + 2, rect.y + 2);
 ///             true
 ///         } else {
 ///             false
@@ -427,10 +427,7 @@ impl DataViewRenderer for DataViewCheckIconTextRenderer {
 ///     })
 ///     .with_has_editor(|| true)
 ///     .with_create_editor(|parent, rect, variant| {
-///         let initial_value = match variant {
-///             Variant::String(s) => s.clone(),
-///             _ => String::new(),
-///         };
+///         let initial_value = variant.get_string().unwrap_or_default();
 ///         
 ///         let text_ctrl = TextCtrl::builder(parent)
 ///             .with_pos(rect.position())
@@ -444,7 +441,7 @@ impl DataViewRenderer for DataViewCheckIconTextRenderer {
 ///         // Use downcasting to get the specific widget type
 ///         if let Some(text_ctrl) = editor.downcast_ref::<TextCtrl>() {
 ///             let value = text_ctrl.get_value();
-///             Some(Variant::String(value))
+///             Some(Variant::from_string(value))
 ///         } else {
 ///             None
 ///         }
@@ -465,8 +462,9 @@ impl DataViewRenderer for DataViewCheckIconTextRenderer {
 ///     .variant_type(VariantType::Int32)
 ///     .mode(DataViewCellMode::Inert)
 ///     .with_render(|rect, ctx, _state, variant| {
-///         if let Variant::Int32(progress) = variant {
-///             // Draw progress bar...
+///         if let Some(progress) = variant.get_i32() {
+///             // Here you would draw the progress bar using the context and rect.
+///             // For example: ctx.draw_progress_bar(rect, progress);
 ///             true
 ///         } else {
 ///             false
@@ -548,22 +546,29 @@ impl DataViewCustomRendererBuilder {
     ///
     /// # Example
     ///
-    /// ```ignore
-    /// .with_get_size(|variant, default_size| {
-    ///     match variant {
-    ///         Variant::String(s) => {
-    ///             // Size based on text length
-    ///             let char_width = 8; // approximate character width
-    ///             Size::new(s.len() as i32 * char_width, default_size.height)
-    ///         }
-    ///         Variant::Int32(i) => {
-    ///             // Size for progress bar based on value
-    ///             let progress_width = 100;
-    ///             Size::new(progress_width, default_size.height)
-    ///         }
-    ///         _ => default_size // Use default size for other types
+    /// ```no_run
+    /// # use wxdragon::prelude::*;
+    /// use wxdragon::widgets::dataview::{DataViewCustomRenderer, Variant};
+    /// use wxdragon::geometry::Size;
+    ///
+    /// // Provide a plain function (no captures) and pass it to with_get_size
+    /// fn size_for_variant(variant: &Variant, default_size: Size) -> Size {
+    ///     if let Some(s) = variant.get_string() {
+    ///         // Estimate width based on text length
+    ///         let char_width = 8; // approximate character width
+    ///         Size::new(s.len() as i32 * char_width, default_size.height)
+    ///     } else if let Some(_i) = variant.get_i32() {
+    ///         // Fixed width for progress bar
+    ///         let progress_width = 100;
+    ///         Size::new(progress_width, default_size.height)
+    ///     } else {
+    ///         // Use the default size for other types
+    ///         default_size
     ///     }
-    /// })
+    /// }
+    ///
+    /// let _renderer_builder = DataViewCustomRenderer::builder()
+    ///     .with_get_size(size_for_variant);
     /// ```
     pub fn with_get_size<F>(mut self, callback: F) -> Self
     where
@@ -577,28 +582,51 @@ impl DataViewCustomRendererBuilder {
     ///
     /// # Example
     ///
-    /// ```ignore
-    /// .with_render(|rect, ctx, state, variant| {
-    ///     match variant {
-    ///         Variant::String(s) => {
-    ///             // Render string
-    ///             ctx.draw_text(s, rect.x, rect.y);
+    /// ```no_run
+    /// # use wxdragon::prelude::*;
+    /// use wxdragon::widgets::dataview::{DataViewCustomRenderer, Variant};
+    /// use wxdragon::widgets::dataview::renderer::RenderContext;
+    ///
+    /// // Provide a plain function (no captures) and pass it to with_render
+    /// fn render_variant(
+    ///     rect: wxdragon::geometry::Rect,
+    ///     ctx: &RenderContext,
+    ///     state: i32,
+    ///     variant: &Variant,
+    /// ) -> bool {
+    ///     if let Some(text) = variant.get_string() {
+    ///         // Render string
+    ///         ctx.draw_text(&text, rect.x, rect.y);
+    ///         true
+    ///     } else if let Some(progress) = variant.get_i32() {
+    ///         // Render integer as a simple progress bar using basic DC ops
+    ///         // Frame
+    ///         ctx.set_pen(colours::BLACK, 1, PenStyle::Solid);
+    ///         ctx.set_brush(colours::LIGHT_GRAY, BrushStyle::Solid);
+    ///         ctx.draw_rectangle(rect.x, rect.y, rect.width, rect.height);
+    ///         // Fill according to progress (0..=100)
+    ///         let fill_w = (rect.width * progress / 100).clamp(0, rect.width);
+    ///         ctx.set_brush(colours::BLUE, BrushStyle::Solid);
+    ///         ctx.draw_rectangle(rect.x + 1, rect.y + 1, (fill_w - 2).max(0), rect.height - 2);
+    ///         true
+    ///     } else if let Some(checked) = variant.get_bool() {
+    ///         // Render boolean as a minimal checkbox: draw a box and an X when checked
+    ///         let box_size = rect.height.min(16);
+    ///         ctx.set_pen(colours::BLACK, 1, PenStyle::Solid);
+    ///         ctx.set_brush(colours::WHITE, BrushStyle::Solid);
+    ///         ctx.draw_rectangle(rect.x, rect.y, box_size, box_size);
+    ///         if checked {
+    ///             ctx.draw_text("X", rect.x + 3, rect.y + 1);
     ///         }
-    ///         Variant::Int32(i) => {
-    ///             // Render integer as progress bar
-    ///             let progress = *i;
-    ///             // ... draw progress bar
-    ///         }
-    ///         Variant::Bool(b) => {
-    ///             // Render boolean as checkbox
-    ///             // ... draw checkbox
-    ///         }
-    ///         _ => {
-    ///             // Handle other variant types or ignore
-    ///         }
+    ///         true
+    ///     } else {
+    ///         // Handle other variant types or ignore
+    ///         false
     ///     }
-    ///     true
-    /// })
+    /// }
+    ///
+    /// let _renderer_builder = DataViewCustomRenderer::builder()
+    ///     .with_render(render_variant);
     /// ```
     pub fn with_render<F>(mut self, callback: F) -> Self
     where
@@ -623,23 +651,30 @@ impl DataViewCustomRendererBuilder {
     /// It should return a boxed widget that will be used for editing the cell value.
     ///
     /// # Example
-    /// ```ignore
+    /// ```no_run
+    /// # use wxdragon::prelude::*;
     /// use wxdragon::widgets::TextCtrl;
+    /// use wxdragon::widgets::dataview::{DataViewCustomRenderer, Variant};
     ///
-    /// .with_create_editor(|parent, rect, variant| {
-    ///     let initial_value = match variant {
-    ///         Variant::String(s) => s.clone(),
-    ///         _ => String::new(),
-    ///     };
-    ///     
+    /// // Provide a plain function (no captures) and pass it to with_create_editor
+    /// fn create_text_editor(
+    ///     parent: &dyn wxdragon::WxWidget,
+    ///     rect: wxdragon::geometry::Rect,
+    ///     variant: &Variant,
+    /// ) -> Option<Box<dyn wxdragon::WxWidget>> {
+    ///     let initial_value = variant.get_string().unwrap_or_default();
+    ///
     ///     let text_ctrl = TextCtrl::builder(parent)
     ///         .with_pos(rect.position())
     ///         .with_size(rect.size())
     ///         .with_value(&initial_value)
     ///         .build();
-    ///     
+    ///
     ///     Some(Box::new(text_ctrl))
-    /// })
+    /// }
+    ///
+    /// let _renderer_builder = DataViewCustomRenderer::builder()
+    ///     .with_create_editor(create_text_editor);
     /// ```
     pub fn with_create_editor<F>(mut self, callback: F) -> Self
     where
@@ -660,19 +695,25 @@ impl DataViewCustomRendererBuilder {
     /// You can downcast it to the specific widget type to extract the value.
     ///
     /// # Example
-    /// ```ignore
+    /// ```no_run
+    /// # use wxdragon::prelude::*;
     /// use wxdragon::window::WxWidgetDowncast;
     /// use wxdragon::widgets::TextCtrl;
+    /// use wxdragon::widgets::dataview::{DataViewCustomRenderer, Variant};
     ///
-    /// .with_get_value_from_editor(|editor| {
+    /// // Provide a plain function (no captures) and pass it to with_get_value_from_editor
+    /// fn get_value_from_text_editor(editor: &dyn wxdragon::WxWidget) -> Option<Variant> {
     ///     // Downcast to the specific widget type you created
     ///     if let Some(text_ctrl) = editor.downcast_ref::<TextCtrl>() {
     ///         let value = text_ctrl.get_value();
-    ///         Some(Variant::String(value))
+    ///         Some(Variant::from_string(value))
     ///     } else {
     ///         None
     ///     }
-    /// })
+    /// }
+    ///
+    /// let _renderer_builder = DataViewCustomRenderer::builder()
+    ///     .with_get_value_from_editor(get_value_from_text_editor);
     /// ```
     pub fn with_get_value_from_editor<F>(mut self, callback: F) -> Self
     where
@@ -702,7 +743,7 @@ impl DataViewCustomRendererBuilder {
             activate_cell: self.activate_cell,
             create_editor: self.create_editor,
             get_value_from_editor: self.get_value_from_editor,
-            current_value: std::cell::RefCell::new(super::Variant::String(String::new())),
+            current_value: std::cell::RefCell::new(super::Variant::from_string("")),
         });
 
         unsafe {
@@ -834,7 +875,7 @@ extern "C" fn set_value_trampoline(
     }
 
     let callbacks = unsafe { &*(user_data as *const CustomRendererCallbacks) };
-    let variant = unsafe { super::variant::from_raw_variant(value) };
+    let variant = Variant::from(value).clone();
 
     // Store the value internally in the renderer
     let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
@@ -845,29 +886,21 @@ extern "C" fn set_value_trampoline(
     result.unwrap_or(false)
 }
 
-extern "C" fn get_value_trampoline(
-    user_data: *mut std::ffi::c_void,
-    value: *mut ffi::wxd_Variant_t,
-) {
-    if user_data.is_null() || value.is_null() {
-        return;
+extern "C" fn get_value_trampoline(user_data: *mut std::ffi::c_void) -> *mut ffi::wxd_Variant_t {
+    if user_data.is_null() {
+        return std::ptr::null_mut();
     }
 
     let callbacks = unsafe { &*(user_data as *const CustomRendererCallbacks) };
     let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
         let current_value = callbacks.current_value.borrow();
-        let raw = super::variant::to_raw_variant(&current_value);
-        unsafe {
-            *value = raw;
-        }
+        let owned = current_value.clone();
+        owned.try_into().unwrap()
     }));
 
-    if result.is_err() {
-        // Return empty string on panic
-        unsafe {
-            (*value).type_ = ffi::WXD_VARIANT_TYPE_STRING as i32;
-            (*value).data.string_val = std::ptr::null_mut();
-        }
+    match result {
+        Ok(ptr) => ptr,
+        Err(_) => super::Variant::from_string("").try_into().unwrap(),
     }
 }
 
@@ -927,7 +960,9 @@ extern "C" fn create_editor_trampoline(
             label_rect.width,
             label_rect.height,
         );
-        let variant = unsafe { super::variant::from_raw_variant(value) };
+
+        // Just convert the variant, no holding the ownership here
+        let variant = Variant::from(value);
 
         // Create a wrapper for the parent widget
         // Note: This is a simplified implementation. In a full implementation,
@@ -960,15 +995,13 @@ extern "C" fn create_editor_trampoline(
 extern "C" fn get_value_from_editor_trampoline(
     user_data: *mut std::ffi::c_void,
     editor: *mut std::ffi::c_void,
-    value: *mut ffi::wxd_Variant_t,
-) -> bool {
-    if user_data.is_null() || editor.is_null() || value.is_null() {
-        return false;
+) -> *mut ffi::wxd_Variant_t {
+    if user_data.is_null() || editor.is_null() {
+        return std::ptr::null_mut();
     }
 
     let callbacks = unsafe { &*(user_data as *const CustomRendererCallbacks) };
     if let Some(ref callback) = callbacks.get_value_from_editor {
-        // Create a wrapper for the editor widget
         struct EditorWrapper {
             ptr: *mut std::ffi::c_void,
         }
@@ -985,17 +1018,11 @@ extern "C" fn get_value_from_editor_trampoline(
             std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| callback(&editor_wrapper)));
 
         match result {
-            Ok(Some(variant)) => {
-                let raw = super::variant::to_raw_variant(&variant);
-                unsafe {
-                    *value = raw;
-                }
-                true
-            }
-            _ => false,
+            Ok(Some(variant)) => variant.try_into().unwrap_or(std::ptr::null_mut()),
+            _ => std::ptr::null_mut(),
         }
     } else {
-        false
+        std::ptr::null_mut()
     }
 }
 

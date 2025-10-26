@@ -105,8 +105,14 @@ WXD_EXPORTED bool
 wxd_DataViewEvent_GetRow(wxd_Event_t* event, int64_t* row);
 WXD_EXPORTED const wxd_DataViewItem_t*
 wxd_DataViewEvent_GetItem(wxd_Event_t* event);
-WXD_EXPORTED bool
-wxd_DataViewEvent_GetValue(wxd_Event_t* event, wxd_Variant_t* value);
+
+/**
+ * Get a variant value from the DataViewEvent.
+ * Returns a cloned variant; caller is responsible for freeing it.
+ */
+WXD_EXPORTED wxd_Variant_t*
+wxd_DataViewEvent_GetValue(wxd_Event_t* event);
+
 WXD_EXPORTED bool
 wxd_DataViewEvent_SetValue(wxd_Event_t* event, const wxd_Variant_t* value);
 WXD_EXPORTED bool

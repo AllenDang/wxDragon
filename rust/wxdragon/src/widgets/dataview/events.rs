@@ -147,19 +147,12 @@ impl DataViewEventData {
         if self.event.is_null() {
             return None;
         }
-
-        // Create a temporary variant struct to hold the returned data
-        let variant_raw = Box::new(unsafe { std::mem::zeroed::<ffi::wxd_Variant_t>() });
-        let variant_ptr = Box::into_raw(variant_raw);
-
-        if unsafe { ffi::wxd_DataViewEvent_GetValue(self.event.0, variant_ptr) } {
-            // Convert the C++ variant to a Rust Variant, taking ownership and freeing the C resources
-            unsafe { super::Variant::from_raw(variant_ptr) }
-        } else {
-            // Free the memory if the call failed
-            unsafe { ffi::wxd_Variant_Free(variant_ptr) };
-            None
+        let p = unsafe { ffi::wxd_DataViewEvent_GetValue(self.event.0) };
+        if p.is_null() {
+            return None;
         }
+        // Wrap the returned pointer in a Variant; Rust takes ownership
+        Some(super::Variant::from(p))
     }
 
     /// Set the value for editing events
@@ -168,12 +161,7 @@ impl DataViewEventData {
             return false;
         }
 
-        // Clone the variant since we need to transfer ownership to C++
-        let variant_clone = value.clone();
-
-        // Use into_raw to properly transfer ownership to C++
-        // C++ side will free the memory using wxd_Variant_Free
-        unsafe { ffi::wxd_DataViewEvent_SetValue(self.event.0, variant_clone.into_raw()) }
+        unsafe { ffi::wxd_DataViewEvent_SetValue(self.event.0, **value) }
     }
 }
 

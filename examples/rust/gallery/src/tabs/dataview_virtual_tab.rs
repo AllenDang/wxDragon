@@ -238,40 +238,40 @@ pub fn create_dataview_virtual_tab(parent: &impl WxWidget) -> DataViewVirtualTab
         let employee = &mut employees_data[row];
         match col {
             1 => {
-                if let Variant::String(s) = value {
-                    employee.name = s.clone();
+                if let Some(s) = value.get_string() {
+                    employee.name = s;
                     true
                 } else {
                     false
                 }
             }
             2 => {
-                if let Variant::String(s) = value {
-                    employee.department = s.clone();
+                if let Some(s) = value.get_string() {
+                    employee.department = s;
                     true
                 } else {
                     false
                 }
             }
             3 => {
-                if let Variant::Bool(b) = value {
-                    employee.active = *b;
+                if let Some(b) = value.get_bool() {
+                    employee.active = b;
                     true
                 } else {
                     false
                 }
             }
             7 => {
-                if let Variant::Int32(i) = value {
-                    employee.hourly_rate = *i;
+                if let Some(i) = value.get_i32() {
+                    employee.hourly_rate = i;
                     true
                 } else {
                     false
                 }
             }
             8 => {
-                if let Variant::String(s) = value {
-                    employee.status = s.clone();
+                if let Some(s) = value.get_string() {
+                    employee.status = s;
                     true
                 } else {
                     false
