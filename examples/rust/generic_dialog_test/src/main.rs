@@ -1,6 +1,8 @@
 use wxdragon::prelude::*;
 
 fn main() {
+    SystemOptions::set_option_by_int("msw.no-manifest-check", 1);
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("trace")).init();
     let _ = wxdragon::main(|_| {
         let frame = Frame::builder()
             .with_title("Generic Dialog Test")
@@ -36,6 +38,10 @@ fn main() {
                 dialog_clone.end_modal(ID_OK);
             });
 
+            dialog.on_destroy(move |_| {
+                log::info!("Dialog destroyed");
+            });
+
             // Layout the panel content
             let panel_sizer = BoxSizer::builder(Orientation::Vertical).build();
             panel_sizer.add(&text, 1, SizerFlag::Expand | SizerFlag::All, 10);
@@ -49,9 +55,11 @@ fn main() {
 
             // Show the dialog modally
             let result = dialog.show_modal();
-            println!("Dialog returned: {}", result);
+            log::info!("Dialog returned: {result}");
 
-            // Dialog is automatically cleaned up when it goes out of scope
+            // Explicitly destroy the dialog after the modal loop ends to free resources
+            dialog.destroy();
+            // Dialog is explicitly destroyed above to avoid retaining it via event closures
         });
 
         // Layout the main frame
