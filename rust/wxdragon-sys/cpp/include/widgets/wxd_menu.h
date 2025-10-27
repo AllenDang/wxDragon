@@ -14,6 +14,24 @@ WXD_EXPORTED wxd_Menu_t*
 wxd_Menu_Create(const char* title, wxd_Style_t style);
 
 /**
+ * @brief Get the number of items in the wxMenu.
+ */
+WXD_EXPORTED size_t
+wxd_Menu_GetMenuItemCount(const wxd_Menu_t* menu);
+
+/**
+ * @brief Get the title of the wxMenu in UTF-8.
+ * If buffer is non-null and buffer_size > 0, copies up to buffer_size - 1 bytes and NUL-terminates the buffer.
+ * If buffer is null or buffer_size == 0, nothing is written.
+ * @param menu Pointer to wxMenu.
+ * @param buffer Buffer to receive the UTF-8 title.
+ * @param buffer_size Size of the buffer.
+ * @return Number of bytes required to store the UTF-8 title, excluding the terminating NUL.
+ */
+WXD_EXPORTED size_t
+wxd_Menu_GetTitle(const wxd_Menu_t* menu, char* buffer, size_t buffer_size);
+
+/**
  * @brief Destroy a wxMenu.
  * WARNING: Only destroy standalone menus not owned by a wxMenuBar.
  * If a wxMenu has been appended to a wxMenuBar, the menubar owns it and
@@ -24,6 +42,14 @@ wxd_Menu_Destroy(wxd_Menu_t* menu);
 
 WXD_EXPORTED wxd_MenuItem_t*
 wxd_Menu_Append(wxd_Menu_t* menu, wxd_Id id, const char* item, const char* helpString, int kind);
+
+/**
+ * @brief Append a submenu to a wxMenu.
+ * wxMenu takes ownership of the submenu.
+ */
+WXD_EXPORTED const wxd_MenuItem_t*
+wxd_Menu_AppendSubMenu(wxd_Menu_t* menu, wxd_Menu_t* submenu, const char* title,
+                       const char* helpString);
 
 WXD_EXPORTED void
 wxd_Menu_AppendSeparator(wxd_Menu_t* menu);

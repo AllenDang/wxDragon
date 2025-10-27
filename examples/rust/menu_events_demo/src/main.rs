@@ -74,6 +74,15 @@ impl MenuEventsApp {
             .append_item(ID_ABOUT, "&About", "About this application")
             .build();
 
+        let mut file_menu2 = Menu::builder()
+            .append_item(ID_NEW, "&New\tCtrl+N", "Create a new document")
+            .append_item(ID_OPEN, "&Open\tCtrl+O", "Open an existing document")
+            .append_item(ID_SAVE, "&Save\tCtrl+S", "Save the current document")
+            .append_separator()
+            .append_item(ID_EXIT, "E&xit\tAlt+F4", "Exit the application")
+            .build();
+        edit_menu.append_submenu(&mut file_menu2, "&File", "File operations");
+
         // Create and set menu bar
         let menu_bar = MenuBar::builder()
             .append(file_menu, "&File")

@@ -2,6 +2,7 @@
 #include <wx/wx.h>
 #include "../include/wxdragon.h"
 #include <wx/menu.h> // Include for wxMenuBar, wxMenu, wxMenuItem
+#include <cstring>   // C runtime for strlen/memcpy
 
 extern "C" {
 
@@ -33,6 +34,56 @@ wxd_Menu_Create(const char* title, wxd_Style_t style)
     return reinterpret_cast<wxd_Menu_t*>(menu);
 }
 
+WXD_EXPORTED size_t
+wxd_Menu_GetMenuItemCount(const wxd_Menu_t* menu)
+{
+    if (!menu)
+        return 0;
+    const wxMenu* wx_menu = reinterpret_cast<const wxMenu*>(menu);
+    return wx_menu->GetMenuItemCount();
+}
+
+// @brief Get the title of the wxMenu in UTF-8.
+// If buffer is non-null and buffer_size > 0, copies up to buffer_size - 1 bytes and NUL-terminates the buffer.
+// If buffer is null or buffer_size == 0, nothing is written.
+// @param menu Pointer to wxMenu.
+// @param buffer Buffer to receive the UTF-8 title.
+// @param buffer_size Size of the buffer.
+// @return Number of bytes required to store the UTF-8 title, excluding the terminating NUL.
+WXD_EXPORTED size_t
+wxd_Menu_GetTitle(const wxd_Menu_t* menu, char* buffer, size_t buffer_size)
+{
+    if (!menu) {
+        return 0;
+    }
+
+    const wxMenu* wx_menu = reinterpret_cast<const wxMenu*>(menu);
+    const wxString title = wx_menu->GetTitle();
+    const wxScopedCharBuffer utf8_buf = title.ToUTF8();
+    const char* data = utf8_buf.data();
+
+    // If conversion failed, treat as empty string.
+    if (!data) {
+        if (buffer && buffer_size > 0) {
+            buffer[0] = '\0';
+        }
+        return 0;
+    }
+
+    const size_t required = std::strlen(data);
+
+    if (buffer && buffer_size > 0) {
+        const size_t to_copy = (required < (buffer_size - 1)) ? required : (buffer_size - 1);
+        if (to_copy > 0) {
+            std::memcpy(buffer, data, to_copy);
+        }
+        buffer[to_copy] = '\0';
+    }
+
+    // Always return the required size, regardless of truncation.
+    return required;
+}
+
 // @brief Destroy a wxMenu.
 // WARNING: Only destroy standalone menus not owned by a wxMenuBar.
 // If a wxMenu has been appended to a wxMenuBar, the menubar owns it and
@@ -58,6 +109,20 @@ wxd_Menu_Append(wxd_Menu_t* menu, wxd_Id id, const char* item, const char* helpS
                                           wx_kind);
     // wxMenu takes ownership of the wxMenuItem* it creates/appends.
     return reinterpret_cast<wxd_MenuItem_t*>(wx_item);
+}
+
+WXD_EXPORTED const wxd_MenuItem_t*
+wxd_Menu_AppendSubMenu(wxd_Menu_t* menu, wxd_Menu_t* submenu, const char* title,
+                       const char* helpString)
+{
+    if (!menu || !submenu)
+        return nullptr;
+    wxMenu* wx_menu = reinterpret_cast<wxMenu*>(menu);
+    wxMenu* wx_submenu = reinterpret_cast<wxMenu*>(submenu);
+    wxMenuItem* wx_item = wx_menu->AppendSubMenu(wx_submenu, wxString::FromUTF8(title ? title : ""),
+                                                 wxString::FromUTF8(helpString ? helpString : ""));
+    // wxMenu takes ownership of the wxMenuItem* it creates/appends.
+    return reinterpret_cast<const wxd_MenuItem_t*>(wx_item);
 }
 
 WXD_EXPORTED void

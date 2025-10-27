@@ -53,7 +53,7 @@ wxd_TaskBarIcon_PopupMenu(wxd_TaskBarIcon_t* taskbar, wxd_Menu_t* menu);
 void
 wxd_TaskBarIcon_SetPopupMenu(wxd_TaskBarIcon_t* taskbar, wxd_Menu_t* menu);
 
-wxd_Menu_t*
+const wxd_Menu_t*
 wxd_TaskBarIcon_GetPopupMenu(wxd_TaskBarIcon_t* taskbar);
 
 // Event handler pointer for binding events

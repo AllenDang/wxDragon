@@ -1570,7 +1570,7 @@ pub trait WxWidget: std::any::Any {
     /// ```
     fn popup_menu(&self, menu: &crate::Menu, pos: Option<crate::geometry::Point>) -> bool {
         let handle = self.handle_ptr();
-        let menu_ptr = unsafe { menu.as_ptr() };
+        let menu_ptr = **menu;
         if handle.is_null() || menu_ptr.is_null() {
             return false;
         }

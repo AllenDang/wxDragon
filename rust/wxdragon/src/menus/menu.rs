@@ -14,11 +14,40 @@ use wxdragon_sys as ffi;
 /// Represents a wxMenu.
 pub struct Menu {
     ptr: *mut ffi::wxd_Menu_t,
+    owned: bool,
 }
 
 impl Drop for Menu {
     fn drop(&mut self) {
-        // No explicit destruction needed; wxMenuBar takes ownership
+        self.destroy_meun();
+    }
+}
+
+impl From<*mut ffi::wxd_Menu_t> for Menu {
+    fn from(ptr: *mut ffi::wxd_Menu_t) -> Self {
+        Menu { ptr, owned: true }
+    }
+}
+
+impl From<*const ffi::wxd_Menu_t> for Menu {
+    fn from(ptr: *const ffi::wxd_Menu_t) -> Self {
+        Menu {
+            ptr: ptr as *mut ffi::wxd_Menu_t,
+            owned: false,
+        }
+    }
+}
+
+impl AsRef<*mut ffi::wxd_Menu_t> for Menu {
+    fn as_ref(&self) -> &*mut ffi::wxd_Menu_t {
+        &self.ptr
+    }
+}
+
+impl std::ops::Deref for Menu {
+    type Target = *mut ffi::wxd_Menu_t;
+    fn deref(&self) -> &Self::Target {
+        &self.ptr
     }
 }
 
@@ -28,14 +57,41 @@ impl Menu {
         MenuBuilder::new()
     }
 
+    /// Gets the number of items in the menu.
+    pub fn get_item_count(&self) -> usize {
+        unsafe { ffi::wxd_Menu_GetMenuItemCount(self.ptr) }
+    }
+
+    /// Gets the title of the menu.
+    pub fn get_title(&self) -> String {
+        // First, get the required buffer size
+        let size = unsafe { ffi::wxd_Menu_GetTitle(self.ptr, std::ptr::null_mut(), 0) };
+        if size == 0 {
+            return String::new();
+        }
+
+        // Allocate buffer
+        let mut buffer: Vec<u8> = vec![0; size + 1]; // +1 for null terminator
+
+        // Get the title
+        unsafe { ffi::wxd_Menu_GetTitle(self.ptr, buffer.as_mut_ptr() as *mut i8, buffer.len()) };
+
+        // Convert to String
+        let cstr = unsafe { CString::from_vec_unchecked(buffer) };
+        cstr.to_string_lossy().into_owned()
+    }
+
     /// Explicitly destroy this Menu. Use this for standalone/popup menus that are not
     /// appended to a MenuBar. After calling this method, the Menu must not be used.
     ///
     /// Safety: Do NOT call this if the menu was appended to a MenuBar, as the menubar
     /// takes ownership and will delete it, leading to double free.
     pub fn destroy_meun(&mut self) {
-        unsafe { ffi::wxd_Menu_Destroy(self.ptr) };
-        self.ptr = std::ptr::null_mut();
+        if self.owned {
+            unsafe { ffi::wxd_Menu_Destroy(self.ptr) };
+            self.ptr = std::ptr::null_mut();
+            log::debug!("Menu '{}' destroyed", self.get_title());
+        }
     }
 
     /// Appends a menu item.
@@ -50,6 +106,26 @@ impl Menu {
         self.append_raw(id, item, help_string, kind)
     }
 
+    /// Appends a submenu.
+    pub fn append_submenu(
+        &self,
+        submenu: &mut Menu,
+        title: &str,
+        help_string: &str,
+    ) -> Option<MenuItem> {
+        let title_c = CString::new(title).unwrap_or_default();
+        let help_c = CString::new(help_string).unwrap_or_default();
+        let item_ptr = unsafe {
+            ffi::wxd_Menu_AppendSubMenu(self.ptr, **submenu, title_c.as_ptr(), help_c.as_ptr())
+        };
+        if item_ptr.is_null() {
+            return None;
+        }
+        submenu.relinquish_ownership();
+        // Return a MenuItem wrapper, but don't give it ownership
+        Some(MenuItem::from(item_ptr))
+    }
+
     /// Appends a separator.
     pub fn append_separator(&self) {
         self.append_separator_raw();
@@ -60,13 +136,6 @@ impl Menu {
     #[cfg(feature = "xrc")]
     pub fn get_item_by_name(&self, parent_window: &Window, item_name: &str) -> Option<MenuItem> {
         MenuItem::from_xrc_name(parent_window, item_name)
-    }
-
-    /// Creates a Menu wrapper from a raw pointer.
-    /// # Safety
-    /// The pointer must be a valid wxMenu pointer.
-    pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_Menu_t) -> Self {
-        Self { ptr }
     }
 
     /// Special XRC loading method for menus.
@@ -87,11 +156,12 @@ impl Menu {
         }
     }
 
-    /// Returns the raw pointer.
-    /// # Safety
-    /// The caller must ensure the pointer is used correctly.
-    pub(crate) unsafe fn as_ptr(&self) -> *mut ffi::wxd_Menu_t {
-        self.ptr
+    /// Relinquish ownership of the underlying wxMenu.
+    ///
+    /// Use this when transferring ownership to another native owner (e.g. MenuBar::append).
+    /// After calling this, Drop will not delete the native wxMenu.
+    pub(crate) fn relinquish_ownership(&mut self) {
+        self.owned = false;
     }
 
     // Make append private as it's called by builder
@@ -111,15 +181,13 @@ impl Menu {
             None
         } else {
             // Return a MenuItem wrapper, but don't give it ownership
-            Some(unsafe { MenuItem::from_ptr(item_ptr) })
+            Some(MenuItem::from_ptr(item_ptr))
         }
     }
 
     // Make append_separator private as it's called by builder
     fn append_separator_raw(&self) {
-        unsafe {
-            ffi::wxd_Menu_AppendSeparator(self.ptr);
-        }
+        unsafe { ffi::wxd_Menu_AppendSeparator(self.ptr) };
     }
 }
 
@@ -203,7 +271,7 @@ impl MenuBuilder {
         if ptr.is_null() {
             panic!("Failed to create Menu");
         }
-        let menu = Menu { ptr };
+        let menu = Menu { ptr, owned: true };
 
         // Perform actions
         for action in self.actions {
@@ -230,8 +298,8 @@ impl MenuBuilder {
 #[cfg(feature = "xrc")]
 impl crate::xrc::XrcSupport for Menu {
     unsafe fn from_xrc_ptr(ptr: *mut wxdragon_sys::wxd_Window_t) -> Self {
-        let menu_ptr = ptr as *mut wxdragon_sys::wxd_Menu_t;
-        Self { ptr: menu_ptr }
+        let ptr = ptr as *mut wxdragon_sys::wxd_Menu_t;
+        Self { ptr, owned: true }
     }
 }
 
@@ -275,7 +343,7 @@ impl MenuEventData {
 
 impl crate::event::WxEvtHandler for Menu {
     unsafe fn get_event_handler_ptr(&self) -> *mut wxdragon_sys::wxd_EvtHandler_t {
-        self.as_ptr() as *mut ffi::wxd_EvtHandler_t
+        **self as *mut ffi::wxd_EvtHandler_t
     }
 }
 

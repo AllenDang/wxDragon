@@ -212,7 +212,7 @@ impl TaskBarIcon {
     /// taskbar.popup_menu(&menu);
     /// ```
     pub fn popup_menu(&self, menu: &Menu) -> bool {
-        unsafe { ffi::wxd_TaskBarIcon_PopupMenu(self.ptr, menu.as_ptr()) }
+        unsafe { ffi::wxd_TaskBarIcon_PopupMenu(self.ptr, **menu) }
     }
 
     /// Sets a menu that will be automatically displayed when the taskbar icon is clicked.
@@ -249,7 +249,7 @@ impl TaskBarIcon {
     /// // Now the menu will appear automatically when the taskbar icon is clicked
     /// ```
     pub fn set_popup_menu(&self, menu: &Menu) {
-        unsafe { ffi::wxd_TaskBarIcon_SetPopupMenu(self.ptr, menu.as_ptr()) }
+        unsafe { ffi::wxd_TaskBarIcon_SetPopupMenu(self.ptr, **menu) }
     }
 
     /// Gets the currently set automatic popup menu.
@@ -265,7 +265,7 @@ impl TaskBarIcon {
         if menu_ptr.is_null() {
             None
         } else {
-            Some(unsafe { Menu::from_ptr(menu_ptr) })
+            Some(Menu::from(menu_ptr))
         }
     }
 

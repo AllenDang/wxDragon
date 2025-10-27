@@ -253,16 +253,16 @@ wxd_TaskBarIcon_SetPopupMenu(wxd_TaskBarIcon_t* taskbar, wxd_Menu_t* menu)
     wx_taskbar->SetPopupMenu(wx_menu);
 }
 
-wxd_Menu_t*
+const wxd_Menu_t*
 wxd_TaskBarIcon_GetPopupMenu(wxd_TaskBarIcon_t* taskbar)
 {
     if (!taskbar)
         return nullptr;
 
     wxdTaskBarIcon* wx_taskbar = reinterpret_cast<wxdTaskBarIcon*>(taskbar);
-    wxMenu* wx_menu = wx_taskbar->GetPopupMenu();
+    const wxMenu* wx_menu = wx_taskbar->GetPopupMenu();
 
-    return reinterpret_cast<wxd_Menu_t*>(wx_menu);
+    return reinterpret_cast<const wxd_Menu_t*>(wx_menu);
 }
 
 } // extern "C"

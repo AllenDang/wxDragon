@@ -216,11 +216,7 @@ impl ListBox {
     pub fn popup_menu(&self, menu: &Menu, pos: Option<Point>) -> bool {
         let pos = pos.unwrap_or_else(|| Point::new(-1, -1));
         unsafe {
-            ffi::wxd_ListBox_PopupMenu(
-                self.window.as_ptr() as *mut RawListBox,
-                menu.as_ptr(),
-                pos.into(),
-            )
+            ffi::wxd_ListBox_PopupMenu(self.window.as_ptr() as *mut RawListBox, **menu, pos.into())
         }
     }
 }

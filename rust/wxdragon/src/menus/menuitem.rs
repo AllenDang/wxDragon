@@ -48,16 +48,28 @@ pub struct MenuItem {
     item_name: Option<String>,
 }
 
+impl From<*mut ffi::wxd_MenuItem_t> for MenuItem {
+    fn from(ptr: *mut ffi::wxd_MenuItem_t) -> Self {
+        MenuItem::from_ptr(ptr)
+    }
+}
+
+impl From<*const ffi::wxd_MenuItem_t> for MenuItem {
+    fn from(ptr: *const ffi::wxd_MenuItem_t) -> Self {
+        MenuItem::from_ptr(ptr as *mut ffi::wxd_MenuItem_t)
+    }
+}
+
 impl MenuItem {
     /// Creates a non-owning wrapper from a raw pointer.
-    /// # Safety
-    /// The caller must ensure the pointer is valid and its lifetime is managed elsewhere (e.g., by wxMenu).
-    pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_MenuItem_t) -> Self {
+    /// Note: This function does not dereference the pointer. The wrapper is
+    /// non-owning; validity must be ensured by the creator (e.g., owned by wxMenu).
+    pub(crate) fn from_ptr(ptr: *mut ffi::wxd_MenuItem_t) -> Self {
         // For now, we don't have parent window or ID information
         // This will need to be updated when we have more context
         MenuItem {
             ptr,
-            parent_window: Window::from_ptr(std::ptr::null_mut()), // Invalid for now
+            parent_window: unsafe { Window::from_ptr(std::ptr::null_mut()) }, // Invalid for now
             item_id: -1,
             item_name: None,
         }
