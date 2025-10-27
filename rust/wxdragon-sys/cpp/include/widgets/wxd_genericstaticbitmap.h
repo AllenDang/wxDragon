@@ -5,12 +5,12 @@
 
 // --- GenericStaticBitmap Functions ---
 WXD_EXPORTED wxd_GenericStaticBitmap_t*
-wxd_GenericStaticBitmap_CreateWithBitmap(wxd_Window_t* parent, wxd_Id id, wxd_Bitmap_t* bitmap,
-                                         wxd_Point pos, wxd_Size size, wxd_Style_t style,
-                                         const char* name);
+wxd_GenericStaticBitmap_CreateWithBitmap(wxd_Window_t* parent, wxd_Id id,
+                                         const wxd_Bitmap_t* bitmap, wxd_Point pos, wxd_Size size,
+                                         wxd_Style_t style, const char* name);
 
 WXD_EXPORTED void
-wxd_GenericStaticBitmap_SetBitmap(wxd_GenericStaticBitmap_t* self, wxd_Bitmap_t* bitmap);
+wxd_GenericStaticBitmap_SetBitmap(wxd_GenericStaticBitmap_t* self, const wxd_Bitmap_t* bitmap);
 
 WXD_EXPORTED wxd_Bitmap_t*
 wxd_GenericStaticBitmap_GetBitmap(wxd_GenericStaticBitmap_t* self);

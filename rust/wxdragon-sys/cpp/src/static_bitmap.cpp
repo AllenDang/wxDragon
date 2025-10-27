@@ -32,11 +32,11 @@ wxd_to_wx_size_sb(const wxd_Size& s)
  * of the passed wxd_Bitmap_t, unless it's intended to be consumed.
  */
 WXD_EXPORTED wxd_StaticBitmap_t*
-wxd_StaticBitmap_CreateWithBitmap(wxd_Window_t* parent, wxd_Id id, wxd_Bitmap_t* bitmap,
+wxd_StaticBitmap_CreateWithBitmap(wxd_Window_t* parent, wxd_Id id, const wxd_Bitmap_t* bitmap,
                                   wxd_Point pos, wxd_Size size, wxd_Style_t style, const char* name)
 {
     wxWindow* parentWin = reinterpret_cast<wxWindow*>(parent);
-    wxBitmap* bmp = reinterpret_cast<wxBitmap*>(bitmap);
+    const wxBitmap* bmp = reinterpret_cast<const wxBitmap*>(bitmap);
 
     if (!parentWin) {
         WXD_LOG_ERROR("wxd_StaticBitmap_CreateWithBitmap: Parent window is null.");
@@ -65,10 +65,10 @@ wxd_StaticBitmap_CreateWithBitmap(wxd_Window_t* parent, wxd_Id id, wxd_Bitmap_t*
  * The wxStaticBitmap makes its own copy of the bitmap.
  */
 WXD_EXPORTED void
-wxd_StaticBitmap_SetBitmap(wxd_StaticBitmap_t* self, wxd_Bitmap_t* bitmap)
+wxd_StaticBitmap_SetBitmap(wxd_StaticBitmap_t* self, const wxd_Bitmap_t* bitmap)
 {
     wxStaticBitmap* statBmp = reinterpret_cast<wxStaticBitmap*>(self);
-    wxBitmap* bmp = reinterpret_cast<wxBitmap*>(bitmap);
+    const wxBitmap* bmp = reinterpret_cast<const wxBitmap*>(bitmap);
 
     if (!statBmp)
         return;

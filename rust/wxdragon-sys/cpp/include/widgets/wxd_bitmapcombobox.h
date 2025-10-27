@@ -9,7 +9,7 @@ wxd_BitmapComboBox_Create(wxd_Window_t* parent, wxd_Id id, const char* value, wx
                           wxd_Size size, wxd_Style_t style);
 
 WXD_EXPORTED void
-wxd_BitmapComboBox_Append(wxd_BitmapComboBox_t* self, const char* item, wxd_Bitmap_t* bitmap);
+wxd_BitmapComboBox_Append(wxd_BitmapComboBox_t* self, const char* item, const wxd_Bitmap_t* bitmap);
 
 WXD_EXPORTED void
 wxd_BitmapComboBox_Clear(wxd_BitmapComboBox_t* self);
@@ -36,6 +36,7 @@ WXD_EXPORTED wxd_Bitmap_t*
 wxd_BitmapComboBox_GetItemBitmap(wxd_BitmapComboBox_t* self, unsigned int n);
 
 WXD_EXPORTED void
-wxd_BitmapComboBox_SetItemBitmap(wxd_BitmapComboBox_t* self, unsigned int n, wxd_Bitmap_t* bitmap);
+wxd_BitmapComboBox_SetItemBitmap(wxd_BitmapComboBox_t* self, unsigned int n,
+                                 const wxd_Bitmap_t* bitmap);
 
 #endif // WXD_BITMAPCOMBOBOX_H

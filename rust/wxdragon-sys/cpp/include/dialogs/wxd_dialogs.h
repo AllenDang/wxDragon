@@ -9,7 +9,7 @@ wxd_Dialog_Create(wxd_Window_t* parent, const char* title, wxd_Style_t style, in
                   int width, int height);
 
 WXD_EXPORTED void
-wxd_Dialog_SetIcon(wxd_Dialog_t* dlg, wxd_Bitmap_t* bitmap);
+wxd_Dialog_SetIcon(wxd_Dialog_t* dlg, const wxd_Bitmap_t* bitmap);
 
 WXD_EXPORTED int
 wxd_Dialog_ShowModal(wxd_Dialog_t* self);

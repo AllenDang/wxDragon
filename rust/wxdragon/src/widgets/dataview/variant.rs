@@ -110,8 +110,7 @@ impl Variant {
 
     pub fn from_bitmap(bmp: &Bitmap) -> Self {
         let var = Self::new();
-        let p = **bmp as *const ffi::wxd_Bitmap_t;
-        unsafe { ffi::wxd_Variant_SetBitmap(var.ptr, p) };
+        unsafe { ffi::wxd_Variant_SetBitmap(var.ptr, **bmp) };
         var
     }
 
@@ -218,7 +217,7 @@ impl Variant {
         if ptr.is_null() {
             None
         } else {
-            Some(Bitmap::from_ptr_owned(ptr))
+            Some(Bitmap::from(ptr))
         }
     }
 }

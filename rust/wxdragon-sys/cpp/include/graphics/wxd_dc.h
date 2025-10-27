@@ -261,10 +261,10 @@ wxd_DC_GetLogicalFunction(wxd_DC_t* dc);
 
 // MemoryDC specific operations
 WXD_EXPORTED void
-wxd_MemoryDC_SelectObject(wxd_MemoryDC_t* dc, wxd_Bitmap_t* bitmap);
+wxd_MemoryDC_SelectObject(wxd_MemoryDC_t* dc, const wxd_Bitmap_t* bitmap);
 
 WXD_EXPORTED void
-wxd_MemoryDC_SelectObjectAsSource(wxd_MemoryDC_t* dc, wxd_Bitmap_t* bitmap);
+wxd_MemoryDC_SelectObjectAsSource(wxd_MemoryDC_t* dc, const wxd_Bitmap_t* bitmap);
 
 // Type casting functions (for safely using base DC functions with derived types)
 WXD_EXPORTED wxd_DC_t*

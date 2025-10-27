@@ -28,14 +28,14 @@ wxd_BitmapComboBox_Create(wxd_Window_t* parent, wxd_Id id, const char* value, wx
 
 WXD_EXPORTED void
 wxd_BitmapComboBox_Append(wxd_BitmapComboBox_t* self, const char* item,
-                          wxd_Bitmap_t* bitmap // Can be NULL
+                          const wxd_Bitmap_t* bitmap // Can be NULL
 )
 {
     wxBitmapComboBox* cb = (wxBitmapComboBox*)self;
     if (!cb)
         return;
     wxString wxItem = wxString::FromUTF8(item ? item : "");
-    wxBitmap* wxBmp = (wxBitmap*)bitmap;
+    const wxBitmap* wxBmp = reinterpret_cast<const wxBitmap*>(bitmap);
 
     if (wxBmp && wxBmp->IsOk()) {
         cb->Append(wxItem, *wxBmp);
@@ -128,16 +128,17 @@ wxd_BitmapComboBox_GetItemBitmap(wxd_BitmapComboBox_t* self, unsigned int n)
     if (!bmp.IsOk())
         return nullptr;
     // Create a new wxBitmap on the heap to return a stable pointer
-    return (wxd_Bitmap_t*)new wxBitmap(bmp);
+    return (wxd_Bitmap_t*)new (std::nothrow) wxBitmap(bmp);
 }
 
 WXD_EXPORTED void
-wxd_BitmapComboBox_SetItemBitmap(wxd_BitmapComboBox_t* self, unsigned int n, wxd_Bitmap_t* bitmap)
+wxd_BitmapComboBox_SetItemBitmap(wxd_BitmapComboBox_t* self, unsigned int n,
+                                 const wxd_Bitmap_t* bitmap)
 {
     wxBitmapComboBox* cb = (wxBitmapComboBox*)self;
     if (!cb || n >= cb->GetCount())
         return;
-    wxBitmap* wxBmp = (wxBitmap*)bitmap;
+    const wxBitmap* wxBmp = reinterpret_cast<const wxBitmap*>(bitmap);
     // Use wxNullBitmap if the provided bitmap pointer is null or invalid
     cb->SetItemBitmap(n, (wxBmp && wxBmp->IsOk()) ? *wxBmp : wxNullBitmap);
 }

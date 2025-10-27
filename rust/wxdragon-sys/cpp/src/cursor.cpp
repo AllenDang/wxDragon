@@ -238,14 +238,14 @@ wxd_Cursor_CreateFromData(const unsigned char* bits, int width, int height, int 
 }
 
 WXD_EXPORTED wxd_Cursor_t*
-wxd_Cursor_CreateFromImage(wxd_Bitmap_t* image)
+wxd_Cursor_CreateFromImage(const wxd_Bitmap_t* image)
 {
     if (!image) {
         return nullptr;
     }
 
     try {
-        wxBitmap* wx_bitmap = reinterpret_cast<wxBitmap*>(image);
+        const wxBitmap* wx_bitmap = reinterpret_cast<const wxBitmap*>(image);
         wxImage wx_image = wx_bitmap->ConvertToImage();
         wxCursor* cursor = new wxCursor(wx_image);
 

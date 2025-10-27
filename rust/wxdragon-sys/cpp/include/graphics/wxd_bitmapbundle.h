@@ -15,7 +15,7 @@ WXD_EXPORTED wxd_BitmapBundle_t*
 wxd_BitmapBundle_Create();
 
 WXD_EXPORTED wxd_BitmapBundle_t*
-wxd_BitmapBundle_CreateFromBitmap(wxd_Bitmap_t* bitmap);
+wxd_BitmapBundle_CreateFromBitmap(const wxd_Bitmap_t* bitmap);
 
 WXD_EXPORTED wxd_BitmapBundle_t*
 wxd_BitmapBundle_Clone(const wxd_BitmapBundle_t* bundle);
@@ -25,7 +25,7 @@ wxd_BitmapBundle_Destroy(wxd_BitmapBundle_t* bundle);
 
 // Create from multiple bitmaps
 WXD_EXPORTED wxd_BitmapBundle_t*
-wxd_BitmapBundle_FromBitmaps(wxd_Bitmap_t** bitmaps, size_t count);
+wxd_BitmapBundle_FromBitmaps(const wxd_Bitmap_t* const* bitmaps, size_t count);
 
 // SVG-related functions
 WXD_EXPORTED wxd_BitmapBundle_t*

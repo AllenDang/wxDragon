@@ -24,7 +24,7 @@ wxd_Cursor_CreateFromData(const unsigned char* bits, int width, int height, int 
 
 /// Creates a cursor from an image
 WXD_EXPORTED wxd_Cursor_t*
-wxd_Cursor_CreateFromImage(wxd_Bitmap_t* image);
+wxd_Cursor_CreateFromImage(const wxd_Bitmap_t* image);
 
 /// Creates a copy of a cursor
 WXD_EXPORTED wxd_Cursor_t*

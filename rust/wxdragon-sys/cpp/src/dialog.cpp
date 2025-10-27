@@ -27,13 +27,13 @@ wxd_Dialog_Create(wxd_Window_t* parent, const char* title, wxd_Style_t style, in
 }
 
 void
-wxd_Dialog_SetIcon(wxd_Dialog* dlg, wxd_Bitmap_t* bitmap)
+wxd_Dialog_SetIcon(wxd_Dialog* dlg, const wxd_Bitmap_t* bitmap)
 {
     if (!dlg || !bitmap)
         return;
 
     wxDialog* dialog = reinterpret_cast<wxDialog*>(dlg);
-    wxBitmap* bmp = reinterpret_cast<wxBitmap*>(bitmap);
+    const wxBitmap* bmp = reinterpret_cast<const wxBitmap*>(bitmap);
 
     if (!bmp->IsOk())
         return;

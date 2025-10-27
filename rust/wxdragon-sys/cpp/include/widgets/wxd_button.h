@@ -29,19 +29,20 @@ wxd_Button_GetLabel(wxd_Button_t* button, char* buffer, int buffer_len);
 
 // --- Bitmap related functions for wxButton ---
 WXD_EXPORTED void
-wxd_Button_SetBitmap(wxd_Button_t* self, wxd_Bitmap_t* bitmap, wxd_ButtonBitmapPosition_t dir);
+wxd_Button_SetBitmap(wxd_Button_t* self, const wxd_Bitmap_t* bitmap,
+                     wxd_ButtonBitmapPosition_t dir);
 
 WXD_EXPORTED void
-wxd_Button_SetBitmapDisabled(wxd_Button_t* self, wxd_Bitmap_t* bitmap);
+wxd_Button_SetBitmapDisabled(wxd_Button_t* self, const wxd_Bitmap_t* bitmap);
 
 WXD_EXPORTED void
-wxd_Button_SetBitmapFocus(wxd_Button_t* self, wxd_Bitmap_t* bitmap);
+wxd_Button_SetBitmapFocus(wxd_Button_t* self, const wxd_Bitmap_t* bitmap);
 
 WXD_EXPORTED void
-wxd_Button_SetBitmapCurrent(wxd_Button_t* self, wxd_Bitmap_t* bitmap); // For hover state
+wxd_Button_SetBitmapCurrent(wxd_Button_t* self, const wxd_Bitmap_t* bitmap); // For hover state
 
 WXD_EXPORTED void
-wxd_Button_SetBitmapPressed(wxd_Button_t* self, wxd_Bitmap_t* bitmap);
+wxd_Button_SetBitmapPressed(wxd_Button_t* self, const wxd_Bitmap_t* bitmap);
 
 WXD_EXPORTED wxd_Bitmap_t*
 wxd_Button_GetBitmap(wxd_Button_t* self);

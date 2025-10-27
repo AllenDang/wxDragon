@@ -71,54 +71,54 @@ map_to_wx_direction(wxd_ButtonBitmapPosition_t dir)
 }
 
 void
-wxd_Button_SetBitmap(wxd_Button_t* self, wxd_Bitmap_t* bitmap, wxd_ButtonBitmapPosition_t dir)
+wxd_Button_SetBitmap(wxd_Button_t* self, const wxd_Bitmap_t* bitmap, wxd_ButtonBitmapPosition_t dir)
 {
     if (!self)
         return;
     wxButton* btn = reinterpret_cast<wxButton*>(self);
-    wxBitmap* bmp = reinterpret_cast<wxBitmap*>(bitmap);
+    const wxBitmap* bmp = reinterpret_cast<const wxBitmap*>(bitmap);
     // wxBitmapBundle can be created from a single bitmap
     btn->SetBitmap(bmp ? wxBitmapBundle(*bmp) : wxBitmapBundle(),
                    static_cast<wxDirection>(map_to_wx_direction(dir)));
 }
 
 void
-wxd_Button_SetBitmapDisabled(wxd_Button_t* self, wxd_Bitmap_t* bitmap)
+wxd_Button_SetBitmapDisabled(wxd_Button_t* self, const wxd_Bitmap_t* bitmap)
 {
     if (!self)
         return;
     wxButton* btn = reinterpret_cast<wxButton*>(self);
-    wxBitmap* bmp = reinterpret_cast<wxBitmap*>(bitmap);
+    const wxBitmap* bmp = reinterpret_cast<const wxBitmap*>(bitmap);
     btn->SetBitmapDisabled(bmp ? wxBitmapBundle(*bmp) : wxBitmapBundle());
 }
 
 void
-wxd_Button_SetBitmapFocus(wxd_Button_t* self, wxd_Bitmap_t* bitmap)
+wxd_Button_SetBitmapFocus(wxd_Button_t* self, const wxd_Bitmap_t* bitmap)
 {
     if (!self)
         return;
     wxButton* btn = reinterpret_cast<wxButton*>(self);
-    wxBitmap* bmp = reinterpret_cast<wxBitmap*>(bitmap);
+    const wxBitmap* bmp = reinterpret_cast<const wxBitmap*>(bitmap);
     btn->SetBitmapFocus(bmp ? wxBitmapBundle(*bmp) : wxBitmapBundle());
 }
 
 void
-wxd_Button_SetBitmapCurrent(wxd_Button_t* self, wxd_Bitmap_t* bitmap)
+wxd_Button_SetBitmapCurrent(wxd_Button_t* self, const wxd_Bitmap_t* bitmap)
 {
     if (!self)
         return;
     wxButton* btn = reinterpret_cast<wxButton*>(self);
-    wxBitmap* bmp = reinterpret_cast<wxBitmap*>(bitmap);
+    const wxBitmap* bmp = reinterpret_cast<const wxBitmap*>(bitmap);
     btn->SetBitmapCurrent(bmp ? wxBitmapBundle(*bmp) : wxBitmapBundle());
 }
 
 void
-wxd_Button_SetBitmapPressed(wxd_Button_t* self, wxd_Bitmap_t* bitmap)
+wxd_Button_SetBitmapPressed(wxd_Button_t* self, const wxd_Bitmap_t* bitmap)
 {
     if (!self)
         return;
     wxButton* btn = reinterpret_cast<wxButton*>(self);
-    wxBitmap* bmp = reinterpret_cast<wxBitmap*>(bitmap);
+    const wxBitmap* bmp = reinterpret_cast<const wxBitmap*>(bitmap);
     btn->SetBitmapPressed(bmp ? wxBitmapBundle(*bmp) : wxBitmapBundle());
 }
 

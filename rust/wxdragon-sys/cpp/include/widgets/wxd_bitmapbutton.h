@@ -6,25 +6,25 @@
 // --- BitmapButton Functions ---
 WXD_EXPORTED wxd_BitmapButton_t*
 wxd_BitmapButton_Create(wxd_Window_t* parent, wxd_Id id,
-                        wxd_Bitmap_t* bitmap, // Main bitmap (normal state)
+                        const wxd_Bitmap_t* bitmap, // Main bitmap (normal state)
                         wxd_Point pos, wxd_Size size, wxd_Style_t style, const char* name,
-                        wxd_Bitmap_t* bitmap_disabled, // Disabled state bitmap (can be NULL)
-                        wxd_Bitmap_t* bitmap_focus,    // Focus state bitmap (can be NULL)
-                        wxd_Bitmap_t* bitmap_hover     // Hover state bitmap (can be NULL)
+                        const wxd_Bitmap_t* bitmap_disabled, // Disabled state bitmap (can be NULL)
+                        const wxd_Bitmap_t* bitmap_focus,    // Focus state bitmap (can be NULL)
+                        const wxd_Bitmap_t* bitmap_hover     // Hover state bitmap (can be NULL)
 );
 
 // --- Setters for individual bitmaps after creation ---
 WXD_EXPORTED void
-wxd_BitmapButton_SetBitmapLabel(wxd_BitmapButton_t* self, wxd_Bitmap_t* bitmap);
+wxd_BitmapButton_SetBitmapLabel(wxd_BitmapButton_t* self, const wxd_Bitmap_t* bitmap);
 
 WXD_EXPORTED void
-wxd_BitmapButton_SetBitmapDisabled(wxd_BitmapButton_t* self, wxd_Bitmap_t* bitmap);
+wxd_BitmapButton_SetBitmapDisabled(wxd_BitmapButton_t* self, const wxd_Bitmap_t* bitmap);
 
 WXD_EXPORTED void
-wxd_BitmapButton_SetBitmapFocus(wxd_BitmapButton_t* self, wxd_Bitmap_t* bitmap);
+wxd_BitmapButton_SetBitmapFocus(wxd_BitmapButton_t* self, const wxd_Bitmap_t* bitmap);
 
 WXD_EXPORTED void
-wxd_BitmapButton_SetBitmapHover(wxd_BitmapButton_t* self, wxd_Bitmap_t* bitmap);
+wxd_BitmapButton_SetBitmapHover(wxd_BitmapButton_t* self, const wxd_Bitmap_t* bitmap);
 
 // --- Getters for individual bitmaps ---
 WXD_EXPORTED wxd_Bitmap_t*

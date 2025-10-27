@@ -6,10 +6,10 @@
 
 // Helper to create a wxBitmapBundle from optional wxd_Bitmap_t pointers
 wxBitmapBundle
-CreateBundle(wxd_Bitmap_t* bmpNormal, wxd_Bitmap_t* bmpDisabled)
+CreateBundle(const wxd_Bitmap_t* bmpNormal, const wxd_Bitmap_t* bmpDisabled)
 {
-    wxBitmap* normalPtr = reinterpret_cast<wxBitmap*>(bmpNormal);
-    // wxBitmap* disabledPtr = reinterpret_cast<wxBitmap*>(bmpDisabled);
+    const wxBitmap* normalPtr = reinterpret_cast<const wxBitmap*>(bmpNormal);
+    // const wxBitmap* disabledPtr = reinterpret_cast<const wxBitmap*>(bmpDisabled);
 
     if (!normalPtr || !normalPtr->IsOk()) {
         // Must have at least a normal bitmap
@@ -39,9 +39,9 @@ wxd_ToolBar_Create(wxd_Window_t* parent, wxd_Id id, wxd_Point pos, wxd_Size size
 }
 
 WXD_EXPORTED void*
-wxd_ToolBar_AddTool(wxd_ToolBar_t* self, wxd_Id toolId, const char* label, wxd_Bitmap_t* bitmap,
-                    wxd_Bitmap_t* bitmapDisabled, int kind, const char* shortHelp,
-                    const char* longHelp)
+wxd_ToolBar_AddTool(wxd_ToolBar_t* self, wxd_Id toolId, const char* label,
+                    const wxd_Bitmap_t* bitmap, const wxd_Bitmap_t* bitmapDisabled, int kind,
+                    const char* shortHelp, const char* longHelp)
 {
     wxToolBar* tb = reinterpret_cast<wxToolBar*>(self);
     if (!tb)

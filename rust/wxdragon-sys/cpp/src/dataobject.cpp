@@ -127,11 +127,11 @@ wxd_FileDataObject_GetFilenames(wxd_FileDataObject_t* obj, wxd_ArrayString_t* fi
 // --- BitmapDataObject Functions ---
 
 wxd_BitmapDataObject_t*
-wxd_BitmapDataObject_Create(wxd_Bitmap_t* bitmap)
+wxd_BitmapDataObject_Create(const wxd_Bitmap_t* bitmap)
 {
     if (!bitmap)
         return nullptr;
-    wxBitmap* wx_bitmap = reinterpret_cast<wxBitmap*>(bitmap);
+    const wxBitmap* wx_bitmap = reinterpret_cast<const wxBitmap*>(bitmap);
     wxBitmapDataObject* data_object = new wxBitmapDataObject(*wx_bitmap);
     return reinterpret_cast<wxd_BitmapDataObject_t*>(data_object);
 }

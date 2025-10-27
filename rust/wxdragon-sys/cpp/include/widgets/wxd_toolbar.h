@@ -9,9 +9,9 @@ wxd_ToolBar_Create(wxd_Window_t* parent, wxd_Id id, wxd_Point pos, wxd_Size size
                    wxd_Style_t style);
 
 WXD_EXPORTED void*
-wxd_ToolBar_AddTool(wxd_ToolBar_t* self, wxd_Id toolId, const char* label, wxd_Bitmap_t* bitmap,
-                    wxd_Bitmap_t* bitmapDisabled, int kind, const char* shortHelp,
-                    const char* longHelp);
+wxd_ToolBar_AddTool(wxd_ToolBar_t* self, wxd_Id toolId, const char* label,
+                    const wxd_Bitmap_t* bitmap, const wxd_Bitmap_t* bitmapDisabled, int kind,
+                    const char* shortHelp, const char* longHelp);
 
 WXD_EXPORTED void
 wxd_ToolBar_AddSeparator(wxd_ToolBar_t* self);

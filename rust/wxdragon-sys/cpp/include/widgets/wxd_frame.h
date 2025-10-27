@@ -63,6 +63,6 @@ WXD_EXPORTED bool
 wxd_Frame_IsMaximized(wxd_Frame_t* frame);
 
 WXD_EXPORTED void
-wxd_Frame_SetIconFromBitmap(wxd_Frame_t* frame, wxd_Bitmap_t* bitmap);
+wxd_Frame_SetIconFromBitmap(wxd_Frame_t* frame, const wxd_Bitmap_t* bitmap);
 
 #endif // WXD_FRAME_H

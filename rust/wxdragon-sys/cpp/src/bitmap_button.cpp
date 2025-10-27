@@ -24,16 +24,17 @@ wxd_to_wx_size(const wxd_Size& s)
 
 // Implementation for wxd_BitmapButton_Create
 WXD_EXPORTED wxd_BitmapButton_t*
-wxd_BitmapButton_Create(wxd_Window_t* parent, wxd_Id id,
-                        wxd_Bitmap_t* bitmap, // Main bitmap (normal state)
-                        wxd_Point pos, wxd_Size size, wxd_Style_t style, const char* name_str,
-                        wxd_Bitmap_t* bitmap_disabled_wxd, // Disabled state bitmap (can be NULL)
-                        wxd_Bitmap_t* bitmap_focus_wxd,    // Focus state bitmap (can be NULL)
-                        wxd_Bitmap_t* bitmap_hover_wxd     // Hover state bitmap (can be NULL)
+wxd_BitmapButton_Create(
+    wxd_Window_t* parent, wxd_Id id,
+    const wxd_Bitmap_t* bitmap, // Main bitmap (normal state)
+    wxd_Point pos, wxd_Size size, wxd_Style_t style, const char* name_str,
+    const wxd_Bitmap_t* bitmap_disabled_wxd, // Disabled state bitmap (can be NULL)
+    const wxd_Bitmap_t* bitmap_focus_wxd,    // Focus state bitmap (can be NULL)
+    const wxd_Bitmap_t* bitmap_hover_wxd     // Hover state bitmap (can be NULL)
 )
 {
     wxWindow* parentWin = reinterpret_cast<wxWindow*>(parent);
-    wxBitmap* bmp_main = reinterpret_cast<wxBitmap*>(bitmap);
+    const wxBitmap* bmp_main = reinterpret_cast<const wxBitmap*>(bitmap);
 
     if (!parentWin) {
         return nullptr;
@@ -63,19 +64,19 @@ wxd_BitmapButton_Create(wxd_Window_t* parent, wxd_Id id,
 
     // Set other state bitmaps if provided
     if (bitmap_disabled_wxd) {
-        wxBitmap* bmp_disabled = reinterpret_cast<wxBitmap*>(bitmap_disabled_wxd);
+        const wxBitmap* bmp_disabled = reinterpret_cast<const wxBitmap*>(bitmap_disabled_wxd);
         if (bmp_disabled && bmp_disabled->IsOk()) {
             btn->SetBitmapDisabled(*bmp_disabled);
         }
     }
     if (bitmap_focus_wxd) {
-        wxBitmap* bmp_focus = reinterpret_cast<wxBitmap*>(bitmap_focus_wxd);
+        const wxBitmap* bmp_focus = reinterpret_cast<const wxBitmap*>(bitmap_focus_wxd);
         if (bmp_focus && bmp_focus->IsOk()) {
             btn->SetBitmapFocus(*bmp_focus);
         }
     }
     if (bitmap_hover_wxd) {
-        wxBitmap* bmp_hover = reinterpret_cast<wxBitmap*>(bitmap_hover_wxd);
+        const wxBitmap* bmp_hover = reinterpret_cast<const wxBitmap*>(bitmap_hover_wxd);
         if (bmp_hover && bmp_hover->IsOk()) {
             btn->SetBitmapHover(*bmp_hover);
         }

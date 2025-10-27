@@ -32,7 +32,7 @@ wxd_FileDataObject_GetFilenames(wxd_FileDataObject_t* obj, wxd_ArrayString_t* fi
 
 // --- BitmapDataObject Functions ---
 WXD_EXPORTED wxd_BitmapDataObject_t*
-wxd_BitmapDataObject_Create(wxd_Bitmap_t* bitmap);
+wxd_BitmapDataObject_Create(const wxd_Bitmap_t* bitmap);
 
 WXD_EXPORTED wxd_Bitmap_t*
 wxd_BitmapDataObject_GetBitmap(wxd_BitmapDataObject_t* data_object);

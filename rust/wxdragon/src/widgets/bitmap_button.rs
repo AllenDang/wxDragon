@@ -44,14 +44,14 @@ impl ButtonEvents for BitmapButton {}
 struct BitmapButtonConfig {
     pub parent_ptr: *mut ffi::wxd_Window_t,
     pub id: Id,
-    pub bitmap_ptr: *mut ffi::wxd_Bitmap_t,
+    pub bitmap_ptr: *const ffi::wxd_Bitmap_t,
     pub pos: Point,
     pub size: Size,
     pub style: i64,
     pub name: String,
-    pub bmp_disabled_ptr: *mut ffi::wxd_Bitmap_t,
-    pub bmp_focus_ptr: *mut ffi::wxd_Bitmap_t,
-    pub bmp_hover_ptr: *mut ffi::wxd_Bitmap_t,
+    pub bmp_disabled_ptr: *const ffi::wxd_Bitmap_t,
+    pub bmp_focus_ptr: *const ffi::wxd_Bitmap_t,
+    pub bmp_hover_ptr: *const ffi::wxd_Bitmap_t,
 }
 
 impl BitmapButton {
@@ -116,13 +116,13 @@ widget_builder!(
 
         let bmp_disabled_ptr = slf.bitmap_disabled
             .as_ref()
-            .map_or(std::ptr::null_mut(), |b| **b);
+            .map_or(std::ptr::null(), |b| **b);
         let bmp_focus_ptr = slf.bitmap_focus
             .as_ref()
-            .map_or(std::ptr::null_mut(), |b| **b);
+            .map_or(std::ptr::null(), |b| **b);
         let bmp_hover_ptr = slf.bitmap_hover
             .as_ref()
-            .map_or(std::ptr::null_mut(), |b| **b);
+            .map_or(std::ptr::null(), |b| **b);
 
         // For BitmapButton, size is often best derived from the bitmap if not explicitly set
         // and if a bitmap is provided

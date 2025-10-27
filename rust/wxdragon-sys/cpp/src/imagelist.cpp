@@ -12,10 +12,10 @@ ToWxImageList(wxd_ImageList_t* self)
 }
 
 // Helper to cast to wxBitmap*
-static inline wxBitmap*
-ToWxBitmap(wxd_Bitmap_t* self)
+static inline const wxBitmap*
+ToWxBitmap(const wxd_Bitmap_t* self)
 {
-    return reinterpret_cast<wxBitmap*>(self);
+    return reinterpret_cast<const wxBitmap*>(self);
 }
 
 WXD_EXPORTED wxd_ImageList_t*
@@ -36,10 +36,10 @@ wxd_ImageList_Destroy(wxd_ImageList_t* self)
 }
 
 WXD_EXPORTED int
-wxd_ImageList_Add(wxd_ImageList_t* self, wxd_Bitmap_t* bitmap_ptr)
+wxd_ImageList_Add(wxd_ImageList_t* self, const wxd_Bitmap_t* bitmap_ptr)
 {
     wxImageList* list = ToWxImageList(self);
-    wxBitmap* bitmap = ToWxBitmap(bitmap_ptr);
+    const wxBitmap* bitmap = ToWxBitmap(bitmap_ptr);
     if (!list || !bitmap || !bitmap->IsOk()) {
         return -1;
     }
@@ -48,11 +48,12 @@ wxd_ImageList_Add(wxd_ImageList_t* self, wxd_Bitmap_t* bitmap_ptr)
 }
 
 WXD_EXPORTED int
-wxd_ImageList_AddWithMask(wxd_ImageList_t* self, wxd_Bitmap_t* bitmap_ptr, wxd_Bitmap_t* mask_ptr)
+wxd_ImageList_AddWithMask(wxd_ImageList_t* self, const wxd_Bitmap_t* bitmap_ptr,
+                          const wxd_Bitmap_t* mask_ptr)
 {
     wxImageList* list = ToWxImageList(self);
-    wxBitmap* bitmap = ToWxBitmap(bitmap_ptr);
-    wxBitmap* mask = ToWxBitmap(mask_ptr);
+    const wxBitmap* bitmap = ToWxBitmap(bitmap_ptr);
+    const wxBitmap* mask = ToWxBitmap(mask_ptr);
 
     if (!list || !bitmap || !bitmap->IsOk()) {
         return -1;

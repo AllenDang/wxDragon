@@ -12,43 +12,43 @@ extern "C" {
 
 // --- Setters for individual bitmaps after creation ---
 WXD_EXPORTED void
-wxd_BitmapButton_SetBitmapLabel(wxd_BitmapButton_t* self, wxd_Bitmap_t* bitmap)
+wxd_BitmapButton_SetBitmapLabel(wxd_BitmapButton_t* self, const wxd_Bitmap_t* bitmap)
 {
     if (!self)
         return;
     wxBitmapButton* btn = reinterpret_cast<wxBitmapButton*>(self);
-    wxBitmap* bmp = reinterpret_cast<wxBitmap*>(bitmap);
+    const wxBitmap* bmp = reinterpret_cast<const wxBitmap*>(bitmap);
     // wxBitmapButton::SetBitmapLabel takes a wxBitmap, not wxBitmapBundle
     btn->SetBitmapLabel(bmp ? *bmp : wxNullBitmap);
 }
 
 WXD_EXPORTED void
-wxd_BitmapButton_SetBitmapDisabled(wxd_BitmapButton_t* self, wxd_Bitmap_t* bitmap)
+wxd_BitmapButton_SetBitmapDisabled(wxd_BitmapButton_t* self, const wxd_Bitmap_t* bitmap)
 {
     if (!self)
         return;
     wxBitmapButton* btn = reinterpret_cast<wxBitmapButton*>(self);
-    wxBitmap* bmp = reinterpret_cast<wxBitmap*>(bitmap);
+    const wxBitmap* bmp = reinterpret_cast<const wxBitmap*>(bitmap);
     btn->SetBitmapDisabled(bmp ? *bmp : wxNullBitmap);
 }
 
 WXD_EXPORTED void
-wxd_BitmapButton_SetBitmapFocus(wxd_BitmapButton_t* self, wxd_Bitmap_t* bitmap)
+wxd_BitmapButton_SetBitmapFocus(wxd_BitmapButton_t* self, const wxd_Bitmap_t* bitmap)
 {
     if (!self)
         return;
     wxBitmapButton* btn = reinterpret_cast<wxBitmapButton*>(self);
-    wxBitmap* bmp = reinterpret_cast<wxBitmap*>(bitmap);
+    const wxBitmap* bmp = reinterpret_cast<const wxBitmap*>(bitmap);
     btn->SetBitmapFocus(bmp ? *bmp : wxNullBitmap);
 }
 
 WXD_EXPORTED void
-wxd_BitmapButton_SetBitmapHover(wxd_BitmapButton_t* self, wxd_Bitmap_t* bitmap)
+wxd_BitmapButton_SetBitmapHover(wxd_BitmapButton_t* self, const wxd_Bitmap_t* bitmap)
 {
     if (!self)
         return;
     wxBitmapButton* btn = reinterpret_cast<wxBitmapButton*>(self);
-    wxBitmap* bmp = reinterpret_cast<wxBitmap*>(bitmap);
+    const wxBitmap* bmp = reinterpret_cast<const wxBitmap*>(bitmap);
     btn->SetBitmapCurrent(bmp ? *bmp : wxNullBitmap); // wxWidgets uses SetBitmapCurrent for hover
 }
 

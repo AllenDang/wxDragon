@@ -68,9 +68,9 @@ wxd_Bitmap_CreateFromRGBA(const unsigned char* data, int width, int height)
 
 // Implementation for wxd_Bitmap_Destroy
 WXD_EXPORTED void
-wxd_Bitmap_Destroy(wxd_Bitmap_t* bitmap)
+wxd_Bitmap_Destroy(const wxd_Bitmap_t* bitmap)
 {
-    wxBitmap* bmp = reinterpret_cast<wxBitmap*>(bitmap);
+    const wxBitmap* bmp = reinterpret_cast<const wxBitmap*>(bitmap);
     if (!bmp)
         return;
     // Never delete the global wxNullBitmap.
@@ -81,39 +81,39 @@ wxd_Bitmap_Destroy(wxd_Bitmap_t* bitmap)
 
 // ADDED: Get bitmap dimensions and validity
 WXD_EXPORTED int
-wxd_Bitmap_GetWidth(wxd_Bitmap_t* bitmap)
+wxd_Bitmap_GetWidth(const wxd_Bitmap_t* bitmap)
 {
-    wxBitmap* bmp = reinterpret_cast<wxBitmap*>(bitmap);
+    const wxBitmap* bmp = reinterpret_cast<const wxBitmap*>(bitmap);
     if (!bmp || !bmp->IsOk())
         return 0;
     return bmp->GetWidth();
 }
 
 WXD_EXPORTED int
-wxd_Bitmap_GetHeight(wxd_Bitmap_t* bitmap)
+wxd_Bitmap_GetHeight(const wxd_Bitmap_t* bitmap)
 {
-    wxBitmap* bmp = reinterpret_cast<wxBitmap*>(bitmap);
+    const wxBitmap* bmp = reinterpret_cast<const wxBitmap*>(bitmap);
     if (!bmp || !bmp->IsOk())
         return 0;
     return bmp->GetHeight();
 }
 
 WXD_EXPORTED bool
-wxd_Bitmap_IsOk(wxd_Bitmap_t* bitmap)
+wxd_Bitmap_IsOk(const wxd_Bitmap_t* bitmap)
 {
-    wxBitmap* bmp = reinterpret_cast<wxBitmap*>(bitmap);
+    const wxBitmap* bmp = reinterpret_cast<const wxBitmap*>(bitmap);
     if (!bmp)
         return false;
     return bmp->IsOk();
 }
 
 WXD_EXPORTED wxd_Bitmap_t*
-wxd_Bitmap_Clone(wxd_Bitmap_t* bitmap)
+wxd_Bitmap_Clone(const wxd_Bitmap_t* bitmap)
 {
     if (!bitmap) {
         return nullptr;
     }
-    wxBitmap* original_bmp = reinterpret_cast<wxBitmap*>(bitmap);
+    const wxBitmap* original_bmp = reinterpret_cast<const wxBitmap*>(bitmap);
     if (!original_bmp->IsOk()) {
         return nullptr; // Don't clone an invalid bitmap
     }
@@ -130,13 +130,13 @@ wxd_Bitmap_Clone(wxd_Bitmap_t* bitmap)
 
 // Extract RGBA data from bitmap
 WXD_EXPORTED unsigned char*
-wxd_Bitmap_GetRGBAData(wxd_Bitmap_t* bitmap)
+wxd_Bitmap_GetRGBAData(const wxd_Bitmap_t* bitmap, size_t* width, size_t* height)
 {
     if (!bitmap) {
         return nullptr;
     }
 
-    wxBitmap* bmp = reinterpret_cast<wxBitmap*>(bitmap);
+    const wxBitmap* bmp = reinterpret_cast<const wxBitmap*>(bitmap);
     if (!bmp || !bmp->IsOk()) {
         return nullptr;
     }
@@ -147,10 +147,18 @@ wxd_Bitmap_GetRGBAData(wxd_Bitmap_t* bitmap)
         return nullptr;
     }
 
-    int width = image.GetWidth();
-    int height = image.GetHeight();
-    size_t num_pixels = static_cast<size_t>(width) * static_cast<size_t>(height);
+    int w = image.GetWidth();
+    int h = image.GetHeight();
+    size_t num_pixels = static_cast<size_t>(w) * static_cast<size_t>(h);
     size_t rgba_data_size = num_pixels * 4; // 4 bytes per pixel (RGBA)
+
+    if (width) {
+        *width = static_cast<size_t>(w);
+    }
+
+    if (height) {
+        *height = static_cast<size_t>(h);
+    }
 
     // Allocate memory for RGBA data
     unsigned char* rgba_data = static_cast<unsigned char*>(malloc(rgba_data_size));

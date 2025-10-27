@@ -21,12 +21,13 @@ wxd_ImageList_Destroy(wxd_ImageList_t* self);
 // Adds a bitmap to the image list. wxImageList makes an internal copy of the bitmap.
 // Returns the index of the new image in the list, or -1 on failure.
 WXD_EXPORTED int
-wxd_ImageList_Add(wxd_ImageList_t* self, wxd_Bitmap_t* bitmap);
+wxd_ImageList_Add(wxd_ImageList_t* self, const wxd_Bitmap_t* bitmap);
 
 // Adds a bitmap and a mask to the image list. wxImageList makes internal copies.
 // Returns the index of the new image in the list, or -1 on failure.
 WXD_EXPORTED int
-wxd_ImageList_AddWithMask(wxd_ImageList_t* self, wxd_Bitmap_t* bitmap, wxd_Bitmap_t* mask);
+wxd_ImageList_AddWithMask(wxd_ImageList_t* self, const wxd_Bitmap_t* bitmap,
+                          const wxd_Bitmap_t* mask);
 
 // Returns the number of images in the list.
 WXD_EXPORTED int

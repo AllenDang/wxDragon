@@ -16,20 +16,20 @@ wxd_BitmapBundle_Create()
 
 // Create a bitmap bundle from a single bitmap
 WXD_EXPORTED wxd_BitmapBundle_t*
-wxd_BitmapBundle_CreateFromBitmap(wxd_Bitmap_t* bitmap)
+wxd_BitmapBundle_CreateFromBitmap(const wxd_Bitmap_t* bitmap)
 {
     if (!bitmap) {
         return wxd_BitmapBundle_Create();
     }
 
-    wxBitmap* wx_bitmap = reinterpret_cast<wxBitmap*>(bitmap);
+    const wxBitmap* wx_bitmap = reinterpret_cast<const wxBitmap*>(bitmap);
     wxBitmapBundle* bundle = new wxBitmapBundle(*wx_bitmap);
     return reinterpret_cast<wxd_BitmapBundle_t*>(bundle);
 }
 
 // Create a bitmap bundle from multiple bitmaps of different sizes
 WXD_EXPORTED wxd_BitmapBundle_t*
-wxd_BitmapBundle_FromBitmaps(wxd_Bitmap_t** bitmaps, size_t count)
+wxd_BitmapBundle_FromBitmaps(const wxd_Bitmap_t* const* bitmaps, size_t count)
 {
     if (!bitmaps || count == 0) {
         return wxd_BitmapBundle_Create();
@@ -40,7 +40,7 @@ wxd_BitmapBundle_FromBitmaps(wxd_Bitmap_t** bitmaps, size_t count)
 
     for (size_t i = 0; i < count; ++i) {
         if (bitmaps[i]) {
-            wxBitmap* wx_bitmap = reinterpret_cast<wxBitmap*>(bitmaps[i]);
+            const wxBitmap* wx_bitmap = reinterpret_cast<const wxBitmap*>(bitmaps[i]);
             wx_bitmaps.push_back(*wx_bitmap);
         }
     }

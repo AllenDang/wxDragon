@@ -556,21 +556,22 @@ wxd_DC_GetTextExtent(wxd_DC_t* dc, const char* string, int* w, int* h)
 
 // MemoryDC specific operations
 void
-wxd_MemoryDC_SelectObject(wxd_MemoryDC_t* dc, wxd_Bitmap_t* bitmap)
+wxd_MemoryDC_SelectObject(wxd_MemoryDC_t* dc, const wxd_Bitmap_t* bitmap)
 {
     if (dc && bitmap) {
         wxMemoryDC* wx_dc = reinterpret_cast<wxMemoryDC*>(dc);
-        wxBitmap* wx_bitmap = reinterpret_cast<wxBitmap*>(bitmap);
-        wx_dc->SelectObject(*wx_bitmap);
+        const wxBitmap* wx_bitmap = reinterpret_cast<const wxBitmap*>(bitmap);
+        // Note: wxMemoryDC::SelectObject takes a non-const wxBitmap*, strange.
+        wx_dc->SelectObject(*(const_cast<wxBitmap*>(wx_bitmap)));
     }
 }
 
 void
-wxd_MemoryDC_SelectObjectAsSource(wxd_MemoryDC_t* dc, wxd_Bitmap_t* bitmap)
+wxd_MemoryDC_SelectObjectAsSource(wxd_MemoryDC_t* dc, const wxd_Bitmap_t* bitmap)
 {
     if (dc && bitmap) {
         wxMemoryDC* wx_dc = reinterpret_cast<wxMemoryDC*>(dc);
-        wxBitmap* wx_bitmap = reinterpret_cast<wxBitmap*>(bitmap);
+        const wxBitmap* wx_bitmap = reinterpret_cast<const wxBitmap*>(bitmap);
         wx_dc->SelectObjectAsSource(*wx_bitmap);
     }
 }

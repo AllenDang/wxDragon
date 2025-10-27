@@ -201,13 +201,13 @@ wxd_Frame_IsMaximized(wxd_Frame_t* frame)
 }
 
 void
-wxd_Frame_SetIconFromBitmap(wxd_Frame_t* frame, wxd_Bitmap_t* bitmap)
+wxd_Frame_SetIconFromBitmap(wxd_Frame_t* frame, const wxd_Bitmap_t* bitmap)
 {
     if (!frame || !bitmap)
         return;
 
     wxFrame* wx_frame = reinterpret_cast<wxFrame*>(frame);
-    wxBitmap* wx_bitmap = reinterpret_cast<wxBitmap*>(bitmap);
+    const wxBitmap* wx_bitmap = reinterpret_cast<const wxBitmap*>(bitmap);
 
     if (!wx_bitmap->IsOk())
         return;

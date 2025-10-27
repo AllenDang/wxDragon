@@ -7,19 +7,19 @@ use wxdragon_sys as ffi;
 /// Represents a platform-dependent bitmap image.
 #[derive(Debug)] // Keep Debug if useful, or remove if pointer isn't meaningful for debug
 pub struct Bitmap {
-    ptr: *mut ffi::wxd_Bitmap_t,
+    ptr: *const ffi::wxd_Bitmap_t,
     is_owned: bool, // Tracks whether Rust owns this bitmap and should destroy it
 }
 
-impl AsRef<*mut ffi::wxd_Bitmap_t> for Bitmap {
+impl AsRef<*const ffi::wxd_Bitmap_t> for Bitmap {
     /// Returns a reference to the raw bitmap pointer.
-    fn as_ref(&self) -> &*mut ffi::wxd_Bitmap_t {
+    fn as_ref(&self) -> &*const ffi::wxd_Bitmap_t {
         &self.ptr
     }
 }
 
 impl std::ops::Deref for Bitmap {
-    type Target = *mut ffi::wxd_Bitmap_t;
+    type Target = *const ffi::wxd_Bitmap_t;
 
     /// Dereferences to the raw bitmap pointer.
     fn deref(&self) -> &Self::Target {
@@ -40,7 +40,7 @@ impl Bitmap {
     /// Returns a non-owning wrapper around wxNullBitmap.
     /// This value will not free the underlying object on Drop.
     pub fn null_bitmap() -> Self {
-        unsafe { Bitmap::from_ptr_unowned(ffi::wxd_Bitmap_GetNull() as *mut _) }
+        unsafe { Bitmap::from(ffi::wxd_Bitmap_GetNull()) }
     }
 
     /// Checks if this bitmap is wxNullBitmap.
@@ -73,8 +73,11 @@ impl Bitmap {
         let expected_len = (width * height * 4) as usize;
         if data.len() != expected_len || width == 0 || height == 0 {
             log::error!(
-                "Bitmap::from_rgba: Invalid data length or dimensions. Expected {}, got {}, w={}, h={}", 
-                expected_len, data.len(), width, height
+                "Bitmap::from_rgba: Invalid data length or dimensions. Expected {}, got {}, w={}, h={}",
+                expected_len,
+                data.len(),
+                width,
+                height
             );
             return None;
         }
@@ -92,42 +95,8 @@ impl Bitmap {
         }
     }
 
-    /// Creates a bitmap wrapper around an existing bitmap pointer, transferring ownership to Rust.
-    /// The bitmap will be destroyed when the wrapper is dropped.
-    ///
-    /// # Safety
-    ///
-    /// The pointer must be a valid wxBitmap pointer, and no other code should destroy it.
-    pub(crate) fn from_ptr_owned(ptr: *mut ffi::wxd_Bitmap_t) -> Self {
-        Bitmap {
-            ptr,
-            is_owned: true,
-        }
-    }
-
-    /// Creates a bitmap wrapper around an existing bitmap pointer without taking ownership.
-    /// Rust will NOT destroy the bitmap when the wrapper is dropped.
-    ///
-    /// # Safety
-    ///
-    /// The pointer must be a valid `wxd_Bitmap_t` pointer that is managed (lifetime-wise)
-    /// by other code (e.g., wxWidgets internals). The pointer must remain valid for the
-    /// lifetime of this `Bitmap` object.
-    pub(crate) unsafe fn from_ptr_unowned(ptr: *mut ffi::wxd_Bitmap_t) -> Self {
-        Bitmap {
-            ptr,
-            is_owned: false,
-        }
-    }
-
-    /// Consumes the Bitmap and returns the raw pointer, transferring ownership to the caller.
-    #[allow(dead_code)]
-    pub(crate) fn into_raw(mut self) -> *mut ffi::wxd_Bitmap_t {
-        let ptr = self.ptr;
-        // Prevent Drop from freeing the pointer we are returning.
-        self.ptr = std::ptr::null_mut();
-        self.is_owned = false;
-        ptr
+    pub fn is_owned(&self) -> bool {
+        self.is_owned
     }
 
     /// Returns the width of the bitmap in pixels.
@@ -184,42 +153,88 @@ impl Bitmap {
             return None;
         }
 
-        unsafe {
-            let data_ptr = ffi::wxd_Bitmap_GetRGBAData(self.ptr);
-            if data_ptr.is_null() {
-                return None;
-            }
-
-            let width = self.get_width() as usize;
-            let height = self.get_height() as usize;
-            let data_len = width * height * 4; // 4 bytes per pixel (RGBA)
-
-            // Copy the data from C++ allocated memory to Rust Vec
-            let rgba_data = std::slice::from_raw_parts(data_ptr, data_len).to_vec();
-
-            // Free the C++ allocated memory
-            ffi::wxd_Bitmap_FreeRGBAData(data_ptr);
-
-            Some(rgba_data)
+        let (mut width, mut height) = (0_usize, 0_usize);
+        let data_ptr = unsafe { ffi::wxd_Bitmap_GetRGBAData(self.ptr, &mut width, &mut height) };
+        if data_ptr.is_null() {
+            return None;
         }
+
+        // let width = self.get_width() as usize;
+        // let height = self.get_height() as usize;
+        let data_len = width * height * 4; // 4 bytes per pixel (RGBA)
+
+        // Copy the data from C++ allocated memory to Rust Vec
+        let rgba_data = unsafe { std::slice::from_raw_parts(data_ptr, data_len).to_vec() };
+
+        // Free the C++ allocated memory
+        unsafe { ffi::wxd_Bitmap_FreeRGBAData(data_ptr) };
+
+        Some(rgba_data)
     }
 }
 
 impl Clone for Bitmap {
     fn clone(&self) -> Self {
-        unsafe {
-            let cloned_ptr = ffi::wxd_Bitmap_Clone(self.ptr);
-            if cloned_ptr.is_null() {
-                panic!(
-                    "Failed to clone wxBitmap: wxd_Bitmap_Clone returned null. Original: {:?}",
-                    self.ptr
-                );
-            }
-            // A cloned bitmap is always owned by Rust
-            Bitmap {
-                ptr: cloned_ptr,
-                is_owned: true,
-            }
+        let cloned_ptr = unsafe { ffi::wxd_Bitmap_Clone(self.ptr) };
+        if cloned_ptr.is_null() {
+            panic!(
+                "Failed to clone wxBitmap: wxd_Bitmap_Clone returned null. Original: {:?}",
+                self.ptr
+            );
+        }
+        // A cloned bitmap is always owned by Rust
+        Bitmap {
+            ptr: cloned_ptr,
+            is_owned: true,
+        }
+    }
+}
+
+impl From<*const ffi::wxd_Bitmap_t> for Bitmap {
+    /// Creates a non-owning Bitmap wrapper from a raw pointer.
+    /// The pointer must be valid for the lifetime of the Bitmap object.
+    fn from(ptr: *const ffi::wxd_Bitmap_t) -> Self {
+        Bitmap {
+            ptr,
+            is_owned: false,
+        }
+    }
+}
+
+impl From<*mut ffi::wxd_Bitmap_t> for Bitmap {
+    /// Creates an owning Bitmap wrapper from a raw pointer.
+    /// The pointer must be valid and Rust will take ownership of it.
+    fn from(ptr: *mut ffi::wxd_Bitmap_t) -> Self {
+        Bitmap {
+            ptr,
+            is_owned: true,
+        }
+    }
+}
+
+impl TryFrom<Bitmap> for *const ffi::wxd_Bitmap_t {
+    type Error = std::io::Error;
+    fn try_from(bitmap: Bitmap) -> Result<Self, Self::Error> {
+        if bitmap.is_owned {
+            Err(std::io::Error::other(
+                "Cannot convert owned Bitmap to raw pointer without transferring ownership",
+            ))
+        } else {
+            Ok(bitmap.ptr)
+        }
+    }
+}
+
+impl TryFrom<Bitmap> for *mut ffi::wxd_Bitmap_t {
+    type Error = std::io::Error;
+    fn try_from(mut bitmap: Bitmap) -> Result<Self, Self::Error> {
+        if bitmap.is_owned {
+            bitmap.is_owned = false; // Prevent Drop from freeing it
+            Ok(bitmap.ptr as *mut ffi::wxd_Bitmap_t)
+        } else {
+            Err(std::io::Error::other(
+                "Cannot convert unowned Bitmap to mutable raw pointer",
+            ))
         }
     }
 }
