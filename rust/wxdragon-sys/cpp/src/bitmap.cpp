@@ -1,17 +1,15 @@
 #include <wx/wxprec.h>
 #include <wx/wx.h>
 #include "../include/wxdragon.h"
-#include <wx/image.h> // For wxImage
+#include <wx/image.h>  // For wxImage
 #include <wx/bitmap.h> // For wxBitmap
-#include <cstdlib> // For malloc, free
-#include <cstring> // For memcpy
+#include <cstdlib>     // For malloc, free
+#include <cstring>     // For memcpy
 
 // Implementation for wxd_Bitmap_CreateFromRGBA
-WXD_EXPORTED wxd_Bitmap_t* wxd_Bitmap_CreateFromRGBA(
-    const unsigned char* data, 
-    int width, 
-    int height
-) {
+WXD_EXPORTED wxd_Bitmap_t*
+wxd_Bitmap_CreateFromRGBA(const unsigned char* data, int width, int height)
+{
     if (!data || width <= 0 || height <= 0) {
         return nullptr;
     }
@@ -19,11 +17,11 @@ WXD_EXPORTED wxd_Bitmap_t* wxd_Bitmap_CreateFromRGBA(
     // wxImage::SetData requires a buffer allocated with malloc that it can free later.
     // We must copy the RGB data from the Rust-provided RGBA buffer into a new malloc'd buffer.
     size_t num_pixels = static_cast<size_t>(width) * static_cast<size_t>(height);
-    size_t rgb_data_size = num_pixels * 3; 
+    size_t rgb_data_size = num_pixels * 3;
     unsigned char* rgb_data = static_cast<unsigned char*>(malloc(rgb_data_size));
     if (!rgb_data) {
         WXD_LOG_ERROR("Failed to allocate memory for bitmap RGB data.");
-        return nullptr; 
+        return nullptr;
     }
 
     // Also need a separate buffer for Alpha data
@@ -40,7 +38,7 @@ WXD_EXPORTED wxd_Bitmap_t* wxd_Bitmap_CreateFromRGBA(
         rgb_data[i * 3 + 0] = data[i * 4 + 0]; // R
         rgb_data[i * 3 + 1] = data[i * 4 + 1]; // G
         rgb_data[i * 3 + 2] = data[i * 4 + 2]; // B
-        alpha_data[i]       = data[i * 4 + 3]; // A
+        alpha_data[i] = data[i * 4 + 3];       // A
     }
 
     // Create wxImage. It takes ownership of rgb_data AND alpha_data.
@@ -69,34 +67,49 @@ WXD_EXPORTED wxd_Bitmap_t* wxd_Bitmap_CreateFromRGBA(
 }
 
 // Implementation for wxd_Bitmap_Destroy
-WXD_EXPORTED void wxd_Bitmap_Destroy(wxd_Bitmap_t* bitmap) {
+WXD_EXPORTED void
+wxd_Bitmap_Destroy(wxd_Bitmap_t* bitmap)
+{
     wxBitmap* bmp = reinterpret_cast<wxBitmap*>(bitmap);
-    if (!bmp) return;
+    if (!bmp)
+        return;
     // Never delete the global wxNullBitmap.
-    if (bmp == &wxNullBitmap) return;
+    if (bmp == &wxNullBitmap)
+        return;
     delete bmp;
 }
 
 // ADDED: Get bitmap dimensions and validity
-WXD_EXPORTED int wxd_Bitmap_GetWidth(wxd_Bitmap_t* bitmap) {
+WXD_EXPORTED int
+wxd_Bitmap_GetWidth(wxd_Bitmap_t* bitmap)
+{
     wxBitmap* bmp = reinterpret_cast<wxBitmap*>(bitmap);
-    if (!bmp || !bmp->IsOk()) return 0;
+    if (!bmp || !bmp->IsOk())
+        return 0;
     return bmp->GetWidth();
 }
 
-WXD_EXPORTED int wxd_Bitmap_GetHeight(wxd_Bitmap_t* bitmap) {
+WXD_EXPORTED int
+wxd_Bitmap_GetHeight(wxd_Bitmap_t* bitmap)
+{
     wxBitmap* bmp = reinterpret_cast<wxBitmap*>(bitmap);
-    if (!bmp || !bmp->IsOk()) return 0;
+    if (!bmp || !bmp->IsOk())
+        return 0;
     return bmp->GetHeight();
 }
 
-WXD_EXPORTED bool wxd_Bitmap_IsOk(wxd_Bitmap_t* bitmap) {
+WXD_EXPORTED bool
+wxd_Bitmap_IsOk(wxd_Bitmap_t* bitmap)
+{
     wxBitmap* bmp = reinterpret_cast<wxBitmap*>(bitmap);
-    if (!bmp) return false;
+    if (!bmp)
+        return false;
     return bmp->IsOk();
 }
 
-WXD_EXPORTED wxd_Bitmap_t* wxd_Bitmap_Clone(wxd_Bitmap_t* bitmap) {
+WXD_EXPORTED wxd_Bitmap_t*
+wxd_Bitmap_Clone(wxd_Bitmap_t* bitmap)
+{
     if (!bitmap) {
         return nullptr;
     }
@@ -116,62 +129,69 @@ WXD_EXPORTED wxd_Bitmap_t* wxd_Bitmap_Clone(wxd_Bitmap_t* bitmap) {
 }
 
 // Extract RGBA data from bitmap
-WXD_EXPORTED unsigned char* wxd_Bitmap_GetRGBAData(wxd_Bitmap_t* bitmap) {
+WXD_EXPORTED unsigned char*
+wxd_Bitmap_GetRGBAData(wxd_Bitmap_t* bitmap)
+{
     if (!bitmap) {
         return nullptr;
     }
-    
+
     wxBitmap* bmp = reinterpret_cast<wxBitmap*>(bitmap);
     if (!bmp || !bmp->IsOk()) {
         return nullptr;
     }
-    
+
     // Convert bitmap to image to access pixel data
     wxImage image = bmp->ConvertToImage();
     if (!image.IsOk()) {
         return nullptr;
     }
-    
+
     int width = image.GetWidth();
     int height = image.GetHeight();
     size_t num_pixels = static_cast<size_t>(width) * static_cast<size_t>(height);
     size_t rgba_data_size = num_pixels * 4; // 4 bytes per pixel (RGBA)
-    
+
     // Allocate memory for RGBA data
     unsigned char* rgba_data = static_cast<unsigned char*>(malloc(rgba_data_size));
     if (!rgba_data) {
         return nullptr;
     }
-    
+
     // Get RGB and alpha data from image
     unsigned char* rgb_data = image.GetData();
     unsigned char* alpha_data = image.GetAlpha();
-    
+
     // Combine RGB and alpha into RGBA format
     for (size_t i = 0; i < num_pixels; ++i) {
         rgba_data[i * 4 + 0] = rgb_data[i * 3 + 0]; // R
         rgba_data[i * 4 + 1] = rgb_data[i * 3 + 1]; // G
         rgba_data[i * 4 + 2] = rgb_data[i * 3 + 2]; // B
-        
+
         // Set alpha channel (255 if no alpha data available)
         if (alpha_data) {
             rgba_data[i * 4 + 3] = alpha_data[i]; // A
-        } else {
+        }
+        else {
             rgba_data[i * 4 + 3] = 255; // Fully opaque
         }
     }
-    
+
     return rgba_data;
 }
 
 // Free RGBA data allocated by wxd_Bitmap_GetRGBAData
-WXD_EXPORTED void wxd_Bitmap_FreeRGBAData(unsigned char* data) {
+WXD_EXPORTED void
+wxd_Bitmap_FreeRGBAData(unsigned char* data)
+{
     if (data) {
         free(data);
     }
 }
 
 // Get a pointer to wxNullBitmap
-WXD_EXPORTED const wxd_Bitmap_t* wxd_Bitmap_GetNull(void) {
+WXD_EXPORTED const wxd_Bitmap_t*
+wxd_Bitmap_GetNull(void)
+{
     return reinterpret_cast<const wxd_Bitmap_t*>(&wxNullBitmap);
-} 
+}

@@ -5,7 +5,10 @@
 
 extern "C" {
 
-wxd_Dialog_t* wxd_Dialog_Create(wxd_Window_t* parent, const char* title, wxd_Style_t style, int x, int y, int width, int height) {
+wxd_Dialog_t*
+wxd_Dialog_Create(wxd_Window_t* parent, const char* title, wxd_Style_t style, int x, int y,
+                  int width, int height)
+{
     wxWindow* wx_parent = (wxWindow*)parent;
     wxString wx_title = wxString::FromUTF8(title ? title : "");
 
@@ -23,13 +26,17 @@ wxd_Dialog_t* wxd_Dialog_Create(wxd_Window_t* parent, const char* title, wxd_Sty
     return (wxd_Dialog_t*)dialog;
 }
 
-void wxd_Dialog_SetIcon(wxd_Dialog* dlg, wxd_Bitmap_t* bitmap) {
-    if (!dlg || !bitmap) return;
+void
+wxd_Dialog_SetIcon(wxd_Dialog* dlg, wxd_Bitmap_t* bitmap)
+{
+    if (!dlg || !bitmap)
+        return;
 
     wxDialog* dialog = reinterpret_cast<wxDialog*>(dlg);
     wxBitmap* bmp = reinterpret_cast<wxBitmap*>(bitmap);
 
-    if (!bmp->IsOk()) return;
+    if (!bmp->IsOk())
+        return;
 
     wxIcon icon;
     icon.CopyFromBitmap(*bmp);
@@ -38,13 +45,19 @@ void wxd_Dialog_SetIcon(wxd_Dialog* dlg, wxd_Bitmap_t* bitmap) {
     }
 }
 
-int wxd_Dialog_ShowModal(wxd_Dialog* self) {
-    if (!self) return wxID_NONE; // Or some other error indicator, wxDialog::ShowModal returns int
+int
+wxd_Dialog_ShowModal(wxd_Dialog* self)
+{
+    if (!self)
+        return wxID_NONE; // Or some other error indicator, wxDialog::ShowModal returns int
     return ((wxDialog*)self)->ShowModal();
 }
 
-void wxd_Dialog_EndModal(wxd_Dialog* self, int retCode) {
-    if (!self) return;
+void
+wxd_Dialog_EndModal(wxd_Dialog* self, int retCode)
+{
+    if (!self)
+        return;
     ((wxDialog*)self)->EndModal(retCode);
 }
 
@@ -52,4 +65,4 @@ void wxd_Dialog_EndModal(wxd_Dialog* self, int retCode) {
 // Derived dialogs (like wxMessageDialog) will have their own creation functions that return a wxd_Dialog* or wxd_SpecificDialog* castable to wxd_Dialog*.
 // Destruction is handled by wxd_Window_Destroy, as wxDialog inherits from wxWindow.
 
-} // extern "C" 
+} // extern "C"

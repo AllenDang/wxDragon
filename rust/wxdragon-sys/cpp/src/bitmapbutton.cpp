@@ -11,30 +11,42 @@ extern "C" {
 // If it's missing, the linker will complain, and it can be added here or to button.cpp.
 
 // --- Setters for individual bitmaps after creation ---
-WXD_EXPORTED void wxd_BitmapButton_SetBitmapLabel(wxd_BitmapButton_t* self, wxd_Bitmap_t* bitmap) {
-    if (!self) return;
+WXD_EXPORTED void
+wxd_BitmapButton_SetBitmapLabel(wxd_BitmapButton_t* self, wxd_Bitmap_t* bitmap)
+{
+    if (!self)
+        return;
     wxBitmapButton* btn = reinterpret_cast<wxBitmapButton*>(self);
     wxBitmap* bmp = reinterpret_cast<wxBitmap*>(bitmap);
     // wxBitmapButton::SetBitmapLabel takes a wxBitmap, not wxBitmapBundle
     btn->SetBitmapLabel(bmp ? *bmp : wxNullBitmap);
 }
 
-WXD_EXPORTED void wxd_BitmapButton_SetBitmapDisabled(wxd_BitmapButton_t* self, wxd_Bitmap_t* bitmap) {
-    if (!self) return;
+WXD_EXPORTED void
+wxd_BitmapButton_SetBitmapDisabled(wxd_BitmapButton_t* self, wxd_Bitmap_t* bitmap)
+{
+    if (!self)
+        return;
     wxBitmapButton* btn = reinterpret_cast<wxBitmapButton*>(self);
     wxBitmap* bmp = reinterpret_cast<wxBitmap*>(bitmap);
     btn->SetBitmapDisabled(bmp ? *bmp : wxNullBitmap);
 }
 
-WXD_EXPORTED void wxd_BitmapButton_SetBitmapFocus(wxd_BitmapButton_t* self, wxd_Bitmap_t* bitmap) {
-    if (!self) return;
+WXD_EXPORTED void
+wxd_BitmapButton_SetBitmapFocus(wxd_BitmapButton_t* self, wxd_Bitmap_t* bitmap)
+{
+    if (!self)
+        return;
     wxBitmapButton* btn = reinterpret_cast<wxBitmapButton*>(self);
     wxBitmap* bmp = reinterpret_cast<wxBitmap*>(bitmap);
     btn->SetBitmapFocus(bmp ? *bmp : wxNullBitmap);
 }
 
-WXD_EXPORTED void wxd_BitmapButton_SetBitmapHover(wxd_BitmapButton_t* self, wxd_Bitmap_t* bitmap) {
-    if (!self) return;
+WXD_EXPORTED void
+wxd_BitmapButton_SetBitmapHover(wxd_BitmapButton_t* self, wxd_Bitmap_t* bitmap)
+{
+    if (!self)
+        return;
     wxBitmapButton* btn = reinterpret_cast<wxBitmapButton*>(self);
     wxBitmap* bmp = reinterpret_cast<wxBitmap*>(bitmap);
     btn->SetBitmapCurrent(bmp ? *bmp : wxNullBitmap); // wxWidgets uses SetBitmapCurrent for hover
@@ -47,36 +59,52 @@ WXD_EXPORTED void wxd_BitmapButton_SetBitmapHover(wxd_BitmapButton_t* self, wxd_
 // For now, these will return a const_cast pointer to the internal bitmap if it's valid.
 // The Rust side should treat this as an unowned reference and ideally copy it if modification or longer lifetime is needed.
 
-WXD_EXPORTED wxd_Bitmap_t* wxd_BitmapButton_GetBitmapLabel(wxd_BitmapButton_t* self) {
-    if (!self) return nullptr;
+WXD_EXPORTED wxd_Bitmap_t*
+wxd_BitmapButton_GetBitmapLabel(wxd_BitmapButton_t* self)
+{
+    if (!self)
+        return nullptr;
     wxBitmapButton* btn = reinterpret_cast<wxBitmapButton*>(self);
     const wxBitmap& bmp = btn->GetBitmapLabel();
-    if (!bmp.IsOk()) return nullptr;
+    if (!bmp.IsOk())
+        return nullptr;
     return (wxd_Bitmap_t*)new wxBitmap(bmp); // Return a heap-allocated copy
 }
 
-WXD_EXPORTED wxd_Bitmap_t* wxd_BitmapButton_GetBitmapDisabled(wxd_BitmapButton_t* self) {
-    if (!self) return nullptr;
+WXD_EXPORTED wxd_Bitmap_t*
+wxd_BitmapButton_GetBitmapDisabled(wxd_BitmapButton_t* self)
+{
+    if (!self)
+        return nullptr;
     wxBitmapButton* btn = reinterpret_cast<wxBitmapButton*>(self);
     const wxBitmap& bmp = btn->GetBitmapDisabled();
-    if (!bmp.IsOk()) return nullptr;
+    if (!bmp.IsOk())
+        return nullptr;
     return (wxd_Bitmap_t*)new wxBitmap(bmp); // Return a heap-allocated copy
 }
 
-WXD_EXPORTED wxd_Bitmap_t* wxd_BitmapButton_GetBitmapFocus(wxd_BitmapButton_t* self) {
-    if (!self) return nullptr;
+WXD_EXPORTED wxd_Bitmap_t*
+wxd_BitmapButton_GetBitmapFocus(wxd_BitmapButton_t* self)
+{
+    if (!self)
+        return nullptr;
     wxBitmapButton* btn = reinterpret_cast<wxBitmapButton*>(self);
     const wxBitmap& bmp = btn->GetBitmapFocus();
-    if (!bmp.IsOk()) return nullptr;
+    if (!bmp.IsOk())
+        return nullptr;
     return (wxd_Bitmap_t*)new wxBitmap(bmp); // Return a heap-allocated copy
 }
 
-WXD_EXPORTED wxd_Bitmap_t* wxd_BitmapButton_GetBitmapHover(wxd_BitmapButton_t* self) {
-    if (!self) return nullptr;
+WXD_EXPORTED wxd_Bitmap_t*
+wxd_BitmapButton_GetBitmapHover(wxd_BitmapButton_t* self)
+{
+    if (!self)
+        return nullptr;
     wxBitmapButton* btn = reinterpret_cast<wxBitmapButton*>(self);
     const wxBitmap& bmp = btn->GetBitmapCurrent(); // wxWidgets uses GetBitmapCurrent for hover
-    if (!bmp.IsOk()) return nullptr;
+    if (!bmp.IsOk())
+        return nullptr;
     return (wxd_Bitmap_t*)new wxBitmap(bmp); // Return a heap-allocated copy
 }
 
-} // extern "C" 
+} // extern "C"
