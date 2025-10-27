@@ -6,88 +6,100 @@
 
 extern "C" {
 
-WXD_EXPORTED wxd_CollapsiblePane_t* wxd_CollapsiblePane_Create(
-    wxd_Window_t* parent,
-    wxd_Id id,
-    const char* label,
-    wxd_Point pos,
-    wxd_Size size,
-    wxd_Style_t style,
-    const char* name
-) {
+WXD_EXPORTED wxd_CollapsiblePane_t*
+wxd_CollapsiblePane_Create(wxd_Window_t* parent, wxd_Id id, const char* label, wxd_Point pos,
+                           wxd_Size size, wxd_Style_t style, const char* name)
+{
     wxWindow* parentWindow = reinterpret_cast<wxWindow*>(parent);
-    if (!parentWindow) return nullptr;
+    if (!parentWindow)
+        return nullptr;
 
     wxString wxLabel = WXD_STR_TO_WX_STRING_UTF8_NULL_OK(label);
     wxString wxName = WXD_STR_TO_WX_STRING_UTF8_NULL_OK(name);
-    
-    wxCollapsiblePane* pane = new wxCollapsiblePane(
-        parentWindow,
-        id,
-        wxLabel,
-        wxPoint(pos.x, pos.y),
-        wxSize(size.width, size.height),
-        style,
-        wxDefaultValidator,
-        wxName
-    );
-    
+
+    wxCollapsiblePane* pane =
+        new wxCollapsiblePane(parentWindow, id, wxLabel, wxPoint(pos.x, pos.y),
+                              wxSize(size.width, size.height), style, wxDefaultValidator, wxName);
+
     return reinterpret_cast<wxd_CollapsiblePane_t*>(pane);
 }
 
-WXD_EXPORTED bool wxd_CollapsiblePane_IsExpanded(wxd_CollapsiblePane_t* self) {
+WXD_EXPORTED bool
+wxd_CollapsiblePane_IsExpanded(wxd_CollapsiblePane_t* self)
+{
     wxCollapsiblePane* pane = reinterpret_cast<wxCollapsiblePane*>(self);
-    if (!pane) return false;
+    if (!pane)
+        return false;
     return pane->IsExpanded();
 }
 
-WXD_EXPORTED bool wxd_CollapsiblePane_IsCollapsed(wxd_CollapsiblePane_t* self) {
+WXD_EXPORTED bool
+wxd_CollapsiblePane_IsCollapsed(wxd_CollapsiblePane_t* self)
+{
     wxCollapsiblePane* pane = reinterpret_cast<wxCollapsiblePane*>(self);
-    if (!pane) return true;
+    if (!pane)
+        return true;
     return pane->IsCollapsed();
 }
 
-WXD_EXPORTED void wxd_CollapsiblePane_Expand(wxd_CollapsiblePane_t* self, bool expand) {
+WXD_EXPORTED void
+wxd_CollapsiblePane_Expand(wxd_CollapsiblePane_t* self, bool expand)
+{
     wxCollapsiblePane* pane = reinterpret_cast<wxCollapsiblePane*>(self);
-    if (!pane) return;
+    if (!pane)
+        return;
     if (expand) {
         pane->Expand();
-    } else {
+    }
+    else {
         pane->Collapse();
     }
 }
 
-WXD_EXPORTED void wxd_CollapsiblePane_Collapse(wxd_CollapsiblePane_t* self, bool collapse) {
+WXD_EXPORTED void
+wxd_CollapsiblePane_Collapse(wxd_CollapsiblePane_t* self, bool collapse)
+{
     wxCollapsiblePane* pane = reinterpret_cast<wxCollapsiblePane*>(self);
-    if (!pane) return;
+    if (!pane)
+        return;
     if (collapse) {
         pane->Collapse();
-    } else {
+    }
+    else {
         pane->Expand();
     }
 }
 
-WXD_EXPORTED wxd_Window_t* wxd_CollapsiblePane_GetPane(wxd_CollapsiblePane_t* self) {
+WXD_EXPORTED wxd_Window_t*
+wxd_CollapsiblePane_GetPane(wxd_CollapsiblePane_t* self)
+{
     wxCollapsiblePane* pane = reinterpret_cast<wxCollapsiblePane*>(self);
-    if (!pane) return nullptr;
+    if (!pane)
+        return nullptr;
     wxWindow* paneWindow = pane->GetPane();
     return reinterpret_cast<wxd_Window_t*>(paneWindow);
 }
 
-WXD_EXPORTED void wxd_CollapsiblePane_SetLabel(wxd_CollapsiblePane_t* self, const char* label) {
+WXD_EXPORTED void
+wxd_CollapsiblePane_SetLabel(wxd_CollapsiblePane_t* self, const char* label)
+{
     wxCollapsiblePane* pane = reinterpret_cast<wxCollapsiblePane*>(self);
-    if (!pane || !label) return;
+    if (!pane || !label)
+        return;
     wxString wxLabel = WXD_STR_TO_WX_STRING_UTF8_NULL_OK(label);
     pane->SetLabel(wxLabel);
 }
 
-WXD_EXPORTED char* wxd_CollapsiblePane_GetLabel(wxd_CollapsiblePane_t* self) {
+WXD_EXPORTED char*
+wxd_CollapsiblePane_GetLabel(wxd_CollapsiblePane_t* self)
+{
     wxCollapsiblePane* pane = reinterpret_cast<wxCollapsiblePane*>(self);
-    if (!pane) return nullptr;
-    
+    if (!pane)
+        return nullptr;
+
     wxString label = pane->GetLabel();
     char* result = strdup(label.utf8_str());
     return result;
 }
 
-} // extern "C" 
+} // extern "C"

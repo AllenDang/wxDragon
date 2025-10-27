@@ -7,17 +7,19 @@
 extern "C" {
 
 // Implement the creation function for wxPanel
-WXD_EXPORTED wxd_Panel_t* wxd_Panel_Create(wxd_Window_t* parent, wxd_Id id, wxd_Point pos, wxd_Size size, wxd_Style_t style) {
+WXD_EXPORTED wxd_Panel_t*
+wxd_Panel_Create(wxd_Window_t* parent, wxd_Id id, wxd_Point pos, wxd_Size size, wxd_Style_t style)
+{
     wxWindow* parentWin = (wxWindow*)parent; // Cast opaque parent pointer
-    
+
     // Create wxWidgets objects for position and size
     wxPoint wxPos(pos.x, pos.y);
     wxSize wxSize(size.width, size.height);
-    
+
     // Create the wxPanel instance
     // Note: wxPanel inherits from wxWindow, so the wxd_Window_t* parent is appropriate.
     wxPanel* panel = new wxPanel(parentWin, id, wxPos, wxSize, style);
-    
+
     // Return the created panel pointer, cast to the opaque C type
     return (wxd_Panel_t*)panel;
 }
@@ -27,4 +29,4 @@ WXD_EXPORTED wxd_Panel_t* wxd_Panel_Create(wxd_Window_t* parent, wxd_Id id, wxd_
 // Explicit destruction might only be necessary if dynamically removing panels without destroying the parent.
 // For now, we assume parent-based destruction.
 
-} // extern "C" 
+} // extern "C"

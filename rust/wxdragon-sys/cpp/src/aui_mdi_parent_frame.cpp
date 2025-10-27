@@ -11,7 +11,10 @@
 
 extern "C" {
 
-wxd_AuiMDIParentFrame_t* wxd_AuiMDIParentFrame_Create(wxd_Window_t* parent, int id, const char* title, wxd_Point pos, wxd_Size size, int64_t style, const char* name) {
+wxd_AuiMDIParentFrame_t*
+wxd_AuiMDIParentFrame_Create(wxd_Window_t* parent, int id, const char* title, wxd_Point pos,
+                             wxd_Size size, int64_t style, const char* name)
+{
     wxWindow* parentPtr = (wxWindow*)parent;
     wxPoint wxPos = wxPoint(pos.x, pos.y);
     wxSize wxSizeInstance = wxSize(size.width, size.height);
@@ -19,10 +22,10 @@ wxd_AuiMDIParentFrame_t* wxd_AuiMDIParentFrame_Create(wxd_Window_t* parent, int 
     wxString wxTitle = WXD_STR_TO_WX_STRING_UTF8_NULL_OK(title);
     wxString wxName = WXD_STR_TO_WX_STRING_UTF8_NULL_OK(name);
 
-    wxAuiMDIParentFrame* frame = new wxAuiMDIParentFrame(parentPtr, id, wxTitle, wxPos, wxSizeInstance, style, wxName);
+    wxAuiMDIParentFrame* frame =
+        new wxAuiMDIParentFrame(parentPtr, id, wxTitle, wxPos, wxSizeInstance, style, wxName);
     return (wxd_AuiMDIParentFrame_t*)frame;
 }
 
 // Implementations for other wxAuiMDIParentFrame specific functions will go here.
-
-} 
+}

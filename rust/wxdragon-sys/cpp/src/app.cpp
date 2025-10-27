@@ -9,34 +9,42 @@
 #include <vector>
 #include <utility>
 
-// --- Globals --- 
+// --- Globals ---
 // Store the C callback and user data provided to wxd_Main
 static wxd_OnInitCallback g_OnInitCallback = nullptr;
 static void* g_OnInitUserData = nullptr;
 
 // Function to process Rust callbacks, implemented in Rust
-extern "C" int process_rust_callbacks();
+extern "C" int
+process_rust_callbacks();
 
 // --- Internal C++ App Class ---
 
 class WxdApp : public wxApp {
 public:
     // Called by wxWidgets framework on application startup.
-    virtual bool OnInit() override;
+    virtual bool
+    OnInit() override;
 
     // Idle event handler to process callbacks
-    void OnIdle(wxIdleEvent& event);
+    void
+    OnIdle(wxIdleEvent& event);
 
     // Optional: Override OnExit for cleanup if needed
     // virtual int OnExit() override;
 
 #ifdef __WXOSX__
     // macOS-specific overrides
-    virtual void MacOpenFiles(const wxArrayString& fileNames) override;
-    virtual void MacOpenURL(const wxString& url) override;
-    virtual void MacNewFile() override;
-    virtual void MacReopenApp() override;
-    virtual void MacPrintFiles(const wxArrayString& fileNames) override;
+    virtual void
+    MacOpenFiles(const wxArrayString& fileNames) override;
+    virtual void
+    MacOpenURL(const wxString& url) override;
+    virtual void
+    MacNewFile() override;
+    virtual void
+    MacReopenApp() override;
+    virtual void
+    MacPrintFiles(const wxArrayString& fileNames) override;
 
     // Store multiple callbacks for each event type
     struct MacCallbackList {
@@ -50,7 +58,9 @@ public:
 };
 
 // Implementation of OnInit - this is where we call the C callback
-bool WxdApp::OnInit() {
+bool
+WxdApp::OnInit()
+{
     // Call base class OnInit (important)
     if (!wxApp::OnInit()) {
         return false;
@@ -73,7 +83,8 @@ bool WxdApp::OnInit() {
         // and calling wxd_App_SetTopWindow.
         bool success = g_OnInitCallback(g_OnInitUserData);
         return success;
-    } else {
+    }
+    else {
         // Should not happen if wxd_Main is used correctly
         WXD_LOG_ERROR("wxDragon: No OnInit callback provided to wxd_Main.");
         return false;
@@ -81,10 +92,12 @@ bool WxdApp::OnInit() {
 }
 
 // Process callbacks on idle
-void WxdApp::OnIdle(wxIdleEvent& event) {
+void
+WxdApp::OnIdle(wxIdleEvent& event)
+{
     // Process any pending Rust callbacks
     int callbacks_processed = process_rust_callbacks();
-    
+
     // Only request more idle events if there were callbacks to process
     // This prevents unnecessary CPU usage when the app is idle
     if (callbacks_processed > 0) {
@@ -92,7 +105,7 @@ void WxdApp::OnIdle(wxIdleEvent& event) {
     }
 }
 
-// --- C API Implementation --- 
+// --- C API Implementation ---
 
 // This macro creates the necessary wxWidgets entry points (like main or WinMain)
 // and instantiates our WxdApp class when wxEntry is called.
@@ -107,7 +120,9 @@ wxDECLARE_APP(WxdApp);
 wxIMPLEMENT_APP_NO_MAIN(WxdApp);
 
 // Main entry point implementation
-int wxd_Main(int argc, char** argv, wxd_OnInitCallback on_init_cb, void* userData) {
+int
+wxd_Main(int argc, char** argv, wxd_OnInitCallback on_init_cb, void* userData)
+{
     if (!on_init_cb) {
         fprintf(stderr, "wxDragon Error: No OnInit callback provided to wxd_Main.\n");
         return 1;
@@ -133,7 +148,7 @@ int wxd_Main(int argc, char** argv, wxd_OnInitCallback on_init_cb, void* userDat
                 return wxApp::GetFatalErrorExitCode();
             }
             // CallOnInit will execute WxdApp::OnInit, which calls the Rust g_OnInitCallback.
-            if ( !wxTheApp->CallOnInit() ) {
+            if (!wxTheApp->CallOnInit()) {
                 // don't call OnExit() if OnInit() failed
                 return wxTheApp->GetErrorExitCode();
             }
@@ -148,8 +163,7 @@ int wxd_Main(int argc, char** argv, wxd_OnInitCallback on_init_cb, void* userDat
         []() {
             wxApp::CallOnUnhandledException();
             return wxApp::GetFatalErrorExitCode();
-        }
-    );
+        });
 
     wxEntryCleanup();
     g_OnInitCallback = nullptr;
@@ -158,33 +172,44 @@ int wxd_Main(int argc, char** argv, wxd_OnInitCallback on_init_cb, void* userDat
 }
 
 // Gets the handle to the global application instance.
-wxd_App_t* wxd_GetApp() {
+wxd_App_t*
+wxd_GetApp()
+{
     // wxTheApp is the global pointer to the wxApp instance
     return reinterpret_cast<wxd_App_t*>(wxTheApp);
 }
 
 // Sets the top window (main frame) for the application.
-void wxd_App_SetTopWindow(wxd_App_t* app, wxd_Window_t* window) {
-    if (!app || !window) return;
+void
+wxd_App_SetTopWindow(wxd_App_t* app, wxd_Window_t* window)
+{
+    if (!app || !window)
+        return;
     WxdApp* wx_app = reinterpret_cast<WxdApp*>(app);
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     wx_app->SetTopWindow(wx_window);
 }
 
 // Manual callback processing for cases where we need to trigger it
-void wxd_App_ProcessCallbacks() {
+void
+wxd_App_ProcessCallbacks()
+{
     process_rust_callbacks();
 }
 
 // Implementation for wxd_free_string
-void wxd_free_string(char* str) {
+void
+wxd_free_string(char* str)
+{
     if (str) {
         free(str); // free is from <cstdlib> or <stdlib.h>
     }
 }
 
 // Implementation for wxd_free_int_array
-void wxd_free_int_array(int* ptr) {
+void
+wxd_free_int_array(int* ptr)
+{
     if (ptr) {
         free(ptr);
     }
@@ -198,37 +223,40 @@ void wxd_free_int_array(int* ptr) {
 #endif
 
 // Set the application appearance mode
-wxd_AppearanceResult wxd_App_SetAppearance(wxd_App_t* app, wxd_Appearance appearance) {
-    if (!app) return WXD_APPEARANCE_RESULT_FAILURE;
-    
+wxd_AppearanceResult
+wxd_App_SetAppearance(wxd_App_t* app, wxd_Appearance appearance)
+{
+    if (!app)
+        return WXD_APPEARANCE_RESULT_FAILURE;
+
 #if wxCHECK_VERSION(3, 3, 0)
     wxApp* wx_app = reinterpret_cast<wxApp*>(app);
-    
+
     wxApp::Appearance wx_appearance;
     switch (appearance) {
-        case WXD_APPEARANCE_LIGHT:
-            wx_appearance = wxApp::Appearance::Light;
-            break;
-        case WXD_APPEARANCE_DARK:
-            wx_appearance = wxApp::Appearance::Dark;
-            break;
-        case WXD_APPEARANCE_SYSTEM:
-        default:
-            wx_appearance = wxApp::Appearance::System;
-            break;
+    case WXD_APPEARANCE_LIGHT:
+        wx_appearance = wxApp::Appearance::Light;
+        break;
+    case WXD_APPEARANCE_DARK:
+        wx_appearance = wxApp::Appearance::Dark;
+        break;
+    case WXD_APPEARANCE_SYSTEM:
+    default:
+        wx_appearance = wxApp::Appearance::System;
+        break;
     }
-    
+
     wxApp::AppearanceResult result = wx_app->SetAppearance(wx_appearance);
-    
+
     switch (result) {
-        case wxApp::AppearanceResult::Ok:
-            return WXD_APPEARANCE_RESULT_OK;
-        case wxApp::AppearanceResult::Failure:
-            return WXD_APPEARANCE_RESULT_FAILURE;
-        case wxApp::AppearanceResult::CannotChange:
-            return WXD_APPEARANCE_RESULT_CANNOT_CHANGE;
+    case wxApp::AppearanceResult::Ok:
+        return WXD_APPEARANCE_RESULT_OK;
+    case wxApp::AppearanceResult::Failure:
+        return WXD_APPEARANCE_RESULT_FAILURE;
+    case wxApp::AppearanceResult::CannotChange:
+        return WXD_APPEARANCE_RESULT_CANNOT_CHANGE;
     }
-    
+
     return WXD_APPEARANCE_RESULT_FAILURE;
 #else
     // For older wxWidgets versions, appearance is not supported
@@ -237,7 +265,9 @@ wxd_AppearanceResult wxd_App_SetAppearance(wxd_App_t* app, wxd_Appearance appear
 }
 
 // Get system appearance information
-wxd_SystemAppearance_t* wxd_SystemSettings_GetAppearance() {
+wxd_SystemAppearance_t*
+wxd_SystemSettings_GetAppearance()
+{
 #if wxCHECK_VERSION(3, 3, 0)
     wxSystemAppearance appearance = wxSystemSettings::GetAppearance();
     // Create a copy on the heap to return to Rust
@@ -250,9 +280,12 @@ wxd_SystemAppearance_t* wxd_SystemSettings_GetAppearance() {
 }
 
 // Check if the system is using dark mode
-bool wxd_SystemAppearance_IsDark(wxd_SystemAppearance_t* appearance) {
-    if (!appearance) return false;
-    
+bool
+wxd_SystemAppearance_IsDark(wxd_SystemAppearance_t* appearance)
+{
+    if (!appearance)
+        return false;
+
 #if wxCHECK_VERSION(3, 3, 0)
     wxSystemAppearance* wx_appearance = reinterpret_cast<wxSystemAppearance*>(appearance);
     return wx_appearance->IsDark();
@@ -262,9 +295,12 @@ bool wxd_SystemAppearance_IsDark(wxd_SystemAppearance_t* appearance) {
 }
 
 // Check if the system background is dark
-bool wxd_SystemAppearance_IsUsingDarkBackground(wxd_SystemAppearance_t* appearance) {
-    if (!appearance) return false;
-    
+bool
+wxd_SystemAppearance_IsUsingDarkBackground(wxd_SystemAppearance_t* appearance)
+{
+    if (!appearance)
+        return false;
+
 #if wxCHECK_VERSION(3, 3, 0)
     wxSystemAppearance* wx_appearance = reinterpret_cast<wxSystemAppearance*>(appearance);
     return wx_appearance->IsUsingDarkBackground();
@@ -274,9 +310,12 @@ bool wxd_SystemAppearance_IsUsingDarkBackground(wxd_SystemAppearance_t* appearan
 }
 
 // Get the system appearance name (mainly for macOS)
-char* wxd_SystemAppearance_GetName(wxd_SystemAppearance_t* appearance) {
-    if (!appearance) return strdup("");
-    
+char*
+wxd_SystemAppearance_GetName(wxd_SystemAppearance_t* appearance)
+{
+    if (!appearance)
+        return strdup("");
+
 #if wxCHECK_VERSION(3, 3, 0)
     wxSystemAppearance* wx_appearance = reinterpret_cast<wxSystemAppearance*>(appearance);
     wxString name = wx_appearance->GetName();
@@ -289,9 +328,12 @@ char* wxd_SystemAppearance_GetName(wxd_SystemAppearance_t* appearance) {
 }
 
 // Free system appearance object
-void wxd_SystemAppearance_Destroy(wxd_SystemAppearance_t* appearance) {
-    if (!appearance) return;
-    
+void
+wxd_SystemAppearance_Destroy(wxd_SystemAppearance_t* appearance)
+{
+    if (!appearance)
+        return;
+
 #if wxCHECK_VERSION(3, 3, 0)
     wxSystemAppearance* wx_appearance = reinterpret_cast<wxSystemAppearance*>(appearance);
     delete wx_appearance;
@@ -305,7 +347,9 @@ void wxd_SystemAppearance_Destroy(wxd_SystemAppearance_t* appearance) {
 #ifdef __WXOSX__
 
 // MacOpenFiles override - calls all registered handlers
-void WxdApp::MacOpenFiles(const wxArrayString& fileNames) {
+void
+WxdApp::MacOpenFiles(const wxArrayString& fileNames)
+{
     if (m_macCallbacks.openFiles.empty()) {
         // No callbacks registered, use default behavior
         wxApp::MacOpenFiles(fileNames);
@@ -333,7 +377,9 @@ void WxdApp::MacOpenFiles(const wxArrayString& fileNames) {
 }
 
 // MacOpenURL override - calls all registered handlers
-void WxdApp::MacOpenURL(const wxString& url) {
+void
+WxdApp::MacOpenURL(const wxString& url)
+{
     if (m_macCallbacks.openURL.empty()) {
         wxApp::MacOpenURL(url);
         return;
@@ -350,7 +396,9 @@ void WxdApp::MacOpenURL(const wxString& url) {
 }
 
 // MacNewFile override - calls all registered handlers
-void WxdApp::MacNewFile() {
+void
+WxdApp::MacNewFile()
+{
     if (m_macCallbacks.newFile.empty()) {
         wxApp::MacNewFile();
         return;
@@ -365,7 +413,9 @@ void WxdApp::MacNewFile() {
 }
 
 // MacReopenApp override - calls all registered handlers
-void WxdApp::MacReopenApp() {
+void
+WxdApp::MacReopenApp()
+{
     if (m_macCallbacks.reopenApp.empty()) {
         wxApp::MacReopenApp();
         return;
@@ -380,7 +430,9 @@ void WxdApp::MacReopenApp() {
 }
 
 // MacPrintFiles override - calls all registered handlers
-void WxdApp::MacPrintFiles(const wxArrayString& fileNames) {
+void
+WxdApp::MacPrintFiles(const wxArrayString& fileNames)
+{
     if (m_macCallbacks.printFiles.empty()) {
         wxApp::MacPrintFiles(fileNames);
         return;
@@ -409,41 +461,56 @@ void WxdApp::MacPrintFiles(const wxArrayString& fileNames) {
 #endif // __WXOSX__
 
 // Registration functions - add handlers to the callback lists
-void wxd_App_AddMacOpenFilesHandler(wxd_App_t* app, wxd_MacOpenFilesCallback callback, void* userData) {
+void
+wxd_App_AddMacOpenFilesHandler(wxd_App_t* app, wxd_MacOpenFilesCallback callback, void* userData)
+{
 #ifdef __WXOSX__
-    if (!app || !callback) return;
+    if (!app || !callback)
+        return;
     WxdApp* wx_app = reinterpret_cast<WxdApp*>(app);
     wx_app->m_macCallbacks.openFiles.push_back(std::make_pair(callback, userData));
 #endif
 }
 
-void wxd_App_AddMacOpenURLHandler(wxd_App_t* app, wxd_MacOpenURLCallback callback, void* userData) {
+void
+wxd_App_AddMacOpenURLHandler(wxd_App_t* app, wxd_MacOpenURLCallback callback, void* userData)
+{
 #ifdef __WXOSX__
-    if (!app || !callback) return;
+    if (!app || !callback)
+        return;
     WxdApp* wx_app = reinterpret_cast<WxdApp*>(app);
     wx_app->m_macCallbacks.openURL.push_back(std::make_pair(callback, userData));
 #endif
 }
 
-void wxd_App_AddMacNewFileHandler(wxd_App_t* app, wxd_MacNewFileCallback callback, void* userData) {
+void
+wxd_App_AddMacNewFileHandler(wxd_App_t* app, wxd_MacNewFileCallback callback, void* userData)
+{
 #ifdef __WXOSX__
-    if (!app || !callback) return;
+    if (!app || !callback)
+        return;
     WxdApp* wx_app = reinterpret_cast<WxdApp*>(app);
     wx_app->m_macCallbacks.newFile.push_back(std::make_pair(callback, userData));
 #endif
 }
 
-void wxd_App_AddMacReopenAppHandler(wxd_App_t* app, wxd_MacReopenAppCallback callback, void* userData) {
+void
+wxd_App_AddMacReopenAppHandler(wxd_App_t* app, wxd_MacReopenAppCallback callback, void* userData)
+{
 #ifdef __WXOSX__
-    if (!app || !callback) return;
+    if (!app || !callback)
+        return;
     WxdApp* wx_app = reinterpret_cast<WxdApp*>(app);
     wx_app->m_macCallbacks.reopenApp.push_back(std::make_pair(callback, userData));
 #endif
 }
 
-void wxd_App_AddMacPrintFilesHandler(wxd_App_t* app, wxd_MacPrintFilesCallback callback, void* userData) {
+void
+wxd_App_AddMacPrintFilesHandler(wxd_App_t* app, wxd_MacPrintFilesCallback callback, void* userData)
+{
 #ifdef __WXOSX__
-    if (!app || !callback) return;
+    if (!app || !callback)
+        return;
     WxdApp* wx_app = reinterpret_cast<WxdApp*>(app);
     wx_app->m_macCallbacks.printFiles.push_back(std::make_pair(callback, userData));
 #endif

@@ -5,24 +5,22 @@
 
 #include <wx/choicdlg.h>
 
-WXD_EXPORTED wxd_SingleChoiceDialog_t* wxd_SingleChoiceDialog_Create(wxd_Window_t* parent, const char* message,
-                                                                    const char* caption, wxd_ArrayString_t* choices,
-                                                                    wxd_Style_t style, int x, int y, int width, int height)
+WXD_EXPORTED wxd_SingleChoiceDialog_t*
+wxd_SingleChoiceDialog_Create(wxd_Window_t* parent, const char* message, const char* caption,
+                              wxd_ArrayString_t* choices, wxd_Style_t style, int x, int y,
+                              int width, int height)
 {
     wxWindow* parent_wx = (wxWindow*)parent;
     wxArrayString* wxChoices = static_cast<wxArrayString*>(choices->internal_data);
-    
+
     // Default position/size if not specified
     wxPoint pos = (x == -1 && y == -1) ? wxDefaultPosition : wxPoint(x, y);
-    
-    wxSingleChoiceDialog* dialog = new wxSingleChoiceDialog(
-        parent_wx,
-        WXD_STR_TO_WX_STRING_UTF8_NULL_OK(message),
-        WXD_STR_TO_WX_STRING_UTF8_NULL_OK(caption),
-        *wxChoices,
-        nullptr, // Client data
-        style
-    );
+
+    wxSingleChoiceDialog* dialog =
+        new wxSingleChoiceDialog(parent_wx, WXD_STR_TO_WX_STRING_UTF8_NULL_OK(message),
+                                 WXD_STR_TO_WX_STRING_UTF8_NULL_OK(caption), *wxChoices,
+                                 nullptr, // Client data
+                                 style);
 
     // Set position and size if provided
     if (x != -1 && y != -1) {
@@ -35,23 +33,29 @@ WXD_EXPORTED wxd_SingleChoiceDialog_t* wxd_SingleChoiceDialog_Create(wxd_Window_
     return reinterpret_cast<wxd_SingleChoiceDialog_t*>(dialog);
 }
 
-WXD_EXPORTED int wxd_SingleChoiceDialog_GetSelection(wxd_SingleChoiceDialog_t* self)
+WXD_EXPORTED int
+wxd_SingleChoiceDialog_GetSelection(wxd_SingleChoiceDialog_t* self)
 {
-    if (!self) return -1;
+    if (!self)
+        return -1;
     wxSingleChoiceDialog* dialog = (wxSingleChoiceDialog*)self;
     return dialog->GetSelection();
 }
 
-WXD_EXPORTED void wxd_SingleChoiceDialog_SetSelection(wxd_SingleChoiceDialog_t* self, int selection)
+WXD_EXPORTED void
+wxd_SingleChoiceDialog_SetSelection(wxd_SingleChoiceDialog_t* self, int selection)
 {
-    if (!self) return;
+    if (!self)
+        return;
     wxSingleChoiceDialog* dialog = (wxSingleChoiceDialog*)self;
     dialog->SetSelection(selection);
 }
 
-WXD_EXPORTED int wxd_SingleChoiceDialog_GetStringSelection(wxd_SingleChoiceDialog_t* self, char* buffer, int bufLen)
+WXD_EXPORTED int
+wxd_SingleChoiceDialog_GetStringSelection(wxd_SingleChoiceDialog_t* self, char* buffer, int bufLen)
 {
-    if (!self) return -1;
+    if (!self)
+        return -1;
     wxSingleChoiceDialog* dialog = (wxSingleChoiceDialog*)self;
     return GET_WX_STRING_RESULT(dialog->GetStringSelection(), buffer, bufLen);
-} 
+}

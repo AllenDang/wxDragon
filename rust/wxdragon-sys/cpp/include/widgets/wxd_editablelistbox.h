@@ -18,12 +18,9 @@ extern "C" {
  * @param style The window style, see wxEditableListBox
  * @return Pointer to the new wxEditableListBox
  */
-wxd_Window_t* wxd_EditableListBox_New(wxd_Window_t* parent, 
-                                   int id, 
-                                   const char* label,
-                                   int x, int y,
-                                   int width, int height,
-                                   int64_t style);
+wxd_Window_t*
+wxd_EditableListBox_New(wxd_Window_t* parent, int id, const char* label, int x, int y, int width,
+                        int height, int64_t style);
 
 /**
  * @brief Get the string items in the listbox
@@ -32,7 +29,8 @@ wxd_Window_t* wxd_EditableListBox_New(wxd_Window_t* parent,
  * @param count Pointer to be filled with the count of items
  * @return Array of strings, must be freed with wxd_free_strings
  */
-char** wxd_EditableListBox_GetStrings(wxd_Window_t* self, int* count);
+char**
+wxd_EditableListBox_GetStrings(wxd_Window_t* self, int* count);
 
 /**
  * @brief Set the string items in the listbox
@@ -41,7 +39,8 @@ char** wxd_EditableListBox_GetStrings(wxd_Window_t* self, int* count);
  * @param strings Array of strings
  * @param count Number of strings
  */
-void wxd_EditableListBox_SetStrings(wxd_Window_t* self, const char** strings, int count);
+void
+wxd_EditableListBox_SetStrings(wxd_Window_t* self, const char** strings, int count);
 
 /**
  * @brief Add a string item to the listbox
@@ -49,7 +48,8 @@ void wxd_EditableListBox_SetStrings(wxd_Window_t* self, const char** strings, in
  * @param self Pointer to wxEditableListBox
  * @param string String to add
  */
-void wxd_EditableListBox_AddString(wxd_Window_t* self, const char* string);
+void
+wxd_EditableListBox_AddString(wxd_Window_t* self, const char* string);
 
 /**
  * @brief Get the underlying wxListCtrl
@@ -57,7 +57,8 @@ void wxd_EditableListBox_AddString(wxd_Window_t* self, const char* string);
  * @param self Pointer to wxEditableListBox
  * @return Pointer to the internal wxListBox 
  */
-wxd_Window_t* wxd_EditableListBox_GetListCtrl(wxd_Window_t* self);
+wxd_Window_t*
+wxd_EditableListBox_GetListCtrl(wxd_Window_t* self);
 
 /**
  * @brief Copy strings from the listbox to an array of wxd_ArrayString_t
@@ -65,10 +66,11 @@ wxd_Window_t* wxd_EditableListBox_GetListCtrl(wxd_Window_t* self);
  * @param self Pointer to wxEditableListBox
  * @return Pointer to the array of strings
  */
-wxd_ArrayString_t* wxd_EditableListBox_CopyStringsToArrayString(wxd_Window_t* self_ptr);
+wxd_ArrayString_t*
+wxd_EditableListBox_CopyStringsToArrayString(wxd_Window_t* self_ptr);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // WXD_EDITABLELISTBOX_H 
+#endif // WXD_EDITABLELISTBOX_H

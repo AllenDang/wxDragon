@@ -9,20 +9,16 @@
 
 extern "C" {
 
-WXD_EXPORTED wxd_AuiNotebook_t* wxd_AuiNotebook_Create(
-    wxd_Window_t* parent,
-    int id,
-    wxd_Point pos,
-    wxd_Size size,
-    int64_t style) {
-
+WXD_EXPORTED wxd_AuiNotebook_t*
+wxd_AuiNotebook_Create(wxd_Window_t* parent, int id, wxd_Point pos, wxd_Size size, int64_t style)
+{
     wxWindow* parentPtr = (wxWindow*)parent;
     // Note: wxAuiNotebook parent can be null according to some docs, but safer to require for now.
-    // if (!parentPtr) return nullptr; 
+    // if (!parentPtr) return nullptr;
 
     wxPoint wxPos = wxPoint(pos.x, pos.y);
     wxSize wxSizeInstance = wxSize(size.width, size.height);
-    
+
     // Default style for wxAuiNotebook is wxAUI_NB_DEFAULT_STYLE
     // If style is 0 or some sentinel indicating default, wxAUI_NB_DEFAULT_STYLE should be used.
     // For now, assume `style` passed is intentional.
@@ -30,13 +26,10 @@ WXD_EXPORTED wxd_AuiNotebook_t* wxd_AuiNotebook_Create(
     return (wxd_AuiNotebook_t*)notebook;
 }
 
-WXD_EXPORTED bool wxd_AuiNotebook_AddPage(
-    wxd_AuiNotebook_t* self,
-    wxd_Window_t* page,
-    const char* caption,
-    bool select,
-    int bitmap_id) {
-
+WXD_EXPORTED bool
+wxd_AuiNotebook_AddPage(wxd_AuiNotebook_t* self, wxd_Window_t* page, const char* caption,
+                        bool select, int bitmap_id)
+{
     wxAuiNotebook* notebook = (wxAuiNotebook*)self;
     wxWindow* pagePtr = (wxWindow*)page;
 
@@ -58,7 +51,9 @@ WXD_EXPORTED bool wxd_AuiNotebook_AddPage(
     return notebook->AddPage(pagePtr, wxCaption, select, bitmap_id);
 }
 
-WXD_EXPORTED size_t wxd_AuiNotebook_GetPageCount(wxd_AuiNotebook_t* self) {
+WXD_EXPORTED size_t
+wxd_AuiNotebook_GetPageCount(wxd_AuiNotebook_t* self)
+{
     wxAuiNotebook* notebook = (wxAuiNotebook*)self;
     if (!notebook) {
         return 0; // Or some error indication if size_t allows
@@ -66,16 +61,18 @@ WXD_EXPORTED size_t wxd_AuiNotebook_GetPageCount(wxd_AuiNotebook_t* self) {
     return notebook->GetPageCount();
 }
 
-WXD_EXPORTED size_t wxd_AuiNotebook_SetSelection(wxd_AuiNotebook_t* self, size_t new_page) {
+WXD_EXPORTED size_t
+wxd_AuiNotebook_SetSelection(wxd_AuiNotebook_t* self, size_t new_page)
+{
     wxAuiNotebook* notebook = (wxAuiNotebook*)self;
     if (!notebook) {
         // Return current selection or an error indicator. wxwidgets returns old selection.
         // For simplicity, if notebook is null, perhaps 0 or new_page itself if no better error val.
-        return new_page; 
+        return new_page;
     }
     return notebook->SetSelection(new_page);
 }
 
 // Add implementations for other wxAuiNotebook functions (GetPage, InsertPage, DeletePage, etc.) here as needed.
 
-} // extern "C" 
+} // extern "C"

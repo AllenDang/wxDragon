@@ -1,14 +1,16 @@
 #include "wxd_utils.h"
-#include <cstring> // For strncpy, strlen
+#include <cstring>   // For strncpy, strlen
 #include <algorithm> // For std::min
-#include <cstdlib> // For strdup
+#include <cstdlib>   // For strdup
 
 namespace wxd_cpp_utils {
 
-size_t copy_wxstring_to_buffer(const wxString& str, char* buffer, size_t buffer_len) {
+size_t
+copy_wxstring_to_buffer(const wxString& str, char* buffer, size_t buffer_len)
+{
     if (!buffer || buffer_len == 0) {
         // Still return the needed length even if buffer is invalid for some reason
-        return str.ToUTF8().length(); 
+        return str.ToUTF8().length();
     }
 
     wxScopedCharBuffer utf8_buf = str.ToUTF8();
@@ -17,7 +19,7 @@ size_t copy_wxstring_to_buffer(const wxString& str, char* buffer, size_t buffer_
     if (buffer_len > 0) {
         // Number of bytes to copy, leaving space for null terminator
         size_t copy_len = std::min(source_len, buffer_len - 1);
-        
+
         // strncpy(buffer, utf8_buf.data(), copy_len);
         // Using memcpy is often safer with wxScopedCharBuffer as data() might not be null-terminated by itself
         // if the original string contained embedded nulls (though unlikely for UI strings).
@@ -27,14 +29,16 @@ size_t copy_wxstring_to_buffer(const wxString& str, char* buffer, size_t buffer_
         memcpy(buffer, utf8_buf.data(), copy_len);
         buffer[copy_len] = '\0'; // Ensure null termination
     }
-    
+
     return source_len; // Return the original length of the UTF-8 string (excluding its null terminator)
 }
 
 }
 
 // Implementation of wxd_str_to_c_str function
-const char* wxd_str_to_c_str(const wxString& s) {
+const char*
+wxd_str_to_c_str(const wxString& s)
+{
     if (s.IsEmpty()) {
         return strdup(""); // Return empty string, not nullptr
     }
@@ -44,7 +48,9 @@ const char* wxd_str_to_c_str(const wxString& s) {
 
 // --- Colour Conversion Helper Implementations ---
 
-wxColour wxdColourToWxColour(unsigned long wxd_colour_val) {
+wxColour
+wxdColourToWxColour(unsigned long wxd_colour_val)
+{
     unsigned char r = (wxd_colour_val >> 24) & 0xFF;
     unsigned char g = (wxd_colour_val >> 16) & 0xFF;
     unsigned char b = (wxd_colour_val >> 8) & 0xFF;
@@ -52,9 +58,11 @@ wxColour wxdColourToWxColour(unsigned long wxd_colour_val) {
     return wxColour(r, g, b, a);
 }
 
-unsigned long wxColourToWxdColour(const wxColour& wx_colour_obj) {
+unsigned long
+wxColourToWxdColour(const wxColour& wx_colour_obj)
+{
     return (static_cast<unsigned long>(wx_colour_obj.Red()) << 24) |
            (static_cast<unsigned long>(wx_colour_obj.Green()) << 16) |
            (static_cast<unsigned long>(wx_colour_obj.Blue()) << 8) |
            static_cast<unsigned long>(wx_colour_obj.Alpha());
-} 
+}

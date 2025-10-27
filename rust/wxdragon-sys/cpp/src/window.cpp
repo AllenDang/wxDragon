@@ -1,14 +1,14 @@
 #include <wx/wxprec.h>
 #include <wx/wx.h>
 #include "../include/wxdragon.h" // Needed for WXD_EXPORTED, wxd_* types, WXD_ID_ANY
-#include <wx/window.h> // Needed for wxWindow
-#include <wx/sizer.h>  // Needed for wxSizer
-#include "wx/gdicmn.h" // For wxSize, wxPoint
-#include <cstring> // For strdup
-#include <cstdlib> // For free (though free typically comes from stdlib.h, cstdlib is C++ way)
-#include <wx/font.h> // For wxFont in SetFont
+#include <wx/window.h>           // Needed for wxWindow
+#include <wx/sizer.h>            // Needed for wxSizer
+#include "wx/gdicmn.h"           // For wxSize, wxPoint
+#include <cstring>               // For strdup
+#include <cstdlib>       // For free (though free typically comes from stdlib.h, cstdlib is C++ way)
+#include <wx/font.h>     // For wxFont in SetFont
 #include <wx/settings.h> // For wxSystemSettings and wxSYS_DEFAULT_GUI_FONT
-#include <wx/cursor.h> // For wxCursor
+#include <wx/cursor.h>   // For wxCursor
 #include <wx/textctrl.h> // For wxTextCtrl scrolling
 
 // Conditional includes for optional features
@@ -25,7 +25,9 @@ extern "C" {
 // --- General Window Functions ---
 
 // Implementation for wxd_Window_SetSizer
-WXD_EXPORTED void wxd_Window_SetSizer(wxd_Window_t* window, wxd_Sizer_t* sizer, bool deleteOldSizer) {
+WXD_EXPORTED void
+wxd_Window_SetSizer(wxd_Window_t* window, wxd_Sizer_t* sizer, bool deleteOldSizer)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     wxSizer* wx_sizer = reinterpret_cast<wxSizer*>(sizer);
     if (wx_window && wx_sizer) {
@@ -34,7 +36,9 @@ WXD_EXPORTED void wxd_Window_SetSizer(wxd_Window_t* window, wxd_Sizer_t* sizer, 
 }
 
 // Implementation for wxd_Window_SetSizerAndFit
-WXD_EXPORTED void wxd_Window_SetSizerAndFit(wxd_Window_t* window, wxd_Sizer_t* sizer, bool deleteOldSizer) {
+WXD_EXPORTED void
+wxd_Window_SetSizerAndFit(wxd_Window_t* window, wxd_Sizer_t* sizer, bool deleteOldSizer)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     wxSizer* wx_sizer = reinterpret_cast<wxSizer*>(sizer);
     if (wx_window && wx_sizer) {
@@ -43,7 +47,9 @@ WXD_EXPORTED void wxd_Window_SetSizerAndFit(wxd_Window_t* window, wxd_Sizer_t* s
 }
 
 // Implementation for wxd_Window_GetSizer
-WXD_EXPORTED wxd_Sizer_t* wxd_Window_GetSizer(wxd_Window_t* window) {
+WXD_EXPORTED wxd_Sizer_t*
+wxd_Window_GetSizer(wxd_Window_t* window)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (wx_window) {
         wxSizer* wx_sizer = wx_window->GetSizer();
@@ -53,7 +59,9 @@ WXD_EXPORTED wxd_Sizer_t* wxd_Window_GetSizer(wxd_Window_t* window) {
 }
 
 // Implementation for wxd_Window_GetId
-WXD_EXPORTED int wxd_Window_GetId(wxd_Window_t* window) {
+WXD_EXPORTED int
+wxd_Window_GetId(wxd_Window_t* window)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (!wx_window) {
         return wxID_ANY; // Use wxID_ANY instead of WXD_ID_ANY
@@ -62,7 +70,9 @@ WXD_EXPORTED int wxd_Window_GetId(wxd_Window_t* window) {
 }
 
 // Placeholder for wxd_Window_Destroy if needed later
-WXD_EXPORTED void wxd_Window_Destroy(wxd_Window_t* window) {
+WXD_EXPORTED void
+wxd_Window_Destroy(wxd_Window_t* window)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (wx_window) {
         // For non-top-level windows, Destroy() schedules deletion.
@@ -75,46 +85,60 @@ WXD_EXPORTED void wxd_Window_Destroy(wxd_Window_t* window) {
     }
 }
 
-WXD_EXPORTED void wxd_Window_SetBackgroundColor(wxd_Window_t* window, wxd_Colour_t color) {
+WXD_EXPORTED void
+wxd_Window_SetBackgroundColor(wxd_Window_t* window, wxd_Colour_t color)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (wx_window) {
         wx_window->SetBackgroundColour(wxColour(color.r, color.g, color.b, color.a));
     }
 }
 
-WXD_EXPORTED void wxd_Window_SetMinSize(wxd_Window_t* window, wxd_Size size) {
+WXD_EXPORTED void
+wxd_Window_SetMinSize(wxd_Window_t* window, wxd_Size size)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (wx_window) {
         wx_window->SetMinSize(wxSize(size.width, size.height));
     }
 }
 
-WXD_EXPORTED void wxd_Window_Refresh(wxd_Window_t* window, int eraseBackground, const wxd_Rect* rect) {
+WXD_EXPORTED void
+wxd_Window_Refresh(wxd_Window_t* window, int eraseBackground, const wxd_Rect* rect)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (wx_window) {
         if (rect) {
-            wx_window->RefreshRect(wxRect(rect->x, rect->y, rect->width, rect->height), eraseBackground);
-        } else {
+            wx_window->RefreshRect(wxRect(rect->x, rect->y, rect->width, rect->height),
+                                   eraseBackground);
+        }
+        else {
             wx_window->Refresh(eraseBackground);
         }
     }
 }
 
-WXD_EXPORTED void wxd_Window_Fit(wxd_Window_t* window) {
+WXD_EXPORTED void
+wxd_Window_Fit(wxd_Window_t* window)
+{
     wxWindow* win = (wxWindow*)window;
     if (win) {
         win->Fit();
     }
 }
 
-WXD_EXPORTED void wxd_Window_Layout(wxd_Window_t* window) {
+WXD_EXPORTED void
+wxd_Window_Layout(wxd_Window_t* window)
+{
     wxWindow* win = (wxWindow*)window;
     if (win) {
         win->Layout();
     }
 }
 
-WXD_EXPORTED wxd_Size wxd_Window_GetBestSize(wxd_Window_t* window) {
+WXD_EXPORTED wxd_Size
+wxd_Window_GetBestSize(wxd_Window_t* window)
+{
     wxWindow* win = (wxWindow*)window;
     wxd_Size result = { -1, -1 }; // Default invalid size
     if (win) {
@@ -126,38 +150,46 @@ WXD_EXPORTED wxd_Size wxd_Window_GetBestSize(wxd_Window_t* window) {
 }
 
 // ADDED: Implementation for wxd_Window_SetToolTip
-WXD_EXPORTED void wxd_Window_SetToolTip(wxd_Window_t* window, const char* tipString) {
+WXD_EXPORTED void
+wxd_Window_SetToolTip(wxd_Window_t* window, const char* tipString)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (wx_window) {
         // wxString::FromUTF8 handles NULL tipString gracefully (creates empty string)
-        wx_window->SetToolTip(wxString::FromUTF8(tipString)); 
+        wx_window->SetToolTip(wxString::FromUTF8(tipString));
     }
 }
 
 // Implement other wxd_Window_* functions from the header here (e.g., Show, Destroy) if needed.
 
-// Note: SetSizer and SetSizerAndFit are often implemented in sizer.cpp or 
+// Note: SetSizer and SetSizerAndFit are often implemented in sizer.cpp or
 // directly where wxSizer is involved, but could be here too if preferred.
 // Checking existing code... It seems SetSizer and SetSizerAndFit are in sizer.cpp.
 
 // Attach/Detach/Notify cleanup functions are already implemented (likely in app.cpp or event.cpp).
 
-// --- Window Manipulation --- 
+// --- Window Manipulation ---
 
-WXD_EXPORTED void wxd_Window_Show(wxd_Window_t* self, bool show) {
+WXD_EXPORTED void
+wxd_Window_Show(wxd_Window_t* self, bool show)
+{
     if (self) {
         reinterpret_cast<wxWindow*>(self)->Show(show);
     }
 }
 
-WXD_EXPORTED bool wxd_Window_Close(wxd_Window_t* self, bool force) {
+WXD_EXPORTED bool
+wxd_Window_Close(wxd_Window_t* self, bool force)
+{
     if (self) {
         return reinterpret_cast<wxWindow*>(self)->Close(force);
     }
     return false;
 }
 
-WXD_EXPORTED void wxd_Window_SetId(wxd_Window_t* self, int id) {
+WXD_EXPORTED void
+wxd_Window_SetId(wxd_Window_t* self, int id)
+{
     if (self) {
         reinterpret_cast<wxWindow*>(self)->SetId(id);
     }
@@ -166,28 +198,35 @@ WXD_EXPORTED void wxd_Window_SetId(wxd_Window_t* self, int id) {
 // Note: GetLabel for a generic wxWindow might not always be what's expected,
 // as not all windows have a visible label in the same way as controls.
 // However, wxWindow itself does have GetLabel/SetLabel.
-WXD_EXPORTED void wxd_Window_SetLabel(wxd_Window_t* self, const char* label) {
+WXD_EXPORTED void
+wxd_Window_SetLabel(wxd_Window_t* self, const char* label)
+{
     if (self) {
         reinterpret_cast<wxWindow*>(self)->SetLabel(wxString::FromUTF8(label ? label : ""));
     }
 }
 
-WXD_EXPORTED char* wxd_Window_GetLabel(wxd_Window_t* self) {
+WXD_EXPORTED char*
+wxd_Window_GetLabel(wxd_Window_t* self)
+{
     if (self) {
         wxString label = reinterpret_cast<wxWindow*>(self)->GetLabel();
         const wxScopedCharBuffer utf8_buf = label.ToUTF8();
-        if (utf8_buf.data()) { // Check if data is not null
+        if (utf8_buf.data()) {              // Check if data is not null
             return strdup(utf8_buf.data()); // Allocate and copy string
         }
     }
     // Return a duplicated empty string if self is null or label is empty to avoid returning NULL
     // which Rust CString::from_raw would panic on.
     // Callers should check if the string is empty if that has meaning.
-    return strdup(""); 
+    return strdup("");
 }
 
-WXD_EXPORTED void wxd_Window_SetFont(wxd_Window_t* self, const wxd_Font_t* font) {
-    if (!self) return;
+WXD_EXPORTED void
+wxd_Window_SetFont(wxd_Window_t* self, const wxd_Font_t* font)
+{
+    if (!self)
+        return;
     // If font is NULL, wxWidgets SetFont will likely use a default or do nothing.
     // If it requires a valid font, we might need to pass wxNullFont or wxSystemSettings::GetFont(wxSYS_DEFAULT_GUI_FONT).
     // For now, assume passing NULL (if wxd_Font_t* is NULL) is handled gracefully by wxFont constructor or SetFont.
@@ -195,7 +234,8 @@ WXD_EXPORTED void wxd_Window_SetFont(wxd_Window_t* self, const wxd_Font_t* font)
     // Better to check for NULL font and pass wxNullFont explicitly.
     if (font) {
         ((wxWindow*)self)->SetFont(*((wxFont*)font));
-    } else {
+    }
+    else {
         // Attempt to set a default font or do nothing if wxNullFont isn't appropriate.
         // For now, let's try setting the system default GUI font if null is passed.
         // This behavior might need adjustment based on desired semantics for a null font.
@@ -203,22 +243,27 @@ WXD_EXPORTED void wxd_Window_SetFont(wxd_Window_t* self, const wxd_Font_t* font)
     }
 }
 
-WXD_EXPORTED wxd_Font_t* wxd_Window_GetFont(wxd_Window_t* self) {
-    if (!self) return NULL;
-    
+WXD_EXPORTED wxd_Font_t*
+wxd_Window_GetFont(wxd_Window_t* self)
+{
+    if (!self)
+        return NULL;
+
     wxWindow* window = reinterpret_cast<wxWindow*>(self);
     wxFont font = window->GetFont();
-    
+
     // Only allocate and return a new wxFont if it's valid
     if (font.IsOk()) {
         wxFont* new_font = new wxFont(font);
         return reinterpret_cast<wxd_Font_t*>(new_font);
     }
-    
+
     return NULL;
 }
 
-WXD_EXPORTED wxd_Point wxd_Window_GetPosition(wxd_Window_t* self) {
+WXD_EXPORTED wxd_Point
+wxd_Window_GetPosition(wxd_Window_t* self)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(self);
     if (!wx_window) {
         return { -1, -1 }; // Default invalid position
@@ -227,31 +272,45 @@ WXD_EXPORTED wxd_Point wxd_Window_GetPosition(wxd_Window_t* self) {
     return { wx_position.x, wx_position.y };
 }
 
-WXD_EXPORTED wxd_Window_t* wxd_Window_GetParent(wxd_Window_t* self) {
+WXD_EXPORTED wxd_Window_t*
+wxd_Window_GetParent(wxd_Window_t* self)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(self);
-    if (!wx_window) return NULL;
+    if (!wx_window)
+        return NULL;
     return reinterpret_cast<wxd_Window_t*>(wx_window->GetParent());
 }
 
-WXD_EXPORTED wxd_Window_t* wxd_Window_GetGrandParent(wxd_Window_t* self) {
-    if (!self) return NULL;
+WXD_EXPORTED wxd_Window_t*
+wxd_Window_GetGrandParent(wxd_Window_t* self)
+{
+    if (!self)
+        return NULL;
     wxWindow* self_wnd = reinterpret_cast<wxWindow*>(self);
     return reinterpret_cast<wxd_Window_t*>(self_wnd->GetGrandParent());
 }
 
-WXD_EXPORTED bool wxd_Window_IsEnabled(wxd_Window_t *self) {
-    if (!self) return false;
+WXD_EXPORTED bool
+wxd_Window_IsEnabled(wxd_Window_t* self)
+{
+    if (!self)
+        return false;
     return reinterpret_cast<wxWindow*>(self)->IsEnabled();
 }
 
-WXD_EXPORTED void wxd_Window_Enable(wxd_Window_t *self, bool enable) {
-    if (!self) return;
+WXD_EXPORTED void
+wxd_Window_Enable(wxd_Window_t* self, bool enable)
+{
+    if (!self)
+        return;
     reinterpret_cast<wxWindow*>(self)->Enable(enable);
 }
 
 // New size and position functions
 
-WXD_EXPORTED wxd_Size wxd_Window_GetSize(wxd_Window_t* window) {
+WXD_EXPORTED wxd_Size
+wxd_Window_GetSize(wxd_Window_t* window)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (!wx_window) {
         return { -1, -1 }; // Default invalid size
@@ -260,21 +319,27 @@ WXD_EXPORTED wxd_Size wxd_Window_GetSize(wxd_Window_t* window) {
     return { wx_size.GetWidth(), wx_size.GetHeight() };
 }
 
-WXD_EXPORTED void wxd_Window_SetSize(wxd_Window_t* window, wxd_Size size) {
+WXD_EXPORTED void
+wxd_Window_SetSize(wxd_Window_t* window, wxd_Size size)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (wx_window) {
         wx_window->SetSize(wxSize(size.width, size.height));
     }
 }
 
-WXD_EXPORTED void wxd_Window_SetSizeWithPos(wxd_Window_t* window, int x, int y, int width, int height, int sizeFlags) {
+WXD_EXPORTED void
+wxd_Window_SetSizeWithPos(wxd_Window_t* window, int x, int y, int width, int height, int sizeFlags)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (wx_window) {
         wx_window->SetSize(x, y, width, height, sizeFlags);
     }
 }
 
-WXD_EXPORTED wxd_Size wxd_Window_GetClientSize(wxd_Window_t* window) {
+WXD_EXPORTED wxd_Size
+wxd_Window_GetClientSize(wxd_Window_t* window)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (!wx_window) {
         return { -1, -1 }; // Default invalid size
@@ -283,14 +348,18 @@ WXD_EXPORTED wxd_Size wxd_Window_GetClientSize(wxd_Window_t* window) {
     return { wx_size.GetWidth(), wx_size.GetHeight() };
 }
 
-WXD_EXPORTED void wxd_Window_SetClientSize(wxd_Window_t* window, wxd_Size size) {
+WXD_EXPORTED void
+wxd_Window_SetClientSize(wxd_Window_t* window, wxd_Size size)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (wx_window) {
         wx_window->SetClientSize(wxSize(size.width, size.height));
     }
 }
 
-WXD_EXPORTED wxd_Size wxd_Window_GetMinSize(wxd_Window_t* window) {
+WXD_EXPORTED wxd_Size
+wxd_Window_GetMinSize(wxd_Window_t* window)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (!wx_window) {
         return { -1, -1 }; // Default invalid size
@@ -299,14 +368,18 @@ WXD_EXPORTED wxd_Size wxd_Window_GetMinSize(wxd_Window_t* window) {
     return { wx_size.GetWidth(), wx_size.GetHeight() };
 }
 
-WXD_EXPORTED void wxd_Window_Move(wxd_Window_t* window, int x, int y) {
+WXD_EXPORTED void
+wxd_Window_Move(wxd_Window_t* window, int x, int y)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (wx_window) {
         wx_window->Move(x, y);
     }
 }
 
-WXD_EXPORTED void wxd_Window_Center(wxd_Window_t* window) {
+WXD_EXPORTED void
+wxd_Window_Center(wxd_Window_t* window)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (wx_window) {
         wx_window->Center();
@@ -314,7 +387,9 @@ WXD_EXPORTED void wxd_Window_Center(wxd_Window_t* window) {
 }
 
 // Background style functions
-WXD_EXPORTED void wxd_Window_SetBackgroundStyle(wxd_Window_t* window, int style) {
+WXD_EXPORTED void
+wxd_Window_SetBackgroundStyle(wxd_Window_t* window, int style)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (wx_window) {
         wxBackgroundStyle wx_style = static_cast<wxBackgroundStyle>(style);
@@ -322,7 +397,9 @@ WXD_EXPORTED void wxd_Window_SetBackgroundStyle(wxd_Window_t* window, int style)
     }
 }
 
-WXD_EXPORTED int wxd_Window_GetBackgroundStyle(wxd_Window_t* window) {
+WXD_EXPORTED int
+wxd_Window_GetBackgroundStyle(wxd_Window_t* window)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (wx_window) {
         return static_cast<int>(wx_window->GetBackgroundStyle());
@@ -330,7 +407,9 @@ WXD_EXPORTED int wxd_Window_GetBackgroundStyle(wxd_Window_t* window) {
     return static_cast<int>(wxBG_STYLE_SYSTEM); // Default fallback
 }
 
-WXD_EXPORTED wxd_Point wxd_Window_ClientToScreen(wxd_Window_t* window, wxd_Point pt) {
+WXD_EXPORTED wxd_Point
+wxd_Window_ClientToScreen(wxd_Window_t* window, wxd_Point pt)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (!wx_window) {
         return pt; // Return the input point if window is null
@@ -340,7 +419,9 @@ WXD_EXPORTED wxd_Point wxd_Window_ClientToScreen(wxd_Window_t* window, wxd_Point
     return { wx_result.x, wx_result.y };
 }
 
-WXD_EXPORTED wxd_Point wxd_Window_ScreenToClient(wxd_Window_t* window, wxd_Point pt) {
+WXD_EXPORTED wxd_Point
+wxd_Window_ScreenToClient(wxd_Window_t* window, wxd_Point pt)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (!wx_window) {
         return pt; // Return the input point if window is null
@@ -351,14 +432,18 @@ WXD_EXPORTED wxd_Point wxd_Window_ScreenToClient(wxd_Window_t* window, wxd_Point
 }
 
 // Extra window style functions
-WXD_EXPORTED void wxd_Window_SetExtraStyle(wxd_Window_t* window, int64_t exStyle) {
+WXD_EXPORTED void
+wxd_Window_SetExtraStyle(wxd_Window_t* window, int64_t exStyle)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (wx_window) {
         wx_window->SetExtraStyle(static_cast<int64_t>(exStyle));
     }
 }
 
-WXD_EXPORTED int64_t wxd_Window_GetExtraStyle(wxd_Window_t* window) {
+WXD_EXPORTED int64_t
+wxd_Window_GetExtraStyle(wxd_Window_t* window)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (wx_window) {
         return static_cast<int64_t>(wx_window->GetExtraStyle());
@@ -367,14 +452,18 @@ WXD_EXPORTED int64_t wxd_Window_GetExtraStyle(wxd_Window_t* window) {
 }
 
 // Color management functions
-WXD_EXPORTED void wxd_Window_SetForegroundColor(wxd_Window_t* window, wxd_Colour_t color) {
+WXD_EXPORTED void
+wxd_Window_SetForegroundColor(wxd_Window_t* window, wxd_Colour_t color)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (wx_window) {
         wx_window->SetForegroundColour(wxColour(color.r, color.g, color.b, color.a));
     }
 }
 
-WXD_EXPORTED wxd_Colour_t wxd_Window_GetForegroundColor(wxd_Window_t* window) {
+WXD_EXPORTED wxd_Colour_t
+wxd_Window_GetForegroundColor(wxd_Window_t* window)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (wx_window) {
         wxColour wx_color = wx_window->GetForegroundColour();
@@ -383,7 +472,9 @@ WXD_EXPORTED wxd_Colour_t wxd_Window_GetForegroundColor(wxd_Window_t* window) {
     return { 0, 0, 0, 255 }; // Default black color
 }
 
-WXD_EXPORTED wxd_Colour_t wxd_Window_GetBackgroundColor(wxd_Window_t* window) {
+WXD_EXPORTED wxd_Colour_t
+wxd_Window_GetBackgroundColor(wxd_Window_t* window)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (wx_window) {
         wxColour wx_color = wx_window->GetBackgroundColour();
@@ -393,14 +484,18 @@ WXD_EXPORTED wxd_Colour_t wxd_Window_GetBackgroundColor(wxd_Window_t* window) {
 }
 
 // Focus management functions
-WXD_EXPORTED void wxd_Window_SetFocus(wxd_Window_t* window) {
+WXD_EXPORTED void
+wxd_Window_SetFocus(wxd_Window_t* window)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (wx_window) {
         wx_window->SetFocus();
     }
 }
 
-WXD_EXPORTED bool wxd_Window_HasFocus(wxd_Window_t* window) {
+WXD_EXPORTED bool
+wxd_Window_HasFocus(wxd_Window_t* window)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (wx_window) {
         return wx_window->HasFocus();
@@ -408,7 +503,9 @@ WXD_EXPORTED bool wxd_Window_HasFocus(wxd_Window_t* window) {
     return false;
 }
 
-WXD_EXPORTED bool wxd_Window_CanAcceptFocus(wxd_Window_t* window) {
+WXD_EXPORTED bool
+wxd_Window_CanAcceptFocus(wxd_Window_t* window)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (wx_window) {
         return wx_window->CanAcceptFocus();
@@ -416,7 +513,9 @@ WXD_EXPORTED bool wxd_Window_CanAcceptFocus(wxd_Window_t* window) {
     return false;
 }
 
-WXD_EXPORTED bool wxd_Window_AcceptsFocusFromKeyboard(wxd_Window_t* window) {
+WXD_EXPORTED bool
+wxd_Window_AcceptsFocusFromKeyboard(wxd_Window_t* window)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (wx_window) {
         return wx_window->AcceptsFocusFromKeyboard();
@@ -424,7 +523,9 @@ WXD_EXPORTED bool wxd_Window_AcceptsFocusFromKeyboard(wxd_Window_t* window) {
     return false;
 }
 
-WXD_EXPORTED void wxd_Window_SetCanFocus(wxd_Window_t* window, bool canFocus) {
+WXD_EXPORTED void
+wxd_Window_SetCanFocus(wxd_Window_t* window, bool canFocus)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (wx_window) {
         wx_window->SetCanFocus(canFocus);
@@ -432,7 +533,9 @@ WXD_EXPORTED void wxd_Window_SetCanFocus(wxd_Window_t* window, bool canFocus) {
 }
 
 // Visibility functions
-WXD_EXPORTED bool wxd_Window_IsShown(wxd_Window_t* window) {
+WXD_EXPORTED bool
+wxd_Window_IsShown(wxd_Window_t* window)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (wx_window) {
         return wx_window->IsShown();
@@ -441,14 +544,18 @@ WXD_EXPORTED bool wxd_Window_IsShown(wxd_Window_t* window) {
 }
 
 // Size constraint functions
-WXD_EXPORTED void wxd_Window_SetMaxSize(wxd_Window_t* window, wxd_Size size) {
+WXD_EXPORTED void
+wxd_Window_SetMaxSize(wxd_Window_t* window, wxd_Size size)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (wx_window) {
         wx_window->SetMaxSize(wxSize(size.width, size.height));
     }
 }
 
-WXD_EXPORTED wxd_Size wxd_Window_GetMaxSize(wxd_Window_t* window) {
+WXD_EXPORTED wxd_Size
+wxd_Window_GetMaxSize(wxd_Window_t* window)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (!wx_window) {
         return { -1, -1 }; // Default invalid size
@@ -458,14 +565,18 @@ WXD_EXPORTED wxd_Size wxd_Window_GetMaxSize(wxd_Window_t* window) {
 }
 
 // Window properties functions
-WXD_EXPORTED void wxd_Window_SetName(wxd_Window_t* window, const char* name) {
+WXD_EXPORTED void
+wxd_Window_SetName(wxd_Window_t* window, const char* name)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (wx_window) {
         wx_window->SetName(wxString::FromUTF8(name ? name : ""));
     }
 }
 
-WXD_EXPORTED char* wxd_Window_GetName(wxd_Window_t* window) {
+WXD_EXPORTED char*
+wxd_Window_GetName(wxd_Window_t* window)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (wx_window) {
         wxString name = wx_window->GetName();
@@ -478,42 +589,51 @@ WXD_EXPORTED char* wxd_Window_GetName(wxd_Window_t* window) {
 }
 
 // Window finding functions
-WXD_EXPORTED wxd_Window_t* wxd_Window_FindWindowByName(wxd_Window_t* window, const char* name) {
+WXD_EXPORTED wxd_Window_t*
+wxd_Window_FindWindowByName(wxd_Window_t* window, const char* name)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (!wx_window || !name) {
         return nullptr;
     }
-    
+
     wxString windowName = wxString::FromUTF8(name);
     wxWindow* child = wx_window->FindWindow(windowName);
     return reinterpret_cast<wxd_Window_t*>(child);
 }
 
-WXD_EXPORTED wxd_Window_t* wxd_Window_FindWindowById(wxd_Window_t* window, int id) {
+WXD_EXPORTED wxd_Window_t*
+wxd_Window_FindWindowById(wxd_Window_t* window, int id)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (!wx_window) {
         return nullptr;
     }
-    
+
     wxWindow* child = wx_window->FindWindow(id);
     return reinterpret_cast<wxd_Window_t*>(child);
 }
 
 // --- Cursor Management Functions ---
-WXD_EXPORTED void wxd_Window_SetCursor(wxd_Window_t* window, wxd_Cursor_t* cursor) {
+WXD_EXPORTED void
+wxd_Window_SetCursor(wxd_Window_t* window, wxd_Cursor_t* cursor)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (wx_window) {
         if (cursor) {
             wxCursor* wx_cursor = reinterpret_cast<wxCursor*>(cursor);
             wx_window->SetCursor(*wx_cursor);
-        } else {
+        }
+        else {
             // Set to default cursor if null is passed
             wx_window->SetCursor(wxNullCursor);
         }
     }
 }
 
-WXD_EXPORTED wxd_Cursor_t* wxd_Window_GetCursor(wxd_Window_t* window) {
+WXD_EXPORTED wxd_Cursor_t*
+wxd_Window_GetCursor(wxd_Window_t* window)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (wx_window) {
         wxCursor cursor = wx_window->GetCursor();
@@ -527,14 +647,18 @@ WXD_EXPORTED wxd_Cursor_t* wxd_Window_GetCursor(wxd_Window_t* window) {
 }
 
 // --- Z-Order Management Functions ---
-WXD_EXPORTED void wxd_Window_Raise(wxd_Window_t* window) {
+WXD_EXPORTED void
+wxd_Window_Raise(wxd_Window_t* window)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (wx_window) {
         wx_window->Raise();
     }
 }
 
-WXD_EXPORTED void wxd_Window_Lower(wxd_Window_t* window) {
+WXD_EXPORTED void
+wxd_Window_Lower(wxd_Window_t* window)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (wx_window) {
         wx_window->Lower();
@@ -542,21 +666,27 @@ WXD_EXPORTED void wxd_Window_Lower(wxd_Window_t* window) {
 }
 
 // --- Mouse Capture Functions ---
-WXD_EXPORTED void wxd_Window_CaptureMouse(wxd_Window_t* window) {
+WXD_EXPORTED void
+wxd_Window_CaptureMouse(wxd_Window_t* window)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (wx_window) {
         wx_window->CaptureMouse();
     }
 }
 
-WXD_EXPORTED void wxd_Window_ReleaseMouse(wxd_Window_t* window) {
+WXD_EXPORTED void
+wxd_Window_ReleaseMouse(wxd_Window_t* window)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (wx_window) {
         wx_window->ReleaseMouse();
     }
 }
 
-WXD_EXPORTED bool wxd_Window_HasCapture(wxd_Window_t* window) {
+WXD_EXPORTED bool
+wxd_Window_HasCapture(wxd_Window_t* window)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (wx_window) {
         return wx_window->HasCapture();
@@ -564,13 +694,16 @@ WXD_EXPORTED bool wxd_Window_HasCapture(wxd_Window_t* window) {
     return false;
 }
 
-WXD_EXPORTED wxd_Window_t* wxd_Window_GetCapture() {
+WXD_EXPORTED wxd_Window_t*
+wxd_Window_GetCapture()
+{
     wxWindow* captured_window = wxWindow::GetCapture();
     return reinterpret_cast<wxd_Window_t*>(captured_window);
 }
 
 // --- Painting The Window ---
-WXD_EXPORTED void wxd_Window_Freeze(wxd_Window_t* window)
+WXD_EXPORTED void
+wxd_Window_Freeze(wxd_Window_t* window)
 {
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (wx_window) {
@@ -578,7 +711,8 @@ WXD_EXPORTED void wxd_Window_Freeze(wxd_Window_t* window)
     }
 }
 
-WXD_EXPORTED void wxd_Window_Thaw(wxd_Window_t* window)
+WXD_EXPORTED void
+wxd_Window_Thaw(wxd_Window_t* window)
 {
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (wx_window) {
@@ -586,7 +720,8 @@ WXD_EXPORTED void wxd_Window_Thaw(wxd_Window_t* window)
     }
 }
 
-WXD_EXPORTED bool wxd_Window_IsFrozen(wxd_Window_t* window)
+WXD_EXPORTED bool
+wxd_Window_IsFrozen(wxd_Window_t* window)
 {
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (wx_window) {
@@ -596,7 +731,9 @@ WXD_EXPORTED bool wxd_Window_IsFrozen(wxd_Window_t* window)
 }
 
 // --- Text Measurement Functions ---
-WXD_EXPORTED wxd_Size wxd_Window_GetTextExtent(wxd_Window_t* window, const char* text) {
+WXD_EXPORTED wxd_Size
+wxd_Window_GetTextExtent(wxd_Window_t* window, const char* text)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (wx_window && text) {
         wxString wx_text = wxString::FromUTF8(text);
@@ -606,31 +743,40 @@ WXD_EXPORTED wxd_Size wxd_Window_GetTextExtent(wxd_Window_t* window, const char*
     return { 0, 0 }; // Default size if window is null or text is null
 }
 
-WXD_EXPORTED void wxd_Window_GetFullTextExtent(wxd_Window_t* window, const char* text, wxd_Size* size, int* descent, int* external_leading, wxd_Font_t* font) {
+WXD_EXPORTED void
+wxd_Window_GetFullTextExtent(wxd_Window_t* window, const char* text, wxd_Size* size, int* descent,
+                             int* external_leading, wxd_Font_t* font)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (!wx_window || !text || !size) {
         if (size) {
             size->width = 0;
             size->height = 0;
         }
-        if (descent) *descent = 0;
-        if (external_leading) *external_leading = 0;
+        if (descent)
+            *descent = 0;
+        if (external_leading)
+            *external_leading = 0;
         return;
     }
 
     wxString wx_text = wxString::FromUTF8(text);
     wxFont* wx_font = font ? reinterpret_cast<wxFont*>(font) : nullptr;
-    
+
     int w, h, desc, ext_lead;
     wx_window->GetTextExtent(wx_text, &w, &h, &desc, &ext_lead, wx_font);
-    
+
     size->width = w;
     size->height = h;
-    if (descent) *descent = desc;
-    if (external_leading) *external_leading = ext_lead;
+    if (descent)
+        *descent = desc;
+    if (external_leading)
+        *external_leading = ext_lead;
 }
 
-WXD_EXPORTED int wxd_Window_GetCharHeight(wxd_Window_t* window) {
+WXD_EXPORTED int
+wxd_Window_GetCharHeight(wxd_Window_t* window)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (wx_window) {
         return wx_window->GetCharHeight();
@@ -638,7 +784,9 @@ WXD_EXPORTED int wxd_Window_GetCharHeight(wxd_Window_t* window) {
     return 0;
 }
 
-WXD_EXPORTED int wxd_Window_GetCharWidth(wxd_Window_t* window) {
+WXD_EXPORTED int
+wxd_Window_GetCharWidth(wxd_Window_t* window)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (!wx_window) {
         return 0;
@@ -647,14 +795,18 @@ WXD_EXPORTED int wxd_Window_GetCharWidth(wxd_Window_t* window) {
 }
 
 // Window style functions
-WXD_EXPORTED void wxd_Window_SetWindowStyle(wxd_Window_t* window, int64_t style) {
+WXD_EXPORTED void
+wxd_Window_SetWindowStyle(wxd_Window_t* window, int64_t style)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (wx_window) {
         wx_window->SetWindowStyle(static_cast<long>(style));
     }
 }
 
-WXD_EXPORTED int64_t wxd_Window_GetWindowStyle(wxd_Window_t* window) {
+WXD_EXPORTED int64_t
+wxd_Window_GetWindowStyle(wxd_Window_t* window)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (wx_window) {
         return static_cast<int64_t>(wx_window->GetWindowStyle());
@@ -663,7 +815,9 @@ WXD_EXPORTED int64_t wxd_Window_GetWindowStyle(wxd_Window_t* window) {
 }
 
 // --- Scrolling Functions ---
-WXD_EXPORTED void wxd_Window_ShowPosition(wxd_Window_t* window, int64_t position) {
+WXD_EXPORTED void
+wxd_Window_ShowPosition(wxd_Window_t* window, int64_t position)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (!wx_window) {
         return;
@@ -696,7 +850,9 @@ WXD_EXPORTED void wxd_Window_ShowPosition(wxd_Window_t* window, int64_t position
     // Note: This may not work for all widget types, but provides a fallback
 }
 
-WXD_EXPORTED void wxd_Window_ScrollIntoView(wxd_Window_t* window, int64_t position, int keyCode) {
+WXD_EXPORTED void
+wxd_Window_ScrollIntoView(wxd_Window_t* window, int64_t position, int keyCode)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (!wx_window) {
         return;
@@ -729,7 +885,9 @@ WXD_EXPORTED void wxd_Window_ScrollIntoView(wxd_Window_t* window, int64_t positi
     wxd_Window_ShowPosition(window, position);
 }
 
-WXD_EXPORTED bool wxd_Window_IsPositionVisible(wxd_Window_t* window, int64_t position) {
+WXD_EXPORTED bool
+wxd_Window_IsPositionVisible(wxd_Window_t* window, int64_t position)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (!wx_window) {
         return false;
@@ -749,7 +907,7 @@ WXD_EXPORTED bool wxd_Window_IsPositionVisible(wxd_Window_t* window, int64_t pos
         int scroll_pos = text_ctrl->GetScrollPos(wxVERTICAL);
         int char_height = text_ctrl->GetCharHeight();
         int lines_visible = client_size.y / char_height;
-        
+
         // This is a rough approximation - for exact visibility checking,
         // more sophisticated logic would be needed
         long first_visible = text_ctrl->XYToPosition(0, scroll_pos);
@@ -757,7 +915,7 @@ WXD_EXPORTED bool wxd_Window_IsPositionVisible(wxd_Window_t* window, int64_t pos
         if (last_visible < 0) {
             last_visible = text_ctrl->GetLastPosition();
         }
-        
+
         return position >= first_visible && position <= last_visible;
     }
 
@@ -775,7 +933,9 @@ WXD_EXPORTED bool wxd_Window_IsPositionVisible(wxd_Window_t* window, int64_t pos
     return false;
 }
 
-WXD_EXPORTED int64_t wxd_Window_GetLastPosition(wxd_Window_t* window) {
+WXD_EXPORTED int64_t
+wxd_Window_GetLastPosition(wxd_Window_t* window)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (!wx_window) {
         return 0;
@@ -806,7 +966,9 @@ WXD_EXPORTED int64_t wxd_Window_GetLastPosition(wxd_Window_t* window) {
 
 // --- Platform-specific Functions ---
 
-WXD_EXPORTED void* wxd_Window_GetHandle(wxd_Window_t* self) {
+WXD_EXPORTED void*
+wxd_Window_GetHandle(wxd_Window_t* self)
+{
     if (!self) {
         return nullptr;
     }
@@ -814,10 +976,12 @@ WXD_EXPORTED void* wxd_Window_GetHandle(wxd_Window_t* self) {
     return reinterpret_cast<void*>(wx_window->GetHandle());
 }
 
-
 // Get wxWidgets class name using built-in RTTI
-WXD_EXPORTED const char* wxd_Window_GetClassName(wxd_Window_t* window) {
-    if (!window) return nullptr;
+WXD_EXPORTED const char*
+wxd_Window_GetClassName(wxd_Window_t* window)
+{
+    if (!window)
+        return nullptr;
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
 
     // Get the class name and convert from wxChar* to const char*
@@ -836,7 +1000,9 @@ WXD_EXPORTED const char* wxd_Window_GetClassName(wxd_Window_t* window) {
 
 // --- Tab Order Functions ---
 
-WXD_EXPORTED void wxd_Window_MoveAfterInTabOrder(wxd_Window_t* window, wxd_Window_t* win) {
+WXD_EXPORTED void
+wxd_Window_MoveAfterInTabOrder(wxd_Window_t* window, wxd_Window_t* win)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     wxWindow* wx_win = reinterpret_cast<wxWindow*>(win);
     if (wx_window && wx_win) {
@@ -844,7 +1010,9 @@ WXD_EXPORTED void wxd_Window_MoveAfterInTabOrder(wxd_Window_t* window, wxd_Windo
     }
 }
 
-WXD_EXPORTED void wxd_Window_MoveBeforeInTabOrder(wxd_Window_t* window, wxd_Window_t* win) {
+WXD_EXPORTED void
+wxd_Window_MoveBeforeInTabOrder(wxd_Window_t* window, wxd_Window_t* win)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     wxWindow* wx_win = reinterpret_cast<wxWindow*>(win);
     if (wx_window && wx_win) {
@@ -852,7 +1020,9 @@ WXD_EXPORTED void wxd_Window_MoveBeforeInTabOrder(wxd_Window_t* window, wxd_Wind
     }
 }
 
-WXD_EXPORTED wxd_Window_t* wxd_Window_GetNextSibling(wxd_Window_t* window) {
+WXD_EXPORTED wxd_Window_t*
+wxd_Window_GetNextSibling(wxd_Window_t* window)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (wx_window) {
         wxWindow* next_sibling = wx_window->GetNextSibling();
@@ -861,7 +1031,9 @@ WXD_EXPORTED wxd_Window_t* wxd_Window_GetNextSibling(wxd_Window_t* window) {
     return nullptr;
 }
 
-WXD_EXPORTED wxd_Window_t* wxd_Window_GetPrevSibling(wxd_Window_t* window) {
+WXD_EXPORTED wxd_Window_t*
+wxd_Window_GetPrevSibling(wxd_Window_t* window)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (wx_window) {
         wxWindow* prev_sibling = wx_window->GetPrevSibling();
@@ -870,7 +1042,9 @@ WXD_EXPORTED wxd_Window_t* wxd_Window_GetPrevSibling(wxd_Window_t* window) {
     return nullptr;
 }
 
-WXD_EXPORTED bool wxd_Window_Navigate(wxd_Window_t* window, int flags) {
+WXD_EXPORTED bool
+wxd_Window_Navigate(wxd_Window_t* window, int flags)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     if (wx_window) {
         return wx_window->Navigate(flags);
@@ -880,7 +1054,9 @@ WXD_EXPORTED bool wxd_Window_Navigate(wxd_Window_t* window, int flags) {
 
 // --- Popup Menu Functions ---
 
-WXD_EXPORTED bool wxd_Window_PopupMenu(wxd_Window_t* window, wxd_Menu_t* menu, const wxd_Point* pos) {
+WXD_EXPORTED bool
+wxd_Window_PopupMenu(wxd_Window_t* window, wxd_Menu_t* menu, const wxd_Point* pos)
+{
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     wxMenu* wx_menu = reinterpret_cast<wxMenu*>(menu);
 
@@ -891,7 +1067,8 @@ WXD_EXPORTED bool wxd_Window_PopupMenu(wxd_Window_t* window, wxd_Menu_t* menu, c
     if (pos) {
         // Use provided position
         return wx_window->PopupMenu(wx_menu, pos->x, pos->y);
-    } else {
+    }
+    else {
         // Use default position (current mouse position)
         return wx_window->PopupMenu(wx_menu);
     }

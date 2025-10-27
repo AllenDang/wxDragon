@@ -12,7 +12,9 @@
 #include <stddef.h>
 
 // helper function: format with va_list and send to wxd_rust_log
-static void wxd_log_vformat_and_send(int level, const char* fmt, va_list ap) {
+static void
+wxd_log_vformat_and_send(int level, const char* fmt, va_list ap)
+{
     if (!fmt) {
         wxd_rust_log(level, "(null)");
         return;
@@ -71,7 +73,9 @@ static void wxd_log_vformat_and_send(int level, const char* fmt, va_list ap) {
     free(buf);
 }
 
-extern "C" void wxd_log_vprintf(int level, const char* fmt, va_list ap) {
+extern "C" void
+wxd_log_vprintf(int level, const char* fmt, va_list ap)
+{
     // copy va_list to avoid affecting the caller's va_list
     va_list ap_copy;
     va_copy(ap_copy, ap);
@@ -79,7 +83,9 @@ extern "C" void wxd_log_vprintf(int level, const char* fmt, va_list ap) {
     va_end(ap_copy);
 }
 
-extern "C" void wxd_log_printf(int level, const char* fmt, ...) {
+extern "C" void
+wxd_log_printf(int level, const char* fmt, ...)
+{
     va_list ap;
     va_start(ap, fmt);
     wxd_log_vformat_and_send(level, fmt, ap);

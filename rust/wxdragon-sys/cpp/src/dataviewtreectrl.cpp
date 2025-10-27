@@ -43,7 +43,7 @@ wxd_DataViewTreeCtrl_new(
         new wxDataViewTreeCtrl(parent, static_cast<wxWindowID>(id), wxd_cpp_utils::to_wx(pos_rust),
                                wxd_cpp_utils::to_wx(size_rust), static_cast<long>(style),
                                wxDefaultValidator // Pass default validator for the 6th argument
-                               // name_str is not passed to this constructor
+                                                  // name_str is not passed to this constructor
         );
 
     WXD_LOG_TRACEF("wxDataViewTreeCtrl created with pointer %p", ctrl);
