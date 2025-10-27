@@ -33,7 +33,7 @@ fn main() {
         panel.set_sizer(sizer, true);
 
         // Create popup menu for taskbar icon
-        let popup_menu = Menu::builder()
+        let mut popup_menu = Menu::builder()
             .append_item(1001, "Open Application", "Open the main application window")
             .append_separator()
             .append_item(1002, "Settings", "Open application settings")
@@ -141,7 +141,7 @@ fn main() {
         });
 
         frame.on_destroy(move |_evt| {
-            popup_menu.destroy(); // Clean up the popup menu to release the rust closures of menu items
+            popup_menu.destroy_meun(); // Clean up the popup menu to release the rust closures of menu items
             taskbar.destroy(); // Clean up the TaskBarIcon
             log::info!("Application on_destroy.");
         });

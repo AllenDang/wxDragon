@@ -148,7 +148,7 @@ fn main() {
 
                 // Build a simple context menu
                 let edit_id = ID_HIGHEST + 1;
-                let menu = Menu::builder()
+                let mut menu = Menu::builder()
                     .append_item(edit_id, "Edit", "Edit this item")
                     .build();
 
@@ -192,7 +192,7 @@ fn main() {
                 dataview_for_menu.popup_menu(&menu, None);
 
                 // Explicitly destroy the standalone popup menu to release its wxEvtHandler and closures
-                menu.destroy();
+                menu.destroy_meun();
             }
         });
         frame.show(true);

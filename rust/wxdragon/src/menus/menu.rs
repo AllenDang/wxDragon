@@ -33,7 +33,7 @@ impl Menu {
     ///
     /// Safety: Do NOT call this if the menu was appended to a MenuBar, as the menubar
     /// takes ownership and will delete it, leading to double free.
-    pub fn destroy(&mut self) {
+    pub fn destroy_meun(&mut self) {
         unsafe { ffi::wxd_Menu_Destroy(self.ptr) };
         self.ptr = std::ptr::null_mut();
     }

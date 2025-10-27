@@ -63,7 +63,7 @@ fn main() {
             .build();
 
         // Create popup menu for taskbar icon
-        let tray_icon_menu = Menu::builder()
+        let mut tray_icon_menu = Menu::builder()
             .append_item(
                 MenuId::Open.into(),
                 "Open Application",
@@ -234,7 +234,7 @@ fn main() {
             taskbar.destroy();
 
             // Clean up the tray icon menu to release rust closures attached to menu items
-            tray_icon_menu.destroy();
+            tray_icon_menu.destroy_meun();
         });
 
         // --- Main Panel Layout ---
