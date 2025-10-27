@@ -11,28 +11,14 @@ use std::ffi::CString;
 use std::marker::PhantomData;
 use wxdragon_sys as ffi;
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
-enum MenuOwnership {
-    SelfOwned,
-    MenuBarOwned,
-}
-
 /// Represents a wxMenu.
-/// Note: Ownership is typically transferred to the MenuBar when Append is called.
 pub struct Menu {
     ptr: *mut ffi::wxd_Menu_t,
-    ownership: MenuOwnership,
 }
 
 impl Drop for Menu {
     fn drop(&mut self) {
-        if self.ptr.is_null() {
-            return;
-        }
-        if self.ownership == MenuOwnership::SelfOwned {
-            unsafe { ffi::wxd_Menu_Destroy(self.ptr) };
-        }
-        self.ptr = std::ptr::null_mut();
+        // No explicit destruction needed; wxMenuBar takes ownership
     }
 }
 
@@ -47,12 +33,9 @@ impl Menu {
     ///
     /// Safety: Do NOT call this if the menu was appended to a MenuBar, as the menubar
     /// takes ownership and will delete it, leading to double free.
-    pub fn destroy(self) {
-        // Move out the pointer and prevent Drop.
-        let ptr = self.ptr;
-        // Prevent use-after-move: forget self without dropping
-        std::mem::forget(self);
-        unsafe { ffi::wxd_Menu_Destroy(ptr) };
+    pub fn destroy(&mut self) {
+        unsafe { ffi::wxd_Menu_Destroy(self.ptr) };
+        self.ptr = std::ptr::null_mut();
     }
 
     /// Appends a menu item.
@@ -83,10 +66,7 @@ impl Menu {
     /// # Safety
     /// The pointer must be a valid wxMenu pointer.
     pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_Menu_t) -> Self {
-        Self {
-            ptr,
-            ownership: MenuOwnership::SelfOwned,
-        }
+        Self { ptr }
     }
 
     /// Special XRC loading method for menus.
@@ -112,11 +92,6 @@ impl Menu {
     /// The caller must ensure the pointer is used correctly.
     pub(crate) unsafe fn as_ptr(&self) -> *mut ffi::wxd_Menu_t {
         self.ptr
-    }
-
-    /// Mark that ownership is transferred to a MenuBar (so Drop won't destroy the underlying wxMenu).
-    pub(crate) fn mark_owned_by_menubar(&mut self) {
-        self.ownership = MenuOwnership::MenuBarOwned;
     }
 
     // Make append private as it's called by builder
@@ -228,10 +203,7 @@ impl MenuBuilder {
         if ptr.is_null() {
             panic!("Failed to create Menu");
         }
-        let menu = Menu {
-            ptr,
-            ownership: MenuOwnership::SelfOwned,
-        };
+        let menu = Menu { ptr };
 
         // Perform actions
         for action in self.actions {
@@ -259,10 +231,7 @@ impl MenuBuilder {
 impl crate::xrc::XrcSupport for Menu {
     unsafe fn from_xrc_ptr(ptr: *mut wxdragon_sys::wxd_Window_t) -> Self {
         let menu_ptr = ptr as *mut wxdragon_sys::wxd_Menu_t;
-        Self {
-            ptr: menu_ptr,
-            ownership: MenuOwnership::SelfOwned,
-        }
+        Self { ptr: menu_ptr }
     }
 }
 
