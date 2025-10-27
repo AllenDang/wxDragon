@@ -95,6 +95,14 @@ impl Bitmap {
         }
     }
 
+    /// Returns `true` if this bitmap is owned by Rust and will be automatically destroyed when dropped.
+    ///
+    /// Returns `false` if the bitmap is managed elsewhere (e.g., by wxWidgets or another owner)
+    /// and should not be destroyed by Rust code. This is important for avoiding double-free or
+    /// use-after-free bugs when working with bitmaps obtained from external sources.
+    ///
+    /// Typically, bitmaps created via Rust constructors (such as [`Bitmap::from_rgba`]) are owned,
+    /// while those wrapping external pointers are not.
     pub fn is_owned(&self) -> bool {
         self.is_owned
     }
@@ -159,8 +167,6 @@ impl Bitmap {
             return None;
         }
 
-        // let width = self.get_width() as usize;
-        // let height = self.get_height() as usize;
         let data_len = width * height * 4; // 4 bytes per pixel (RGBA)
 
         // Copy the data from C++ allocated memory to Rust Vec
