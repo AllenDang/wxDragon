@@ -103,8 +103,7 @@ impl Variant {
 
     pub fn from_datetime(dt: DateTime) -> Self {
         let var = Self::new();
-        let raw = unsafe { *dt.as_ptr() };
-        unsafe { ffi::wxd_Variant_SetDateTime(var.ptr, raw) };
+        unsafe { ffi::wxd_Variant_SetDateTime(var.ptr, *dt.as_ref()) };
         var
     }
 
@@ -203,12 +202,11 @@ impl Variant {
     }
 
     pub fn get_datetime(&self) -> Option<DateTime> {
-        let mut raw = unsafe { std::mem::zeroed::<ffi::wxd_DateTime_t>() };
-        let ok = unsafe { ffi::wxd_Variant_GetDateTime(self.ptr, &mut raw) };
-        if ok {
-            Some(DateTime::from_raw(raw))
-        } else {
+        let ptr = unsafe { ffi::wxd_Variant_GetDateTime(self.ptr) };
+        if ptr.is_null() {
             None
+        } else {
+            Some(DateTime::from(ptr))
         }
     }
 
@@ -336,6 +334,14 @@ impl From<String> for Variant {
 impl From<DateTime> for Variant {
     fn from(value: DateTime) -> Self {
         Self::from_datetime(value)
+    }
+}
+
+impl<'a> From<&'a DateTime> for Variant {
+    fn from(value: &'a DateTime) -> Self {
+        let var = Variant::new();
+        unsafe { ffi::wxd_Variant_SetDateTime(var.ptr, **value) };
+        var
     }
 }
 

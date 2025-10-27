@@ -244,18 +244,19 @@ wxd_Variant_SetString_Utf8(const wxd_Variant_t* variant, const char* s, int len)
 }
 
 extern "C" WXD_EXPORTED void
-wxd_Variant_SetDateTime(const wxd_Variant_t* variant, wxd_DateTime_t value)
+wxd_Variant_SetDateTime(const wxd_Variant_t* variant, const wxd_DateTime_t* value)
 {
     wxVariant* v = as_wx_mut(variant);
     if (!v)
         return;
 #if wxUSE_DATETIME
-    wxDateTime dt;
-    // wxDateTime::Month is 0..11; wxd_DateTime_t.month is expected 1..12
-    int m = value.month > 0 ? (static_cast<int>(value.month) - 1) : 0;
-    dt.Set(value.day, static_cast<wxDateTime::Month>(m), value.year, value.hour, value.minute,
-           value.second);
-    *v = dt;
+    const wxDateTime* dt = reinterpret_cast<const wxDateTime*>(value);
+    if (dt) {
+        *v = *dt;
+    }
+    else {
+        v->MakeNull();
+    }
 #else
     (void)value;
     v->MakeNull();
@@ -361,26 +362,23 @@ wxd_Variant_GetString_Utf8(const wxd_Variant_t* variant, char* out, size_t out_l
     return need;
 }
 
-extern "C" WXD_EXPORTED bool
-wxd_Variant_GetDateTime(const wxd_Variant_t* variant, wxd_DateTime_t* out_value)
+extern "C" WXD_EXPORTED wxd_DateTime_t*
+wxd_Variant_GetDateTime(const wxd_Variant_t* variant)
 {
-    if (!variant || !out_value)
-        return false;
+    if (!variant)
+        return nullptr;
 #if wxUSE_DATETIME
     const wxVariant* v = as_wx_const(variant);
     wxDateTime dt;
     if (!v->Convert(&dt))
-        return false;
-    out_value->day = static_cast<short>(dt.GetDay());
-    out_value->month = static_cast<unsigned short>(static_cast<int>(dt.GetMonth()) + 1);
-    out_value->year = static_cast<int>(dt.GetYear());
-    out_value->hour = static_cast<short>(dt.GetHour());
-    out_value->minute = static_cast<short>(dt.GetMinute());
-    out_value->second = static_cast<short>(dt.GetSecond());
-    return true;
+        return nullptr;
+    wxDateTime* cloned = new (std::nothrow) wxDateTime(dt);
+    if (!cloned)
+        return nullptr;
+    return reinterpret_cast<wxd_DateTime_t*>(cloned);
 #else
     (void)variant;
-    return false;
+    return nullptr;
 #endif
 }
 

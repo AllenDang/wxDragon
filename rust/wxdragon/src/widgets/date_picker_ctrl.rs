@@ -53,7 +53,7 @@ impl DatePickerCtrlEventData {
         if date_ptr.is_null() {
             return None;
         }
-        Some(unsafe { DateTime::from_raw(*date_ptr) })
+        Some(DateTime::from(date_ptr))
     }
 }
 
@@ -74,7 +74,7 @@ impl DatePickerCtrl {
         let ffi_dt = unsafe {
             ffi::wxd_DatePickerCtrl_GetValue(self.window.as_ptr() as *mut ffi::wxd_DatePickerCtrl_t)
         };
-        DateTime::from_raw(ffi_dt)
+        DateTime::from(ffi_dt)
     }
 
     /// Sets the currently selected date.
@@ -82,7 +82,7 @@ impl DatePickerCtrl {
         unsafe {
             ffi::wxd_DatePickerCtrl_SetValue(
                 self.window.as_ptr() as *mut ffi::wxd_DatePickerCtrl_t,
-                dt.as_ptr(),
+                **dt,
             );
         }
     }
@@ -91,24 +91,27 @@ impl DatePickerCtrl {
     /// Returns `Ok((Option<DateTime>, Option<DateTime>))` if successful.
     /// The DateTimes in the tuple will be None if the corresponding bound is not set or if the bounds are invalid.
     pub fn get_range(&self) -> Result<(Option<DateTime>, Option<DateTime>), String> {
-        let mut ffi_dt1 = unsafe { ffi::wxd_DateTime_Default() };
-        let mut ffi_dt2 = unsafe { ffi::wxd_DateTime_Default() };
+        let mut p1: *mut ffi::wxd_DateTime_t = std::ptr::null_mut();
+        let mut p2: *mut ffi::wxd_DateTime_t = std::ptr::null_mut();
 
-        // GetRange C FFI returns true if a range is set, false otherwise.
-        // It populates dt1 and dt2 regardless; they will be invalid if no range or only one side of range is set.
         let _has_range = unsafe {
             ffi::wxd_DatePickerCtrl_GetRange(
                 self.window.as_ptr() as *mut ffi::wxd_DatePickerCtrl_t,
-                &mut ffi_dt1,
-                &mut ffi_dt2,
+                &mut p1,
+                &mut p2,
             )
         };
 
-        let dt1 = DateTime::from_raw(ffi_dt1);
-        let dt2 = DateTime::from_raw(ffi_dt2);
-
-        let opt_dt1 = if dt1.is_valid() { Some(dt1) } else { None };
-        let opt_dt2 = if dt2.is_valid() { Some(dt2) } else { None };
+        let opt_dt1 = if p1.is_null() {
+            None
+        } else {
+            Some(DateTime::from(p1))
+        };
+        let opt_dt2 = if p2.is_null() {
+            None
+        } else {
+            Some(DateTime::from(p2))
+        };
 
         Ok((opt_dt1, opt_dt2))
     }
@@ -116,8 +119,8 @@ impl DatePickerCtrl {
     /// Sets the valid range for dates on the control.
     /// Pass `None` for `dt_start` or `dt_end` to remove the lower or upper bound, respectively.
     pub fn set_range(&self, dt_start: Option<&DateTime>, dt_end: Option<&DateTime>) {
-        let ptr_dt1 = dt_start.map_or(ptr::null(), |dt| dt.as_ptr());
-        let ptr_dt2 = dt_end.map_or(ptr::null(), |dt| dt.as_ptr());
+        let ptr_dt1 = dt_start.map_or(ptr::null(), |dt| **dt);
+        let ptr_dt2 = dt_end.map_or(ptr::null(), |dt| **dt);
 
         unsafe {
             ffi::wxd_DatePickerCtrl_SetRange(
@@ -160,7 +163,7 @@ widget_builder!(
     build_impl: |slf| {
         assert!(!slf.parent.handle_ptr().is_null(), "DatePickerCtrl requires a parent");
 
-        let ffi_dt_ptr = slf.value.as_ref().map_or(ptr::null(), |dt_val| dt_val.as_ptr());
+        let ffi_dt_ptr = slf.value.as_ref().map_or(ptr::null(), |dt_val| **dt_val);
 
         let ptr = unsafe {
             ffi::wxd_DatePickerCtrl_Create(

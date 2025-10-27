@@ -5,140 +5,133 @@
 
 extern "C" {
 
-// Convert Rust struct to wxDateTime and return pointer
-wxd_DateTime_t wxd_DateTime_FromComponents(
-    int year,
-    unsigned short month, // Already 0-based, adjusted in Rust wrapper
-    short day,
-    short hour,
-    short minute,
-    short second
-) {
-    // Initialize an invalid result
-    wxd_DateTime_t invalid = {0};
-    
+// Create a new wxDateTime from components and return an opaque pointer
+wxd_DateTime_t*
+wxd_DateTime_FromComponents(int year,
+                            unsigned short month, // Already 0-based, adjusted in Rust wrapper
+                            short day, short hour, short minute, short second)
+{
     // Validate parameters according to wxDateTime::Set requirements
-    if (year <= 0 || month >= 12 || day <= 0 || day > 31 ||
-        hour < 0 || hour >= 24 || minute < 0 || minute >= 60 || second < 0 || second >= 60) {
-        return invalid;
+    if (year <= 0 || month >= 12 || day <= 0 || day > 31 || hour < 0 || hour >= 24 || minute < 0 ||
+        minute >= 60 || second < 0 || second >= 60) {
+        return nullptr;
     }
-    
-    wxDateTime dt;
-    
-    // Try to create a wxDateTime (avoid using Set() directly)
-    try {
-        // Try a different approach - explicitly create wxDateTime
-        dt = wxDateTime((wxDateTime::wxDateTime_t)day, 
-                        (wxDateTime::Month)month, 
-                        year,
-                        (wxDateTime::wxDateTime_t)hour,
-                        (wxDateTime::wxDateTime_t)minute,
-                        (wxDateTime::wxDateTime_t)second);
+
+    wxDateTime* dt = new (std::nothrow) wxDateTime(static_cast<wxDateTime::wxDateTime_t>(day),
+                                                   static_cast<wxDateTime::Month>(month), year,
+                                                   static_cast<wxDateTime::wxDateTime_t>(hour),
+                                                   static_cast<wxDateTime::wxDateTime_t>(minute),
+                                                   static_cast<wxDateTime::wxDateTime_t>(second));
+    if (!dt || !dt->IsValid()) {
+        delete dt;
+        return nullptr;
     }
-    catch (const std::exception&) {
-        return invalid;
-    }
-    catch (...) {
-        return invalid;
-    }
-    
-    // Return the result
-    wxd_DateTime_t result;
-    if (dt.IsValid()) {
-        result.day = dt.GetDay();
-        result.month = dt.GetMonth(); // wxDateTime::Month enum (0-based)
-        result.year = dt.GetYear();
-        result.hour = dt.GetHour();
-        result.minute = dt.GetMinute();
-        result.second = dt.GetSecond();
-    } else {
-        // Return an invalid representation
-        result = invalid;
-    }
-    
-    return result;
+    return reinterpret_cast<wxd_DateTime_t*>(dt);
 }
 
-wxd_DateTime_t wxd_DateTime_Now() {
-    wxDateTime now = wxDateTime::Now();
-    wxd_DateTime_t result;
-    
-    if (now.IsValid()) {
-        result.day = now.GetDay();
-        result.month = now.GetMonth();
-        result.year = now.GetYear();
-        result.hour = now.GetHour();
-        result.minute = now.GetMinute();
-        result.second = now.GetSecond();
-    } else {
-        // This should never happen with Now()
-        result.day = 0;
-        result.month = 0; 
-        result.year = 0;
-        result.hour = 0;
-        result.minute = 0;
-        result.second = 0;
+wxd_DateTime_t*
+wxd_DateTime_Clone(const wxd_DateTime_t* dt)
+{
+    if (!dt)
+        return nullptr;
+    const wxDateTime* wdt = reinterpret_cast<const wxDateTime*>(dt);
+    wxDateTime* clone = new (std::nothrow) wxDateTime(*wdt);
+    if (!clone || !clone->IsValid()) {
+        delete clone;
+        return nullptr;
     }
-    
-    return result;
+    return reinterpret_cast<wxd_DateTime_t*>(clone);
 }
 
-// Returns an invalid wxDateTime representation
-wxd_DateTime_t wxd_DateTime_Default() {
-    wxd_DateTime_t result;
-    result.day = 0;
-    result.month = 0; 
-    result.year = 0;
-    result.hour = 0;
-    result.minute = 0;
-    result.second = 0;
-    return result;
+wxd_DateTime_t*
+wxd_DateTime_Now()
+{
+    wxDateTime* now = new (std::nothrow) wxDateTime(wxDateTime::Now());
+    if (!now || !now->IsValid()) {
+        delete now;
+        return nullptr;
+    }
+    return reinterpret_cast<wxd_DateTime_t*>(now);
 }
 
-bool wxd_DateTime_IsValid(const wxd_DateTime_t* dt) {
-    if (!dt) {
+// Returns a default-constructed (invalid) wxDateTime pointer
+wxd_DateTime_t*
+wxd_DateTime_Default()
+{
+    wxDateTime* dt = new (std::nothrow) wxDateTime();
+    return reinterpret_cast<wxd_DateTime_t*>(dt);
+}
+
+bool
+wxd_DateTime_IsValid(const wxd_DateTime_t* dt)
+{
+    if (!dt)
         return false;
-    }
-    
-    // Basic check: year 0 is often invalid, months must be 0-11
-    if (dt->year == 0 || dt->month > 11) {
-        return false; 
-    }
-    
-    // Try to create a wxDateTime to check validity
-    try {
-        // Don't use the wxDateTime constructor directly, as it might be what's failing
-        // Instead, let's use individual checks
-        if (dt->month > 11 || dt->day < 1 || dt->day > 31 || 
-            dt->hour >= 24 || dt->minute >= 60 || dt->second >= 60) {
-            return false;
-        }
-        
-        // For February, check leap year rules
-        if (dt->month == 1) {  // February (0-based)
-            bool isLeap = (dt->year % 4 == 0) && 
-                          ((dt->year % 100 != 0) || (dt->year % 400 == 0));
-            int maxDays = isLeap ? 29 : 28;
-            
-            if (dt->day > maxDays) {
-                return false;
-            }
-        }
-        
-        // For months with 30 days
-        if ((dt->month == 3 || dt->month == 5 || dt->month == 8 || dt->month == 10) && 
-            dt->day > 30) {
-            return false;
-        }
-        
-        return true;
-    }
-    catch (const std::exception&) {
-        return false;
-    }
-    catch (...) {
-        return false;
-    }
+    const wxDateTime* wdt = reinterpret_cast<const wxDateTime*>(dt);
+    return wdt->IsValid();
+}
+
+WXD_EXPORTED void
+wxd_DateTime_Destroy(const wxd_DateTime_t* dt)
+{
+    if (!dt)
+        return;
+    wxDateTime* wdt = const_cast<wxDateTime*>(reinterpret_cast<const wxDateTime*>(dt));
+    delete wdt;
+}
+
+WXD_EXPORTED int
+wxd_DateTime_GetYear(const wxd_DateTime_t* dt)
+{
+    if (!dt)
+        return 0;
+    const wxDateTime* wdt = reinterpret_cast<const wxDateTime*>(dt);
+    return wdt->GetYear();
+}
+
+WXD_EXPORTED unsigned short
+wxd_DateTime_GetMonth(const wxd_DateTime_t* dt)
+{
+    if (!dt)
+        return 0;
+    const wxDateTime* wdt = reinterpret_cast<const wxDateTime*>(dt);
+    return static_cast<unsigned short>(wdt->GetMonth());
+}
+
+WXD_EXPORTED short
+wxd_DateTime_GetDay(const wxd_DateTime_t* dt)
+{
+    if (!dt)
+        return 0;
+    const wxDateTime* wdt = reinterpret_cast<const wxDateTime*>(dt);
+    return static_cast<short>(wdt->GetDay());
+}
+
+WXD_EXPORTED short
+wxd_DateTime_GetHour(const wxd_DateTime_t* dt)
+{
+    if (!dt)
+        return 0;
+    const wxDateTime* wdt = reinterpret_cast<const wxDateTime*>(dt);
+    return static_cast<short>(wdt->GetHour());
+}
+
+WXD_EXPORTED short
+wxd_DateTime_GetMinute(const wxd_DateTime_t* dt)
+{
+    if (!dt)
+        return 0;
+    const wxDateTime* wdt = reinterpret_cast<const wxDateTime*>(dt);
+    return static_cast<short>(wdt->GetMinute());
+}
+
+WXD_EXPORTED short
+wxd_DateTime_GetSecond(const wxd_DateTime_t* dt)
+{
+    if (!dt)
+        return 0;
+    const wxDateTime* wdt = reinterpret_cast<const wxDateTime*>(dt);
+    return static_cast<short>(wdt->GetSecond());
 }
 
 } // extern "C"

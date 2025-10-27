@@ -223,7 +223,7 @@ pub fn create_dataview_virtual_tab(parent: &impl WxWidget) -> DataViewVirtualTab
                 let bmp = &icon_bitmaps_for_closure_get[employee.icon_index];
                 bmp.into()
             }
-            6 => employee.hire_date.into(),
+            6 => employee.hire_date.clone().into(),
             7 => employee.hourly_rate.into(),
             8 => employee.status.clone().into(),
             _ => "".to_string().into(),

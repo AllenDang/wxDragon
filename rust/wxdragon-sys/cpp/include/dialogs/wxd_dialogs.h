@@ -219,19 +219,43 @@ wxd_ProgressDialog_WasCancelled(wxd_ProgressDialog_t* self);
 WXD_EXPORTED bool
 wxd_ProgressDialog_WasSkipped(wxd_ProgressDialog_t* self);
 
-// --- DateTime Helper Functions (moved here as they are used by DatePickerCtrl in this file) ---
-WXD_EXPORTED wxd_DateTime_t
+// --- DateTime Helper Functions (pointer-based) ---
+WXD_EXPORTED wxd_DateTime_t*
 wxd_DateTime_Default();
 
-WXD_EXPORTED wxd_DateTime_t
+WXD_EXPORTED wxd_DateTime_t*
 wxd_DateTime_Now();
 
-WXD_EXPORTED wxd_DateTime_t
+WXD_EXPORTED wxd_DateTime_t*
+wxd_DateTime_Clone(const wxd_DateTime_t* dt);
+
+WXD_EXPORTED wxd_DateTime_t*
 wxd_DateTime_FromComponents(int year, unsigned short month, short day, short hour, short minute,
                             short second);
 
 WXD_EXPORTED bool
 wxd_DateTime_IsValid(const wxd_DateTime_t* dt);
+
+WXD_EXPORTED void
+wxd_DateTime_Destroy(const wxd_DateTime_t* dt);
+
+WXD_EXPORTED int
+wxd_DateTime_GetYear(const wxd_DateTime_t* dt);
+
+WXD_EXPORTED unsigned short
+wxd_DateTime_GetMonth(const wxd_DateTime_t* dt);
+
+WXD_EXPORTED short
+wxd_DateTime_GetDay(const wxd_DateTime_t* dt);
+
+WXD_EXPORTED short
+wxd_DateTime_GetHour(const wxd_DateTime_t* dt);
+
+WXD_EXPORTED short
+wxd_DateTime_GetMinute(const wxd_DateTime_t* dt);
+
+WXD_EXPORTED short
+wxd_DateTime_GetSecond(const wxd_DateTime_t* dt);
 
 // --- SingleChoiceDialog ---
 WXD_EXPORTED wxd_SingleChoiceDialog_t*

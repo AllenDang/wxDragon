@@ -59,7 +59,7 @@ WXD_EXPORTED void
 wxd_Variant_SetString_Utf8(const wxd_Variant_t* variant, const char* s, int len);
 
 WXD_EXPORTED void
-wxd_Variant_SetDateTime(const wxd_Variant_t* variant, wxd_DateTime_t value);
+wxd_Variant_SetDateTime(const wxd_Variant_t* variant, const wxd_DateTime_t* value);
 
 // Bitmap: store by value inside wxVariant (RC+COW). If bmp is null or invalid, makes variant null.
 WXD_EXPORTED void
@@ -85,8 +85,8 @@ wxd_Variant_GetDouble(const wxd_Variant_t* variant, double* out_value);
 WXD_EXPORTED size_t
 wxd_Variant_GetString_Utf8(const wxd_Variant_t* variant, char* out, size_t out_len);
 
-WXD_EXPORTED bool
-wxd_Variant_GetDateTime(const wxd_Variant_t* variant, wxd_DateTime_t* out_value);
+WXD_EXPORTED wxd_DateTime_t*
+wxd_Variant_GetDateTime(const wxd_Variant_t* variant);
 
 // Bitmap: returns a new heap-allocated clone on success; caller must destroy with wxd_Bitmap_Destroy.
 WXD_EXPORTED wxd_Bitmap_t*
