@@ -20,28 +20,46 @@ typedef enum {
 } wxd_TaskBarIconType_t;
 
 // TaskBarIcon creation and destruction
-wxd_TaskBarIcon_t* wxd_TaskBarIcon_Create(wxd_TaskBarIconType_t iconType);
-void wxd_TaskBarIcon_Destroy(wxd_TaskBarIcon_t* taskbar);
+wxd_TaskBarIcon_t*
+wxd_TaskBarIcon_Create(wxd_TaskBarIconType_t iconType);
+
+void
+wxd_TaskBarIcon_Destroy(wxd_TaskBarIcon_t* taskbar);
 
 // Icon operations
-bool wxd_TaskBarIcon_SetIcon(wxd_TaskBarIcon_t* taskbar, const wxd_Bitmap_t* icon, const char* tooltip);
-bool wxd_TaskBarIcon_SetIconBundle(wxd_TaskBarIcon_t* taskbar, const wxd_BitmapBundle_t* iconBundle, const char* tooltip);
-bool wxd_TaskBarIcon_RemoveIcon(wxd_TaskBarIcon_t* taskbar);
-bool wxd_TaskBarIcon_IsIconInstalled(wxd_TaskBarIcon_t* taskbar);
+bool
+wxd_TaskBarIcon_SetIcon(wxd_TaskBarIcon_t* taskbar, const wxd_Bitmap_t* icon, const char* tooltip);
+
+bool
+wxd_TaskBarIcon_SetIconBundle(wxd_TaskBarIcon_t* taskbar, const wxd_BitmapBundle_t* iconBundle,
+                              const char* tooltip);
+
+bool
+wxd_TaskBarIcon_RemoveIcon(wxd_TaskBarIcon_t* taskbar);
+
+bool
+wxd_TaskBarIcon_IsIconInstalled(wxd_TaskBarIcon_t* taskbar);
 
 // Balloon tooltip operations (Windows only)
-bool wxd_TaskBarIcon_ShowBalloon(wxd_TaskBarIcon_t* taskbar, const char* title, const char* text, unsigned int timeout, int flags, const wxd_BitmapBundle_t* icon);
+bool
+wxd_TaskBarIcon_ShowBalloon(wxd_TaskBarIcon_t* taskbar, const char* title, const char* text,
+                            unsigned int timeout, int flags, const wxd_BitmapBundle_t* icon);
 
 // Menu operations
-bool wxd_TaskBarIcon_PopupMenu(wxd_TaskBarIcon_t* taskbar, wxd_Menu_t* menu);
+bool
+wxd_TaskBarIcon_PopupMenu(wxd_TaskBarIcon_t* taskbar, wxd_Menu_t* menu);
 
 // Automatic popup menu operations
-void wxd_TaskBarIcon_SetPopupMenu(wxd_TaskBarIcon_t* taskbar, wxd_Menu_t* menu);
-wxd_Menu_t* wxd_TaskBarIcon_GetPopupMenu(wxd_TaskBarIcon_t* taskbar);
+void
+wxd_TaskBarIcon_SetPopupMenu(wxd_TaskBarIcon_t* taskbar, wxd_Menu_t* menu);
+
+wxd_Menu_t*
+wxd_TaskBarIcon_GetPopupMenu(wxd_TaskBarIcon_t* taskbar);
 
 // Event handler pointer for binding events
-wxd_EvtHandler_t* wxd_TaskBarIcon_GetEvtHandler(wxd_TaskBarIcon_t* taskbar);
+wxd_EvtHandler_t*
+wxd_TaskBarIcon_GetEvtHandler(wxd_TaskBarIcon_t* taskbar);
 
 #ifdef __cplusplus
 }
-#endif 
+#endif

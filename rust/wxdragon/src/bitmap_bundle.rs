@@ -84,11 +84,9 @@ impl BitmapBundle {
         }
 
         // Create an array of pointers to the bitmaps
-        let mut bitmap_ptrs: Vec<*mut ffi::wxd_Bitmap_t> =
-            bitmaps.iter().map(|bmp| **bmp).collect();
+        let bitmap_ptrs: Vec<*const ffi::wxd_Bitmap_t> = bitmaps.iter().map(|bmp| **bmp).collect();
 
-        let ptr =
-            unsafe { ffi::wxd_BitmapBundle_FromBitmaps(bitmap_ptrs.as_mut_ptr(), bitmaps.len()) };
+        let ptr = unsafe { ffi::wxd_BitmapBundle_FromBitmaps(bitmap_ptrs.as_ptr(), bitmaps.len()) };
 
         BitmapBundle {
             ptr,
@@ -197,7 +195,7 @@ impl BitmapBundle {
             None
         } else {
             // The C++ side returns a new bitmap that we own
-            Some(Bitmap::from_ptr_owned(bitmap_ptr))
+            Some(Bitmap::from(bitmap_ptr))
         }
     }
 
@@ -220,7 +218,7 @@ impl BitmapBundle {
             None
         } else {
             // The C++ side returns a new bitmap that we own
-            Some(Bitmap::from_ptr_owned(bitmap_ptr))
+            Some(Bitmap::from(bitmap_ptr))
         }
     }
 

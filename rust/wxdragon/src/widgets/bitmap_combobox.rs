@@ -65,7 +65,7 @@ impl BitmapComboBox {
     /// Appends an item with an optional bitmap.
     pub fn append(&self, item: &str, bitmap: Option<&Bitmap>) {
         let c_item = CString::new(item).expect("CString::new failed for item");
-        let bmp_ptr = bitmap.map_or(ptr::null_mut(), |b| **b);
+        let bmp_ptr = bitmap.map_or(ptr::null(), |b| **b);
         unsafe {
             ffi::wxd_BitmapComboBox_Append(self.as_ptr(), c_item.as_ptr(), bmp_ptr);
         }
@@ -154,7 +154,7 @@ impl BitmapComboBox {
             None
         } else {
             // The C++ side created a `new wxBitmap`. We take ownership.
-            Some(Bitmap::from_ptr_owned(bmp_ptr))
+            Some(Bitmap::from(bmp_ptr))
         }
     }
 

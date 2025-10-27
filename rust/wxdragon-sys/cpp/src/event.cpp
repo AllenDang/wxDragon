@@ -415,6 +415,14 @@ WxdEventHandler::DispatchEvent(wxEvent& event)
             event.Skip(true);
         }
     }
+
+    // If this is the destroy event, perform a final cleanup of all bound closures.
+    // This runs after all user destroy handlers have been invoked above.
+    if (eventType == wxEVT_DESTROY) {
+        // Intentionally ignore the return value of UnbindAll() as we do not need to know
+        // how many handlers were unbound; this is a final cleanup step.
+        (void)this->UnbindAll();
+    }
 }
 
 // Special dispatch method for close events

@@ -40,15 +40,8 @@ typedef struct {
     unsigned char a;
 } wxd_Colour_t;
 
-// DateTime type for DataView
-typedef struct {
-    short day;
-    unsigned short month;
-    int year;
-    short hour;
-    short minute;
-    short second;
-} wxd_DateTime_t;
+// DateTime opaque type (pointer to wxDateTime instance)
+typedef struct wxd_DateTime_t wxd_DateTime_t;
 
 /// @brief Event types represented by stable integer values in C.
 typedef enum {

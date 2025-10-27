@@ -308,7 +308,7 @@ impl BitmapDataObject {
             None
         } else {
             // Create a bitmap object that takes ownership of the pointer
-            Some(crate::bitmap::Bitmap::from_ptr_owned(ptr))
+            Some(crate::bitmap::Bitmap::from(ptr))
         }
     }
 

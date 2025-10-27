@@ -68,7 +68,7 @@ impl TimePickerCtrl {
         let ffi_dt = unsafe {
             ffi::wxd_TimePickerCtrl_GetValue(self.window.as_ptr() as *mut ffi::wxd_TimePickerCtrl_t)
         };
-        DateTime::from_raw(ffi_dt)
+        DateTime::from(ffi_dt)
     }
 
     /// Sets the currently selected time.
@@ -76,7 +76,7 @@ impl TimePickerCtrl {
         unsafe {
             ffi::wxd_TimePickerCtrl_SetValue(
                 self.window.as_ptr() as *mut ffi::wxd_TimePickerCtrl_t,
-                dt.as_ptr(),
+                **dt,
             );
         }
     }
@@ -102,7 +102,7 @@ widget_builder!(
     build_impl: |slf| {
         assert!(!slf.parent.handle_ptr().is_null(), "TimePickerCtrl requires a parent");
 
-        let ffi_dt_ptr = slf.value.as_ref().map_or(ptr::null(), |dt_val| dt_val.as_ptr());
+        let ffi_dt_ptr = slf.value.as_ref().map_or(ptr::null(), |dt_val| **dt_val);
 
         let ptr = unsafe {
             ffi::wxd_TimePickerCtrl_Create(

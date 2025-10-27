@@ -113,16 +113,11 @@ impl MenuBarBuilder {
         let menubar = MenuBar { ptr };
 
         // Append all collected menus
-        for (mut menu, title) in self.items {
+        for (menu, title) in self.items {
             let title_c = CString::new(title).unwrap_or_default();
-            // Transfer ownership to the menubar so Menu::Drop won't destroy it
-            menu.mark_owned_by_menubar();
             let menu_ptr = unsafe { menu.as_ptr() };
-            // MenuBar takes ownership of the menu pointer, but Menu doesn't implement Drop
-            // so no need to forget it
-            unsafe {
-                ffi::wxd_MenuBar_Append(menubar.ptr, menu_ptr, title_c.as_ptr());
-            }
+            // MenuBar takes ownership of the menu pointer
+            unsafe { ffi::wxd_MenuBar_Append(menubar.ptr, menu_ptr, title_c.as_ptr()) };
         }
 
         menubar

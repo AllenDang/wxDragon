@@ -258,7 +258,7 @@ impl Button {
         if ptr.is_null() {
             None
         } else {
-            Some(unsafe { Bitmap::from_ptr_unowned(ptr) })
+            Some(Bitmap::from(ptr))
         }
     }
     pub fn get_bitmap_disabled(&self) -> Option<Bitmap> {
@@ -268,7 +268,7 @@ impl Button {
         if ptr.is_null() {
             None
         } else {
-            Some(unsafe { Bitmap::from_ptr_unowned(ptr) })
+            Some(Bitmap::from(ptr))
         }
     }
     pub fn get_bitmap_focus(&self) -> Option<Bitmap> {
@@ -278,7 +278,7 @@ impl Button {
         if ptr.is_null() {
             None
         } else {
-            Some(unsafe { Bitmap::from_ptr_unowned(ptr) })
+            Some(Bitmap::from(ptr))
         }
     }
     pub fn get_bitmap_current(&self) -> Option<Bitmap> {
@@ -288,7 +288,7 @@ impl Button {
         if ptr.is_null() {
             None
         } else {
-            Some(unsafe { Bitmap::from_ptr_unowned(ptr) })
+            Some(Bitmap::from(ptr))
         }
     }
     pub fn get_bitmap_pressed(&self) -> Option<Bitmap> {
@@ -298,7 +298,7 @@ impl Button {
         if ptr.is_null() {
             None
         } else {
-            Some(unsafe { Bitmap::from_ptr_unowned(ptr) })
+            Some(Bitmap::from(ptr))
         }
     }
 }

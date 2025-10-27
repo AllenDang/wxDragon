@@ -232,6 +232,9 @@ fn main() {
             // Clean up the TaskBarIcon, it's important to call destroy() to remove the icon from the system tray,
             // or we can't exit the application main loop.
             taskbar.destroy();
+
+            // Clean up the tray icon menu to release rust closures attached to menu items
+            tray_icon_menu.destroy();
         });
 
         // --- Main Panel Layout ---

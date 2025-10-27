@@ -1,6 +1,8 @@
 use wxdragon::prelude::*;
 
 fn main() {
+    SystemOptions::set_option_by_int("msw.no-manifest-check", 1);
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("trace")).init();
     let _ = wxdragon::main(|_| {
         // Create a main frame to keep the app running
         let frame = Frame::builder()
@@ -59,29 +61,29 @@ fn main() {
                 match menu_id {
                     1001 => {
                         // Open Application
-                        println!("📂 Open Application clicked!");
+                        log::info!("📂 Open Application clicked!");
                         status.set_label("Menu: Open Application clicked!");
                     }
                     1002 => {
                         // Settings
-                        println!("⚙️ Settings clicked!");
+                        log::info!("⚙️ Settings clicked!");
                         status.set_label("Menu: Settings clicked!");
                     }
                     1003 => {
                         // About
-                        println!("ℹ️ About clicked!");
+                        log::info!("ℹ️ About clicked!");
                         status.set_label("Menu: About clicked!");
                     }
                     1004 => {
                         // Exit
-                        println!("🚪 Exit clicked!");
+                        log::info!("🚪 Exit clicked!");
                         status.set_label("Menu: Exit clicked - closing application...");
 
                         // Close the frame, which will trigger the on_close event
                         frame.close(true);
                     }
                     _ => {
-                        println!("Unknown menu item clicked: {menu_id}");
+                        log::warn!("Unknown menu item clicked: {menu_id}");
                     }
                 }
             }
@@ -139,8 +141,9 @@ fn main() {
         });
 
         frame.on_destroy(move |_evt| {
+            popup_menu.destroy(); // Clean up the popup menu to release the rust closures of menu items
             taskbar.destroy(); // Clean up the TaskBarIcon
-            println!("Application on_destroy.");
+            log::info!("Application on_destroy.");
         });
     });
 }
