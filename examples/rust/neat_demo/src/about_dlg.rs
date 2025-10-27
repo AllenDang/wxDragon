@@ -31,7 +31,10 @@ pub fn show_about_dialog(parent: &dyn WxWidget) {
     );
     let text = StaticText::builder(&dlg).with_label(&info).build();
     right_sizer.add(&text, 1, SizerFlag::Expand | SizerFlag::All, 20);
-    let ok_btn = Button::builder(&dlg).with_label("OK").build();
+    let ok_btn = Button::builder(&dlg)
+        .with_id(ID_CANCEL)
+        .with_label("OK")
+        .build();
     let flags = SizerFlag::AlignCenterHorizontal | SizerFlag::All;
     right_sizer.add(&ok_btn, 0, flags, 10);
 
@@ -42,6 +45,7 @@ pub fn show_about_dialog(parent: &dyn WxWidget) {
     let dlg_clone = dlg.clone();
     ok_btn.on_click(move |_| {
         dlg_clone.end_modal(0);
+        log::info!("About dialog closed.");
     });
 
     dlg.show_modal();

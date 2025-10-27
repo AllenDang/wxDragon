@@ -370,6 +370,9 @@ impl MenuEventsApp {
 
             let pos = event.get_position();
             dataview_clone.popup_menu(&popup_menu, pos);
+
+            // Clean up the popup menu after use to release rust closures attached to menu items
+            popup_menu.destroy();
         });
     }
 
