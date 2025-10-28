@@ -129,11 +129,7 @@ impl Cursor {
             StockCursor::ArrowWait => ffi::wxd_StockCursor_WXD_CURSOR_ARROWWAIT,
         };
         let ptr = unsafe { ffi::wxd_Cursor_CreateStock(ffi_cursor_type) };
-        if ptr.is_null() {
-            None
-        } else {
-            Some(Self(ptr))
-        }
+        if ptr.is_null() { None } else { Some(Self(ptr)) }
     }
 
     /// Creates a cursor from a file.
@@ -181,11 +177,7 @@ impl Cursor {
                 hotspot_y,
             )
         };
-        if ptr.is_null() {
-            None
-        } else {
-            Some(Self(ptr))
-        }
+        if ptr.is_null() { None } else { Some(Self(ptr)) }
     }
 
     /// Creates a cursor from raw bitmap data.
@@ -221,10 +213,10 @@ impl Cursor {
             return None;
         }
 
-        if let Some(mask) = mask_bits {
-            if mask.len() < expected_size {
-                return None;
-            }
+        if let Some(mask) = mask_bits
+            && mask.len() < expected_size
+        {
+            return None;
         }
 
         let mask_ptr = mask_bits.map(|m| m.as_ptr()).unwrap_or(std::ptr::null());
@@ -239,11 +231,7 @@ impl Cursor {
             )
         };
 
-        if ptr.is_null() {
-            None
-        } else {
-            Some(Self(ptr))
-        }
+        if ptr.is_null() { None } else { Some(Self(ptr)) }
     }
 
     /// Creates a cursor from a bitmap/image.
@@ -255,11 +243,7 @@ impl Cursor {
     /// A new `Cursor` instance, or `None` if creation failed
     pub fn from_bitmap(bitmap: &Bitmap) -> Option<Self> {
         let ptr = unsafe { ffi::wxd_Cursor_CreateFromImage(**bitmap) };
-        if ptr.is_null() {
-            None
-        } else {
-            Some(Self(ptr))
-        }
+        if ptr.is_null() { None } else { Some(Self(ptr)) }
     }
 
     /// Creates a copy of this cursor.
@@ -268,11 +252,7 @@ impl Cursor {
     /// A new `Cursor` instance that is a copy of this one, or `None` if copying failed
     pub fn copy(&self) -> Option<Self> {
         let ptr = unsafe { ffi::wxd_Cursor_Copy(self.0) };
-        if ptr.is_null() {
-            None
-        } else {
-            Some(Self(ptr))
-        }
+        if ptr.is_null() { None } else { Some(Self(ptr)) }
     }
 
     /// Returns true if the cursor is valid and can be used.
@@ -304,7 +284,7 @@ impl Cursor {
     /// The returned pointer should not be used to modify the cursor and may
     /// only be valid for the lifetime of this `Cursor` instance.
     pub unsafe fn get_handle(&self) -> *mut std::ffi::c_void {
-        ffi::wxd_Cursor_GetHandle(self.0)
+        unsafe { ffi::wxd_Cursor_GetHandle(self.0) }
     }
 
     /// Sets the native handle of the cursor (platform-specific).
@@ -316,7 +296,7 @@ impl Cursor {
     /// The caller must ensure the handle is valid and compatible with the current platform.
     /// This function is only supported on Windows.
     pub unsafe fn set_handle(&self, handle: *mut std::ffi::c_void) {
-        ffi::wxd_Cursor_SetHandle(self.0, handle);
+        unsafe { ffi::wxd_Cursor_SetHandle(self.0, handle) };
     }
 
     /// Returns the raw underlying pointer.
@@ -332,11 +312,7 @@ impl Cursor {
     /// # Safety
     /// The caller must ensure the pointer is valid and manages its lifetime correctly.
     pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_Cursor_t) -> Option<Self> {
-        if ptr.is_null() {
-            None
-        } else {
-            Some(Self(ptr))
-        }
+        if ptr.is_null() { None } else { Some(Self(ptr)) }
     }
 
     /// Checks if the underlying pointer is null.

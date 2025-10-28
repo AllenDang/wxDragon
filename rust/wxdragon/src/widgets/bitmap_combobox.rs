@@ -30,7 +30,7 @@ impl BitmapComboBox {
     /// The caller must ensure the pointer is valid and represents a `wxBitmapComboBox`.
     pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_BitmapComboBox_t) -> Self {
         BitmapComboBox {
-            window: Window::from_ptr(ptr as *mut ffi::wxd_Window_t),
+            window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
         }
     }
 

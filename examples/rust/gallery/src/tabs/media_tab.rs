@@ -10,8 +10,10 @@ pub struct MediaControls {
 impl MediaControls {
     pub fn bind_events(&self) {
         // Bind events for media controls if any
-        self.animation_ctrl.on_mouse_left_down( |_event| {
-            log::debug!("AnimationCtrl clicked - this event might not be standard for it, just for testing.");
+        self.animation_ctrl.on_mouse_left_down(|_event| {
+            log::debug!(
+                "AnimationCtrl clicked - this event might not be standard for it, just for testing."
+            );
         });
     }
 }

@@ -1,5 +1,5 @@
 use crate::dialogs::Dialog;
-use crate::geometry::{Point, Size, DEFAULT_POSITION, DEFAULT_SIZE};
+use crate::geometry::{DEFAULT_POSITION, DEFAULT_SIZE, Point, Size};
 use crate::utils::WxdArrayString;
 use crate::window::WxWidget;
 use std::ffi::CString;
@@ -43,7 +43,7 @@ impl MultiChoiceDialog {
     /// The pointer must be a valid pointer to a wxMultiChoiceDialog.
     pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_MultiChoiceDialog_t) -> Self {
         MultiChoiceDialog {
-            dialog_base: Dialog::from_ptr(ptr as *mut ffi::wxd_Dialog_t),
+            dialog_base: unsafe { Dialog::from_ptr(ptr as *mut ffi::wxd_Dialog_t) },
         }
     }
 

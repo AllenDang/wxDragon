@@ -51,7 +51,7 @@ impl ScrolledWindow {
     /// The pointer must be a valid `wxd_ScrolledWindow_t` pointer.
     pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_ScrolledWindow_t) -> Self {
         ScrolledWindow {
-            panel: Panel::from_ptr(ptr as *mut ffi::wxd_Panel_t),
+            panel: unsafe { Panel::from_ptr(ptr as *mut ffi::wxd_Panel_t) },
         }
     }
 
@@ -174,7 +174,7 @@ impl crate::window::FromWindowWithClassName for ScrolledWindow {
 
     unsafe fn from_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
         ScrolledWindow {
-            panel: Panel::from_ptr(ptr as *mut ffi::wxd_Panel_t),
+            panel: unsafe { Panel::from_ptr(ptr as *mut ffi::wxd_Panel_t) },
         }
     }
 }

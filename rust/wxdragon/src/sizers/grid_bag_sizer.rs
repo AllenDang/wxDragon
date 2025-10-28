@@ -1,6 +1,6 @@
 use crate::prelude::Size;
-use crate::sizers::base::Sizer;
 use crate::sizers::WxSizer as WxSizerTrait;
+use crate::sizers::base::Sizer;
 use crate::window::WxWidget;
 use std::ops::Deref;
 use wxdragon_sys as ffi;
@@ -135,10 +135,12 @@ impl GridBagSizer {
         } else {
             // The pointer for the base Sizer is the same as the specific GridBagSizer pointer.
             let base_ptr = ptr as *mut ffi::wxd_Sizer_t;
-            Sizer::from_ptr(base_ptr).map(|sizer_base| GridBagSizer {
-                raw_specific_ptr: ptr,
-                sizer_base,
-            })
+            unsafe {
+                Sizer::from_ptr(base_ptr).map(|sizer_base| GridBagSizer {
+                    raw_specific_ptr: ptr,
+                    sizer_base,
+                })
+            }
         }
     }
 

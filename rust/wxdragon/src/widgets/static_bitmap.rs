@@ -110,7 +110,7 @@ impl StaticBitmap {
     /// The pointer must be a valid `wxd_StaticBitmap_t` pointer.
     pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_StaticBitmap_t) -> Self {
         StaticBitmap {
-            window: Window::from_ptr(ptr as *mut ffi::wxd_Window_t),
+            window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
         }
     }
 

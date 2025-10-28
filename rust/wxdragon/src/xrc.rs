@@ -167,7 +167,7 @@ impl<T: XrcSupport> FromXrcPtr for T {
     type RawFfiType = *mut ffi::wxd_Window_t;
 
     unsafe fn from_xrc_ptr(ptr: Self::RawFfiType) -> Self {
-        T::from_xrc_ptr(ptr)
+        unsafe { T::from_xrc_ptr(ptr) }
     }
 }
 

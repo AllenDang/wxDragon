@@ -216,11 +216,7 @@ impl DataViewCtrl {
     /// An `Option` containing the index of the selected row, or `None` if no row is selected.
     pub fn get_selected_row(&self) -> Option<usize> {
         let row = unsafe { ffi::wxd_DataViewCtrl_GetSelectedRow(self.window.handle_ptr()) };
-        if row >= 0 {
-            Some(row as usize)
-        } else {
-            None
-        }
+        if row >= 0 { Some(row as usize) } else { None }
     }
 
     /// Deselects all currently selected items.

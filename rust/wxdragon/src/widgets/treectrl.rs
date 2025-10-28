@@ -74,7 +74,7 @@ use crate::implement_widget_traits_with_target;
 use crate::widget_builder;
 use crate::widget_style_enum;
 use crate::widgets::imagelist::ImageList;
-use crate::widgets::item_data::{get_item_data, remove_item_data, store_item_data, HasItemData};
+use crate::widgets::item_data::{HasItemData, get_item_data, remove_item_data, store_item_data};
 use crate::window::{Window, WxWidget};
 use wxdragon_sys as ffi;
 
@@ -140,14 +140,14 @@ impl TreeItemId {
             // Not in kernel space
             {
                 // Additional check: try to verify the TreeItemId is valid
-                if ffi::wxd_TreeItemId_IsOk(ptr) {
+                if unsafe { ffi::wxd_TreeItemId_IsOk(ptr) } {
                     Some(TreeItemId { ptr })
                 } else {
                     log::warn!(
                         "Warning: C++ returned invalid TreeItemId pointer {ptr:p}, rejecting"
                     );
                     // Free the invalid pointer since we were supposed to take ownership
-                    ffi::wxd_TreeItemId_Free(ptr);
+                    unsafe { ffi::wxd_TreeItemId_Free(ptr) };
                     None
                 }
             } else {
@@ -220,7 +220,10 @@ impl Drop for TreeItemId {
                     }
                 } else {
                     // Pointer looks corrupted, don't try to free it to avoid crashes
-                    log::warn!("Warning: Dropping TreeItemId with corrupted pointer {:p}, not freeing to avoid crash", self.ptr);
+                    log::warn!(
+                        "Warning: Dropping TreeItemId with corrupted pointer {:p}, not freeing to avoid crash",
+                        self.ptr
+                    );
                 }
             }
             self.ptr = ptr::null_mut();
@@ -282,7 +285,7 @@ impl TreeCtrl {
     /// The pointer must be a valid `wxd_TreeCtrl_t` pointer.
     pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_TreeCtrl_t) -> Self {
         TreeCtrl {
-            window: Window::from_ptr(ptr as *mut ffi::wxd_Window_t),
+            window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
         }
     }
 

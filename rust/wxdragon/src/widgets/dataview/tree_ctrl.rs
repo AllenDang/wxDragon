@@ -1,29 +1,26 @@
 //! DataViewTreeCtrl implementation.
 
-// use crate::event::EventType; // For event binding later
 use crate::widgets::dataview::item::DataViewItem;
+use crate::widgets::imagelist::ImageList;
 use crate::window::{Window, WxWidget}; // WxWidget needed for parent_type and Deref target
-                                       // TODO: Add ImageList if/when it's implemented
-                                       // use crate::widgets::imagelist::ImageList;
-use crate::widgets::imagelist::ImageList; // USE THE NEW ImageList
 use crate::{
-    implement_widget_traits_with_target,
-    widget_builder,
-    widget_style_enum, // Corrected macro import and usage
     // WxEvtHandler, // For event binding later
     Id,
     Point,
     Size, // Colour removed (unused)
+    implement_widget_traits_with_target,
+    widget_builder,
+    widget_style_enum, // Corrected macro import and usage
 };
 use std::ffi::CString;
 // use std::rc::Rc; // Unused
 use wxdragon_sys as ffi;
 // Import necessary types for columns from parent dataview module
+use super::DataViewModel;
 use super::column::DataViewColumn;
 use super::enums::{DataViewAlign, DataViewCellMode, DataViewColumnFlags}; // Added DataViewCellMode and DataViewColumnFlags
 use super::renderer::{DataViewIconTextRenderer, DataViewTextRenderer}; // Added DataViewIconTextRenderer
 use super::variant::VariantType; // Added VariantType
-use super::DataViewModel;
 
 // Styles for DataViewTreeCtrl (currently uses general DataViewCtrl styles)
 // If specific styles are needed, they can be added here.

@@ -1034,9 +1034,9 @@ extern "C" fn get_value_from_editor_trampoline(
 /// that was previously created by `Box::into_raw()` for a `CustomRendererCallbacks` struct.
 /// The pointer must not be null and must not have been freed previously. After this
 /// function is called, the pointer becomes invalid and must not be used again.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn drop_rust_custom_renderer_callbacks(ptr: *mut std::ffi::c_void) {
     if !ptr.is_null() {
-        let _ = Box::from_raw(ptr as *mut CustomRendererCallbacks);
+        let _ = unsafe { Box::from_raw(ptr as *mut CustomRendererCallbacks) };
     }
 }

@@ -69,7 +69,7 @@ impl CheckBox {
     unsafe fn from_ptr(ptr: *mut ffi::wxd_CheckBox_t) -> Self {
         assert!(!ptr.is_null());
         CheckBox {
-            window: Window::from_ptr(ptr as *mut ffi::wxd_Window_t),
+            window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
         }
     }
 }

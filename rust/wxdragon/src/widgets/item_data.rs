@@ -6,8 +6,8 @@
 use std::any::Any;
 use std::collections::HashMap;
 use std::sync::{
-    atomic::{AtomicU64, Ordering},
     Arc, LazyLock, RwLock,
+    atomic::{AtomicU64, Ordering},
 };
 
 // Global registry to store item data safely

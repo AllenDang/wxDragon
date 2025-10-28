@@ -1,7 +1,7 @@
 use crate::bitmap::Bitmap; // ADDED: Import Bitmap
-use crate::geometry::{Point, Size, DEFAULT_POSITION};
-use crate::id::Id;
+use crate::geometry::{DEFAULT_POSITION, Point, Size};
 use crate::id::ID_ANY;
+use crate::id::Id;
 use crate::menus::MenuBar; // ADDED: Import MenuBar
 use crate::widget_style_enum;
 use crate::widgets::statusbar::StatusBar; // ADDED Import
@@ -403,7 +403,7 @@ implement_widget_traits_with_target!(Frame, window, Window);
 impl crate::xrc::XrcSupport for Frame {
     unsafe fn from_xrc_ptr(ptr: *mut wxdragon_sys::wxd_Window_t) -> Self {
         Frame {
-            window: Window::from_ptr(ptr),
+            window: unsafe { Window::from_ptr(ptr) },
             parent_ptr: std::ptr::null_mut(),
             _marker: PhantomData,
         }
@@ -418,7 +418,7 @@ impl crate::window::FromWindowWithClassName for Frame {
 
     unsafe fn from_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
         Frame {
-            window: Window::from_ptr(ptr),
+            window: unsafe { Window::from_ptr(ptr) },
             parent_ptr: std::ptr::null_mut(),
             _marker: PhantomData,
         }

@@ -83,8 +83,9 @@ impl ComboBox {
             }
 
             if actual_len >= 0 {
-                buffer.set_len(actual_len as usize); // Set actual length of string
-                                                     // Create String from UTF-8 bytes, handling potential invalid UTF-8
+                // Set actual length of string
+                // Create String from UTF-8 bytes, handling potential invalid UTF-8
+                buffer.set_len(actual_len as usize);
                 Some(String::from_utf8_lossy(&buffer).into_owned())
             } else {
                 None // Error occurred

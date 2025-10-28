@@ -1,7 +1,7 @@
 /* This is a new file */
 //! Safe wrapper for wxDirPickerCtrl.
 
-use std::ffi::{c_longlong, CString};
+use std::ffi::{CString, c_longlong};
 use wxdragon_sys as ffi;
 
 use crate::event::{Event, EventType};
@@ -87,10 +87,9 @@ impl DirPickerCtrl {
                 String::new()
             } else {
                 // Free the string using wxd_free_string when we're done with it
-                let rust_str = CString::from_raw(c_str as *mut _)
+                CString::from_raw(c_str as *mut _)
                     .to_string_lossy()
-                    .into_owned();
-                rust_str
+                    .into_owned()
             }
         }
     }
@@ -111,7 +110,7 @@ impl DirPickerCtrl {
     /// The pointer must be a valid `wxd_DirPickerCtrl_t`.
     pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_DirPickerCtrl_t) -> Self {
         DirPickerCtrl {
-            window: Window::from_ptr(ptr as *mut ffi::wxd_Window_t),
+            window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
         }
     }
 }

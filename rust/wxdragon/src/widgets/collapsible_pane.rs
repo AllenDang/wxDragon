@@ -42,7 +42,7 @@ impl CollapsiblePane {
     pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_CollapsiblePane_t) -> Self {
         assert!(!ptr.is_null());
         CollapsiblePane {
-            window: Window::from_ptr(ptr as *mut ffi::wxd_Window_t),
+            window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
         }
     }
 
@@ -106,15 +106,11 @@ impl CollapsiblePane {
             return String::new();
         }
 
-        let result = unsafe {
-            let cstr = std::ffi::CStr::from_ptr(c_str);
-            let string = cstr.to_string_lossy().into_owned();
-            // Free the C string allocated by strdup in C++
-            ffi::wxd_free_string(c_str);
-            string
-        };
-
-        result
+        let cstr = unsafe { std::ffi::CStr::from_ptr(c_str) };
+        let string = cstr.to_string_lossy().into_owned();
+        // Free the C string allocated by strdup in C++
+        unsafe { ffi::wxd_free_string(c_str) };
+        string
     }
 }
 

@@ -6,7 +6,7 @@ wxDragon is a cross-platform GUI library that provides safe Rust bindings for wx
 
 **Key technologies:**
 
-- Rust (edition 2021)
+- Rust (edition 2024)
 - wxWidgets 3.3.1 (C++ GUI framework)
 - FFI bindings via wxdragon-sys
 - Procedural macros via wxdragon-macros

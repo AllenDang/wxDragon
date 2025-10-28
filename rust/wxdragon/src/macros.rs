@@ -234,7 +234,7 @@ macro_rules! implement_widget_traits_with_target {
 
         impl $crate::event::WxEvtHandler for $widget_name {
             unsafe fn get_event_handler_ptr(&self) -> *mut wxdragon_sys::wxd_EvtHandler_t {
-                self.$window_field.get_event_handler_ptr()
+                unsafe { self.$window_field.get_event_handler_ptr() }
             }
         }
 
@@ -577,7 +577,7 @@ macro_rules! custom_widget {
 
             impl $crate::event::WxEvtHandler for $name {
                 unsafe fn get_event_handler_ptr(&self) -> *mut $crate::ffi::wxd_EvtHandler_t {
-                    self.panel.get_event_handler_ptr()
+                    unsafe { self.panel.get_event_handler_ptr() }
                 }
             }
 
@@ -622,7 +622,7 @@ macro_rules! impl_widget_cast {
             }
 
             unsafe fn from_ptr(ptr: *mut wxdragon_sys::wxd_Window_t) -> Self {
-                let window = $crate::window::Window::from_ptr(ptr);
+                let window = unsafe { $crate::window::Window::from_ptr(ptr) };
                 Self::new_from_composition(window, std::ptr::null_mut())
             }
         }
@@ -636,7 +636,7 @@ macro_rules! impl_widget_cast {
             }
 
             unsafe fn from_ptr(ptr: *mut wxdragon_sys::wxd_Window_t) -> Self {
-                let $field = $crate::window::Window::from_ptr(ptr);
+                let $field = unsafe { $crate::window::Window::from_ptr(ptr) };
                 Self { $field }
             }
         }

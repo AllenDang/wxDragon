@@ -1,5 +1,6 @@
 //! Safe wrapper for wxListBox.
 
+use crate::Menu;
 use crate::event::event_data::CommandEventData;
 use crate::event::{Event, EventType};
 use crate::geometry::{Point, Size};
@@ -8,7 +9,6 @@ use crate::implement_widget_traits_with_target;
 use crate::widget_builder;
 use crate::widget_style_enum;
 use crate::window::{Window, WxWidget};
-use crate::Menu;
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
 use wxdragon_sys as ffi;
@@ -205,7 +205,7 @@ impl ListBox {
     pub(crate) unsafe fn from_ptr(ptr: *mut RawListBox) -> Self {
         assert!(!ptr.is_null());
         ListBox {
-            window: Window::from_ptr(ptr as *mut ffi::wxd_Window_t),
+            window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
         }
     }
 

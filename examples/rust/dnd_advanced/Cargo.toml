@@ -2,7 +2,7 @@
 name = "dnd_advanced"
 version = "0.1.0"
 authors = ["wxDragon Contributors"]
-edition = "2021"
+edition = "2024"
 publish = false
 
 [dependencies]

@@ -85,7 +85,7 @@ implement_widget_traits_with_target!(CommandLinkButton, button, Button);
 #[cfg(feature = "xrc")]
 impl crate::xrc::XrcSupport for CommandLinkButton {
     unsafe fn from_xrc_ptr(ptr: *mut wxdragon_sys::wxd_Window_t) -> Self {
-        let window = Window::from_ptr(ptr);
+        let window = unsafe { Window::from_ptr(ptr) };
         let button = Button::new_from_composition(window, std::ptr::null_mut());
         CommandLinkButton { button }
     }
@@ -98,7 +98,7 @@ impl crate::window::FromWindowWithClassName for CommandLinkButton {
     }
 
     unsafe fn from_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
-        let window = Window::from_ptr(ptr);
+        let window = unsafe { Window::from_ptr(ptr) };
         let button = Button::new_from_composition(window, std::ptr::null_mut());
         CommandLinkButton { button }
     }

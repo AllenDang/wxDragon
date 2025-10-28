@@ -3,9 +3,9 @@
 // This module might later contain wrappers for App-specific functions if needed.
 
 use std::collections::VecDeque;
-use std::ffi::{c_char, c_void, CString};
 #[cfg(target_os = "macos")]
-use std::ffi::{c_int, CStr};
+use std::ffi::{CStr, c_int};
+use std::ffi::{CString, c_char, c_void};
 use std::sync::{Arc, LazyLock, Mutex};
 use wxdragon_sys as ffi; // Import Window and WxWidget trait
 
@@ -80,7 +80,7 @@ pub fn process_main_thread_queue() -> bool {
 
 // This function is called from C++ to process pending callbacks
 // Returns 1 if callbacks were processed, 0 if not
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn process_rust_callbacks() -> i32 {
     if process_main_thread_queue() {
         1 // Callbacks were processed
@@ -367,15 +367,15 @@ unsafe extern "C" fn mac_open_files_trampoline<F>(
         return;
     }
 
-    let callback = &*(user_data as *const F);
+    let callback = unsafe { &*(user_data as *const F) };
 
     let mut file_list = Vec::new();
     for i in 0..count as isize {
-        let file_ptr = *files.offset(i);
-        if !file_ptr.is_null() {
-            if let Ok(file_str) = CStr::from_ptr(file_ptr).to_str() {
-                file_list.push(file_str.to_string());
-            }
+        let file_ptr = unsafe { *files.offset(i) };
+        if !file_ptr.is_null()
+            && let Ok(file_str) = unsafe { CStr::from_ptr(file_ptr) }.to_str()
+        {
+            file_list.push(file_str.to_string());
         }
     }
 
@@ -391,8 +391,8 @@ where
         return;
     }
 
-    let callback = &*(user_data as *const F);
-    if let Ok(url_str) = CStr::from_ptr(url).to_str() {
+    let callback = unsafe { &*(user_data as *const F) };
+    if let Ok(url_str) = unsafe { CStr::from_ptr(url) }.to_str() {
         callback(url_str.to_string());
     }
 }
@@ -406,7 +406,7 @@ where
         return;
     }
 
-    let callback = &*(user_data as *const F);
+    let callback = unsafe { &*(user_data as *const F) };
     callback();
 }
 
@@ -419,7 +419,7 @@ where
         return;
     }
 
-    let callback = &*(user_data as *const F);
+    let callback = unsafe { &*(user_data as *const F) };
     callback();
 }
 
@@ -435,15 +435,15 @@ unsafe extern "C" fn mac_print_files_trampoline<F>(
         return;
     }
 
-    let callback = &*(user_data as *const F);
+    let callback = unsafe { &*(user_data as *const F) };
 
     let mut file_list = Vec::new();
     for i in 0..count as isize {
-        let file_ptr = *files.offset(i);
-        if !file_ptr.is_null() {
-            if let Ok(file_str) = CStr::from_ptr(file_ptr).to_str() {
-                file_list.push(file_str.to_string());
-            }
+        let file_ptr = unsafe { *files.offset(i) };
+        if !file_ptr.is_null()
+            && let Ok(file_str) = unsafe { CStr::from_ptr(file_ptr) }.to_str()
+        {
+            file_list.push(file_str.to_string());
         }
     }
 
@@ -547,7 +547,7 @@ unsafe extern "C" fn on_init_trampoline(user_data: *mut c_void) -> bool {
     }
 
     // Borrow the payload and take the callback out.
-    let payload = &mut *(user_data as *mut OnInitPayload);
+    let payload = unsafe { &mut *(user_data as *mut OnInitPayload) };
     let Some(cb) = payload.cb.take() else {
         return false;
     };

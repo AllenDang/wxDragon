@@ -7,7 +7,7 @@ use crate::implement_widget_traits_with_target;
 use crate::widget_builder;
 use crate::widget_style_enum;
 use crate::widgets::imagelist::ImageList;
-use crate::widgets::item_data::{get_item_data, remove_item_data, store_item_data, HasItemData};
+use crate::widgets::item_data::{HasItemData, get_item_data, remove_item_data, store_item_data};
 use crate::window::{Window, WxWidget};
 use std::any::Any;
 use std::ffi::CString;
@@ -172,11 +172,7 @@ impl ListCtrlEventData {
             return None;
         }
         let col = unsafe { ffi::wxd_ListEvent_GetColumn(self.event.0) };
-        if col == -1 {
-            None
-        } else {
-            Some(col)
-        }
+        if col == -1 { None } else { Some(col) }
     }
 
     /// Get the item label (for label edit events)
@@ -289,7 +285,7 @@ impl ListCtrl {
     /// The pointer must be a valid wxd_ListCtrl_t pointer.
     unsafe fn from_ptr(ptr: *mut ffi::wxd_ListCtrl_t) -> Self {
         ListCtrl {
-            window: Window::from_ptr(ptr as *mut ffi::wxd_Window_t),
+            window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
         }
     }
 

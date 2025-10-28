@@ -86,7 +86,7 @@ impl TimePickerCtrl {
     /// The pointer must be a valid `wxd_TimePickerCtrl_t`.
     pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_TimePickerCtrl_t) -> Self {
         TimePickerCtrl {
-            window: Window::from_ptr(ptr as *mut ffi::wxd_Window_t),
+            window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
         }
     }
 }

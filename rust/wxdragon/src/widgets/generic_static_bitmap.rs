@@ -82,7 +82,7 @@ impl GenericStaticBitmap {
     /// The pointer must be a valid `wxd_GenericStaticBitmap_t` pointer.
     pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_GenericStaticBitmap_t) -> Self {
         GenericStaticBitmap {
-            window: Window::from_ptr(ptr as *mut ffi::wxd_Window_t),
+            window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
         }
     }
 

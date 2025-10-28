@@ -32,7 +32,7 @@ impl StaticLine {
 
     pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_StaticLine_t) -> Self {
         StaticLine {
-            window: Window::from_ptr(ptr as *mut ffi::wxd_Window_t),
+            window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
         }
     }
 }

@@ -1,7 +1,7 @@
 //! DataViewListCtrl implementation.
 
-use crate::{implement_widget_traits_with_target, widget_builder};
 use crate::{Id, Point, Size, Window, WxWidget};
+use crate::{implement_widget_traits_with_target, widget_builder};
 use wxdragon_sys as ffi;
 
 use super::enums::DataViewColumnFlags;
@@ -156,11 +156,7 @@ impl DataViewListCtrl {
     /// An `Option` containing the index of the selected row, or `None` if no row is selected.
     pub fn get_selected_row(&self) -> Option<usize> {
         let row = unsafe { ffi::wxd_DataViewCtrl_GetSelectedRow(self.window.handle_ptr()) };
-        if row >= 0 {
-            Some(row as usize)
-        } else {
-            None
-        }
+        if row >= 0 { Some(row as usize) } else { None }
     }
 
     /// Deselects all currently selected items.

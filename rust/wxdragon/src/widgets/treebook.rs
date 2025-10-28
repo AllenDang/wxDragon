@@ -106,7 +106,7 @@ impl Treebook {
     /// The pointer must be a valid `wxd_Treebook_t` pointer.
     pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_Treebook_t) -> Self {
         Treebook {
-            window: Window::from_ptr(ptr as *mut ffi::wxd_Window_t),
+            window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
         }
     }
 

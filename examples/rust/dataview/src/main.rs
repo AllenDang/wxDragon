@@ -1,8 +1,8 @@
 use std::cell::RefCell;
 use std::rc::Rc;
-use wxdragon::prelude::*;
 use wxdragon::DataViewCtrl;
 use wxdragon::DataViewStyle;
+use wxdragon::prelude::*;
 
 mod music_tree;
 mod mymodels;
@@ -160,27 +160,27 @@ fn main() {
                     match ev.get_id() {
                         id if id == edit_id => {
                             // Get the currently selected item
-                            if let Some(sel_item) = dataview_for_selected.get_selection() {
-                                if let Some(ptr) = sel_item.get_id::<music_tree::MusicNode>() {
-                                    // SAFETY: ptr is an opaque model ID set by us to a MusicNode address
-                                    let node: &music_tree::MusicNode = unsafe { &*ptr };
-                                    let current_title = node.title.clone();
+                            if let Some(sel_item) = dataview_for_selected.get_selection()
+                                && let Some(ptr) = sel_item.get_id::<music_tree::MusicNode>()
+                            {
+                                // SAFETY: ptr is an opaque model ID set by us to a MusicNode address
+                                let node: &music_tree::MusicNode = unsafe { &*ptr };
+                                let current_title = node.title.clone();
 
-                                    // Show a simple text entry dialog to edit the title
-                                    let dlg = TextEntryDialog::builder(
-                                        &frame_for_selected,
-                                        "Edit title",
-                                        "Edit",
-                                    )
-                                    .with_default_value(&current_title)
-                                    .build();
-                                    let ret = dlg.show_modal();
-                                    if ret == ID_OK {
-                                        if let Some(new_val) = dlg.get_value() {
-                                            let val = Variant::from_string(new_val);
-                                            mtm_for_selected.set_value(ptr, 0, &val);
-                                        }
-                                    }
+                                // Show a simple text entry dialog to edit the title
+                                let dlg = TextEntryDialog::builder(
+                                    &frame_for_selected,
+                                    "Edit title",
+                                    "Edit",
+                                )
+                                .with_default_value(&current_title)
+                                .build();
+                                let ret = dlg.show_modal();
+                                if ret == ID_OK
+                                    && let Some(new_val) = dlg.get_value()
+                                {
+                                    let val = Variant::from_string(new_val);
+                                    mtm_for_selected.set_value(ptr, 0, &val);
                                 }
                             }
                         }

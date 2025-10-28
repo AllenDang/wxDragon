@@ -91,7 +91,7 @@ impl ToolBar {
     /// The pointer must be a valid `wxd_ToolBar_t` pointer.
     pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_ToolBar_t) -> Self {
         ToolBar {
-            window: Window::from_ptr(ptr as *mut ffi::wxd_Window_t),
+            window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
         }
     }
 

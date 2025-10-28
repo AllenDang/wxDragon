@@ -1,10 +1,10 @@
 use crate::bitmap::Bitmap;
 use crate::bitmap_bundle::BitmapBundle;
 #[cfg(any(target_os = "windows", target_os = "linux"))]
-use crate::event::taskbar_events::{TaskBarIconEvent, TaskBarIconEventData};
-#[cfg(any(target_os = "windows", target_os = "linux"))]
 use crate::event::EventType;
 use crate::event::WxEvtHandler;
+#[cfg(any(target_os = "windows", target_os = "linux"))]
+use crate::event::taskbar_events::{TaskBarIconEvent, TaskBarIconEventData};
 
 use crate::menus::menu::Menu;
 
@@ -321,7 +321,7 @@ impl Drop for TaskBarIcon {
 
 impl WxEvtHandler for TaskBarIcon {
     unsafe fn get_event_handler_ptr(&self) -> *mut ffi::wxd_EvtHandler_t {
-        ffi::wxd_TaskBarIcon_GetEvtHandler(self.ptr)
+        unsafe { ffi::wxd_TaskBarIcon_GetEvtHandler(self.ptr) }
     }
 }
 

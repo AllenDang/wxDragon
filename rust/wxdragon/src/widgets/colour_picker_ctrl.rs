@@ -1,4 +1,4 @@
-use crate::color::{colours, Colour};
+use crate::color::{Colour, colours};
 use crate::event::{Event, EventType};
 use crate::geometry::{Point, Size};
 use crate::id::Id;

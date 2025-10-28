@@ -20,7 +20,7 @@ fn map_level(level: i32) -> log::Level {
 /// - `level` must be a valid log level integer (1=Error, 2=Warn, 3=Info, 4=Debug, 5=Trace).
 /// - `msg` is a NUL-terminated C string pointer. If null, the call logs a warning and returns.
 /// - Converts non-UTF8 lossily; never panics.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn wxd_rust_log(level: i32, msg: *const std::os::raw::c_char) {
     let c_cpp = "C/C++";
     if msg.is_null() {

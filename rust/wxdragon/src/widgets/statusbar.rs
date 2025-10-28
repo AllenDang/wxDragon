@@ -44,7 +44,7 @@ impl StatusBar {
     /// # Safety
     /// The pointer must be a valid `wxd_StatusBar_t` pointer owned by a `Frame`.
     pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_StatusBar_t) -> Self {
-        let window = Window::from_ptr(ptr as *mut ffi::wxd_Window_t);
+        let window = unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) };
         Self { window }
     }
 

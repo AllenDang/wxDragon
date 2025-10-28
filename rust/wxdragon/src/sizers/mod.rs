@@ -14,7 +14,7 @@ pub use base::{Orientation, Sizer, SizerFlag, WxSizer};
 pub use box_sizer::{BoxSizer, BoxSizerBuilder};
 pub use flex_grid_sizer::{FlexGridSizer, FlexGridSizerBuilder, FlexGrowMode};
 pub use grid_bag_sizer::{
-    GBPosition, GBSpan, GridBagSizer, GridBagSizerBuilder, DEFAULT_GB_POSITION, DEFAULT_GB_SPAN,
+    DEFAULT_GB_POSITION, DEFAULT_GB_SPAN, GBPosition, GBSpan, GridBagSizer, GridBagSizerBuilder,
 };
 pub use grid_sizer::{GridSizer, GridSizerBuilder};
 pub use staticbox_sizer::{StaticBoxSizer, StaticBoxSizerBuilder};

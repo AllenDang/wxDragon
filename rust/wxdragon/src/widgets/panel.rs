@@ -45,7 +45,7 @@ impl Panel {
     pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_Panel_t) -> Self {
         assert!(!ptr.is_null());
         Panel {
-            window: Window::from_ptr(ptr as *mut ffi::wxd_Window_t),
+            window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
         }
     }
 

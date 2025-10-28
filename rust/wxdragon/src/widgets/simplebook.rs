@@ -45,7 +45,7 @@ impl SimpleBook {
     // Internal constructor
     pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_SimpleBook_t) -> Self {
         SimpleBook {
-            window: Window::from_ptr(ptr as *mut ffi::wxd_Window_t),
+            window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
         }
     }
 

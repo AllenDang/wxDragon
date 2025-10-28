@@ -1,5 +1,5 @@
-use crate::sizers::base::{Orientation, Sizer};
 use crate::sizers::WxSizer as WxSizerTrait;
+use crate::sizers::base::{Orientation, Sizer};
 use std::marker::PhantomData;
 use std::ops::Deref;
 use wxdragon_sys as ffi;
@@ -32,10 +32,12 @@ impl WrapSizer {
         } else {
             // The pointer for the base Sizer is the same as the specific WrapSizer pointer.
             let base_ptr = ptr as *mut ffi::wxd_Sizer_t;
-            Sizer::from_ptr(base_ptr).map(|sizer_base| WrapSizer {
-                raw_specific_ptr: ptr,
-                sizer_base,
-            })
+            unsafe {
+                Sizer::from_ptr(base_ptr).map(|sizer_base| WrapSizer {
+                    raw_specific_ptr: ptr,
+                    sizer_base,
+                })
+            }
         }
     }
 

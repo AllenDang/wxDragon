@@ -1,6 +1,7 @@
 use crate::window::WxWidget; // Needed for add method
-use wxdragon_sys as ffi; // Needed for add method, ensure this is correctly pathed if SizerFlag type alias is in box_sizer.rs or mod.rs
-                         // Assuming SizerFlag type and its constants (ALIGN_LEFT etc.) are available in the crate::sizers scope
+// Needed for add method, ensure this is correctly pathed if SizerFlag type alias is in box_sizer.rs or mod.rs
+// Assuming SizerFlag type and its constants (ALIGN_LEFT etc.) are available in the crate::sizers scope
+use wxdragon_sys as ffi;
 
 // --- Sizer Orientation Constants ---
 widget_style_enum!(

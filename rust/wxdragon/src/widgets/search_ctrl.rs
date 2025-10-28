@@ -73,7 +73,7 @@ impl SearchCtrl {
 
     pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_SearchCtrl_t) -> Self {
         SearchCtrl {
-            window: Window::from_ptr(ptr as *mut ffi::wxd_Window_t),
+            window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
         }
     }
 

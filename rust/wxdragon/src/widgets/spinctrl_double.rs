@@ -66,7 +66,7 @@ impl SpinCtrlDouble {
 
     pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_SpinCtrlDouble_t) -> Self {
         SpinCtrlDouble {
-            window: Window::from_ptr(ptr as *mut ffi::wxd_Window_t),
+            window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
         }
     }
 

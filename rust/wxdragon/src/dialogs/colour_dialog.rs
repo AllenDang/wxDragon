@@ -32,7 +32,7 @@ impl ColourDialog {
     /// The pointer must be a valid pointer to a wxColourDialog.
     pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_ColourDialog_t) -> Self {
         ColourDialog {
-            dialog_base: Dialog::from_ptr(ptr as *mut ffi::wxd_Dialog_t),
+            dialog_base: unsafe { Dialog::from_ptr(ptr as *mut ffi::wxd_Dialog_t) },
         }
     }
 

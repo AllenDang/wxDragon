@@ -1,8 +1,8 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 use wxdragon::prelude::*;
-use wxdragon::widgets::dataview::ctrl::SpinColumnConfig;
 use wxdragon::widgets::dataview::DataViewEventHandler;
+use wxdragon::widgets::dataview::ctrl::SpinColumnConfig;
 
 // Define a struct to hold our employee data
 #[derive(Clone)] // Added Clone for potential future use if Employee instances need to be copied

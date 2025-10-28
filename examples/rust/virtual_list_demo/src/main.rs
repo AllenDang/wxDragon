@@ -53,29 +53,29 @@ impl VirtualListItemRenderer for ListItemRenderer {
             let mut item_description = "Unknown".to_string();
 
             // Extract index from button label (format: "Click me! (123)")
-            if let Some(button_window) = panel_for_click.find_window_by_id(BUTTON_ID) {
-                if let Some(button_widget) = button_window.as_widget::<Button>() {
-                    let label = button_widget.get_label();
-                    if let Some(start) = label.find('(') {
-                        if let Some(end) = label.find(')') {
-                            item_index = label[start + 1..end].to_string();
-                        }
-                    }
+            if let Some(button_window) = panel_for_click.find_window_by_id(BUTTON_ID)
+                && let Some(button_widget) = button_window.as_widget::<Button>()
+            {
+                let label = button_widget.get_label();
+                if let Some(start) = label.find('(')
+                    && let Some(end) = label.find(')')
+                {
+                    item_index = label[start + 1..end].to_string();
                 }
             }
 
             // Get current title
-            if let Some(title_window) = panel_for_click.find_window_by_id(TITLE_ID) {
-                if let Some(title_widget) = title_window.as_widget::<StaticText>() {
-                    item_title = title_widget.get_label();
-                }
+            if let Some(title_window) = panel_for_click.find_window_by_id(TITLE_ID)
+                && let Some(title_widget) = title_window.as_widget::<StaticText>()
+            {
+                item_title = title_widget.get_label();
             }
 
             // Get current description
-            if let Some(desc_window) = panel_for_click.find_window_by_id(DESCRIPTION_ID) {
-                if let Some(desc_widget) = desc_window.as_widget::<StaticText>() {
-                    item_description = desc_widget.get_label();
-                }
+            if let Some(desc_window) = panel_for_click.find_window_by_id(DESCRIPTION_ID)
+                && let Some(desc_widget) = desc_window.as_widget::<StaticText>()
+            {
+                item_description = desc_widget.get_label();
             }
 
             println!("🎯 Button clicked!");
@@ -121,44 +121,44 @@ impl VirtualListItemRenderer for ListItemRenderer {
         // Cast the data back to our ListItem type
         if let Some(item_data) = data.downcast_ref::<ListItem>() {
             // Update text content with responsive wrapping
-            if let Some(title_window) = panel.find_window_by_id(TITLE_ID) {
-                if let Some(title) = title_window.as_widget::<StaticText>() {
-                    let panel_width = panel.get_size().width;
-                    let wrap_width = if panel_width > 60 {
-                        panel_width - 20
-                    } else {
-                        350
-                    };
+            if let Some(title_window) = panel.find_window_by_id(TITLE_ID)
+                && let Some(title) = title_window.as_widget::<StaticText>()
+            {
+                let panel_width = panel.get_size().width;
+                let wrap_width = if panel_width > 60 {
+                    panel_width - 20
+                } else {
+                    350
+                };
 
-                    // Reset text to remove existing line breaks, then apply new wrap
-                    title.set_label(&item_data.title);
-                    title.wrap(wrap_width);
-                }
+                // Reset text to remove existing line breaks, then apply new wrap
+                title.set_label(&item_data.title);
+                title.wrap(wrap_width);
             }
 
-            if let Some(desc_window) = panel.find_window_by_id(DESCRIPTION_ID) {
-                if let Some(description) = desc_window.as_widget::<StaticText>() {
-                    let panel_width = panel.get_size().width;
-                    let wrap_width = if panel_width > 60 {
-                        panel_width - 20
-                    } else {
-                        400
-                    };
+            if let Some(desc_window) = panel.find_window_by_id(DESCRIPTION_ID)
+                && let Some(description) = desc_window.as_widget::<StaticText>()
+            {
+                let panel_width = panel.get_size().width;
+                let wrap_width = if panel_width > 60 {
+                    panel_width - 20
+                } else {
+                    400
+                };
 
-                    // Reset text to remove existing line breaks, then apply new wrap
-                    description.set_label(&item_data.description);
-                    description.wrap(wrap_width);
-                }
+                // Reset text to remove existing line breaks, then apply new wrap
+                description.set_label(&item_data.description);
+                description.wrap(wrap_width);
             }
 
-            if let Some(button_window) = panel.find_window_by_id(BUTTON_ID) {
-                if let Some(button) = button_window.as_widget::<Button>() {
-                    // Update button label with current index
-                    button.set_label(&format!("Click me! ({index})"));
+            if let Some(button_window) = panel.find_window_by_id(BUTTON_ID)
+                && let Some(button) = button_window.as_widget::<Button>()
+            {
+                // Update button label with current index
+                button.set_label(&format!("Click me! ({index})"));
 
-                    // Event handler is set up once in create_item()
-                    // Button now displays current item index for reference
-                }
+                // Event handler is set up once in create_item()
+                // Button now displays current item index for reference
             }
         }
     }
@@ -198,29 +198,29 @@ impl VirtualListItemRenderer for HorizontalListItemRenderer {
             let mut item_description = "Unknown".to_string();
 
             // Extract index from button label (format: "Click me! (123)")
-            if let Some(button_window) = panel_for_click.find_window_by_id(BUTTON_ID) {
-                if let Some(button_widget) = button_window.as_widget::<Button>() {
-                    let label = button_widget.get_label();
-                    if let Some(start) = label.find('(') {
-                        if let Some(end) = label.find(')') {
-                            item_index = label[start + 1..end].to_string();
-                        }
-                    }
+            if let Some(button_window) = panel_for_click.find_window_by_id(BUTTON_ID)
+                && let Some(button_widget) = button_window.as_widget::<Button>()
+            {
+                let label = button_widget.get_label();
+                if let Some(start) = label.find('(')
+                    && let Some(end) = label.find(')')
+                {
+                    item_index = label[start + 1..end].to_string();
                 }
             }
 
             // Get current title
-            if let Some(title_window) = panel_for_click.find_window_by_id(TITLE_ID) {
-                if let Some(title_widget) = title_window.as_widget::<StaticText>() {
-                    item_title = title_widget.get_label();
-                }
+            if let Some(title_window) = panel_for_click.find_window_by_id(TITLE_ID)
+                && let Some(title_widget) = title_window.as_widget::<StaticText>()
+            {
+                item_title = title_widget.get_label();
             }
 
             // Get current description
-            if let Some(desc_window) = panel_for_click.find_window_by_id(DESCRIPTION_ID) {
-                if let Some(desc_widget) = desc_window.as_widget::<StaticText>() {
-                    item_description = desc_widget.get_label();
-                }
+            if let Some(desc_window) = panel_for_click.find_window_by_id(DESCRIPTION_ID)
+                && let Some(desc_widget) = desc_window.as_widget::<StaticText>()
+            {
+                item_description = desc_widget.get_label();
             }
 
             println!("🎯 Horizontal Button clicked!");
@@ -270,26 +270,26 @@ impl VirtualListItemRenderer for HorizontalListItemRenderer {
             const CONTENT_WIDTH: i32 = FIXED_ITEM_WIDTH - 20; // Account for margins
 
             // Update title with fixed width wrapping
-            if let Some(title_window) = panel.find_window_by_id(TITLE_ID) {
-                if let Some(title) = title_window.as_widget::<StaticText>() {
-                    title.set_label(&item_data.title);
-                    title.wrap(CONTENT_WIDTH);
-                }
+            if let Some(title_window) = panel.find_window_by_id(TITLE_ID)
+                && let Some(title) = title_window.as_widget::<StaticText>()
+            {
+                title.set_label(&item_data.title);
+                title.wrap(CONTENT_WIDTH);
             }
 
             // Update description with fixed width wrapping
-            if let Some(desc_window) = panel.find_window_by_id(DESCRIPTION_ID) {
-                if let Some(description) = desc_window.as_widget::<StaticText>() {
-                    description.set_label(&item_data.description);
-                    description.wrap(CONTENT_WIDTH);
-                }
+            if let Some(desc_window) = panel.find_window_by_id(DESCRIPTION_ID)
+                && let Some(description) = desc_window.as_widget::<StaticText>()
+            {
+                description.set_label(&item_data.description);
+                description.wrap(CONTENT_WIDTH);
             }
 
             // Update button
-            if let Some(button_window) = panel.find_window_by_id(BUTTON_ID) {
-                if let Some(button) = button_window.as_widget::<Button>() {
-                    button.set_label(&format!("Click! ({index})"));
-                }
+            if let Some(button_window) = panel.find_window_by_id(BUTTON_ID)
+                && let Some(button) = button_window.as_widget::<Button>()
+            {
+                button.set_label(&format!("Click! ({index})"));
             }
 
             // Set the panel to fixed width after content update

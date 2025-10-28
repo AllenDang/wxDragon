@@ -187,7 +187,7 @@ impl HyperlinkCtrl {
     /// The pointer must be a valid `wxd_HyperlinkCtrl_t`.
     pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_HyperlinkCtrl_t) -> Self {
         HyperlinkCtrl {
-            window: Window::from_ptr(ptr as *mut ffi::wxd_Window_t),
+            window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
         }
     }
 }

@@ -1,4 +1,4 @@
-use super::{config::VirtualListInternalParams, VirtualListLayoutMode};
+use super::{VirtualListLayoutMode, config::VirtualListInternalParams};
 use crate::prelude::*;
 use std::time::{Duration, Instant};
 

@@ -48,11 +48,7 @@ impl ScrollEventData {
             return None;
         }
         let pos = unsafe { ffi::wxd_ScrollEvent_GetPosition(self.event.0) };
-        if pos == -1 {
-            None
-        } else {
-            Some(pos)
-        }
+        if pos == -1 { None } else { Some(pos) }
     }
 
     /// Get the orientation of the scrollbar (horizontal or vertical)
@@ -61,11 +57,7 @@ impl ScrollEventData {
             return None;
         }
         let orient = unsafe { ffi::wxd_ScrollEvent_GetOrientation(self.event.0) };
-        if orient == -1 {
-            None
-        } else {
-            Some(orient)
-        }
+        if orient == -1 { None } else { Some(orient) }
     }
 }
 

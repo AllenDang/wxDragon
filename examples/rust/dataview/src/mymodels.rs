@@ -134,11 +134,7 @@ pub fn create_music_tree_model(data: Rc<RefCell<MusicTree>>) -> CustomDataViewTr
                     let vb = b.year.unwrap_or(0);
                     // return negative if a < b, positive if a > b
                     let diff = va.wrapping_sub(vb);
-                    if asc {
-                        diff
-                    } else {
-                        -diff
-                    }
+                    if asc { diff } else { -diff }
                 } else {
                     0
                 }

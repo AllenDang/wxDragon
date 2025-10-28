@@ -193,11 +193,7 @@ impl TreeListCtrlEventData {
             return None;
         }
         let col = unsafe { ffi::wxd_TreeListEvent_GetColumn(self.event._as_ptr()) };
-        if col >= 0 {
-            Some(col)
-        } else {
-            None
-        }
+        if col >= 0 { Some(col) } else { None }
     }
 
     /// Get the label text for label edit events (fallback to generic event string)
@@ -250,7 +246,7 @@ impl TreeListCtrl {
     /// The pointer must be a valid `wxd_TreeListCtrl_t` pointer.
     pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_TreeListCtrl_t) -> Self {
         TreeListCtrl {
-            window: Window::from_ptr(ptr as *mut ffi::wxd_Window_t),
+            window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
         }
     }
 

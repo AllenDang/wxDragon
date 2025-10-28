@@ -1,5 +1,5 @@
 use crate::window::{Window, WxWidget};
-use crate::{widget_style_enum, Bitmap};
+use crate::{Bitmap, widget_style_enum};
 use std::ffi::CString;
 use std::marker::PhantomData;
 use wxdragon_sys as ffi;
@@ -53,7 +53,7 @@ impl Dialog {
     /// The pointer must be a valid pointer to a wxDialog.
     pub unsafe fn from_ptr(ptr: *mut ffi::wxd_Dialog_t) -> Self {
         Dialog {
-            window: Window::from_ptr(ptr as *mut ffi::wxd_Window_t),
+            window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
             parent_ptr: std::ptr::null_mut(),
             _marker: PhantomData,
         }

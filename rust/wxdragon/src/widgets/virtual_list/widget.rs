@@ -625,7 +625,7 @@ impl VirtualListState {
     fn update_visible_items(&mut self, parent: &Panel) {
         // Early return if we don't have both data source and renderer
         let (data_source, item_renderer) =
-            if let (Some(ref ds), Some(ref ir)) = (&self.data_source, &self.item_renderer) {
+            if let (Some(ds), Some(ir)) = (&self.data_source, &self.item_renderer) {
                 (ds.clone(), ir.clone())
             } else {
                 return;

@@ -141,41 +141,25 @@ impl Variant {
     pub fn get_bool(&self) -> Option<bool> {
         let mut out = false;
         let ok = unsafe { ffi::wxd_Variant_GetBool(**self, &mut out) };
-        if ok {
-            Some(out)
-        } else {
-            None
-        }
+        if ok { Some(out) } else { None }
     }
 
     pub fn get_i32(&self) -> Option<i32> {
         let mut out = 0_i32;
         let ok = unsafe { ffi::wxd_Variant_GetInt32(**self, &mut out) };
-        if ok {
-            Some(out)
-        } else {
-            None
-        }
+        if ok { Some(out) } else { None }
     }
 
     pub fn get_i64(&self) -> Option<i64> {
         let mut out = 0_i64;
         let ok = unsafe { ffi::wxd_Variant_GetInt64(**self, &mut out) };
-        if ok {
-            Some(out)
-        } else {
-            None
-        }
+        if ok { Some(out) } else { None }
     }
 
     pub fn get_f64(&self) -> Option<f64> {
         let mut out = 0_f64;
         let ok = unsafe { ffi::wxd_Variant_GetDouble(**self, &mut out) };
-        if ok {
-            Some(out)
-        } else {
-            None
-        }
+        if ok { Some(out) } else { None }
     }
 
     pub fn get_string(&self) -> Option<String> {

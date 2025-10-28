@@ -41,7 +41,7 @@ impl Slider {
     // Internal constructor
     pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_Slider_t) -> Self {
         Slider {
-            window: Window::from_ptr(ptr as *mut ffi::wxd_Window_t),
+            window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
         }
     }
 

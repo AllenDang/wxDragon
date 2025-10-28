@@ -5,9 +5,8 @@ use crate::implement_widget_traits_with_target;
 use crate::prelude::*; // Use prelude
 use crate::widget_builder;
 use crate::widget_style_enum;
-use crate::window::{Window, WxWidget}; // Make sure WxEvtHandler is imported // Added
-                                       // Remove specific imports covered by prelude
-                                       // use crate::{Id, Point, Size};
+// Make sure WxEvtHandler is imported
+use crate::window::{Window, WxWidget};
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
 use wxdragon_sys as ffi; // ADDED for enum bitwise operations

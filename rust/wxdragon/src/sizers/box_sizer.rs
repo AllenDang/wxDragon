@@ -1,7 +1,7 @@
 // Rust wrappers for wxWidgets Sizers (moved to sizers/box_sizer.rs)
 
-use crate::sizers::base::Sizer;
 use crate::sizers::WxSizer as WxSizerTrait;
+use crate::sizers::base::Sizer;
 use std::marker::PhantomData;
 use std::ops::Deref;
 use wxdragon_sys as ffi;

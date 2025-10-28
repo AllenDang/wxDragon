@@ -140,7 +140,7 @@ impl RichTextCtrl {
     /// The pointer must be a valid `wxd_RichTextCtrl_t` pointer.
     pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_RichTextCtrl_t) -> Self {
         RichTextCtrl {
-            window: Window::from_ptr(ptr as *mut ffi::wxd_Window_t),
+            window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
         }
     }
 

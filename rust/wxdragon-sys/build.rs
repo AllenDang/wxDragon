@@ -45,10 +45,12 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
 
         if let Err(e) = extract_zip_archive(&archive_dest_path, &wxwidgets_dir) {
             println!("cargo::error=Could not extract wxWidgets source archive: {e}");
-            if wxwidgets_dir.exists() {
-                if let Err(remove_err) = std::fs::remove_dir_all(&wxwidgets_dir) {
-                    println!("cargo::warning=Failed to clean up {wxwidgets_dir:?} directory after extraction error: {remove_err}");
-                }
+            if wxwidgets_dir.exists()
+                && let Err(remove_err) = std::fs::remove_dir_all(&wxwidgets_dir)
+            {
+                println!(
+                    "cargo::warning=Failed to clean up {wxwidgets_dir:?} directory after extraction error: {remove_err}"
+                );
             }
             return Err(Box::new(e));
         }
@@ -341,13 +343,17 @@ fn build_wxdragon_wrapper(
                                             "info: Add GCC lib search path(for libstdc++):{v}"
                                         );
                                     } else {
-                                        println!("info: Could not find or verify expected libstdc++ path relative to libgcc path: {v}");
+                                        println!(
+                                            "info: Could not find or verify expected libstdc++ path relative to libgcc path: {v}"
+                                        );
                                     }
                                 }
                             }
                         }
                     } else {
-                        println!("cargo:warning=Could not get parent directory from libgcc path: {libgcc_path_str}");
+                        println!(
+                            "cargo:warning=Could not get parent directory from libgcc path: {libgcc_path_str}"
+                        );
                     }
                 } else {
                     println!(
@@ -359,7 +365,9 @@ fn build_wxdragon_wrapper(
                 println!(
                     "cargo:warning=Failed to run '{gcc_path} -print-libgcc-file-name': {stderr}"
                 );
-                println!("cargo:warning=Static linking for stdc++/gcc might fail. Falling back to hoping they are in default paths.");
+                println!(
+                    "cargo:warning=Static linking for stdc++/gcc might fail. Falling back to hoping they are in default paths."
+                );
             }
             // --- End dynamic path finding ---
         } else {
@@ -731,10 +739,10 @@ pub fn download_file_with_git_http_proxy<P: AsRef<std::path::Path>>(
     }
 
     // Stream to file to avoid loading the entire ZIP into memory.
-    if let Some(parent) = path.parent() {
-        if !parent.as_os_str().is_empty() {
-            std::fs::create_dir_all(parent)?;
-        }
+    if let Some(parent) = path.parent()
+        && !parent.as_os_str().is_empty()
+    {
+        std::fs::create_dir_all(parent)?;
     }
     let mut file = std::fs::File::create(path)?;
     resp.copy_to(&mut file).map_err(Error::other)?;
@@ -788,7 +796,7 @@ where
     P: AsRef<std::path::Path>,
     T: AsRef<std::path::Path>,
 {
-    use rawzip::{CompressionMethod, ZipArchive, RECOMMENDED_BUFFER_SIZE};
+    use rawzip::{CompressionMethod, RECOMMENDED_BUFFER_SIZE, ZipArchive};
     use std::io::{Error, ErrorKind::InvalidData};
 
     let file = std::fs::File::open(archive_path)?;
@@ -837,7 +845,9 @@ where
                 std::io::copy(&mut verifier, &mut outfile)?;
             }
             _ => {
-                println!("cargo:warning=Unsupported compression method {method:?} for file: {file_path:?}");
+                println!(
+                    "cargo:warning=Unsupported compression method {method:?} for file: {file_path:?}"
+                );
             }
         }
     }
@@ -857,12 +867,12 @@ fn chk_wx_version<P: AsRef<std::path::Path>>(
 
     for line in reader.lines() {
         let line = line?;
-        if let Some(ver) = line.strip_prefix("PACKAGE_VERSION='") {
-            if let Some(end) = ver.find('\'') {
-                let found_version = &ver[..end];
-                let matched = found_version == expected_version;
-                return Ok(matched);
-            }
+        if let Some(ver) = line.strip_prefix("PACKAGE_VERSION='")
+            && let Some(end) = ver.find('\'')
+        {
+            let found_version = &ver[..end];
+            let matched = found_version == expected_version;
+            return Ok(matched);
         }
     }
     Ok(false)

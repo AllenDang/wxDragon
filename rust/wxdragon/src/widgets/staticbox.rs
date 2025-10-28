@@ -34,7 +34,7 @@ impl StaticBox {
     /// Does NOT assume ownership.
     pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_StaticBox_t) -> Self {
         StaticBox {
-            window: Window::from_ptr(ptr as *mut ffi::wxd_Window_t),
+            window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
         }
     }
 }

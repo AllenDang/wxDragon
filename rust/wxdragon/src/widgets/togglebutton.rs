@@ -46,7 +46,7 @@ impl ToggleButton {
     /// The pointer must be a valid `wxd_ToggleButton_t` pointer.
     pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_ToggleButton_t) -> Self {
         ToggleButton {
-            window: Window::from_ptr(ptr as *mut ffi::wxd_Window_t),
+            window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
         }
     }
 

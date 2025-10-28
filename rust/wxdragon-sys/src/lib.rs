@@ -48,7 +48,7 @@ type WindowUserData = (); // Replace with actual user data type later if needed
 /// The caller (C++) must ensure `user_data_ptr` is a valid pointer obtained
 /// from `Box::into_raw(Box::new(RefCell::new(data)))` and that it hasn't been
 /// dropped or invalidated since.
-#[no_mangle]
+#[unsafe(no_mangle)]
 #[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub extern "C" fn drop_rust_refcell_box(user_data_ptr: *mut c_void) {
     if !user_data_ptr.is_null() {
@@ -68,7 +68,7 @@ pub extern "C" fn drop_rust_refcell_box(user_data_ptr: *mut c_void) {
 /// # Safety
 /// The caller (C++) must ensure `str_ptr` is a valid pointer obtained from
 /// `CString::into_raw()` and that it hasn't been freed already.
-#[no_mangle]
+#[unsafe(no_mangle)]
 #[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub extern "C" fn wxd_Variant_Free_Rust_String(str_ptr: *mut std::os::raw::c_char) {
     if !str_ptr.is_null() {

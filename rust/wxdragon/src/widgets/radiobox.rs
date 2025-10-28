@@ -78,7 +78,7 @@ impl RadioBox {
     /// The caller must ensure the pointer is valid and represents a `wxRadioBox`.
     pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_RadioBox_t) -> Self {
         RadioBox {
-            window: Window::from_ptr(ptr as *mut ffi::wxd_Window_t),
+            window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
         }
     }
 

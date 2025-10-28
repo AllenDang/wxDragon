@@ -1,7 +1,7 @@
 use proc_macro::TokenStream;
 use quote::quote;
 use std::collections::HashMap;
-use syn::{parse_macro_input, Error, Ident, LitStr, Token};
+use syn::{Error, Ident, LitStr, Token, parse_macro_input};
 
 /// A procedural macro that generates a Rust struct for XRC-defined UI with all named widgets.
 ///
@@ -450,15 +450,18 @@ fn read_xrc_file(path: &str) -> syn::Result<String> {
              \nTried paths: {:?} \
              \n\nNote: Use paths relative to your crate root or source file, just like include_str!",
             path,
-            possible_paths.iter().map(|p| p.display().to_string()).collect::<Vec<_>>()
-        )
+            possible_paths
+                .iter()
+                .map(|p| p.display().to_string())
+                .collect::<Vec<_>>()
+        ),
     ))
 }
 
 /// Parse XRC XML content to extract object hierarchy
 fn parse_xrc_content(content: &str) -> syn::Result<Vec<XrcObject>> {
-    use quick_xml::events::Event;
     use quick_xml::Reader;
+    use quick_xml::events::Event;
 
     let mut reader = Reader::from_str(content);
     reader.config_mut().trim_text(true);
@@ -512,7 +515,7 @@ fn parse_xrc_content(content: &str) -> syn::Result<Vec<XrcObject>> {
                 return Err(Error::new(
                     proc_macro2::Span::call_site(),
                     format!("XML parsing error: {e}"),
-                ))
+                ));
             }
             _ => {}
         }

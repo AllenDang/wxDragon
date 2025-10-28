@@ -1,7 +1,7 @@
 /* This is a new file */
 //! Safe wrapper for wxFilePickerCtrl.
 
-use std::ffi::{c_longlong, CString};
+use std::ffi::{CString, c_longlong};
 use wxdragon_sys as ffi;
 
 use crate::event::{Event, EventType};
@@ -73,10 +73,9 @@ impl FilePickerCtrl {
             if c_str.is_null() {
                 String::new()
             } else {
-                let rust_str = CString::from_raw(c_str as *mut _)
+                CString::from_raw(c_str as *mut _)
                     .to_string_lossy()
-                    .into_owned();
-                rust_str
+                    .into_owned()
             }
         }
     }
@@ -97,7 +96,7 @@ impl FilePickerCtrl {
     /// The pointer must be a valid `wxd_FilePickerCtrl_t`.
     pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_FilePickerCtrl_t) -> Self {
         FilePickerCtrl {
-            window: Window::from_ptr(ptr as *mut ffi::wxd_Window_t),
+            window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
         }
     }
 }

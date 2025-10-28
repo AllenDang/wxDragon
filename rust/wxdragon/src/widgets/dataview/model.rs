@@ -55,8 +55,8 @@ pub mod tree_helpers {
             return;
         }
         // Recreate the Vec from raw parts and drop it so memory is freed.
-        let slice = std::slice::from_raw_parts_mut(ptr, count as usize);
-        let _ = Vec::from_raw_parts(slice.as_mut_ptr(), count as usize, count as usize);
+        let slice = unsafe { std::slice::from_raw_parts_mut(ptr, count as usize) };
+        let _ = unsafe { Vec::from_raw_parts(slice.as_mut_ptr(), count as usize, count as usize) };
     }
 }
 
@@ -298,7 +298,7 @@ impl DataViewVirtualListModel {
     /// # Safety
     /// The caller must ensure the item pointer is valid and comes from the same model.
     pub unsafe fn get_row(&self, item: *mut std::ffi::c_void) -> usize {
-        ffi::wxd_DataViewVirtualListModel_GetRow(self.ptr, item) as usize
+        (unsafe { ffi::wxd_DataViewVirtualListModel_GetRow(self.ptr, item) }) as usize
     }
 
     /// Get the current size of the model
@@ -700,7 +700,7 @@ impl DataViewModel for CustomDataViewTreeModel {
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 #[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub extern "C" fn wxd_Drop_Rust_DataViewTreeModelCallbacks(
     cb_ptr: *mut ffi::wxd_DataViewTreeModel_Callbacks,
@@ -911,7 +911,7 @@ unsafe extern "C" fn get_value_callback(
         return v.try_into().unwrap();
     }
 
-    let callbacks = &*(userdata as *const CustomModelCallbacks);
+    let callbacks = unsafe { &*(userdata as *const CustomModelCallbacks) };
     let value = (callbacks.get_value)(&*callbacks.userdata, row as usize, col as usize);
     // Transfer ownership to C++ side.
     match value.try_into() {
@@ -926,7 +926,7 @@ unsafe extern "C" fn set_value_callback(
     row: u64,
     col: u64,
 ) -> bool {
-    let callbacks = &*(userdata as *const CustomModelCallbacks);
+    let callbacks = unsafe { &*(userdata as *const CustomModelCallbacks) };
     if let Some(set_value) = &callbacks.set_value {
         let value = Variant::from(variant); // Here we just wrap the raw pointer, no ownership transfer
         (set_value)(&*callbacks.userdata, row as usize, col as usize, &value)
@@ -974,7 +974,7 @@ unsafe extern "C" fn is_enabled_callback(
 /// # Safety
 /// The caller (C++) must ensure `ptr` is a valid pointer obtained from
 /// `Box::into_raw()` for a `CustomModelCallbacks` and that it hasn't been freed already.
-#[no_mangle]
+#[unsafe(no_mangle)]
 #[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub extern "C" fn wxd_Drop_Rust_CustomModelCallbacks(ptr: *mut c_void) {
     if !ptr.is_null() {

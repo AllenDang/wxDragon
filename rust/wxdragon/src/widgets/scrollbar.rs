@@ -41,7 +41,7 @@ impl ScrollBar {
     /// The caller must ensure the pointer is valid and relates to a wxScrollBar.
     pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_ScrollBar_t) -> Self {
         ScrollBar {
-            window: Window::from_ptr(ptr as *mut ffi::wxd_Window_t),
+            window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
         }
     }
 

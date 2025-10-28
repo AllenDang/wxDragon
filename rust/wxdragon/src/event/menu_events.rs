@@ -42,11 +42,7 @@ impl MenuEventData {
             return None;
         }
         let menu_id = unsafe { ffi::wxd_MenuEvent_GetMenuId(self.event._as_ptr()) };
-        if menu_id == -1 {
-            None
-        } else {
-            Some(menu_id)
-        }
+        if menu_id == -1 { None } else { Some(menu_id) }
     }
 
     /// Checks if this is a popup menu event

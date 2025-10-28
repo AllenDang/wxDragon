@@ -1,6 +1,6 @@
+use wxdragon::event::WindowEvents;
 use wxdragon::event::button_events::ButtonEvents;
 use wxdragon::event::window_events::WindowEventData;
-use wxdragon::event::WindowEvents;
 use wxdragon::prelude::*;
 use wxdragon::sizers::box_sizer::BoxSizer;
 use wxdragon::widgets::button::Button;

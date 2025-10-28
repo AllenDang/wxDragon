@@ -1,6 +1,6 @@
 // Point, Size, etc. may not be needed directly here but good for consistency
 use std::default::Default;
-use std::ffi::{c_int, CStr};
+use std::ffi::{CStr, c_int};
 use wxdragon_sys as ffi;
 
 /// Specifies the general family category of a font.

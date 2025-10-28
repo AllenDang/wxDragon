@@ -408,7 +408,7 @@ impl StyledTextCtrl {
     /// The pointer must be a valid `wxd_StyledTextCtrl_t` pointer.
     pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_StyledTextCtrl_t) -> Self {
         StyledTextCtrl {
-            window: Window::from_ptr(ptr as *mut ffi::wxd_Window_t),
+            window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
         }
     }
 
@@ -1187,11 +1187,7 @@ impl StyledTextCtrl {
                 c_text.as_ptr(),
                 flags.bits_i32(),
             );
-            if result >= 0 {
-                Some(result)
-            } else {
-                None
-            }
+            if result >= 0 { Some(result) } else { None }
         }
     }
 
@@ -1226,11 +1222,7 @@ impl StyledTextCtrl {
                 search_flags.bits_i32(),
                 c_text.as_ptr(),
             );
-            if result >= 0 {
-                Some(result)
-            } else {
-                None
-            }
+            if result >= 0 { Some(result) } else { None }
         }
     }
 
@@ -1243,11 +1235,7 @@ impl StyledTextCtrl {
                 search_flags.bits_i32(),
                 c_text.as_ptr(),
             );
-            if result >= 0 {
-                Some(result)
-            } else {
-                None
-            }
+            if result >= 0 { Some(result) } else { None }
         }
     }
 

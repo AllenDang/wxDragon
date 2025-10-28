@@ -1,5 +1,5 @@
 use crate::dialogs::Dialog;
-use crate::geometry::{Point, Size, DEFAULT_POSITION, DEFAULT_SIZE};
+use crate::geometry::{DEFAULT_POSITION, DEFAULT_SIZE, Point, Size};
 use crate::window::WxWidget;
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
@@ -44,7 +44,7 @@ impl TextEntryDialog {
     /// The pointer must be a valid pointer to a wxTextEntryDialog.
     pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_TextEntryDialog_t) -> Self {
         TextEntryDialog {
-            dialog_base: Dialog::from_ptr(ptr as *mut ffi::wxd_Dialog_t),
+            dialog_base: unsafe { Dialog::from_ptr(ptr as *mut ffi::wxd_Dialog_t) },
         }
     }
 

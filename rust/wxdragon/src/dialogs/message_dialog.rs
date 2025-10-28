@@ -41,7 +41,7 @@ impl MessageDialog {
     /// The pointer must be a valid pointer to a wxMessageDialog.
     pub unsafe fn from_ptr(ptr: MessageDialogPtr) -> Self {
         MessageDialog {
-            dialog_base: Dialog::from_ptr(ptr as *mut ffi::wxd_Dialog_t),
+            dialog_base: unsafe { Dialog::from_ptr(ptr as *mut ffi::wxd_Dialog_t) },
         }
     }
 

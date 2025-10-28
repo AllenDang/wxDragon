@@ -1,10 +1,10 @@
 use std::ffi::CString;
 use std::ops::Deref;
 
-use crate::sizers::base::{Orientation, Sizer};
-use crate::sizers::WxSizer as WxSizerTrait;
-use crate::window::WxWidget;
 use crate::StaticBox;
+use crate::sizers::WxSizer as WxSizerTrait;
+use crate::sizers::base::{Orientation, Sizer};
+use crate::window::WxWidget;
 use wxdragon_sys as ffi;
 
 /// Represents the wxStaticBoxSizer.
@@ -23,10 +23,12 @@ impl StaticBoxSizer {
         } else {
             // The pointer for the base Sizer is the same as the specific StaticBoxSizer pointer.
             let base_ptr = ptr as *mut ffi::wxd_Sizer_t;
-            Sizer::from_ptr(base_ptr).map(|sizer_base| StaticBoxSizer {
-                raw_specific_ptr: ptr,
-                sizer_base,
-            })
+            unsafe {
+                Sizer::from_ptr(base_ptr).map(|sizer_base| StaticBoxSizer {
+                    raw_specific_ptr: ptr,
+                    sizer_base,
+                })
+            }
         }
     }
 

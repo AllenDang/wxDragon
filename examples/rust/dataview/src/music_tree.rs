@@ -140,12 +140,12 @@ impl MusicNode {
             dto.quality.as_deref(),
         );
 
-        if matches!(dto.node_type, NodeType::Branch) {
-            if let Some(children) = &dto.children {
-                for child_dto in children {
-                    let child = MusicNode::from_dto(child_dto);
-                    MusicNode::push_child(&node, child);
-                }
+        if matches!(dto.node_type, NodeType::Branch)
+            && let Some(children) = &dto.children
+        {
+            for child_dto in children {
+                let child = MusicNode::from_dto(child_dto);
+                MusicNode::push_child(&node, child);
             }
         }
         node

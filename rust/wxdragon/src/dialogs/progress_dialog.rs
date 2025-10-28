@@ -59,7 +59,7 @@ impl ProgressDialog {
     /// The pointer must be a valid pointer to a wxProgressDialog.
     pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_ProgressDialog_t) -> Self {
         ProgressDialog {
-            dialog_base: Dialog::from_ptr(ptr as *mut ffi::wxd_Dialog_t),
+            dialog_base: unsafe { Dialog::from_ptr(ptr as *mut ffi::wxd_Dialog_t) },
         }
     }
 

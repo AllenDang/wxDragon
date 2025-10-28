@@ -58,7 +58,7 @@ impl Gauge {
     pub(crate) unsafe fn from_ptr(ptr: *mut RawGauge) -> Self {
         assert!(!ptr.is_null());
         Gauge {
-            window: Window::from_ptr(ptr as *mut ffi::wxd_Window_t),
+            window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
         }
     }
 }

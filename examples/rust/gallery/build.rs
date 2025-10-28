@@ -55,7 +55,7 @@ fn embed_wx_resources() {
 
     let wx_include_path = wx_dir.join("include");
 
-    use embed_resource::{compile, CompilationResult, ParamsIncludeDirs};
+    use embed_resource::{CompilationResult, ParamsIncludeDirs, compile};
     let res = compile(&wx_rc_path, ParamsIncludeDirs([&wx_include_path]));
     if res != CompilationResult::Ok {
         println!("cargo::warning=Compile resources with embed_resource: {res:?}");
@@ -112,7 +112,9 @@ fn get_wx_rc_path(wx_dir: &std::path::Path) -> std::io::Result<std::path::PathBu
     }
 
     if !wx_rc_path.exists() {
-        println!("cargo::warning=wx.rc not found at {wx_rc_path:?} after {MAX_RETRIES} retries, skipping resource embedding");
+        println!(
+            "cargo::warning=wx.rc not found at {wx_rc_path:?} after {MAX_RETRIES} retries, skipping resource embedding"
+        );
         return Err(std::io::Error::other("wx.rc not found"));
     }
     Ok(wx_rc_path)

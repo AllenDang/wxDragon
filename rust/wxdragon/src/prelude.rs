@@ -1,14 +1,14 @@
 // --- Core Types & Traits ---
-pub use crate::app::{call_after, get_app, main, set_appearance, set_top_window, App};
+pub use crate::app::{App, call_after, get_app, main, set_appearance, set_top_window};
 pub use crate::appearance::{
-    get_app as get_app_for_appearance, get_system_appearance, is_system_dark_mode, AppAppearance,
-    Appearance, AppearanceResult, SystemAppearance,
+    AppAppearance, Appearance, AppearanceResult, SystemAppearance,
+    get_app as get_app_for_appearance, get_system_appearance, is_system_dark_mode,
 };
 pub use crate::clipboard::{Clipboard, ClipboardLocker};
-pub use crate::color::{colours, Colour};
+pub use crate::color::{Colour, colours};
 pub use crate::cursor::{
-    begin_busy_cursor, end_busy_cursor, is_busy, set_cursor, BitmapType, BusyCursor, Cursor,
-    StockCursor,
+    BitmapType, BusyCursor, Cursor, StockCursor, begin_busy_cursor, end_busy_cursor, is_busy,
+    set_cursor,
 };
 pub use crate::datetime::DateTime;
 pub use crate::event::{Event, EventType, IdleEvent, IdleMode, WindowEventData, WxEvtHandler};
@@ -19,8 +19,8 @@ pub use crate::event::{
 // ADDED: Event Data Structs
 pub use crate::event::event_data::{CommandEventData, KeyEventData, MouseEventData};
 pub use crate::event::{IdleEventData, MenuEventData};
-pub use crate::geometry::{Point, Rect, Size, DEFAULT_POSITION, DEFAULT_SIZE};
-pub use crate::id::{Id, ID_ANY, ID_CANCEL, ID_HIGHEST, ID_NO, ID_OK, ID_YES};
+pub use crate::geometry::{DEFAULT_POSITION, DEFAULT_SIZE, Point, Rect, Size};
+pub use crate::id::{ID_ANY, ID_CANCEL, ID_HIGHEST, ID_NO, ID_OK, ID_YES, Id};
 pub use crate::sizers::WxSizer;
 pub use crate::sysopt::SystemOptions;
 pub use crate::types::Style;
@@ -33,7 +33,7 @@ pub use crate::window::{
 pub use crate::sizers::box_sizer::{BoxSizer, BoxSizerBuilder};
 pub use crate::sizers::flex_grid_sizer::{FlexGridSizer, FlexGridSizerBuilder, FlexGrowMode};
 pub use crate::sizers::grid_bag_sizer::{
-    GBPosition, GBSpan, GridBagSizer, GridBagSizerBuilder, DEFAULT_GB_POSITION, DEFAULT_GB_SPAN,
+    DEFAULT_GB_POSITION, DEFAULT_GB_SPAN, GBPosition, GBSpan, GridBagSizer, GridBagSizerBuilder,
 };
 pub use crate::sizers::grid_sizer::{GridSizer, GridSizerBuilder};
 pub use crate::sizers::staticbox_sizer::{StaticBoxSizer, StaticBoxSizerBuilder};
@@ -46,7 +46,6 @@ pub use crate::widgets::activity_indicator::{
     ActivityIndicator, ActivityIndicatorBuilder, ActivityIndicatorStyle,
 }; // Added Style
 pub use crate::widgets::animation_ctrl::{AnimationCtrl, AnimationCtrlBuilder, AnimationCtrlStyle}; // Added Style
-                                                                                                   // ADDED: AUI
 #[cfg(feature = "aui")]
 pub use crate::widgets::aui_manager::{AuiManager, AuiPaneInfo, DockDirection};
 #[cfg(feature = "aui")]
@@ -74,7 +73,7 @@ pub use crate::widgets::combobox::{ComboBox, ComboBoxBuilder, ComboBoxStyle};
 pub use crate::widgets::command_link_button::{
     CommandLinkButton, CommandLinkButtonBuilder, CommandLinkButtonStyle,
 }; // Added Style
-   // ADDED: DataView
+
 pub use crate::widgets::dataview::{
     CustomDataViewTreeModel,
     CustomDataViewVirtualListModel, // Added CustomDataViewVirtualListModel
@@ -135,7 +134,7 @@ pub use crate::widgets::list_ctrl::{
     ListNextItemFlag,
     // Events for ListCtrl are now in list_ctrl/event.rs, re-exported from list_ctrl/mod.rs
 }; // Added Events
-   // Added image_list_type for ListCtrl
+
 pub use crate::widgets::list_ctrl::image_list_type;
 pub use crate::widgets::listbox::{ListBox, ListBoxBuilder, ListBoxStyle};
 #[cfg(feature = "media-ctrl")]

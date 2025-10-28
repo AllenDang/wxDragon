@@ -56,8 +56,8 @@
 
 #![cfg(any(target_os = "windows", target_os = "linux"))]
 
-use crate::event::event_data::MouseEventData;
 use crate::event::Event;
+use crate::event::event_data::MouseEventData;
 use crate::geometry::Point;
 
 /// Event types specific to TaskBarIcon widgets

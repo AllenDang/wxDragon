@@ -103,7 +103,7 @@ impl FontPickerCtrl {
     /// The pointer must be a valid `wxd_FontPickerCtrl_t`.
     pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_FontPickerCtrl_t) -> Self {
         FontPickerCtrl {
-            window: Window::from_ptr(ptr as *mut ffi::wxd_Window_t),
+            window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
         }
     }
 }

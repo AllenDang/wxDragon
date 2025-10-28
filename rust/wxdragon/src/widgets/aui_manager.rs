@@ -415,14 +415,11 @@ impl AuiManager {
         }
 
         // Create a Rust string from the C string
-        let result = unsafe {
-            let c_string = std::ffi::CStr::from_ptr(c_str);
-            let string = c_string.to_string_lossy().into_owned();
-            ffi::wxd_free_string(c_str);
-            string
-        };
 
-        result
+        let c_string = unsafe { std::ffi::CStr::from_ptr(c_str) };
+        let string = c_string.to_string_lossy().into_owned();
+        unsafe { ffi::wxd_free_string(c_str) };
+        string
     }
 
     /// Load a perspective from a string

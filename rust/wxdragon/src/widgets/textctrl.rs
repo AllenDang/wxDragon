@@ -92,7 +92,7 @@ impl TextCtrl {
     /// The pointer must be a valid `wxd_TextCtrl_t` pointer.
     pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_TextCtrl_t) -> Self {
         TextCtrl {
-            window: Window::from_ptr(ptr as *mut ffi::wxd_Window_t),
+            window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
         }
     }
 

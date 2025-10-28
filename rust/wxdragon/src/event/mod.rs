@@ -3,8 +3,8 @@
 use crate::geometry::Point;
 use crate::window::Window;
 use std::boxed::Box;
-use std::ffi::c_void;
 use std::ffi::CStr;
+use std::ffi::c_void;
 use std::os::raw::c_char;
 use wxdragon_sys as ffi;
 pub mod app_events;
@@ -629,11 +629,7 @@ impl Event {
             return None;
         }
         let key_code = unsafe { ffi::wxd_KeyEvent_GetKeyCode(self.0) };
-        if key_code == 0 {
-            None
-        } else {
-            Some(key_code)
-        }
+        if key_code == 0 { None } else { Some(key_code) }
     }
 
     /// Gets the key unicode value associated with a key event.
@@ -642,11 +638,7 @@ impl Event {
             return None;
         }
         let key_code = unsafe { ffi::wxd_KeyEvent_GetUnicodeKey(self.0) };
-        if key_code == 0 {
-            None
-        } else {
-            Some(key_code)
-        }
+        if key_code == 0 { None } else { Some(key_code) }
     }
 
     /// Gets the integer value associated with a command event.
@@ -655,11 +647,7 @@ impl Event {
             return None;
         }
         let int_val = unsafe { ffi::wxd_CommandEvent_GetInt(self.0) };
-        if int_val == -1 {
-            None
-        } else {
-            Some(int_val)
-        }
+        if int_val == -1 { None } else { Some(int_val) }
     }
 
     /// Check if the Control key is pressed during this key event
@@ -896,7 +884,7 @@ pub trait WxEvtHandler {
 /// - `event_ptr_cvoid` must be a valid pointer to a `wxd_Event_t` object
 /// - The pointers must remain valid for the duration of this function call
 /// - This function must not be called from multiple threads simultaneously
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn rust_event_handler_trampoline(
     user_data: *mut c_void,
     event_ptr_cvoid: *mut c_void,
@@ -907,12 +895,12 @@ pub unsafe extern "C" fn rust_event_handler_trampoline(
     }
 
     // Cast to Box<dyn FnMut(Event)> directly
-    let closure_box = &mut *(user_data as *mut Box<dyn FnMut(Event) + 'static>);
+    let closure_box = unsafe { &mut *(user_data as *mut Box<dyn FnMut(Event) + 'static>) };
     let event_ptr = event_ptr_cvoid as *mut ffi::wxd_Event_t;
 
     let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
         // UPDATED: Create simple Event
-        let safe_event = Event::from_ptr(event_ptr);
+        let safe_event = unsafe { Event::from_ptr(event_ptr) };
         (*closure_box)(safe_event);
     }));
 
@@ -928,11 +916,11 @@ pub unsafe extern "C" fn rust_event_handler_trampoline(
 ///   that was previously allocated by Rust
 /// - The pointer must not be used after this function returns
 /// - This function must only be called once per pointer
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn drop_rust_event_closure_box(ptr: *mut c_void) {
     if !ptr.is_null() {
         // Drop the Box<dyn FnMut(Event)>
         log::trace!("Dropping Rust event closure box at ptr: {ptr:?}");
-        let _ = Box::from_raw(ptr as *mut Box<dyn FnMut(Event) + 'static>);
+        let _ = unsafe { Box::from_raw(ptr as *mut Box<dyn FnMut(Event) + 'static>) };
     }
 }
