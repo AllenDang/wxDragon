@@ -80,4 +80,12 @@ wxd_MenuItem_Check(wxd_MenuItem_t* item, bool check);
 WXD_EXPORTED bool
 wxd_MenuItem_IsChecked(wxd_MenuItem_t* item);
 
+/// Get the owning window (typically wxFrame) of a menu item via its menubar.
+WXD_EXPORTED const wxd_Window_t*
+wxd_MenuItem_GetOwningWindow(const wxd_MenuItem_t* item);
+
+/// Get the integer id of the menu item.
+WXD_EXPORTED int
+wxd_MenuItem_GetId(const wxd_MenuItem_t* item);
+
 #endif // WXD_MENU_H

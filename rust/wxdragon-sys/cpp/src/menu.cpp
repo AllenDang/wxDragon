@@ -1,8 +1,9 @@
 #include <wx/wxprec.h>
 #include <wx/wx.h>
 #include "../include/wxdragon.h"
-#include <wx/menu.h> // Include for wxMenuBar, wxMenu, wxMenuItem
-#include <cstring>   // C runtime for strlen/memcpy
+#include <wx/menu.h>  // Include for wxMenuBar, wxMenu, wxMenuItem
+#include <wx/frame.h> // Needed for obtaining owning frame from menubar
+#include <cstring>    // C runtime for strlen/memcpy
 
 extern "C" {
 
@@ -208,6 +209,33 @@ wxd_MenuItem_IsChecked(wxd_MenuItem_t* item)
         return false;
     wxMenuItem* wx_item = reinterpret_cast<wxMenuItem*>(item);
     return wx_item->IsChecked();
+}
+
+// Get the owning window (typically the wxFrame) for a menu item via its menubar
+WXD_EXPORTED const wxd_Window_t*
+wxd_MenuItem_GetOwningWindow(const wxd_MenuItem_t* item)
+{
+    if (!item)
+        return nullptr;
+    const wxMenuItem* wx_item = reinterpret_cast<const wxMenuItem*>(item);
+    wxMenu* menu = wx_item->GetMenu();
+    if (!menu)
+        return nullptr;
+    wxMenuBar* mbar = menu->GetMenuBar();
+    if (!mbar)
+        return nullptr;
+    wxFrame* frame = mbar->GetFrame();
+    return reinterpret_cast<const wxd_Window_t*>(frame);
+}
+
+// Get the integer id of the menu item
+WXD_EXPORTED int
+wxd_MenuItem_GetId(const wxd_MenuItem_t* item)
+{
+    if (!item)
+        return -1;
+    const wxMenuItem* wx_item = reinterpret_cast<const wxMenuItem*>(item);
+    return wx_item->GetId();
 }
 
 } // extern "C"

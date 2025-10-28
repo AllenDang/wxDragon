@@ -87,10 +87,10 @@ impl Menu {
     /// Safety: Do NOT call this if the menu was appended to a MenuBar, as the menubar
     /// takes ownership and will delete it, leading to double free.
     pub fn destroy_meun(&mut self) {
-        if self.owned {
+        if self.owned && !self.ptr.is_null() {
+            log::debug!("Menu '{}' destroyed", self.get_title());
             unsafe { ffi::wxd_Menu_Destroy(self.ptr) };
             self.ptr = std::ptr::null_mut();
-            log::debug!("Menu '{}' destroyed", self.get_title());
         }
     }
 
@@ -299,7 +299,9 @@ impl MenuBuilder {
 impl crate::xrc::XrcSupport for Menu {
     unsafe fn from_xrc_ptr(ptr: *mut wxdragon_sys::wxd_Window_t) -> Self {
         let ptr = ptr as *mut wxdragon_sys::wxd_Menu_t;
-        Self { ptr, owned: true }
+        // Menus loaded via XRC are owned by their parent (e.g., MenuBar/Frame),
+        // so this wrapper must NOT destroy them on drop.
+        Self { ptr, owned: false }
     }
 }
 

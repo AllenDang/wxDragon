@@ -65,12 +65,16 @@ impl MenuItem {
     /// Note: This function does not dereference the pointer. The wrapper is
     /// non-owning; validity must be ensured by the creator (e.g., owned by wxMenu).
     pub(crate) fn from_ptr(ptr: *mut ffi::wxd_MenuItem_t) -> Self {
-        // For now, we don't have parent window or ID information
-        // This will need to be updated when we have more context
+        // Try to resolve owning window (typically the frame) and real id
+        let owner_ptr = unsafe { ffi::wxd_MenuItem_GetOwningWindow(ptr) };
+        let item_id = unsafe { ffi::wxd_MenuItem_GetId(ptr) };
+
+        let parent_window = unsafe { Window::from_ptr(owner_ptr as *mut ffi::wxd_Window_t) };
+
         MenuItem {
             ptr,
-            parent_window: unsafe { Window::from_ptr(std::ptr::null_mut()) }, // Invalid for now
-            item_id: -1,
+            parent_window,
+            item_id,
             item_name: None,
         }
     }
