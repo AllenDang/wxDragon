@@ -342,10 +342,25 @@ fn generate_xrc_struct(input: XrcMacroInput) -> syn::Result<proc_macro2::TokenSt
         quote! { #field_name }
     });
 
+    // Generate Drop impl: auto-destroy the root object if the auto_destroy_root flag is set
+    let drop_impl = quote! {
+        impl Drop for #struct_name {
+            fn drop(&mut self) {
+                // Ensure the XRC-created object is destroyed to free native resources
+                // only when opted-in via auto_destroy flag.
+                if self.auto_destroy_root {
+                    // Use UFCS to avoid requiring trait imports in user crates.
+                    self.#root_field_name.destroy();
+                }
+            }
+        }
+    };
+
     let generated = quote! {
         #[allow(non_snake_case)]
         pub struct #struct_name {
             #(#struct_fields,)*
+            auto_destroy_root: bool,
             _resource: wxdragon::xrc::XmlResource,
         }
 
@@ -354,7 +369,7 @@ fn generate_xrc_struct(input: XrcMacroInput) -> syn::Result<proc_macro2::TokenSt
             pub const XRC_DATA: &'static str = include_str!(#xrc_path);
 
             /// Create a new instance by loading the embedded XRC
-            pub fn new(parent: Option<&dyn wxdragon::window::WxWidget>) -> Self {
+            pub fn new(parent: Option<&dyn wxdragon::window::WxWidget>, auto_destroy_root: bool) -> Self {
                 let resource = wxdragon::xrc::XmlResource::get();
 
                 // Initialize platform-aware StaticBitmap handler BEFORE default handlers
@@ -379,6 +394,7 @@ fn generate_xrc_struct(input: XrcMacroInput) -> syn::Result<proc_macro2::TokenSt
 
                 Self {
                     #(#field_assignments,)*
+                    auto_destroy_root,
                     _resource: resource,
                 }
             }
@@ -388,6 +404,8 @@ fn generate_xrc_struct(input: XrcMacroInput) -> syn::Result<proc_macro2::TokenSt
                 wxdragon::xrc::XmlResource::get_xrc_id(name)
             }
         }
+
+        #drop_impl
     };
 
     Ok(generated)

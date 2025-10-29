@@ -8,7 +8,7 @@ include_xrc!("../ui/simplebook_frame.xrc", SimpleBookXrcUI);
 pub fn run_xrc_test() {
     let _ = wxdragon::main(|_| {
         // Load the UI from XRC
-        let ui = SimpleBookXrcUI::new(None);
+        let ui = SimpleBookXrcUI::new(None, false);
 
         // Set up event handlers
         setup_xrc_event_handlers(&ui);

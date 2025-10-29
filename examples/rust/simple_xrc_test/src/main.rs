@@ -12,7 +12,7 @@ wxdragon::include_xrc!("../ui/dialog.xrc", DialogUI);
 fn main() {
     let _ = wxdragon::main(|_handle| {
         // 1. Load frame.xrc
-        let frame_ui = FrameUI::new(None);
+        let frame_ui = FrameUI::new(None, false);
 
         println!("✓ Loaded frame.xrc");
 
@@ -36,7 +36,7 @@ fn main() {
         });
 
         // 2. Load panel.xrc and embed the panel in main frame
-        let panel_ui = PanelUI::new(Some(content_panel));
+        let panel_ui = PanelUI::new(Some(content_panel), false);
 
         println!("✓ Loaded panel.xrc and embedded in frame");
 
@@ -89,7 +89,7 @@ fn main() {
         );
 
         // 3. Load dialog but don't show it initially (pass frame as parent)
-        let dialog_ui = DialogUI::new(Some(&frame_ui.main_frame));
+        let dialog_ui = DialogUI::new(Some(&frame_ui.main_frame), false);
 
         println!("✓ Loaded dialog.xrc");
 
