@@ -96,15 +96,57 @@ impl Tool {
         }
     }
 
-    /// Binds a click event handler to this tool.
-    /// This is a convenience method that binds a tool event on the parent toolbar for this tool's ID.
+    /// Binds a click handler using a platform-appropriate route.
+    ///
+    /// Platform default routing:
+    /// - Windows (MSW + XRC): bind as a MENU command on the top-level frame
+    /// - macOS / Linux (GTK): bind as a TOOL event on the parent toolbar
+    ///
+    /// Use `on_click_via_menu` or `on_click_via_tool` to override explicitly.
     pub fn on_click<F>(&self, handler: F)
+    where
+        F: FnMut(Event) + 'static,
+    {
+        #[cfg(target_os = "windows")]
+        self.on_click_via_menu(handler);
+
+        #[cfg(not(target_os = "windows"))]
+        self.on_click_via_tool(handler);
+    }
+
+    /// Binds a click event handler for this tool as a `MENU` command on the top-level frame.
+    ///
+    /// This is useful on platforms where toolbar commands are routed as menu commands
+    /// to the owning frame (notably MSW with some XRC configurations). If you just need
+    /// the frame-level MENU route, call this; otherwise prefer `on_click` which binds both.
+    pub fn on_click_via_menu<F>(&self, handler: F)
+    where
+        F: FnMut(Event) + 'static,
+    {
+        let frame_win = self.top_level_window();
+        frame_win.bind_with_id_internal(EventType::MENU, self.tool_id, handler);
+    }
+
+    /// Binds a click event handler for this tool as an `EVT_TOOL` on the parent toolbar.
+    pub fn on_click_via_tool<F>(&self, handler: F)
     where
         F: FnMut(Event) + 'static,
     {
         // Use ID-specific binding for TOOL events
         self.toolbar_window
             .bind_with_id_internal(EventType::TOOL, self.tool_id, handler);
+    }
+
+    // Internal helper: locate top-level parent window (typically a Frame)
+    fn top_level_window(&self) -> Window {
+        let mut current = self.toolbar_window;
+        loop {
+            let parent_ptr = unsafe { ffi::wxd_Window_GetParent(current.as_ptr()) };
+            if parent_ptr.is_null() {
+                break current;
+            }
+            current = unsafe { Window::from_ptr(parent_ptr) };
+        }
     }
 
     /// Special XRC loading method for tools.
