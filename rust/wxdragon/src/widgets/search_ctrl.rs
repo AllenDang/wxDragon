@@ -9,7 +9,6 @@ use wxdragon_sys as ffi;
 
 use std::ffi::CString;
 use std::os::raw::{c_char, c_longlong};
-use std::ptr;
 
 // --- Style enum using macro ---
 widget_style_enum!(
@@ -100,41 +99,21 @@ impl SearchCtrl {
 
     pub fn set_value(&self, value: &str) {
         let c_value = CString::new(value).expect("CString::new failed for value");
-        unsafe {
-            ffi::wxd_TextCtrl_SetValue(self.as_ptr() as *mut ffi::wxd_TextCtrl_t, c_value.as_ptr())
-        }
+        unsafe { ffi::wxd_SearchCtrl_SetValue(self.as_ptr(), c_value.as_ptr()) }
     }
 
     pub fn get_value(&self) -> String {
-        let len_needed = unsafe {
-            ffi::wxd_TextCtrl_GetValue(
-                self.as_ptr() as *mut ffi::wxd_TextCtrl_t,
-                ptr::null_mut(),
-                0,
-            )
-        };
-
-        if len_needed <= 0 {
+        // First call: get required UTF-8 byte length (excluding null terminator)
+        let len = unsafe { ffi::wxd_SearchCtrl_GetValue(self.as_ptr(), std::ptr::null_mut(), 0) };
+        if len == 0 {
             return String::new();
         }
-        let buffer_size = len_needed as usize;
-        let mut buffer: Vec<u8> = Vec::with_capacity(buffer_size);
-
-        let actual_len = unsafe {
-            ffi::wxd_TextCtrl_GetValue(
-                self.as_ptr() as *mut ffi::wxd_TextCtrl_t,
-                buffer.as_mut_ptr() as *mut c_char,
-                len_needed,
-            )
-        };
-
-        if actual_len <= 0 {
-            return String::new();
-        }
-        unsafe {
-            buffer.set_len(usize::max(0, (actual_len - 1) as usize));
-        }
-        String::from_utf8(buffer).unwrap_or_default()
+        // Allocate buffer with space for null terminator
+        let mut vec_buffer: Vec<u8> = vec![0; len + 1];
+        let p = vec_buffer.as_mut_ptr() as *mut c_char;
+        unsafe { ffi::wxd_SearchCtrl_GetValue(self.as_ptr(), p, vec_buffer.len()) };
+        vec_buffer.pop(); // remove null terminator
+        String::from_utf8(vec_buffer).unwrap_or_default()
     }
 }
 

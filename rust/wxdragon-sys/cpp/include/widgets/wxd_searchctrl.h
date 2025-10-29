@@ -20,6 +20,18 @@ wxd_SearchCtrl_ShowCancelButton(wxd_SearchCtrl_t* self, bool show);
 WXD_EXPORTED bool
 wxd_SearchCtrl_IsCancelButtonVisible(wxd_SearchCtrl_t* self);
 
+// Set/Get the value specifically via wxSearchCtrl to avoid base-class casting issues
+WXD_EXPORTED void
+wxd_SearchCtrl_SetValue(const wxd_SearchCtrl_t* self, const char* value);
+
+/**
+ * Get the value of wxSearchCtrl.
+ * Always return the actual UTF-8 byte length of the current value (excluding the null terminator),
+ * regardless of whether a buffer was provided.
+ */
+WXD_EXPORTED size_t
+wxd_SearchCtrl_GetValue(const wxd_SearchCtrl_t* self, char* buffer, size_t buffer_len);
+
 WXD_EXPORTED wxd_Control_t*
 wxd_SearchCtrl_GetCancelButton(wxd_SearchCtrl_t* self);
 

@@ -55,4 +55,40 @@ wxd_SearchCtrl_IsCancelButtonVisible(wxd_SearchCtrl_t* searchCtrl)
     return false; // Or some other appropriate default for null ctrl
 }
 
+// Set the value via wxSearchCtrl directly (avoid relying on wxTextCtrl casting)
+WXD_EXPORTED void
+wxd_SearchCtrl_SetValue(const wxd_SearchCtrl_t* searchCtrl, const char* value)
+{
+    wxSearchCtrl* ctrl =
+        const_cast<wxSearchCtrl*>(reinterpret_cast<const wxSearchCtrl*>(searchCtrl));
+    if (ctrl) {
+        ctrl->SetValue(wxString::FromUTF8(value ? value : ""));
+    }
+}
+
+// Get the value via wxSearchCtrl directly (avoid relying on wxTextCtrl casting)
+// Always return the actual UTF-8 byte length of the current value (excluding the null terminator),
+// regardless of whether a buffer was provided.
+WXD_EXPORTED size_t
+wxd_SearchCtrl_GetValue(const wxd_SearchCtrl_t* searchCtrl, char* buffer, size_t buffer_len)
+{
+    const wxSearchCtrl* ctrl = reinterpret_cast<const wxSearchCtrl*>(searchCtrl);
+    if (!ctrl) {
+        return 0;
+    }
+
+    wxString value = ctrl->GetValue();
+    wxScopedCharBuffer utf8 = value.ToUTF8();
+    const size_t actual_len = utf8.length(); // excludes null terminator
+
+    // If the caller provided a buffer, copy into it (truncating if necessary),
+    // but always return the full actual length.
+    if (buffer && buffer_len > 0) {
+        // copy_wxstring_to_buffer ensures null-termination if buffer_len > 0
+        (void)wxd_cpp_utils::copy_wxstring_to_buffer(value, buffer, buffer_len);
+    }
+
+    return actual_len;
+}
+
 } // extern "C"
