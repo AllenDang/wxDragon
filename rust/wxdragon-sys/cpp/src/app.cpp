@@ -1,5 +1,6 @@
 #include <wx/wxprec.h>
 #include <wx/wx.h>
+#include <wx/cmdline.h>
 #include "../include/wxdragon.h"
 #include <wx/app.h>
 #include <wx/image.h>
@@ -25,6 +26,13 @@ public:
     // Called by wxWidgets framework on application startup.
     virtual bool
     OnInit() override;
+
+    // Accept any command line parameters without errors
+    virtual void
+    OnInitCmdLine(wxCmdLineParser& parser) override;
+
+    virtual bool
+    OnCmdLineParsed(wxCmdLineParser& parser) override;
 
     // Idle event handler to process callbacks
     void
@@ -103,6 +111,34 @@ WxdApp::OnIdle(wxIdleEvent& event)
     if (callbacks_processed > 0) {
         event.RequestMore();
     }
+}
+
+// Configure command line parser to accept any parameters (no options).
+void
+WxdApp::OnInitCmdLine(wxCmdLineParser& parser)
+{
+    // Call base to keep standard behaviour, then override as needed
+    wxApp::OnInitCmdLine(parser);
+
+    // Disable option parsing so tokens starting with '-' are not treated as options
+    parser.EnableLongOptions(false);
+    parser.SetSwitchChars("");
+
+    // Accept any number of free string parameters
+    static const wxCmdLineEntryDesc cmdLineDesc[] = {
+        { wxCMD_LINE_PARAM, nullptr, nullptr, "arg", wxCMD_LINE_VAL_STRING,
+          wxCMD_LINE_PARAM_MULTIPLE | wxCMD_LINE_PARAM_OPTIONAL },
+        { wxCMD_LINE_NONE, nullptr, nullptr, nullptr, wxCMD_LINE_VAL_NONE, 0 }
+    };
+    parser.SetDesc(cmdLineDesc);
+}
+
+// Always accept the parsed command line
+bool
+WxdApp::OnCmdLineParsed(wxCmdLineParser& parser)
+{
+    // Don't enforce any checks here; accept everything
+    return true;
 }
 
 // --- C API Implementation ---

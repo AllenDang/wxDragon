@@ -493,7 +493,7 @@ where
         });
         let user_data_ptr = Box::into_raw(payload) as *mut c_void;
 
-        // Collect OS arguments and convert to CString losslessly via to_string_lossy()
+        // Forward all OS arguments to wxWidgets; our App overrides accept any params safely.
         let args: Vec<CString> = std::env::args_os()
             .map(|os| {
                 // Preserve content best-effort: use lossy UTF-8; wxWidgets on Windows supports wide args internally
@@ -502,16 +502,16 @@ where
             })
             .collect();
 
-        // Build argv: raw pointers from CString; keep them alive in a separate vector to free later
-        let mut raw_args: Vec<*mut c_char> =
-            args.iter().map(|c| c.as_ptr() as *mut c_char).collect();
-        // Ensure at least one arg (program name). If none, inject a default name.
         let _owned_prog: Option<CString>;
-        if raw_args.is_empty() {
+        let mut raw_args: Vec<*mut c_char> = if args.is_empty() {
             let pn = CString::new("wxRustApp").expect("CString for app name");
-            raw_args.push(pn.as_ptr() as *mut c_char);
+            let ptr = pn.as_ptr() as *mut c_char;
+            // Note: keep `pn` alive until function end by binding it (drops after wxd_Main).
             _owned_prog = Some(pn);
-        }
+            vec![ptr]
+        } else {
+            args.iter().map(|c| c.as_ptr() as *mut c_char).collect()
+        };
         // Append null terminator as argv[argc] expected by some consumers
         raw_args.push(std::ptr::null_mut());
 
