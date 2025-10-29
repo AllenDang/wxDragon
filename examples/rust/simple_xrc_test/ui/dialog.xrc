@@ -8,10 +8,11 @@
     <object class="wxBoxSizer" name="">
       <orient>wxVERTICAL</orient>
       <object class="sizeritem">
-        <flag>wxEXPAND|wxALL</flag>
+        <flag>wxALL|wxALIGN_CENTER_HORIZONTAL</flag>
         <border>10</border>
         <option>0</option>
         <object class="wxStaticText" name="dialog_title">
+          <style>wxALIGN_CENTRE_HORIZONTAL</style>
           <font>
             <size>16</size>
             <style>normal</style>
@@ -20,7 +21,7 @@
             <underlined>0</underlined>
           </font>
           <label>Dialog from XRC</label>
-          <wrap>0</wrap>
+          <wrap>-1</wrap>
         </object>
       </object>
       <object class="sizeritem">
@@ -134,13 +135,12 @@
         </object>
       </object>
       <object class="sizeritem">
-        <flag>wxEXPAND|wxALL</flag>
+        <flag>wxEXPAND|wxLEFT|wxRIGHT|wxBOTTOM</flag>
         <border>10</border>
         <option>0</option>
         <object class="wxStaticText" name="dialog_message">
-          <style>wxST_ELLIPSIZE_END</style>
           <label>This dialog was loaded from XRC and demonstrates various controls.</label>
-          <wrap>0</wrap>
+          <wrap>-1</wrap>
         </object>
       </object>
       <object class="sizeritem">

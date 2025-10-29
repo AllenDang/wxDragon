@@ -49,6 +49,7 @@
                 <border>3</border>
                 <object class="wxTextCtrl" name="input_text">
                   <value>Sample text</value>
+                  <style>wxTE_PROCESS_ENTER</style>
                 </object>
               </object>
               
@@ -68,6 +69,7 @@ text control</value>
                 <border>3</border>
                 <object class="wxSearchCtrl" name="search_ctrl">
                   <value>Search...</value>
+                  <style>wxTE_PROCESS_ENTER</style>
                 </object>
               </object>
               
