@@ -168,17 +168,8 @@ public:
     OnDropFiles(wxCoord x, wxCoord y, const wxArrayString& filenames) override
     {
         if (m_onDropFiles) {
-            // Create a wxd_ArrayString_t to pass to the callback
-            wxd_ArrayString_t* wxdArray = new wxd_ArrayString_t();
-            wxdArray->internal_data = new wxArrayString(filenames);
-
-            bool result = m_onDropFiles(wxdArray, x, y, m_userData);
-
-            // Clean up
-            delete static_cast<wxArrayString*>(wxdArray->internal_data);
-            delete wxdArray;
-
-            return result;
+            return m_onDropFiles(reinterpret_cast<const wxd_ArrayString_t*>(&filenames), x, y,
+                                 m_userData);
         }
         return false;
     }

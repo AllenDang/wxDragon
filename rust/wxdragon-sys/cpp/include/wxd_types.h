@@ -369,9 +369,7 @@ typedef struct wxd_ScrollBar_t wxd_ScrollBar_t;
 typedef struct wxd_CommandLinkButton_t wxd_CommandLinkButton_t;
 typedef struct wxd_Dialog wxd_Dialog_t;
 typedef struct wxd_MessageDialog wxd_MessageDialog_t;
-typedef struct wxd_ArrayString {
-    void* internal_data;
-} wxd_ArrayString_t;
+typedef struct wxd_ArrayString_t wxd_ArrayString_t;
 typedef struct wxd_FileDialog wxd_FileDialog_t;
 typedef struct wxd_ColourData wxd_ColourData_t;
 typedef struct wxd_ColourDialog wxd_ColourDialog_t;

@@ -23,23 +23,6 @@ wxd_MessageDialog_Create(wxd_Window_t* parent, const char* message, const char* 
                          wxd_Style_t style);
 
 // --- FileDialog ---
-WXD_EXPORTED wxd_ArrayString_t*
-wxd_ArrayString_Create(); // Helper for paths/filenames
-
-WXD_EXPORTED void
-wxd_ArrayString_Free(wxd_ArrayString_t* self);
-
-WXD_EXPORTED int
-wxd_ArrayString_GetCount(wxd_ArrayString_t* self);
-
-WXD_EXPORTED int
-wxd_ArrayString_GetString(wxd_ArrayString_t* self, int index, char* buffer, int bufLen);
-
-WXD_EXPORTED bool
-wxd_ArrayString_Add(wxd_ArrayString_t* self, const char* str);
-
-WXD_EXPORTED void
-wxd_ArrayString_Clear(wxd_ArrayString_t* self);
 
 WXD_EXPORTED wxd_FileDialog_t*
 wxd_FileDialog_Create(wxd_Window_t* parent, const char* message, const char* defaultDir,

@@ -1,5 +1,4 @@
 use std::ffi::{CStr, CString};
-use std::os::raw::c_char;
 use wxdragon_sys as ffi;
 
 /// A wrapper around wxArrayString that provides safe Rust APIs for interacting with wxWidgets string arrays.
@@ -52,43 +51,20 @@ impl WxdArrayString {
             return None;
         }
 
-        unsafe {
-            // First, try with a reasonable stack buffer
-            let mut buffer: [c_char; 1024] = [0; 1024];
-            let len_needed = ffi::wxd_ArrayString_GetString(
-                self.ptr,
-                index as i32,
-                buffer.as_mut_ptr(),
-                buffer.len() as i32,
-            );
+        let index = index as i32;
+        // First, try with a reasonable stack buffer
+        let len =
+            unsafe { ffi::wxd_ArrayString_GetString(self.ptr, index, std::ptr::null_mut(), 0) };
 
-            if len_needed < 0 {
-                return None; // Error
-            }
-
-            let len_needed_usize = len_needed as usize;
-            if len_needed_usize < buffer.len() {
-                // String fit in the buffer
-                let c_str = CStr::from_ptr(buffer.as_ptr());
-                Some(c_str.to_string_lossy().into_owned())
-            } else {
-                // Need a larger buffer
-                let mut vec_buffer: Vec<u8> = vec![0; len_needed_usize + 1];
-                let len_copied = ffi::wxd_ArrayString_GetString(
-                    self.ptr,
-                    index as i32,
-                    vec_buffer.as_mut_ptr() as *mut c_char,
-                    vec_buffer.len() as i32,
-                );
-
-                if len_copied == len_needed {
-                    vec_buffer.pop(); // Remove null terminator
-                    String::from_utf8(vec_buffer).ok()
-                } else {
-                    None // Error on second call
-                }
-            }
+        if len < 0 {
+            return None; // Error
         }
+
+        // Need a larger buffer
+        let mut buf = vec![0; len as usize + 1];
+        let bl = buf.len() as i32;
+        unsafe { ffi::wxd_ArrayString_GetString(self.ptr, index, buf.as_mut_ptr(), bl) };
+        Some(unsafe { CStr::from_ptr(buf.as_ptr()).to_string_lossy().into_owned() })
     }
 
     /// Adds a string to the array.
@@ -116,9 +92,7 @@ impl WxdArrayString {
 
     /// Clears all strings from the array.
     pub fn clear(&mut self) {
-        unsafe {
-            ffi::wxd_ArrayString_Clear(self.ptr);
-        }
+        unsafe { ffi::wxd_ArrayString_Clear(self.ptr) };
     }
 
     /// Converts this WxdArrayString into a `Vec<String>`.
@@ -183,9 +157,7 @@ impl WxdArrayString {
 impl Drop for WxdArrayString {
     fn drop(&mut self) {
         if !self.ptr.is_null() && self.owns_ptr {
-            unsafe {
-                ffi::wxd_ArrayString_Free(self.ptr);
-            }
+            unsafe { ffi::wxd_ArrayString_Free(self.ptr) };
             self.ptr = std::ptr::null_mut();
         }
     }

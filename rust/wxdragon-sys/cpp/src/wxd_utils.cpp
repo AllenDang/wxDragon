@@ -1,3 +1,4 @@
+#include <wx/wx.h>
 #include "wxd_utils.h"
 #include <cstring>   // For strncpy, strlen
 #include <algorithm> // For std::min
@@ -8,19 +9,13 @@ namespace wxd_cpp_utils {
 size_t
 copy_wxstring_to_buffer(const wxString& str, char* buffer, size_t buffer_len)
 {
-    if (!buffer || buffer_len == 0) {
-        // Still return the needed length even if buffer is invalid for some reason
-        return str.ToUTF8().length();
-    }
-
     wxScopedCharBuffer utf8_buf = str.ToUTF8();
     size_t source_len = utf8_buf.length(); // Length of the UTF-8 string, excluding null terminator
 
-    if (buffer_len > 0) {
+    if (buffer && buffer_len > 0) {
         // Number of bytes to copy, leaving space for null terminator
         size_t copy_len = std::min(source_len, buffer_len - 1);
 
-        // strncpy(buffer, utf8_buf.data(), copy_len);
         // Using memcpy is often safer with wxScopedCharBuffer as data() might not be null-terminated by itself
         // if the original string contained embedded nulls (though unlikely for UI strings).
         // wxScopedCharBuffer::data() returns a const char*, so we might need a cast if buffer is not const,

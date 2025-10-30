@@ -11,7 +11,7 @@ wxd_SingleChoiceDialog_Create(wxd_Window_t* parent, const char* message, const c
                               int width, int height)
 {
     wxWindow* parent_wx = (wxWindow*)parent;
-    wxArrayString* wxChoices = static_cast<wxArrayString*>(choices->internal_data);
+    wxArrayString* wxChoices = reinterpret_cast<wxArrayString*>(choices);
 
     // Default position/size if not specified
     wxPoint pos = (x == -1 && y == -1) ? wxDefaultPosition : wxPoint(x, y);

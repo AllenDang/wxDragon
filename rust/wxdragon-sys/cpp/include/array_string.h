@@ -19,10 +19,17 @@ WXD_EXPORTED void
 wxd_ArrayString_Free(wxd_ArrayString_t* self);
 
 WXD_EXPORTED int
-wxd_ArrayString_GetCount(wxd_ArrayString_t* array);
+wxd_ArrayString_GetCount(const wxd_ArrayString_t* array);
 
+/**
+ * Get string at specified index.
+ * Returns the real length of the string, excluding the null terminator.
+ * If the returned length is negative, indicates an error (invalid index or parameters).
+ * If buffer is non-null and bufferLen > 0, copies up to bufferLen - 1 characters and null-terminates.
+ * If buffer is null or bufferLen == 0, does not copy anything.
+ */
 WXD_EXPORTED int
-wxd_ArrayString_GetString(wxd_ArrayString_t* array, int index, char* buffer, int bufferLen);
+wxd_ArrayString_GetString(const wxd_ArrayString_t* array, int index, char* buffer, int bufferLen);
 
 WXD_EXPORTED bool
 wxd_ArrayString_Add(wxd_ArrayString_t* self, const char* str);
