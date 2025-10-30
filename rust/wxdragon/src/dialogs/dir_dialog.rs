@@ -41,17 +41,13 @@ impl DirDialog {
 
     /// Gets the path selected by the user.
     pub fn get_path(&self) -> Option<String> {
-        unsafe {
-            let mut buffer = vec![0 as c_char; 1024];
-            let len =
-                ffi::wxd_DirDialog_GetPath(self.ptr, buffer.as_mut_ptr(), buffer.len() as i32);
-            if len > 0 {
-                let c_str = CStr::from_ptr(buffer.as_ptr());
-                Some(c_str.to_string_lossy().into_owned())
-            } else {
-                None
-            }
+        let len = unsafe { ffi::wxd_DirDialog_GetPath(self.ptr, std::ptr::null_mut(), 0) };
+        if len == 0 {
+            return None;
         }
+        let mut buf = vec![0; len + 1];
+        unsafe { ffi::wxd_DirDialog_GetPath(self.ptr, buf.as_mut_ptr(), buf.len()) };
+        Some(unsafe { CStr::from_ptr(buf.as_ptr()).to_string_lossy().to_string() })
     }
 
     /// Sets the path that will be selected when the dialog is shown.

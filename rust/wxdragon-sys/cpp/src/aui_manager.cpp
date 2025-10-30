@@ -155,15 +155,21 @@ wxd_AuiManager_Delete(wxd_AuiManager_t* self)
     delete self;
 }
 
-char*
-wxd_AuiManager_SavePerspective(wxd_AuiManager_t* self)
+WXD_EXPORTED size_t
+wxd_AuiManager_SavePerspective(const wxd_AuiManager_t* self, char* out, size_t out_len)
 {
     if (!self || !self->manager)
-        return nullptr;
+        return 0;
 
     wxString perspective = self->manager->SavePerspective();
-    char* result = strdup(perspective.utf8_str());
-    return result;
+    wxScopedCharBuffer utf8_buf = perspective.ToUTF8();
+    if (out && out_len > 0) {
+        size_t copy_len = std::min(out_len - 1, utf8_buf.length());
+        memcpy(out, utf8_buf.data(), copy_len);
+        out[copy_len] = '\0';
+    }
+
+    return utf8_buf.length();
 }
 
 bool

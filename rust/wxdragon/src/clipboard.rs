@@ -1,5 +1,5 @@
 use crate::data_object::DataObject;
-use std::ffi::CString;
+use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
 use wxdragon_sys as ffi;
 
@@ -181,17 +181,13 @@ impl Clipboard {
             return None;
         }
 
-        let mut buffer: Vec<c_char> = vec![0; 1024]; // Initial buffer size
-        let success = unsafe {
-            ffi::wxd_Clipboard_GetText(self.ptr, buffer.as_mut_ptr(), buffer.len() as i32)
-        };
-
-        if success {
-            let c_str = unsafe { std::ffi::CStr::from_ptr(buffer.as_ptr()) };
-            Some(c_str.to_string_lossy().into_owned())
-        } else {
-            None
+        let len = unsafe { ffi::wxd_Clipboard_GetText(self.ptr, std::ptr::null_mut(), 0) };
+        if len == 0 {
+            return None;
         }
+        let mut buf: Vec<c_char> = vec![0; len + 1];
+        unsafe { ffi::wxd_Clipboard_GetText(self.ptr, buf.as_mut_ptr(), buf.len()) };
+        Some(unsafe { CStr::from_ptr(buf.as_ptr()).to_string_lossy().to_string() })
     }
 
     /// Create a ClipboardLocker to safely manage clipboard access

@@ -55,14 +55,20 @@ wxd_StaticText_SetLabel(wxd_StaticText_t* stext, const char* label)
     wx_stext->SetLabel(wx_label);
 }
 
-WXD_EXPORTED int
-wxd_StaticText_GetLabel(wxd_StaticText_t* stext, char* buffer, int buffer_len)
+WXD_EXPORTED size_t
+wxd_StaticText_GetLabel(const wxd_StaticText_t* stext, char* buffer, size_t buffer_len)
 {
-    if (!stext || !buffer || buffer_len <= 0)
-        return -1;
-    wxStaticText* wx_stext = reinterpret_cast<wxStaticText*>(stext);
+    if (!stext)
+        return 0;
+    const wxStaticText* wx_stext = reinterpret_cast<const wxStaticText*>(stext);
     wxString label = wx_stext->GetLabel();
-    return wxd_cpp_utils::copy_wxstring_to_buffer(label, buffer, static_cast<size_t>(buffer_len));
+    wxScopedCharBuffer scoped_buf = label.ToUTF8();
+    if (buffer && buffer_len > 0) {
+        size_t to_copy = std::min(scoped_buf.length(), buffer_len - 1);
+        memcpy(buffer, scoped_buf.data(), to_copy);
+        buffer[to_copy] = '\0'; // Null-terminate
+    }
+    return scoped_buf.length();
 }
 
 WXD_EXPORTED void

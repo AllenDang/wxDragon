@@ -62,11 +62,16 @@ WXD_EXPORTED void
 wxd_MenuItem_SetLabel(wxd_MenuItem_t* item, const char* label);
 
 /**
- * Get the label of the menu item. The returned string is heap-allocated
- * and must be freed by the caller using wxd_free_string.
+ * Get the label of the menu item. The returned value is the length of the label (excluding null terminator).
+ * If buffer is non-null and buffer_size > 0, copies up to buffer_size - 1 bytes and NUL-terminates the buffer.
+ * If buffer is null or buffer_size == 0, nothing is written.
+ * @param item Pointer to wxMenuItem.
+ * @param buffer Buffer to receive the UTF-8 label.
+ * @param buffer_size Size of the buffer.
+ * @return Number of bytes required to store the UTF-8 label, excluding the terminating NUL.
  */
-WXD_EXPORTED char*
-wxd_MenuItem_GetLabel(wxd_MenuItem_t* item);
+WXD_EXPORTED size_t
+wxd_MenuItem_GetLabel(const wxd_MenuItem_t* item, char* buffer, size_t buffer_size);
 
 WXD_EXPORTED void
 wxd_MenuItem_Enable(wxd_MenuItem_t* item, bool enable);

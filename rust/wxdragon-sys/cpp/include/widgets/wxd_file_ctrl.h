@@ -13,8 +13,10 @@ wxd_FileCtrl_Create(wxd_Window_t* parent, int id, const char* default_directory,
                     const char* default_filename, const char* wild_card, int64_t style, int pos_x,
                     int pos_y, int size_w, int size_h, const char* name);
 
+WXD_EXPORTED size_t
+wxd_FileCtrl_GetPath(const wxd_FileCtrl_t* self, char* buffer, size_t buffer_len);
+
 // Placeholder for other wxFileCtrl specific functions:
-// const char* wxd_FileCtrl_GetPath(wxd_FileCtrl_t* self); // Returns char* to be freed by wxd_free_string
 // void wxd_FileCtrl_SetPath(wxd_FileCtrl_t* self, const char* path);
 // const char* wxd_FileCtrl_GetFilename(wxd_FileCtrl_t* self);
 // void wxd_FileCtrl_SetFilename(wxd_FileCtrl_t* self, const char* filename);

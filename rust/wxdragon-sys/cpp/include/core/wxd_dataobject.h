@@ -10,8 +10,17 @@ wxd_DataObject_Destroy(wxd_DataObject_t* data_object);
 // --- TextDataObject Functions ---
 WXD_EXPORTED wxd_TextDataObject_t*
 wxd_TextDataObject_Create(const char* text);
-WXD_EXPORTED int
-wxd_TextDataObject_GetText(wxd_TextDataObject_t* data_object, char* buffer, int buffer_len);
+
+/**
+ * Gets the text from the data object.
+ * Returns the length of the text retrieved (not including the null terminator).
+ * If buffer is not null and buffer_len is non-zero, copies up to buffer_len-1 characters into buffer,
+ * null-terminating it.
+ */
+WXD_EXPORTED size_t
+wxd_TextDataObject_GetText(const wxd_TextDataObject_t* data_object, char* buffer,
+                           size_t buffer_len);
+
 WXD_EXPORTED void
 wxd_TextDataObject_SetText(wxd_TextDataObject_t* data_object, const char* text);
 

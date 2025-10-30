@@ -63,8 +63,14 @@ wxd_DirPickerCtrl_Create(
     const char* path,    // Initial path
     wxd_Point pos, wxd_Size size, wxd_Style_t style);
 
-WXD_EXPORTED const char*
-wxd_DirPickerCtrl_GetPath(wxd_DirPickerCtrl_t* self);
+/**
+ * @brief Get the current path from the DirPickerCtrl
+ * Returns the required UTF-8 byte length (excluding the null terminator).
+ * If buffer is not null and buffer_len > 0, copies up to buffer_len - 1 bytes and null-terminates.
+ * If the current path is longer than buffer_len - 1, it will be truncated.
+ */
+WXD_EXPORTED size_t
+wxd_DirPickerCtrl_GetPath(const wxd_DirPickerCtrl_t* self, char* buffer, size_t buffer_len);
 
 WXD_EXPORTED void
 wxd_DirPickerCtrl_SetPath(wxd_DirPickerCtrl_t* self, const char* path);

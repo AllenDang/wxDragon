@@ -14,8 +14,14 @@ wxd_StaticText_Destroy(wxd_StaticText_t* stext); // Generic might suffice
 WXD_EXPORTED void
 wxd_StaticText_SetLabel(wxd_StaticText_t* stext, const char* label);
 
-WXD_EXPORTED int
-wxd_StaticText_GetLabel(wxd_StaticText_t* stext, char* buffer, int buffer_len);
+/**
+ * Gets the label of the static text control.
+ * Returns the length of the label string (not including the null terminator).
+ * If buffer is not null and buffer_len is non-zero, copies up to buffer_len-1 characters into buffer,
+ * null-terminating it.
+ */
+WXD_EXPORTED size_t
+wxd_StaticText_GetLabel(const wxd_StaticText_t* stext, char* buffer, size_t buffer_len);
 
 WXD_EXPORTED void
 wxd_StaticText_Wrap(wxd_StaticText_t* stext, int width);

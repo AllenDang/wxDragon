@@ -153,16 +153,13 @@ impl MenuItem {
             // For XRC items, we can't get the label directly
             return String::new();
         }
-        unsafe {
-            let c_str = ffi::wxd_MenuItem_GetLabel(self.ptr);
-            if c_str.is_null() {
-                return String::new();
-            }
-            let rust_str = CStr::from_ptr(c_str).to_string_lossy().into_owned();
-            // Free the C string returned by the FFI function using wxd_free_string
-            ffi::wxd_free_string(c_str);
-            rust_str
+        let len = unsafe { ffi::wxd_MenuItem_GetLabel(self.ptr, std::ptr::null_mut(), 0) };
+        if len == 0 {
+            return String::new();
         }
+        let mut c_str = vec![0; len + 1]; // +1 for null terminator
+        unsafe { ffi::wxd_MenuItem_GetLabel(self.ptr, c_str.as_mut_ptr(), c_str.len()) };
+        unsafe { CStr::from_ptr(c_str.as_ptr()).to_string_lossy().to_string() }
     }
 
     /// Enables or disables the menu item.

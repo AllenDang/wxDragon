@@ -1,7 +1,7 @@
 use crate::event::{Event, EventType, WxEvtHandler};
 use crate::prelude::*;
 use crate::window::Window;
-use std::ffi::CString;
+use std::ffi::{CStr, CString};
 use std::marker::PhantomData;
 use wxdragon_sys as ffi;
 
@@ -409,17 +409,15 @@ impl AuiManager {
 
     /// Save the current layout as a perspective string
     pub fn save_perspective(&self) -> String {
-        let c_str = unsafe { ffi::wxd_AuiManager_SavePerspective(self.ptr) };
-        if c_str.is_null() {
+        let len = unsafe { ffi::wxd_AuiManager_SavePerspective(self.ptr, std::ptr::null_mut(), 0) };
+        if len == 0 {
             return String::new();
         }
 
-        // Create a Rust string from the C string
-
-        let c_string = unsafe { std::ffi::CStr::from_ptr(c_str) };
-        let string = c_string.to_string_lossy().into_owned();
-        unsafe { ffi::wxd_free_string(c_str) };
-        string
+        // Create a buffer to hold the perspective string
+        let mut b = vec![0; len + 1]; // +1 for null terminator
+        unsafe { ffi::wxd_AuiManager_SavePerspective(self.ptr, b.as_mut_ptr(), b.len()) };
+        unsafe { CStr::from_ptr(b.as_ptr()).to_string_lossy().to_string() }
     }
 
     /// Load a perspective from a string

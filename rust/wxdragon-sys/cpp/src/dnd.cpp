@@ -11,7 +11,6 @@
 // The following functions are commented out:
 // - wxd_TextDataObject_Create
 // - wxd_TextDataObject_Destroy
-// - wxd_TextDataObject_GetText
 // - wxd_TextDataObject_SetText
 
 // FileDataObject

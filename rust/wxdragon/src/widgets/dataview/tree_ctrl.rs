@@ -12,7 +12,7 @@ use crate::{
     widget_builder,
     widget_style_enum, // Corrected macro import and usage
 };
-use std::ffi::CString;
+use std::ffi::{CStr, CString};
 // use std::rc::Rc; // Unused
 use wxdragon_sys as ffi;
 // Import necessary types for columns from parent dataview module
@@ -325,19 +325,15 @@ impl DataViewTreeCtrl {
 
     // --- Item Attributes ---
     pub fn get_item_text(&self, item: &DataViewItem) -> String {
-        unsafe {
-            let c_str = ffi::wxd_DataViewTreeCtrl_GetItemText(self.handle_ptr(), **item);
-            if c_str.is_null() {
-                String::new()
-            } else {
-                // Use CStr::from_ptr to borrow the string, then convert to owned String
-                let c_str_borrowed = std::ffi::CStr::from_ptr(c_str);
-                let rust_string = c_str_borrowed.to_string_lossy().into_owned();
-                // Now free the C string using the proper FFI function
-                ffi::wxd_free_string(c_str as *mut i8);
-                rust_string
-            }
+        let ptr = self.handle_ptr();
+        let len =
+            unsafe { ffi::wxd_DataViewTreeCtrl_GetItemText(ptr, **item, std::ptr::null_mut(), 0) };
+        if len == 0 {
+            return String::new();
         }
+        let mut b = vec![0; len + 1]; // +1 for null terminator
+        unsafe { ffi::wxd_DataViewTreeCtrl_GetItemText(ptr, **item, b.as_mut_ptr(), b.len()) };
+        unsafe { CStr::from_ptr(b.as_ptr()).to_string_lossy().to_string() }
     }
 
     pub fn set_item_text(&self, item: &DataViewItem, text: &str) {

@@ -30,7 +30,14 @@ wxd_Clipboard_UsePrimarySelection(wxd_Clipboard_t* clipboard, bool use_primary);
 // --- Convenience Functions ---
 WXD_EXPORTED bool
 wxd_Clipboard_SetText(wxd_Clipboard_t* clipboard, const char* text);
-WXD_EXPORTED bool
-wxd_Clipboard_GetText(wxd_Clipboard_t* clipboard, char* buffer, int buffer_len);
+
+/**
+ * Gets text from the clipboard.
+ * Returns the length of the text retrieved.
+ * If buffer is not null and buffer_len is non-zero, copies up to buffer_len-1 characters into buffer,
+ * null-terminating it.
+ */
+WXD_EXPORTED size_t
+wxd_Clipboard_GetText(const wxd_Clipboard_t* clipboard, char* buffer, size_t buffer_len);
 
 #endif // WXD_CLIPBOARD_H

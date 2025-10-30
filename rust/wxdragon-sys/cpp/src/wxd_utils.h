@@ -27,26 +27,8 @@ extern "C" {
 void
 wxd_Variant_Free_Rust_String(char* str);
 
-// Converts a wxString to a C-style string (char*) that must be freed by the caller (Rust) using wxd_free_string.
-// Returns nullptr if the input wxString is empty or on allocation failure.
-// Note: wxString argument implies this must be callable from C++ context that has the wxString.
-// If called from pure C FFI functions, they would already have wxString.
-// This specific signature const char* wxd_str_to_c_str(const wxString& s) is problematic for direct C FFI.
-// A helper inside C++ that then returns char* is better.
-// The existing pattern is likely: C++ FFI function does its work, gets a wxString, then calls an internal helper like this, or directly allocates.
-// The FFI function (e.g. wxd_Window_GetLabel) returns char*.
-// Let's assume wxd_str_to_c_str is an *internal* C++ helper in wxd_utils.cpp and is not directly part of C API.
-// The error in dataviewtreectrl.cpp for wxd_str_to_c_str means it's not visible *within C++ compilation of that file*.
-// So, it needs to be declared in wxd_utils.h, accessible to other .cpp files including wxdragon.h.
-
-// Declaration for wxd_str_to_c_str - ensure it's available for C++ files including wxd_utils.h
 #ifdef __cplusplus
-const char*
-wxd_str_to_c_str(const wxString& s);
-#endif
-
-#ifdef __cplusplus
-} // extern "C" (if opened above, but wxd_str_to_c_str is C++ specific with wxString&)
+} // extern "C"
 #endif
 
 namespace wxd_cpp_utils {

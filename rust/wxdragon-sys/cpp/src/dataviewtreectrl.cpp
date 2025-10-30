@@ -177,17 +177,26 @@ wxd_DataViewTreeCtrl_DeleteAllItems(wxd_Window_t* self)
 }
 
 // --- Item Attributes ---
-WXD_EXPORTED const char*
-wxd_DataViewTreeCtrl_GetItemText(wxd_Window_t* self, const wxd_DataViewItem_t* item_wrapper)
+WXD_EXPORTED size_t
+wxd_DataViewTreeCtrl_GetItemText(const wxd_Window_t* self, const wxd_DataViewItem_t* item_wrapper,
+                                 char* out, size_t out_len)
 {
-    wxDataViewTreeCtrl* ctrl = ToWxDVTC(self);
+    const wxDataViewTreeCtrl* ctrl = reinterpret_cast<const wxDataViewTreeCtrl*>(self);
     if (!ctrl)
-        return nullptr;
+        return 0;
     const wxDataViewItem& item = ToWxDVI(item_wrapper);
     if (!item.IsOk())
-        return nullptr;
+        return 0;
     wxString text = ctrl->GetItemText(item);
-    return wxd_str_to_c_str(text); // Rust frees via wxd_free_string
+    wxScopedCharBuffer utf8_buf = text.ToUTF8();
+    size_t required_len = utf8_buf.length(); // Length without null terminator
+    if (out && out_len > 0) {
+        size_t copy_len = std::min(required_len, out_len - 1);
+        memcpy(out, utf8_buf.data(), copy_len);
+        out[copy_len] = '\0'; // Null-terminate
+    }
+
+    return required_len;
 }
 
 WXD_EXPORTED void

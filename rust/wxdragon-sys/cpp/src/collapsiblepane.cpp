@@ -90,16 +90,21 @@ wxd_CollapsiblePane_SetLabel(wxd_CollapsiblePane_t* self, const char* label)
     pane->SetLabel(wxLabel);
 }
 
-WXD_EXPORTED char*
-wxd_CollapsiblePane_GetLabel(wxd_CollapsiblePane_t* self)
+WXD_EXPORTED size_t
+wxd_CollapsiblePane_GetLabel(const wxd_CollapsiblePane_t* self, char* out, size_t out_len)
 {
-    wxCollapsiblePane* pane = reinterpret_cast<wxCollapsiblePane*>(self);
+    const wxCollapsiblePane* pane = reinterpret_cast<const wxCollapsiblePane*>(self);
     if (!pane)
-        return nullptr;
+        return 0;
 
     wxString label = pane->GetLabel();
-    char* result = strdup(label.utf8_str());
-    return result;
+    wxScopedCharBuffer utf8_buf = label.ToUTF8();
+    if (out && out_len > 0) {
+        size_t copy_len = std::min(out_len - 1, utf8_buf.length());
+        memcpy(out, utf8_buf.data(), copy_len);
+        out[copy_len] = '\0';
+    }
+    return utf8_buf.length();
 }
 
 } // extern "C"

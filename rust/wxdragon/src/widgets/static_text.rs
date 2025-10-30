@@ -4,7 +4,6 @@ use crate::geometry::{Point, Size};
 use crate::id::Id;
 use crate::window::{Window, WxWidget};
 use std::ffi::{CStr, CString};
-use std::os::raw::c_char;
 use wxdragon_sys as ffi;
 
 widget_style_enum!(
@@ -76,42 +75,14 @@ impl StaticText {
 
     /// Gets the text control's label.
     pub fn get_label(&self) -> String {
-        let mut buffer: [c_char; 256] = [0; 256];
-        let len_needed = unsafe {
-            ffi::wxd_StaticText_GetLabel(
-                self.window.as_ptr() as *mut ffi::wxd_StaticText_t,
-                buffer.as_mut_ptr(),
-                buffer.len() as i32,
-            )
-        };
-
-        if len_needed > 0 && (len_needed as usize) <= buffer.len() {
-            unsafe {
-                CStr::from_ptr(buffer.as_ptr())
-                    .to_string_lossy()
-                    .into_owned()
-            }
-        } else if len_needed > (buffer.len() as i32) {
-            let mut vec_buffer: Vec<c_char> = vec![0; len_needed as usize];
-            let len_needed_2 = unsafe {
-                ffi::wxd_StaticText_GetLabel(
-                    self.window.as_ptr() as *mut ffi::wxd_StaticText_t,
-                    vec_buffer.as_mut_ptr(),
-                    vec_buffer.len() as i32,
-                )
-            };
-            if len_needed_2 == len_needed {
-                unsafe {
-                    CStr::from_ptr(vec_buffer.as_ptr())
-                        .to_string_lossy()
-                        .into_owned()
-                }
-            } else {
-                String::new()
-            }
-        } else {
-            String::new()
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_StaticText_t;
+        let len = unsafe { ffi::wxd_StaticText_GetLabel(ptr, std::ptr::null_mut(), 0) };
+        if len == 0 {
+            return String::new();
         }
+        let mut buf = vec![0; len + 1];
+        unsafe { ffi::wxd_StaticText_GetLabel(ptr, buf.as_mut_ptr(), buf.len()) };
+        unsafe { CStr::from_ptr(buf.as_ptr()).to_string_lossy().to_string() }
     }
 
     /// Wraps the text to the specified width in pixels.

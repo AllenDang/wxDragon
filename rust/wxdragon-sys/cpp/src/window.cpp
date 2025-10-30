@@ -206,20 +206,24 @@ wxd_Window_SetLabel(wxd_Window_t* self, const char* label)
     }
 }
 
-WXD_EXPORTED char*
-wxd_Window_GetLabel(wxd_Window_t* self)
+WXD_EXPORTED size_t
+wxd_Window_GetLabel(const wxd_Window_t* self, char* outLabel, size_t maxLen)
 {
-    if (self) {
-        wxString label = reinterpret_cast<wxWindow*>(self)->GetLabel();
-        const wxScopedCharBuffer utf8_buf = label.ToUTF8();
-        if (utf8_buf.data()) {              // Check if data is not null
-            return strdup(utf8_buf.data()); // Allocate and copy string
-        }
+    if (!self) {
+        return 0;
     }
-    // Return a duplicated empty string if self is null or label is empty to avoid returning NULL
-    // which Rust CString::from_raw would panic on.
-    // Callers should check if the string is empty if that has meaning.
-    return strdup("");
+    wxString label = reinterpret_cast<const wxWindow*>(self)->GetLabel();
+    const wxScopedCharBuffer utf8_buf = label.ToUTF8();
+    if (!utf8_buf.data()) { // Check if data is not null
+        return 0;
+    }
+    size_t len = utf8_buf.length();
+    if (outLabel && maxLen > 0) {
+        size_t n = std::min(len, maxLen - 1);
+        std::memcpy(outLabel, utf8_buf.data(), n);
+        outLabel[n] = '\0'; // Ensure null-termination
+    }
+    return len;
 }
 
 WXD_EXPORTED void
@@ -574,18 +578,26 @@ wxd_Window_SetName(wxd_Window_t* window, const char* name)
     }
 }
 
-WXD_EXPORTED char*
-wxd_Window_GetName(wxd_Window_t* window)
+WXD_EXPORTED size_t
+wxd_Window_GetName(const wxd_Window_t* window, char* outName, size_t maxLen)
 {
-    wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
-    if (wx_window) {
-        wxString name = wx_window->GetName();
-        const wxScopedCharBuffer utf8_buf = name.ToUTF8();
-        if (utf8_buf.data()) {
-            return strdup(utf8_buf.data());
-        }
+    const wxWindow* wx_window = reinterpret_cast<const wxWindow*>(window);
+    if (!wx_window) {
+        return 0;
     }
-    return strdup(""); // Return empty string if window is null or name is empty
+    wxString name = wx_window->GetName();
+    const wxScopedCharBuffer utf8_buf = name.ToUTF8();
+    const char* data = utf8_buf.data();
+    if (!data) {
+        return 0;
+    }
+    size_t len = utf8_buf.length();
+    if (outName && maxLen > 0) {
+        size_t n = std::min(len, maxLen - 1);
+        std::memcpy(outName, data, n);
+        outName[n] = '\0'; // Ensure null-termination
+    }
+    return len;
 }
 
 // Window finding functions
@@ -976,26 +988,28 @@ wxd_Window_GetHandle(wxd_Window_t* self)
     return reinterpret_cast<void*>(wx_window->GetHandle());
 }
 
-// Get wxWidgets class name using built-in RTTI
-WXD_EXPORTED const char*
-wxd_Window_GetClassName(wxd_Window_t* window)
+WXD_EXPORTED size_t
+wxd_Window_GetClassName(const wxd_Window_t* window, char* outName, size_t maxLen)
 {
     if (!window)
-        return nullptr;
-    wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
+        return 0;
+
+    const wxWindow* wx_window = reinterpret_cast<const wxWindow*>(window);
 
     // Get the class name and convert from wxChar* to const char*
     const wxChar* wx_class_name = wx_window->GetClassInfo()->GetClassName();
 
     // Convert wxString to std::string, then to const char*
     wxString wx_str(wx_class_name);
-    std::string std_str = wx_str.ToStdString();
+    const wxScopedCharBuffer utf8_buf = wx_str.ToUTF8();
+    size_t len = utf8_buf.length();
+    if (outName && maxLen > 0) {
+        size_t n = std::min(len, maxLen - 1);
+        std::memcpy(outName, utf8_buf.data(), n);
+        outName[n] = '\0'; // Ensure null-termination
+    }
 
-    // We need to return a persistent string, so we'll use a static approach
-    // This is a simple implementation - in production you might want a more sophisticated approach
-    static std::string persistent_name;
-    persistent_name = std_str;
-    return persistent_name.c_str();
+    return len;
 }
 
 // --- Tab Order Functions ---

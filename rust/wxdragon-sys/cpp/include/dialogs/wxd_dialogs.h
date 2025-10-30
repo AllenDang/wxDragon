@@ -294,8 +294,14 @@ WXD_EXPORTED wxd_DirDialog_t*
 wxd_DirDialog_Create(wxd_Window_t* parent, const char* message, const char* defaultPath,
                      wxd_Style_t style, int x, int y, int width, int height);
 
-WXD_EXPORTED int
-wxd_DirDialog_GetPath(wxd_DirDialog_t* self, char* buffer, int bufLen);
+/**
+ * Gets the currently selected path.
+ * Returns the length of the path string (not including the null terminator).
+ * If buffer is not null and bufLen is non-zero, copies up to bufLen-1 characters into buffer,
+ * null-terminating it.
+ */
+WXD_EXPORTED size_t
+wxd_DirDialog_GetPath(const wxd_DirDialog_t* self, char* buffer, size_t bufLen);
 
 WXD_EXPORTED void
 wxd_DirDialog_SetPath(wxd_DirDialog_t* self, const char* path);

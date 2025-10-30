@@ -60,8 +60,15 @@ WXD_EXPORTED void
 wxd_Window_SetId(wxd_Window_t* self, int id);
 WXD_EXPORTED void
 wxd_Window_SetLabel(wxd_Window_t* self, const char* label);
-WXD_EXPORTED char*
-wxd_Window_GetLabel(wxd_Window_t* self); // Caller must free with wxd_free_string
+
+/**
+ * @brief Get the label of the window.
+ * The returned value is the length of the label (excluding null terminator).
+ * If outLabel is not null and maxLen > 0, the label is copied into outLabel
+ * up to maxLen - 1 characters, and null-terminated.
+ */
+WXD_EXPORTED size_t
+wxd_Window_GetLabel(const wxd_Window_t* self, char* outLabel, size_t maxLen);
 
 WXD_EXPORTED bool
 wxd_Window_IsEnabled(wxd_Window_t* self);
@@ -125,8 +132,15 @@ wxd_Window_GetMaxSize(wxd_Window_t* window);
 // Window properties functions
 WXD_EXPORTED void
 wxd_Window_SetName(wxd_Window_t* window, const char* name);
-WXD_EXPORTED char*
-wxd_Window_GetName(wxd_Window_t* window); // Caller must free with wxd_free_string
+
+/**
+ * @brief Get the name of the window.
+ * The returned value is the length of the name (excluding null terminator).
+ * If outName is not null and maxLen > 0, the name is copied into outName
+ * up to maxLen - 1 characters, and null-terminated.
+ */
+WXD_EXPORTED size_t
+wxd_Window_GetName(const wxd_Window_t* window, char* outName, size_t maxLen);
 
 // Window finding functions
 WXD_EXPORTED wxd_Window_t*
@@ -191,9 +205,14 @@ wxd_Window_IsPositionVisible(wxd_Window_t* window, int64_t position);
 WXD_EXPORTED int64_t
 wxd_Window_GetLastPosition(wxd_Window_t* window);
 
-// Widget type identification using wxWidgets' built-in RTTI
-WXD_EXPORTED const char*
-wxd_Window_GetClassName(wxd_Window_t* window);
+/**
+ * @brief Get the wxWidgets class name of the window.
+ * The returned value is the length of the class name (excluding null terminator).
+ * If outName is not null and maxLen > 0, the class name is copied into outName
+ * up to maxLen - 1 characters, and null-terminated.
+ */
+WXD_EXPORTED size_t
+wxd_Window_GetClassName(const wxd_Window_t* window, char* outName, size_t maxLen);
 
 // --- Tab Order Functions ---
 WXD_EXPORTED void

@@ -38,10 +38,14 @@ wxd_DataViewTreeCtrl_DeleteItem(wxd_Window_t* self, const wxd_DataViewItem_t* it
 WXD_EXPORTED void
 wxd_DataViewTreeCtrl_DeleteChildren(wxd_Window_t* self, const wxd_DataViewItem_t* item);
 
-// Item Attributes
-WXD_EXPORTED const char*
-wxd_DataViewTreeCtrl_GetItemText(
-    wxd_Window_t* self, const wxd_DataViewItem_t* item); // Rust must free with wxd_free_string
+/**
+ * Getters and Setters for Item Properties
+ * Note: For string outputs, the function fills the provided buffer and returns the required length.
+ */
+WXD_EXPORTED size_t
+wxd_DataViewTreeCtrl_GetItemText(const wxd_Window_t* self, const wxd_DataViewItem_t* item,
+                                 char* out, size_t out_len);
+
 WXD_EXPORTED void
 wxd_DataViewTreeCtrl_SetItemText(wxd_Window_t* self, const wxd_DataViewItem_t* item,
                                  const char* text);

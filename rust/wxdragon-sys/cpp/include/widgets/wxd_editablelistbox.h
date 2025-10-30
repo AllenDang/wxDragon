@@ -23,16 +23,6 @@ wxd_EditableListBox_New(wxd_Window_t* parent, int id, const char* label, int x, 
                         int height, int64_t style);
 
 /**
- * @brief Get the string items in the listbox
- * 
- * @param self Pointer to wxEditableListBox
- * @param count Pointer to be filled with the count of items
- * @return Array of strings, must be freed with wxd_free_strings
- */
-char**
-wxd_EditableListBox_GetStrings(wxd_Window_t* self, int* count);
-
-/**
  * @brief Set the string items in the listbox
  * 
  * @param self Pointer to wxEditableListBox

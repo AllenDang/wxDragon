@@ -233,15 +233,6 @@ wxd_App_ProcessCallbacks()
     process_rust_callbacks();
 }
 
-// Implementation for wxd_free_string
-void
-wxd_free_string(char* str)
-{
-    if (str) {
-        free(str); // free is from <cstdlib> or <stdlib.h>
-    }
-}
-
 // Implementation for wxd_free_int_array
 void
 wxd_free_int_array(int* ptr)
@@ -346,21 +337,26 @@ wxd_SystemAppearance_IsUsingDarkBackground(wxd_SystemAppearance_t* appearance)
 }
 
 // Get the system appearance name (mainly for macOS)
-char*
-wxd_SystemAppearance_GetName(wxd_SystemAppearance_t* appearance)
+WXD_EXPORTED size_t
+wxd_SystemAppearance_GetName(const wxd_SystemAppearance_t* appearance, char* out, size_t out_len)
 {
     if (!appearance)
-        return strdup("");
+        return 0;
 
 #if wxCHECK_VERSION(3, 3, 0)
-    wxSystemAppearance* wx_appearance = reinterpret_cast<wxSystemAppearance*>(appearance);
-    wxString name = wx_appearance->GetName();
+    const wxSystemAppearance* a = reinterpret_cast<const wxSystemAppearance*>(appearance);
+    wxString name = a->GetName();
     const wxScopedCharBuffer utf8_buf = name.ToUTF8();
     if (utf8_buf.data()) {
-        return strdup(utf8_buf.data());
+        if (out && out_len > 0) {
+            size_t copy_len = std::min(static_cast<size_t>(utf8_buf.length()), out_len - 1);
+            memcpy(out, utf8_buf.data(), copy_len);
+            out[copy_len] = '\0'; // Null-terminate
+        }
+        return utf8_buf.length();
     }
 #endif
-    return strdup("");
+    return 0;
 }
 
 // Free system appearance object

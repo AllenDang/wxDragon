@@ -25,7 +25,7 @@
 // need to `strdup` it or use a static buffer (bad).
 // For wxWidgets, `wxString::utf8_str()` returns `wxScopedCharBuffer` which has `data()` method.
 // The `wxScopedCharBuffer` itself must not go out of scope.
-// Let's follow the pattern potentially used in `wxd_Window_GetLabel` or `wxd_Frame_GetTitle`
+// Let's follow the pattern potentially used in `wxd_Frame_GetTitle`
 // which likely rely on wxString's internal buffer or a temporary buffer which Rust copies immediately.
 // For now, we'll return `link->GetURL().ToUTF8().data()`. This is risky if not copied immediately.
 // A robust solution would be for Rust to allocate and pass a buffer.

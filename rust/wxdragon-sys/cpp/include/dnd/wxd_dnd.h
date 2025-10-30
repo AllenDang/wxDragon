@@ -23,8 +23,6 @@ WXD_EXPORTED wxd_TextDataObject_t*
 wxd_TextDataObject_Create(const char* text);
 WXD_EXPORTED void
 wxd_TextDataObject_Destroy(wxd_TextDataObject_t* obj);
-WXD_EXPORTED int
-wxd_TextDataObject_GetText(wxd_TextDataObject_t* obj, char* buffer, int buffer_len);
 WXD_EXPORTED void
 wxd_TextDataObject_SetText(wxd_TextDataObject_t* obj, const char* text);
 

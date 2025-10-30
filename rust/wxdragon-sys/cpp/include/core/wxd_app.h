@@ -15,10 +15,6 @@ wxd_App_SetTopWindow(wxd_App_t* app, wxd_Window_t* window);
 WXD_EXPORTED void
 wxd_App_ProcessCallbacks();
 
-// Utility to free strings allocated by wxDragon C API
-WXD_EXPORTED void
-wxd_free_string(char* str);
-
 // New function to free an array of integers allocated by C++
 WXD_EXPORTED void
 wxd_free_int_array(int* ptr);
@@ -41,9 +37,15 @@ wxd_SystemAppearance_IsDark(wxd_SystemAppearance_t* appearance);
 WXD_EXPORTED bool
 wxd_SystemAppearance_IsUsingDarkBackground(wxd_SystemAppearance_t* appearance);
 
-// Get the system appearance name (mainly for macOS)
-WXD_EXPORTED char*
-wxd_SystemAppearance_GetName(wxd_SystemAppearance_t* appearance);
+/**
+ * @brief Get the system appearance name (mainly for macOS)
+ * Returns the required UTF-8 byte length (excluding null terminator).
+ * If out is not null and out_len > 0, copies up to out_len - 1 bytes and null-terminates.
+ * If out is null or out_len == 0, nothing is written.
+ * @return Required UTF-8 byte length (excluding null terminator)
+ */
+WXD_EXPORTED size_t
+wxd_SystemAppearance_GetName(const wxd_SystemAppearance_t* appearance, char* out, size_t out_len);
 
 // Free system appearance object
 WXD_EXPORTED void

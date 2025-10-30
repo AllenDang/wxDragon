@@ -24,14 +24,26 @@ wxd_FileCtrl_Create(wxd_Window_t* parent, int id, const char* default_directory,
     return (wxd_FileCtrl_t*)ctrl;
 }
 
+WXD_EXPORTED size_t
+wxd_FileCtrl_GetPath(const wxd_FileCtrl_t* self, char* buffer, size_t buffer_len)
+{
+    wxFileCtrl* ctrl = (wxFileCtrl*)self;
+    if (!ctrl)
+        return 0;
+
+    wxString path = ctrl->GetPath();
+    wxScopedCharBuffer pathBuf = path.ToUTF8();
+    if (buffer && buffer_len > 0) {
+        size_t copyLen = wxMin(static_cast<size_t>(pathBuf.length()), buffer_len - 1);
+        memcpy(buffer, pathBuf.data(), copyLen);
+        buffer[copyLen] = '\0'; // Null-terminate the buffer
+    }
+    return pathBuf.length();
+}
+
 // Implementations for other wxd_FileCtrl_XXX functions will go here
 // Example:
 /*
-const char* wxd_FileCtrl_GetPath(wxd_FileCtrl_t* self) {
-    wxFileCtrl* ctrl = (wxFileCtrl*)self;
-    if (!ctrl) return nullptr;
-    return wxd_wx_string_to_c_str(ctrl->GetPath());
-}
 
 void wxd_FileCtrl_SetPath(wxd_FileCtrl_t* self, const char* path) {
     wxFileCtrl* ctrl = (wxFileCtrl*)self;

@@ -38,8 +38,15 @@ wxd_Event_Skip(wxd_Event_t* event, bool skip);
 WXD_EXPORTED WXDEventTypeCEnum
 wxd_Event_GetEventType(wxd_Event_t* event);
 
-WXD_EXPORTED int
-wxd_CommandEvent_GetString(wxd_Event_t* event, char* buffer, int buffer_len);
+/**
+ * Get string from wxCommandEvent.
+ * Returns the length of the string (excluding null terminator).
+ * If buffer is non-null and buffer_len > 0, copies up to buffer_len - 1 characters and null-terminates.
+ * If buffer is null or buffer_len == 0, does not copy anything.
+ */
+WXD_EXPORTED size_t
+wxd_CommandEvent_GetString(const wxd_Event_t* event, char* buffer, size_t buffer_len);
+
 WXD_EXPORTED bool
 wxd_CommandEvent_IsChecked(wxd_Event_t* event);
 WXD_EXPORTED wxd_Point
@@ -93,8 +100,16 @@ WXD_EXPORTED int32_t
 wxd_ListEvent_GetItemIndex(wxd_Event_t* event);
 WXD_EXPORTED int
 wxd_ListEvent_GetColumn(wxd_Event_t* event);
-WXD_EXPORTED int
-wxd_ListEvent_GetLabel(wxd_Event_t* event, char* buffer, int buffer_len);
+
+/**
+ * Get the label from the ListEvent.
+ * Returns the length of the label (excluding null terminator).
+ * If buffer is non-null and buffer_len > 0, copies up to buffer_len - 1 characters and null-terminates.
+ * If buffer is null or buffer_len == 0, does not copy anything.
+ */
+WXD_EXPORTED size_t
+wxd_ListEvent_GetLabel(const wxd_Event_t* event, char* buffer, size_t buffer_len);
+
 WXD_EXPORTED bool
 wxd_ListEvent_IsEditCancelled(wxd_Event_t* event);
 

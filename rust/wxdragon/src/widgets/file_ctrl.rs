@@ -4,7 +4,7 @@ use crate::prelude::*;
 use crate::widget_builder;
 use crate::widget_style_enum;
 use crate::window::{Window, WxWidget};
-use std::ffi::CString;
+use std::ffi::{CStr, CString};
 use wxdragon_sys as ffi;
 
 // Default wildcard pattern for FileCtrl
@@ -114,6 +114,21 @@ impl FileCtrl {
         // Cast the concrete FileCtrl pointer to the base Window pointer for the wrapper
         let window = unsafe { Window::from_ptr(raw_ptr as *mut ffi::wxd_Window_t) };
         FileCtrl { window }
+    }
+}
+
+impl FileCtrl {
+    /// Get the currently selected path in the FileCtrl
+    pub fn get_path(&self) -> Option<String> {
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_FileCtrl_t;
+        let len = unsafe { ffi::wxd_FileCtrl_GetPath(ptr, std::ptr::null_mut(), 0) };
+        if len == 0 {
+            return None; // No path selected or error
+        }
+        // Now allocate buffer and retrieve the path
+        let mut buf = vec![0; len + 1]; // +1 for null terminator
+        unsafe { ffi::wxd_FileCtrl_GetPath(ptr, buf.as_mut_ptr(), buf.len()) };
+        Some(unsafe { CStr::from_ptr(buf.as_ptr()).to_string_lossy().to_string() })
     }
 }
 

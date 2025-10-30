@@ -7,7 +7,7 @@ use crate::implement_widget_traits_with_target;
 use crate::widget_builder;
 use crate::widget_style_enum;
 use crate::window::{Window, WxWidget};
-use std::ffi::CString;
+use std::ffi::{CStr, CString};
 use wxdragon_sys as ffi;
 
 // --- Style enum using macro ---
@@ -101,16 +101,15 @@ impl CollapsiblePane {
 
     /// Gets the current text label of the collapsible pane button.
     pub fn get_label(&self) -> String {
-        let c_str = unsafe { ffi::wxd_CollapsiblePane_GetLabel(self.as_ptr()) };
-        if c_str.is_null() {
+        use std::ptr::null_mut;
+        let len = unsafe { ffi::wxd_CollapsiblePane_GetLabel(self.as_ptr(), null_mut(), 0) };
+        if len == 0 {
             return String::new();
         }
 
-        let cstr = unsafe { std::ffi::CStr::from_ptr(c_str) };
-        let string = cstr.to_string_lossy().into_owned();
-        // Free the C string allocated by strdup in C++
-        unsafe { ffi::wxd_free_string(c_str) };
-        string
+        let mut b = vec![0; len + 1]; // +1 for null terminator
+        unsafe { ffi::wxd_CollapsiblePane_GetLabel(self.as_ptr(), b.as_mut_ptr(), b.len()) };
+        unsafe { CStr::from_ptr(b.as_ptr()).to_string_lossy().to_string() }
     }
 }
 

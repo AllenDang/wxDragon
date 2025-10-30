@@ -10,7 +10,7 @@ use crate::widgets::imagelist::ImageList;
 use crate::widgets::item_data::{HasItemData, get_item_data, remove_item_data, store_item_data};
 use crate::window::{Window, WxWidget};
 use std::any::Any;
-use std::ffi::CString;
+use std::ffi::{CStr, CString};
 use std::os::raw::{c_int, c_longlong};
 use std::sync::Arc;
 use wxdragon_sys as ffi;
@@ -180,35 +180,13 @@ impl ListCtrlEventData {
         if self.event.is_null() {
             return None;
         }
-        unsafe {
-            let mut buffer: [std::os::raw::c_char; 1024] = [0; 1024];
-            let len_needed =
-                ffi::wxd_ListEvent_GetLabel(self.event.0, buffer.as_mut_ptr(), buffer.len() as i32);
-            if len_needed < 0 {
-                return None;
-            }
-            let len_needed_usize = len_needed as usize;
-            if len_needed_usize < buffer.len() {
-                Some(
-                    std::ffi::CStr::from_ptr(buffer.as_ptr())
-                        .to_string_lossy()
-                        .into_owned(),
-                )
-            } else {
-                let mut vec_buffer: Vec<u8> = vec![0; len_needed_usize + 1];
-                let len_copied = ffi::wxd_ListEvent_GetLabel(
-                    self.event.0,
-                    vec_buffer.as_mut_ptr() as *mut std::os::raw::c_char,
-                    vec_buffer.len() as i32,
-                );
-                if len_copied == len_needed {
-                    vec_buffer.pop();
-                    String::from_utf8(vec_buffer).ok()
-                } else {
-                    None
-                }
-            }
+        let len = unsafe { ffi::wxd_ListEvent_GetLabel(self.event.0, std::ptr::null_mut(), 0) };
+        if len == 0 {
+            return None;
         }
+        let mut buf = vec![0; len + 1];
+        unsafe { ffi::wxd_ListEvent_GetLabel(self.event.0, buf.as_mut_ptr(), buf.len()) };
+        Some(unsafe { CStr::from_ptr(buf.as_ptr()).to_string_lossy().to_string() })
     }
 
     /// Check if editing was cancelled (for end edit events)

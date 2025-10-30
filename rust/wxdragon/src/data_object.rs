@@ -1,4 +1,4 @@
-use std::ffi::CString;
+use std::ffi::{CStr, CString};
 use wxdragon_sys as ffi;
 
 /// Represents a format for data transfer operations.
@@ -106,21 +106,14 @@ impl TextDataObject {
 
     /// Gets the text from the data object.
     pub fn get_text(&self) -> String {
-        let mut buffer: Vec<i8> = vec![0; 1024]; // Initial buffer size
-        let success = unsafe {
-            ffi::wxd_TextDataObject_GetText(
-                self.data_object.as_ptr() as *mut ffi::wxd_TextDataObject_t,
-                buffer.as_mut_ptr(),
-                buffer.len() as i32,
-            )
-        };
-
-        if success > 0 {
-            let c_str = unsafe { std::ffi::CStr::from_ptr(buffer.as_ptr()) };
-            c_str.to_string_lossy().into_owned()
-        } else {
-            String::new()
+        let ptr = self.data_object.as_ptr() as *mut ffi::wxd_TextDataObject_t;
+        let len = unsafe { ffi::wxd_TextDataObject_GetText(ptr, std::ptr::null_mut(), 0) };
+        if len == 0 {
+            return String::new();
         }
+        let mut buf: Vec<i8> = vec![0; len + 1];
+        unsafe { ffi::wxd_TextDataObject_GetText(ptr, buf.as_mut_ptr(), buf.len()) };
+        unsafe { CStr::from_ptr(buf.as_ptr()).to_string_lossy().to_string() }
     }
 
     /// Sets the text contained in this data object.

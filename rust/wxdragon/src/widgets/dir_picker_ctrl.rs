@@ -1,7 +1,7 @@
 /* This is a new file */
 //! Safe wrapper for wxDirPickerCtrl.
 
-use std::ffi::{CString, c_longlong};
+use std::ffi::{CStr, CString, c_longlong};
 use wxdragon_sys as ffi;
 
 use crate::event::{Event, EventType};
@@ -79,19 +79,14 @@ impl DirPickerCtrl {
 
     /// Gets the currently selected path.
     pub fn get_path(&self) -> String {
-        unsafe {
-            let c_str = ffi::wxd_DirPickerCtrl_GetPath(
-                self.window.as_ptr() as *mut ffi::wxd_DirPickerCtrl_t
-            );
-            if c_str.is_null() {
-                String::new()
-            } else {
-                // Free the string using wxd_free_string when we're done with it
-                CString::from_raw(c_str as *mut _)
-                    .to_string_lossy()
-                    .into_owned()
-            }
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_DirPickerCtrl_t;
+        let len = unsafe { ffi::wxd_DirPickerCtrl_GetPath(ptr, std::ptr::null_mut(), 0) };
+        if len == 0 {
+            return String::new();
         }
+        let mut buf = vec![0; len + 1]; // +1 for null terminator
+        unsafe { ffi::wxd_DirPickerCtrl_GetPath(ptr, buf.as_mut_ptr(), buf.len()) };
+        unsafe { CStr::from_ptr(buf.as_ptr()).to_string_lossy().to_string() }
     }
 
     /// Sets the currently selected path.

@@ -158,18 +158,23 @@ wxd_MenuItem_SetLabel(wxd_MenuItem_t* item, const char* label)
     wx_item->SetItemLabel(wxString::FromUTF8(label ? label : ""));
 }
 
-WXD_EXPORTED char*
-wxd_MenuItem_GetLabel(wxd_MenuItem_t* item)
+WXD_EXPORTED size_t
+wxd_MenuItem_GetLabel(const wxd_MenuItem_t* item, char* buffer, size_t buffer_size)
 {
     if (!item)
-        return strdup(""); // Return duplicated empty string to avoid NULL
-    wxMenuItem* wx_item = reinterpret_cast<wxMenuItem*>(item);
+        return 0;
+    const wxMenuItem* wx_item = reinterpret_cast<const wxMenuItem*>(item);
     wxString label = wx_item->GetItemLabel();
     const wxScopedCharBuffer utf8_buf = label.ToUTF8();
+    size_t len = utf8_buf.length();
     if (utf8_buf.data()) {
-        return strdup(utf8_buf.data()); // Allocate and copy string
+        if (buffer && buffer_size > 0) {
+            const size_t to_copy = std::min(len, buffer_size - 1);
+            std::memcpy(buffer, utf8_buf.data(), to_copy);
+            buffer[to_copy] = '\0';
+        }
     }
-    return strdup(""); // Return duplicated empty string if conversion fails
+    return len; // Return the length of the label
 }
 
 WXD_EXPORTED void

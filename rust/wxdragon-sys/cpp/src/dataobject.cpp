@@ -33,15 +33,23 @@ wxd_TextDataObject_Destroy(wxd_TextDataObject_t* obj)
     }
 }
 
-int
-wxd_TextDataObject_GetText(wxd_TextDataObject_t* data_object, char* buffer, int buffer_len)
+WXD_EXPORTED size_t
+wxd_TextDataObject_GetText(const wxd_TextDataObject_t* data_object, char* buffer, size_t buffer_len)
 {
-    if (!data_object || !buffer || buffer_len <= 0)
-        return -1;
-    wxTextDataObject* wx_data_object = reinterpret_cast<wxTextDataObject*>(data_object);
+    if (!data_object)
+        return 0;
+    const wxTextDataObject* wx_data_object = reinterpret_cast<const wxTextDataObject*>(data_object);
 
     wxString text = wx_data_object->GetText();
-    return wxd_cpp_utils::copy_wxstring_to_buffer(text, buffer, static_cast<size_t>(buffer_len));
+    wxScopedCharBuffer scoped_buf = text.utf8_str();
+
+    if (buffer && buffer_len > 0) {
+        size_t to_copy = std::min(scoped_buf.length(), buffer_len - 1);
+        memcpy(buffer, scoped_buf.data(), to_copy);
+        buffer[to_copy] = '\0'; // Null-terminate
+    }
+
+    return scoped_buf.length();
 }
 
 void
