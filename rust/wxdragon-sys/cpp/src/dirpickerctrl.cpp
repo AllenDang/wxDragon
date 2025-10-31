@@ -30,21 +30,13 @@ wxd_DirPickerCtrl_Create(wxd_Window_t* parent, wxd_Id id,
                                                      wxDefaultValidator, wxDirPickerCtrlNameStr);
 }
 
-WXD_EXPORTED size_t
+WXD_EXPORTED int
 wxd_DirPickerCtrl_GetPath(const wxd_DirPickerCtrl_t* self, char* buffer, size_t buffer_len)
 {
     if (!self)
-        return 0;
+        return -1;
     wxString path_str = ((wxDirPickerCtrl*)self)->GetPath();
-    wxScopedCharBuffer utf8_buf = path_str.ToUTF8();
-
-    if (buffer && buffer_len > 0) {
-        size_t copy_len = std::min(buffer_len - 1, utf8_buf.length());
-        memcpy(buffer, utf8_buf.data(), copy_len);
-        buffer[copy_len] = '\0';
-    }
-
-    return utf8_buf.length();
+    return (int)wxd_cpp_utils::copy_wxstring_to_buffer(path_str, buffer, buffer_len);
 }
 
 WXD_EXPORTED void

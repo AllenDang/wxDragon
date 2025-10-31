@@ -2,7 +2,6 @@ use crate::dialogs::Dialog;
 use crate::geometry::{DEFAULT_POSITION, DEFAULT_SIZE, Point, Size};
 use crate::window::WxWidget;
 use std::ffi::{CStr, CString};
-use std::os::raw::c_char;
 use wxdragon_sys as ffi;
 
 // Define style enum using the macro
@@ -58,26 +57,21 @@ impl TextEntryDialog {
     /// Gets the text entered by the user.
     /// Returns `None` if the dialog was cancelled or an error occurred retrieving the value.
     pub fn get_value(&self) -> Option<String> {
-        let mut buffer: [c_char; 1024] = [0; 1024]; // Reasonable buffer size
-        let len_needed = unsafe { ffi::wxd_TextEntryDialog_GetValue(self.as_ptr(), buffer.as_mut_ptr(), buffer.len() as i32) };
+        let mut buffer = [0; 1024]; // Reasonable buffer size
+        let len = unsafe { ffi::wxd_TextEntryDialog_GetValue(self.as_ptr(), buffer.as_mut_ptr(), buffer.len()) };
 
-        if len_needed < 0 {
+        if len < 0 {
             return None; // Error or dialog cancelled before value retrieved?
         }
 
-        let len_needed_usize = len_needed as usize;
-        if len_needed_usize < buffer.len() {
-            let c_str = unsafe { CStr::from_ptr(buffer.as_ptr()) };
-            Some(c_str.to_string_lossy().into_owned())
+        if len < buffer.len() as i32 {
+            Some(unsafe { CStr::from_ptr(buffer.as_ptr()).to_string_lossy().into_owned() })
         } else {
             // Allocate exact size if needed
-            let mut vec_buffer: Vec<u8> = vec![0; len_needed_usize + 1];
-            let len_copied = unsafe {
-                ffi::wxd_TextEntryDialog_GetValue(self.as_ptr(), vec_buffer.as_mut_ptr() as *mut c_char, vec_buffer.len() as i32)
-            };
-            if len_copied == len_needed {
-                vec_buffer.pop();
-                String::from_utf8(vec_buffer).ok()
+            let mut buf = vec![0; len as usize + 1];
+            let len_copied = unsafe { ffi::wxd_TextEntryDialog_GetValue(self.as_ptr(), buf.as_mut_ptr(), buf.len()) };
+            if len_copied == len {
+                Some(unsafe { CStr::from_ptr(buf.as_ptr()).to_string_lossy().to_string() })
             } else {
                 None // Error on second call
             }

@@ -21,7 +21,8 @@ WXD_EXPORTED void
 wxd_BitmapComboBox_SetSelection(wxd_BitmapComboBox_t* self, int index);
 
 WXD_EXPORTED int
-wxd_BitmapComboBox_GetString(wxd_BitmapComboBox_t* self, int index, char* buffer, int buffer_len);
+wxd_BitmapComboBox_GetString(wxd_BitmapComboBox_t* self, int index, char* buffer,
+                             size_t buffer_len);
 
 WXD_EXPORTED unsigned int
 wxd_BitmapComboBox_GetCount(wxd_BitmapComboBox_t* self);
@@ -30,7 +31,7 @@ WXD_EXPORTED void
 wxd_BitmapComboBox_SetValue(wxd_BitmapComboBox_t* self, const char* value);
 
 WXD_EXPORTED int
-wxd_BitmapComboBox_GetValue(wxd_BitmapComboBox_t* self, char* buffer, int buffer_len);
+wxd_BitmapComboBox_GetValue(wxd_BitmapComboBox_t* self, char* buffer, size_t buffer_len);
 
 WXD_EXPORTED wxd_Bitmap_t*
 wxd_BitmapComboBox_GetItemBitmap(wxd_BitmapComboBox_t* self, unsigned int n);

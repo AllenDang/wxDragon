@@ -101,7 +101,7 @@ wxd_RearrangeList_SetSelection(wxd_RearrangeList_t* self, int index, bool select
  * @return The length of the string or -1 on error.
  */
 int
-wxd_RearrangeList_GetString(wxd_RearrangeList_t* self, int index, char* buffer, int bufferSize);
+wxd_RearrangeList_GetString(wxd_RearrangeList_t* self, int index, char* buffer, size_t bufferSize);
 
 /**
  * Gets the number of items in the list.

@@ -44,18 +44,14 @@ wxd_HyperlinkCtrl_Create(wxd_Window_t* parent, int id, const char* label, const 
     return (wxd_HyperlinkCtrl_t*)link;
 }
 
-// This buffer is not thread-safe. For a real application, Rust should pass a buffer.
-// Or the Rust side must immediately copy the returned const char*.
-static wxCharBuffer s_get_url_buffer;
-
-WXD_EXPORTED const char*
-wxd_HyperlinkCtrl_GetURL(wxd_HyperlinkCtrl_t* self)
+WXD_EXPORTED int
+wxd_HyperlinkCtrl_GetURL(const wxd_HyperlinkCtrl_t* self, char* buf, size_t buf_len)
 {
     wxHyperlinkCtrl* link = (wxHyperlinkCtrl*)self;
     if (!link)
-        return NULL;
-    s_get_url_buffer = link->GetURL().ToUTF8(); // ToUTF8() result assigned to static buffer
-    return s_get_url_buffer.data();             // data() should now be valid
+        return -1;
+    wxString url = link->GetURL();
+    return (int)wxd_cpp_utils::copy_wxstring_to_buffer(url, buf, buf_len);
 }
 
 WXD_EXPORTED void

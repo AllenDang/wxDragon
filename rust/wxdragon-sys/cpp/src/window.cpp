@@ -206,24 +206,14 @@ wxd_Window_SetLabel(wxd_Window_t* self, const char* label)
     }
 }
 
-WXD_EXPORTED size_t
+WXD_EXPORTED int
 wxd_Window_GetLabel(const wxd_Window_t* self, char* outLabel, size_t maxLen)
 {
     if (!self) {
-        return 0;
+        return -1;
     }
     wxString label = reinterpret_cast<const wxWindow*>(self)->GetLabel();
-    const wxScopedCharBuffer utf8_buf = label.ToUTF8();
-    if (!utf8_buf.data()) { // Check if data is not null
-        return 0;
-    }
-    size_t len = utf8_buf.length();
-    if (outLabel && maxLen > 0) {
-        size_t n = std::min(len, maxLen - 1);
-        std::memcpy(outLabel, utf8_buf.data(), n);
-        outLabel[n] = '\0'; // Ensure null-termination
-    }
-    return len;
+    return (int)wxd_cpp_utils::copy_wxstring_to_buffer(label, outLabel, maxLen);
 }
 
 WXD_EXPORTED void
@@ -578,26 +568,15 @@ wxd_Window_SetName(wxd_Window_t* window, const char* name)
     }
 }
 
-WXD_EXPORTED size_t
+WXD_EXPORTED int
 wxd_Window_GetName(const wxd_Window_t* window, char* outName, size_t maxLen)
 {
     const wxWindow* wx_window = reinterpret_cast<const wxWindow*>(window);
     if (!wx_window) {
-        return 0;
+        return -1;
     }
     wxString name = wx_window->GetName();
-    const wxScopedCharBuffer utf8_buf = name.ToUTF8();
-    const char* data = utf8_buf.data();
-    if (!data) {
-        return 0;
-    }
-    size_t len = utf8_buf.length();
-    if (outName && maxLen > 0) {
-        size_t n = std::min(len, maxLen - 1);
-        std::memcpy(outName, data, n);
-        outName[n] = '\0'; // Ensure null-termination
-    }
-    return len;
+    return (int)wxd_cpp_utils::copy_wxstring_to_buffer(name, outName, maxLen);
 }
 
 // Window finding functions
@@ -988,11 +967,11 @@ wxd_Window_GetHandle(wxd_Window_t* self)
     return reinterpret_cast<void*>(wx_window->GetHandle());
 }
 
-WXD_EXPORTED size_t
+WXD_EXPORTED int
 wxd_Window_GetClassName(const wxd_Window_t* window, char* outName, size_t maxLen)
 {
     if (!window)
-        return 0;
+        return -1;
 
     const wxWindow* wx_window = reinterpret_cast<const wxWindow*>(window);
 
@@ -1001,15 +980,7 @@ wxd_Window_GetClassName(const wxd_Window_t* window, char* outName, size_t maxLen
 
     // Convert wxString to std::string, then to const char*
     wxString wx_str(wx_class_name);
-    const wxScopedCharBuffer utf8_buf = wx_str.ToUTF8();
-    size_t len = utf8_buf.length();
-    if (outName && maxLen > 0) {
-        size_t n = std::min(len, maxLen - 1);
-        std::memcpy(outName, utf8_buf.data(), n);
-        outName[n] = '\0'; // Ensure null-termination
-    }
-
-    return len;
+    return (int)wxd_cpp_utils::copy_wxstring_to_buffer(wx_str, outName, maxLen);
 }
 
 // --- Tab Order Functions ---

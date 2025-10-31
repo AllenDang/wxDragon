@@ -12,8 +12,10 @@ WXD_EXPORTED int
 wxd_RadioBox_GetSelection(wxd_RadioBox_t* self);
 WXD_EXPORTED void
 wxd_RadioBox_SetSelection(wxd_RadioBox_t* self, int n);
+
 WXD_EXPORTED int
-wxd_RadioBox_GetString(wxd_RadioBox_t* self, int n, char* buffer, int buffer_len);
+wxd_RadioBox_GetString(wxd_RadioBox_t* self, int n, char* buffer, size_t buffer_len);
+
 WXD_EXPORTED unsigned int
 wxd_RadioBox_GetCount(wxd_RadioBox_t* self);
 WXD_EXPORTED bool

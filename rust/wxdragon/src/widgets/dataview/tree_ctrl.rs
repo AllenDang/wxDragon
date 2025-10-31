@@ -278,10 +278,10 @@ impl DataViewTreeCtrl {
     pub fn get_item_text(&self, item: &DataViewItem) -> String {
         let ptr = self.handle_ptr();
         let len = unsafe { ffi::wxd_DataViewTreeCtrl_GetItemText(ptr, **item, std::ptr::null_mut(), 0) };
-        if len == 0 {
+        if len <= 0 {
             return String::new();
         }
-        let mut b = vec![0; len + 1]; // +1 for null terminator
+        let mut b = vec![0; len as usize + 1]; // +1 for null terminator
         unsafe { ffi::wxd_DataViewTreeCtrl_GetItemText(ptr, **item, b.as_mut_ptr(), b.len()) };
         unsafe { CStr::from_ptr(b.as_ptr()).to_string_lossy().to_string() }
     }

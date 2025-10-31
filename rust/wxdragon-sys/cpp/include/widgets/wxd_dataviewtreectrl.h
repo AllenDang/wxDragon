@@ -40,9 +40,10 @@ wxd_DataViewTreeCtrl_DeleteChildren(wxd_Window_t* self, const wxd_DataViewItem_t
 
 /**
  * Getters and Setters for Item Properties
- * Note: For string outputs, the function fills the provided buffer and returns the required length.
+ * Returns the length of the text (excluding null terminator) for GetItemText.
+ * If the item is invalid, returns -1.
  */
-WXD_EXPORTED size_t
+WXD_EXPORTED int
 wxd_DataViewTreeCtrl_GetItemText(const wxd_Window_t* self, const wxd_DataViewItem_t* item,
                                  char* out, size_t out_len);
 

@@ -50,13 +50,13 @@ wxd_Choice_GetSelection(wxd_Choice_t* choice)
 }
 
 WXD_EXPORTED int
-wxd_Choice_GetStringSelection(wxd_Choice_t* choice, char* buffer, int buffer_len)
+wxd_Choice_GetStringSelection(wxd_Choice_t* choice, char* buffer, size_t buffer_len)
 {
-    if (!choice || !buffer || buffer_len <= 0)
+    if (!choice)
         return -1;
     wxChoice* ch = (wxChoice*)choice;
     wxString selection = ch->GetStringSelection();
-    return wxd_cpp_utils::copy_wxstring_to_buffer(selection, buffer, (size_t)buffer_len);
+    return (int)wxd_cpp_utils::copy_wxstring_to_buffer(selection, buffer, buffer_len);
 }
 
 WXD_EXPORTED void
@@ -69,16 +69,16 @@ wxd_Choice_SetSelection(wxd_Choice_t* choice, int index)
 }
 
 WXD_EXPORTED int
-wxd_Choice_GetString(wxd_Choice_t* choice, int index, char* buffer, int buffer_len)
+wxd_Choice_GetString(wxd_Choice_t* choice, int index, char* buffer, size_t buffer_len)
 {
-    if (!choice || !buffer || buffer_len <= 0)
+    if (!choice)
         return -1;
     wxChoice* ch = (wxChoice*)choice;
     if (index < 0 || (unsigned int)index >= ch->GetCount())
         return -1;
 
     wxString item = ch->GetString((unsigned int)index);
-    return wxd_cpp_utils::copy_wxstring_to_buffer(item, buffer, (size_t)buffer_len);
+    return (int)wxd_cpp_utils::copy_wxstring_to_buffer(item, buffer, buffer_len);
 }
 
 WXD_EXPORTED unsigned int

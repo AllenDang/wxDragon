@@ -145,10 +145,10 @@ impl SystemAppearance {
     /// The appearance name as a `String`, or an empty string if not available.
     pub fn get_name(&self) -> String {
         let len = unsafe { ffi::wxd_SystemAppearance_GetName(self.ptr, std::ptr::null_mut(), 0) };
-        if len == 0 {
+        if len <= 0 {
             return String::new();
         }
-        let mut b = vec![0; len + 1];
+        let mut b = vec![0; len as usize + 1];
         unsafe { ffi::wxd_SystemAppearance_GetName(self.ptr, b.as_mut_ptr(), b.len()) };
         unsafe { CStr::from_ptr(b.as_ptr()).to_string_lossy().to_string() }
     }

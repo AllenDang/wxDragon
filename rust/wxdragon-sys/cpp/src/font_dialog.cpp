@@ -125,13 +125,13 @@ wxd_Font_GetUnderlined(wxd_Font_t* self)
 }
 
 int
-wxd_Font_GetFaceName(wxd_Font_t* self, char* buffer, int buffer_len)
+wxd_Font_GetFaceName(wxd_Font_t* self, char* buffer, size_t buffer_len)
 {
     if (!self)
-        return 0;
+        return -1;
     wxFont* font = reinterpret_cast<wxFont*>(self);
     wxString faceName = font->GetFaceName();
-    return wxd_cpp_utils::copy_wxstring_to_buffer(faceName, buffer, buffer_len);
+    return (int)wxd_cpp_utils::copy_wxstring_to_buffer(faceName, buffer, buffer_len);
 }
 
 bool

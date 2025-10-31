@@ -546,10 +546,10 @@ impl Event {
             return None;
         }
         let len = unsafe { ffi::wxd_CommandEvent_GetString(self.0, std::ptr::null_mut(), 0) };
-        if len == 0 {
+        if len < 0 {
             return None;
         }
-        let mut buf = vec![0; len + 1];
+        let mut buf = vec![0; len as usize + 1];
         unsafe { ffi::wxd_CommandEvent_GetString(self.0, buf.as_mut_ptr(), buf.len()) };
         Some(unsafe { CStr::from_ptr(buf.as_ptr()).to_string_lossy().to_string() })
     }

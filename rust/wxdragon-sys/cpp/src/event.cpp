@@ -764,24 +764,16 @@ wxd_Event_Skip(wxd_Event_t* event, bool skip)
 // --- NEW: Event Data Accessors Implementation ---
 
 // Accessors for specific event types
-WXD_EXPORTED size_t
+WXD_EXPORTED int
 wxd_CommandEvent_GetString(const wxd_Event_t* event, char* buffer, size_t buffer_len)
 {
     if (!event)
-        return 0;
+        return -1;
     wxCommandEvent* cmdEvent = wxDynamicCast((wxEvent*)event, wxCommandEvent);
     if (!cmdEvent)
-        return 0; // Return 0 if not a command event
+        return -1; // Return -1 if not a command event
     wxString str = cmdEvent->GetString();
-    wxScopedCharBuffer buf = str.ToUTF8();
-
-    if (buffer && buffer_len > 0) {
-        size_t copy_len = std::min(buf.length(), buffer_len - 1);
-        memcpy(buffer, buf.data(), copy_len);
-        buffer[copy_len] = '\0'; // Null-terminate
-    }
-
-    return buf.length();
+    return (int)wxd_cpp_utils::copy_wxstring_to_buffer(str, buffer, buffer_len);
 }
 
 WXD_EXPORTED bool

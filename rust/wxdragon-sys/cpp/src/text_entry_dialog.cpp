@@ -34,12 +34,13 @@ wxd_TextEntryDialog_Create(wxd_Window_t* parent, const char* message, const char
 // ShowModal is inherited from wxd_Dialog_ShowModal
 
 WXD_EXPORTED int
-wxd_TextEntryDialog_GetValue(wxd_TextEntryDialog_t* self, char* buffer, int bufLen)
+wxd_TextEntryDialog_GetValue(wxd_TextEntryDialog_t* self, char* buffer, size_t bufLen)
 {
     if (!self)
         return -1;
     wxTextEntryDialog* dlg = (wxTextEntryDialog*)self;
-    return GET_WX_STRING_RESULT(dlg->GetValue(), buffer, bufLen);
+    wxString val = dlg->GetValue();
+    return (int)wxd_cpp_utils::copy_wxstring_to_buffer(val, buffer, bufLen);
 }
 
 // Optional: Setter implementation if uncommented in header

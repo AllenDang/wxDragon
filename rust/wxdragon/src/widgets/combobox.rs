@@ -6,7 +6,6 @@ use crate::geometry::{Point, Size};
 use crate::id::Id;
 use crate::window::{Window, WxWidget};
 use std::ffi::{CStr, CString};
-use std::os::raw::c_char;
 use wxdragon_sys as ffi;
 
 // Value for GetSelection when nothing selected
@@ -56,40 +55,17 @@ impl ComboBox {
 
     /// Gets the string selection from the combo box.
     pub fn get_string_selection(&self) -> Option<String> {
-        const DEFAULT_BUF_SIZE: usize = 256;
-        let mut buffer: Vec<u8> = Vec::with_capacity(DEFAULT_BUF_SIZE);
-        let mut actual_len: i32;
-
         unsafe {
-            actual_len = ffi::wxd_ComboBox_GetStringSelection(
-                self.window.as_ptr() as *mut _,
-                buffer.as_mut_ptr() as *mut std::os::raw::c_char,
-                buffer.capacity() as i32,
-            );
+            let len = ffi::wxd_ComboBox_GetStringSelection(self.window.as_ptr() as *mut _, std::ptr::null_mut(), 0);
 
-            if actual_len < 0 {
+            if len < 0 {
                 // Indicates an error or no selection
                 return None;
             }
 
-            if actual_len as usize > buffer.capacity() {
-                // Buffer was too small, resize and try again
-                buffer.reserve_exact(actual_len as usize - buffer.capacity());
-                actual_len = ffi::wxd_ComboBox_GetStringSelection(
-                    self.window.as_ptr() as *mut _,
-                    buffer.as_mut_ptr() as *mut std::os::raw::c_char,
-                    buffer.capacity() as i32,
-                );
-            }
-
-            if actual_len >= 0 {
-                // Set actual length of string
-                // Create String from UTF-8 bytes, handling potential invalid UTF-8
-                buffer.set_len(actual_len as usize);
-                Some(String::from_utf8_lossy(&buffer).into_owned())
-            } else {
-                None // Error occurred
-            }
+            let mut buf = vec![0; len as usize + 1];
+            ffi::wxd_ComboBox_GetStringSelection(self.window.as_ptr() as *mut _, buf.as_mut_ptr(), buf.len());
+            Some(CStr::from_ptr(buf.as_ptr()).to_string_lossy().to_string())
         }
     }
 
@@ -105,39 +81,13 @@ impl ComboBox {
     /// Returns `None` if the index is out of bounds.
     pub fn get_string(&self, index: u32) -> Option<String> {
         unsafe {
-            let mut buffer: [c_char; 256] = [0; 256]; // Reasonable buffer size
-            let len_needed = ffi::wxd_ComboBox_GetString(
-                self.window.as_ptr() as *mut _,
-                index as i32,
-                buffer.as_mut_ptr(),
-                buffer.len() as i32,
-            );
-
-            if len_needed <= 0 {
+            let len = ffi::wxd_ComboBox_GetString(self.window.as_ptr() as *mut _, index as i32, std::ptr::null_mut(), 0);
+            if len < 0 {
                 return None; // Error or invalid index
             }
-
-            let len_needed_usize = len_needed as usize;
-            if len_needed_usize <= buffer.len() {
-                let c_str = CStr::from_ptr(buffer.as_ptr());
-                Some(c_str.to_string_lossy().into_owned())
-            } else {
-                // Buffer too small, try again with required size
-                let mut vec_buffer: Vec<c_char> = vec![0; len_needed_usize];
-                let len_needed_2 = ffi::wxd_ComboBox_GetString(
-                    self.window.as_ptr() as *mut _,
-                    index as i32,
-                    vec_buffer.as_mut_ptr(),
-                    vec_buffer.len() as i32,
-                );
-                if len_needed_2 == len_needed {
-                    let c_str = CStr::from_ptr(vec_buffer.as_ptr());
-                    Some(c_str.to_string_lossy().into_owned())
-                } else {
-                    // Something went wrong
-                    None
-                }
-            }
+            let mut buf = vec![0; len as usize + 1];
+            ffi::wxd_ComboBox_GetString(self.window.as_ptr() as *mut _, index as i32, buf.as_mut_ptr(), buf.len());
+            Some(CStr::from_ptr(buf.as_ptr()).to_string_lossy().into_owned())
         }
     }
 
@@ -149,28 +99,22 @@ impl ComboBox {
     /// Gets the current text value from the text entry field.
     pub fn get_value(&self) -> String {
         unsafe {
-            let mut buffer: [c_char; 256] = [0; 256]; // Reasonable buffer size
-            let len_needed = ffi::wxd_ComboBox_GetValue(self.window.as_ptr() as *mut _, buffer.as_mut_ptr(), buffer.len() as i32);
+            let ptr = self.window.as_ptr() as *mut _;
+            let mut buffer = [0; 256]; // Reasonable buffer size
+            let len = ffi::wxd_ComboBox_GetValue(ptr, buffer.as_mut_ptr(), buffer.len());
 
-            if len_needed <= 0 {
+            if len <= 0 {
                 return String::new(); // Return empty string for errors
             }
 
-            let len_needed_usize = len_needed as usize;
-            if len_needed_usize <= buffer.len() {
-                let c_str = CStr::from_ptr(buffer.as_ptr());
-                c_str.to_string_lossy().into_owned()
+            if len < buffer.len() as i32 {
+                CStr::from_ptr(buffer.as_ptr()).to_string_lossy().into_owned()
             } else {
                 // Buffer too small, try again with required size
-                let mut vec_buffer: Vec<c_char> = vec![0; len_needed_usize];
-                let len_needed_2 = ffi::wxd_ComboBox_GetValue(
-                    self.window.as_ptr() as *mut _,
-                    vec_buffer.as_mut_ptr(),
-                    vec_buffer.len() as i32,
-                );
-                if len_needed_2 == len_needed {
-                    let c_str = CStr::from_ptr(vec_buffer.as_ptr());
-                    c_str.to_string_lossy().into_owned()
+                let mut buf = vec![0; len as usize + 1];
+                let len2 = ffi::wxd_ComboBox_GetValue(ptr, buf.as_mut_ptr(), buf.len());
+                if len2 == len {
+                    CStr::from_ptr(buf.as_ptr()).to_string_lossy().into_owned()
                 } else {
                     // Something went wrong
                     String::new()

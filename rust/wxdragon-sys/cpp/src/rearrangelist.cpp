@@ -130,10 +130,10 @@ wxd_RearrangeList_SetSelection(wxd_RearrangeList_t* self, int index, bool select
 }
 
 int
-wxd_RearrangeList_GetString(wxd_RearrangeList_t* self, int index, char* buffer, int bufferSize)
+wxd_RearrangeList_GetString(wxd_RearrangeList_t* self, int index, char* buffer, size_t bufferSize)
 {
     wxRearrangeList* list = (wxRearrangeList*)self;
-    if (!list || !buffer || bufferSize <= 0)
+    if (!list)
         return -1;
 
     if (index < 0 || index >= static_cast<int>(list->GetCount())) {
@@ -141,7 +141,7 @@ wxd_RearrangeList_GetString(wxd_RearrangeList_t* self, int index, char* buffer, 
     }
 
     wxString item = list->GetString(index);
-    return wxd_cpp_utils::copy_wxstring_to_buffer(item, buffer, static_cast<size_t>(bufferSize));
+    return (int)wxd_cpp_utils::copy_wxstring_to_buffer(item, buffer, bufferSize);
 }
 
 unsigned int

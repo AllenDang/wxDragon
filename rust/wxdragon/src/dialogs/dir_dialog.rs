@@ -1,7 +1,6 @@
 use crate::geometry::{DEFAULT_POSITION, DEFAULT_SIZE, Point, Size};
 use crate::window::WxWidget;
 use std::ffi::{CStr, CString};
-use std::os::raw::c_char;
 use wxdragon_sys as ffi;
 
 // Define style enum using the macro
@@ -38,10 +37,10 @@ impl DirDialog {
     /// Gets the path selected by the user.
     pub fn get_path(&self) -> Option<String> {
         let len = unsafe { ffi::wxd_DirDialog_GetPath(self.ptr, std::ptr::null_mut(), 0) };
-        if len == 0 {
+        if len < 0 {
             return None;
         }
-        let mut buf = vec![0; len + 1];
+        let mut buf = vec![0; len as usize + 1];
         unsafe { ffi::wxd_DirDialog_GetPath(self.ptr, buf.as_mut_ptr(), buf.len()) };
         Some(unsafe { CStr::from_ptr(buf.as_ptr()).to_string_lossy().to_string() })
     }
@@ -56,16 +55,12 @@ impl DirDialog {
 
     /// Gets the message shown to the user.
     pub fn get_message(&self) -> Option<String> {
-        unsafe {
-            let mut buffer = vec![0 as c_char; 1024];
-            let len = ffi::wxd_DirDialog_GetMessage(self.ptr, buffer.as_mut_ptr(), buffer.len() as i32);
-            if len > 0 {
-                let c_str = CStr::from_ptr(buffer.as_ptr());
-                Some(c_str.to_string_lossy().into_owned())
-            } else {
-                None
-            }
+        let mut buffer = vec![0; 1024];
+        let len = unsafe { ffi::wxd_DirDialog_GetMessage(self.ptr, buffer.as_mut_ptr(), buffer.len()) };
+        if len < 0 {
+            return None;
         }
+        Some(unsafe { CStr::from_ptr(buffer.as_ptr()).to_string_lossy().to_string() })
     }
 
     /// Sets the message shown to the user.

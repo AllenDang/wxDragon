@@ -35,7 +35,7 @@ wxd_ArrayString_GetCount(const wxd_ArrayString_t* array)
  * If buffer is null or bufferLen == 0, does not copy anything.
  */
 WXD_EXPORTED int
-wxd_ArrayString_GetString(const wxd_ArrayString_t* array, int index, char* buffer, int bufferLen)
+wxd_ArrayString_GetString(const wxd_ArrayString_t* array, int index, char* buffer, size_t bufferLen)
 {
     if (!array)
         return -1;
@@ -45,7 +45,7 @@ wxd_ArrayString_GetString(const wxd_ArrayString_t* array, int index, char* buffe
         return -1;
 
     wxString str = wx_array->Item(index);
-    return wxd_cpp_utils::copy_wxstring_to_buffer(str, buffer, static_cast<size_t>(bufferLen));
+    return (int)wxd_cpp_utils::copy_wxstring_to_buffer(str, buffer, bufferLen);
 }
 
 WXD_EXPORTED bool

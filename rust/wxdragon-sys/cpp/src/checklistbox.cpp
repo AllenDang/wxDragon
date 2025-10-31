@@ -58,22 +58,14 @@ wxd_CheckListBox_GetSelection(wxd_CheckListBox_t* clbox)
     return wxNOT_FOUND;
 }
 
-WXD_EXPORTED size_t
+WXD_EXPORTED int
 wxd_CheckListBox_GetStringSelection(const wxd_CheckListBox_t* clbox, char* buffer,
                                     size_t buffer_len)
 {
     if (!clbox)
-        return 0;
+        return -1;
     const wxString sel = reinterpret_cast<const wxCheckListBox*>(clbox)->GetStringSelection();
-    wxScopedCharBuffer strBuf = sel.ToUTF8();
-    // Clear buffer first in case selection is empty
-    if (buffer && buffer_len > 0) {
-        size_t copyLen = wxMin(static_cast<size_t>(strBuf.length()), buffer_len - 1);
-        memcpy(buffer, strBuf.data(), copyLen);
-        buffer[copyLen] = '\0'; // Null-terminate the buffer
-    }
-
-    return strBuf.length();
+    return (int)wxd_cpp_utils::copy_wxstring_to_buffer(sel, buffer, buffer_len);
 }
 
 WXD_EXPORTED void
@@ -86,23 +78,17 @@ wxd_CheckListBox_SetSelection(wxd_CheckListBox_t* clbox, int index, bool select)
     }
 }
 
-WXD_EXPORTED size_t
+WXD_EXPORTED int
 wxd_CheckListBox_GetString(const wxd_CheckListBox_t* clbox, size_t index, char* buffer,
                            size_t buffer_len)
 {
     if (!clbox)
-        return 0;
+        return -1;
     const wxCheckListBox* wxClbox = reinterpret_cast<const wxCheckListBox*>(clbox);
     if (index >= wxClbox->GetCount())
-        return 0;
+        return -1;
     const wxString str = wxClbox->GetString(index);
-    wxScopedCharBuffer strBuf = str.ToUTF8();
-    if (buffer && buffer_len > 0) {
-        size_t copyLen = wxMin(static_cast<size_t>(strBuf.length()), buffer_len - 1);
-        memcpy(buffer, strBuf.data(), copyLen);
-        buffer[copyLen] = '\0'; // Null-terminate the buffer
-    }
-    return strBuf.length();
+    return (int)wxd_cpp_utils::copy_wxstring_to_buffer(str, buffer, buffer_len);
 }
 
 WXD_EXPORTED unsigned int

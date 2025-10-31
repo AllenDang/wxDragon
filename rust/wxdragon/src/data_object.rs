@@ -108,10 +108,10 @@ impl TextDataObject {
     pub fn get_text(&self) -> String {
         let ptr = self.data_object.as_ptr() as *mut ffi::wxd_TextDataObject_t;
         let len = unsafe { ffi::wxd_TextDataObject_GetText(ptr, std::ptr::null_mut(), 0) };
-        if len == 0 {
+        if len <= 0 {
             return String::new();
         }
-        let mut buf: Vec<i8> = vec![0; len + 1];
+        let mut buf: Vec<i8> = vec![0; len as usize + 1];
         unsafe { ffi::wxd_TextDataObject_GetText(ptr, buf.as_mut_ptr(), buf.len()) };
         unsafe { CStr::from_ptr(buf.as_ptr()).to_string_lossy().to_string() }
     }
@@ -186,19 +186,12 @@ impl FileDataObject {
 
     /// Gets a file path from the data object at the specified index.
     pub fn get_file(&self, index: usize) -> String {
-        let mut buffer: Vec<i8> = vec![0; 1024]; // Initial buffer size
-        let success = unsafe {
-            ffi::wxd_FileDataObject_GetFile(
-                self.data_object.as_ptr() as *mut ffi::wxd_FileDataObject_t,
-                index as i32,
-                buffer.as_mut_ptr(),
-                buffer.len() as i32,
-            )
-        };
+        let obj = self.data_object.as_ptr() as *mut ffi::wxd_FileDataObject_t;
+        let mut buffer = vec![0; 1024]; // Initial buffer size
+        let len = unsafe { ffi::wxd_FileDataObject_GetFile(obj, index as i32, buffer.as_mut_ptr(), buffer.len()) };
 
-        if success > 0 {
-            let c_str = unsafe { std::ffi::CStr::from_ptr(buffer.as_ptr()) };
-            c_str.to_string_lossy().into_owned()
+        if len > 0 {
+            unsafe { CStr::from_ptr(buffer.as_ptr()).to_string_lossy().to_string() }
         } else {
             String::new()
         }

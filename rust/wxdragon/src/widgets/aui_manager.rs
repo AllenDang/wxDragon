@@ -398,12 +398,12 @@ impl AuiManager {
     /// Save the current layout as a perspective string
     pub fn save_perspective(&self) -> String {
         let len = unsafe { ffi::wxd_AuiManager_SavePerspective(self.ptr, std::ptr::null_mut(), 0) };
-        if len == 0 {
+        if len <= 0 {
             return String::new();
         }
 
         // Create a buffer to hold the perspective string
-        let mut b = vec![0; len + 1]; // +1 for null terminator
+        let mut b = vec![0; len as usize + 1]; // +1 for null terminator
         unsafe { ffi::wxd_AuiManager_SavePerspective(self.ptr, b.as_mut_ptr(), b.len()) };
         unsafe { CStr::from_ptr(b.as_ptr()).to_string_lossy().to_string() }
     }

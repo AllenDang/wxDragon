@@ -150,10 +150,10 @@ impl MenuItem {
             return String::new();
         }
         let len = unsafe { ffi::wxd_MenuItem_GetLabel(self.ptr, std::ptr::null_mut(), 0) };
-        if len == 0 {
+        if len <= 0 {
             return String::new();
         }
-        let mut c_str = vec![0; len + 1]; // +1 for null terminator
+        let mut c_str = vec![0; len as usize + 1]; // +1 for null terminator
         unsafe { ffi::wxd_MenuItem_GetLabel(self.ptr, c_str.as_mut_ptr(), c_str.len()) };
         unsafe { CStr::from_ptr(c_str.as_ptr()).to_string_lossy().to_string() }
     }

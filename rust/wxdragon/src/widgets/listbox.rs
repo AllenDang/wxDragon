@@ -10,7 +10,6 @@ use crate::widget_builder;
 use crate::widget_style_enum;
 use crate::window::{Window, WxWidget};
 use std::ffi::{CStr, CString};
-use std::os::raw::c_char;
 use wxdragon_sys as ffi;
 
 // --- Constants ---
@@ -77,40 +76,23 @@ impl ListBox {
     /// Gets the string value of the currently selected item.
     /// Returns `None` if no item is selected.
     pub fn get_string_selection(&self) -> Option<String> {
-        unsafe {
-            // Allocate a buffer first, like in Event::get_string
-            let mut buffer: [c_char; 1024] = [0; 1024];
-            let len_needed = ffi::wxd_ListBox_GetStringSelection(
-                self.window.as_ptr() as *mut RawListBox,
-                buffer.as_mut_ptr(),
-                buffer.len() as i32,
-            );
+        let ptr = self.window.as_ptr() as *mut RawListBox;
+        // Allocate a buffer first, like in Event::get_string
+        let mut buffer = [0; 1024];
+        let len = unsafe { ffi::wxd_ListBox_GetStringSelection(ptr, buffer.as_mut_ptr(), buffer.len()) };
 
-            if len_needed < 0 {
-                return None; // Indicates error or no selection
-            }
-
-            let len_needed_usize = len_needed as usize;
-            if len_needed_usize < buffer.len() {
-                // String fit in the initial buffer
-                let c_str = CStr::from_ptr(buffer.as_ptr());
-                Some(c_str.to_string_lossy().into_owned())
-            } else {
-                // Buffer was too small, allocate exact size + null terminator
-                let mut vec_buffer: Vec<u8> = vec![0; len_needed_usize + 1];
-                let len_copied = ffi::wxd_ListBox_GetStringSelection(
-                    self.window.as_ptr() as *mut RawListBox,
-                    vec_buffer.as_mut_ptr() as *mut c_char,
-                    vec_buffer.len() as i32,
-                );
-                if len_copied == len_needed {
-                    vec_buffer.pop(); // Remove null terminator
-                    String::from_utf8(vec_buffer).ok()
-                } else {
-                    None // Error on second call
-                }
-            }
+        if len < 0 {
+            return None; // Indicates error or no selection
         }
+
+        if len < buffer.len() as i32 {
+            // String fit in the initial buffer
+            return Some(unsafe { CStr::from_ptr(buffer.as_ptr()).to_string_lossy().into_owned() });
+        }
+        // Buffer was too small, allocate exact size + null terminator
+        let mut buf = vec![0; len as usize + 1];
+        unsafe { ffi::wxd_ListBox_GetStringSelection(ptr, buf.as_mut_ptr(), buf.len()) };
+        Some(unsafe { CStr::from_ptr(buf.as_ptr()).to_string_lossy().into_owned() })
     }
 
     /// Selects or deselects an item at the given index.
@@ -138,40 +120,21 @@ impl ListBox {
     /// Gets the string at the specified index.
     /// Returns `None` if the index is out of bounds.
     pub fn get_string(&self, index: u32) -> Option<String> {
-        unsafe {
-            // Allocate buffer first
-            let mut buffer: [c_char; 1024] = [0; 1024];
-            let len_needed = ffi::wxd_ListBox_GetString(
-                self.window.as_ptr() as *mut RawListBox,
-                index as i32,
-                buffer.as_mut_ptr(),
-                buffer.len() as i32,
-            );
+        let ptr = self.window.as_ptr() as *mut RawListBox;
+        // Allocate buffer first
+        let mut buffer = [0; 1024];
+        let len = unsafe { ffi::wxd_ListBox_GetString(ptr, index as i32, buffer.as_mut_ptr(), buffer.len()) };
 
-            if len_needed < 0 {
-                return None; // Indicates error or invalid index
-            }
-
-            let len_needed_usize = len_needed as usize;
-            if len_needed_usize < buffer.len() {
-                let c_str = CStr::from_ptr(buffer.as_ptr());
-                Some(c_str.to_string_lossy().into_owned())
-            } else {
-                let mut vec_buffer: Vec<u8> = vec![0; len_needed_usize + 1];
-                let len_copied = ffi::wxd_ListBox_GetString(
-                    self.window.as_ptr() as *mut RawListBox,
-                    index as i32,
-                    vec_buffer.as_mut_ptr() as *mut c_char,
-                    vec_buffer.len() as i32,
-                );
-                if len_copied == len_needed {
-                    vec_buffer.pop();
-                    String::from_utf8(vec_buffer).ok()
-                } else {
-                    None
-                }
-            }
+        if len < 0 {
+            return None; // Indicates error or invalid index
         }
+
+        if len < buffer.len() as i32 {
+            return Some(unsafe { CStr::from_ptr(buffer.as_ptr()).to_string_lossy().into_owned() });
+        }
+        let mut buf = vec![0; len as usize + 1];
+        unsafe { ffi::wxd_ListBox_GetString(ptr, index as i32, buf.as_mut_ptr(), buf.len()) };
+        Some(unsafe { CStr::from_ptr(buf.as_ptr()).to_string_lossy().into_owned() })
     }
 
     /// Gets the number of items in the list box.

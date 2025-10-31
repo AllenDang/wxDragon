@@ -65,11 +65,11 @@ wxd_DirPickerCtrl_Create(
 
 /**
  * @brief Get the current path from the DirPickerCtrl
- * Returns the required UTF-8 byte length (excluding the null terminator).
+ * Returns the required UTF-8 byte length (excluding the null terminator), if any error, -1 returned.
  * If buffer is not null and buffer_len > 0, copies up to buffer_len - 1 bytes and null-terminates.
  * If the current path is longer than buffer_len - 1, it will be truncated.
  */
-WXD_EXPORTED size_t
+WXD_EXPORTED int
 wxd_DirPickerCtrl_GetPath(const wxd_DirPickerCtrl_t* self, char* buffer, size_t buffer_len);
 
 WXD_EXPORTED void

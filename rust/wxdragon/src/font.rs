@@ -154,12 +154,10 @@ impl Font {
 
     /// Get the font face name.
     pub fn get_face_name(&self) -> String {
-        let mut buffer = vec![0u8; 256];
-        let len = unsafe { ffi::wxd_Font_GetFaceName(self.ptr, buffer.as_mut_ptr() as *mut i8, buffer.len() as i32) };
+        let mut buffer = vec![0; 256];
+        let len = unsafe { ffi::wxd_Font_GetFaceName(self.ptr, buffer.as_mut_ptr(), buffer.len()) };
         if len > 0 {
-            buffer.resize((len + 1) as usize, 0);
-            let c_str = unsafe { CStr::from_ptr(buffer.as_ptr() as *const i8) };
-            c_str.to_string_lossy().into_owned()
+            unsafe { CStr::from_ptr(buffer.as_ptr()).to_string_lossy().to_string() }
         } else {
             String::new()
         }

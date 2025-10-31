@@ -37,12 +37,13 @@ wxd_FileDialog_Create(
 // ShowModal is inherited from wxd_Dialog_ShowModal
 
 WXD_EXPORTED int
-wxd_FileDialog_GetPath(wxd_FileDialog_t* self, char* buffer, int bufLen)
+wxd_FileDialog_GetPath(wxd_FileDialog_t* self, char* buffer, size_t bufLen)
 {
     if (!self)
         return -1;
     wxFileDialog* dlg = (wxFileDialog*)self;
-    return GET_WX_STRING_RESULT(dlg->GetPath(), buffer, bufLen);
+    wxString str = dlg->GetPath();
+    return (int)wxd_cpp_utils::copy_wxstring_to_buffer(str, buffer, bufLen);
 }
 
 WXD_EXPORTED void
@@ -57,12 +58,13 @@ wxd_FileDialog_GetPaths(wxd_FileDialog_t* self, wxd_ArrayString_t* paths_out)
 }
 
 WXD_EXPORTED int
-wxd_FileDialog_GetFilename(wxd_FileDialog_t* self, char* buffer, int bufLen)
+wxd_FileDialog_GetFilename(const wxd_FileDialog_t* self, char* buffer, size_t bufLen)
 {
     if (!self)
         return -1;
     wxFileDialog* dlg = (wxFileDialog*)self;
-    return GET_WX_STRING_RESULT(dlg->GetFilename(), buffer, bufLen);
+    wxString str = dlg->GetFilename();
+    return (int)wxd_cpp_utils::copy_wxstring_to_buffer(str, buffer, bufLen);
 }
 
 WXD_EXPORTED void
@@ -77,12 +79,13 @@ wxd_FileDialog_GetFilenames(wxd_FileDialog_t* self, wxd_ArrayString_t* filenames
 }
 
 WXD_EXPORTED int
-wxd_FileDialog_GetDirectory(wxd_FileDialog_t* self, char* buffer, int bufLen)
+wxd_FileDialog_GetDirectory(wxd_FileDialog_t* self, char* buffer, size_t bufLen)
 {
     if (!self)
         return -1;
     wxFileDialog* dlg = (wxFileDialog*)self;
-    return GET_WX_STRING_RESULT(dlg->GetDirectory(), buffer, bufLen);
+    wxString str = dlg->GetDirectory();
+    return (int)wxd_cpp_utils::copy_wxstring_to_buffer(str, buffer, bufLen);
 }
 
 WXD_EXPORTED int
@@ -143,23 +146,24 @@ wxd_FileDialog_SetFilterIndex(wxd_FileDialog_t* self, int filterIndex)
     ((wxFileDialog*)self)->SetFilterIndex(filterIndex);
 }
 
-// Add missing GetMessage, GetWildcard functions, and GetCurrentlySelectedFilterIndex
 WXD_EXPORTED int
-wxd_FileDialog_GetMessage(wxd_FileDialog_t* self, char* buffer, int bufLen)
+wxd_FileDialog_GetMessage(wxd_FileDialog_t* self, char* buffer, size_t bufLen)
 {
     if (!self)
         return -1;
     wxFileDialog* dlg = (wxFileDialog*)self;
-    return GET_WX_STRING_RESULT(dlg->GetMessage(), buffer, bufLen);
+    wxString msg = dlg->GetMessage();
+    return (int)wxd_cpp_utils::copy_wxstring_to_buffer(msg, buffer, bufLen);
 }
 
 WXD_EXPORTED int
-wxd_FileDialog_GetWildcard(wxd_FileDialog_t* self, char* buffer, int bufLen)
+wxd_FileDialog_GetWildcard(wxd_FileDialog_t* self, char* buffer, size_t bufLen)
 {
     if (!self)
         return -1;
     wxFileDialog* dlg = (wxFileDialog*)self;
-    return GET_WX_STRING_RESULT(dlg->GetWildcard(), buffer, bufLen);
+    wxString msg = dlg->GetWildcard();
+    return (int)wxd_cpp_utils::copy_wxstring_to_buffer(msg, buffer, bufLen);
 }
 
 WXD_EXPORTED int

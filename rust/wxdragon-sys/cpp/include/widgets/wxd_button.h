@@ -25,7 +25,7 @@ WXD_EXPORTED void
 wxd_Button_SetLabel(wxd_Button_t* button, const char* label);
 
 WXD_EXPORTED int
-wxd_Button_GetLabel(wxd_Button_t* button, char* buffer, int buffer_len);
+wxd_Button_GetLabel(wxd_Button_t* button, char* buffer, size_t buffer_len);
 
 // --- Bitmap related functions for wxButton ---
 WXD_EXPORTED void

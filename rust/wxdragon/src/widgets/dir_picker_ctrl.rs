@@ -77,10 +77,10 @@ impl DirPickerCtrl {
     pub fn get_path(&self) -> String {
         let ptr = self.window.as_ptr() as *mut ffi::wxd_DirPickerCtrl_t;
         let len = unsafe { ffi::wxd_DirPickerCtrl_GetPath(ptr, std::ptr::null_mut(), 0) };
-        if len == 0 {
+        if len <= 0 {
             return String::new();
         }
-        let mut buf = vec![0; len + 1]; // +1 for null terminator
+        let mut buf = vec![0; len as usize + 1]; // +1 for null terminator
         unsafe { ffi::wxd_DirPickerCtrl_GetPath(ptr, buf.as_mut_ptr(), buf.len()) };
         unsafe { CStr::from_ptr(buf.as_ptr()).to_string_lossy().to_string() }
     }

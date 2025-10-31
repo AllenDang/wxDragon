@@ -30,28 +30,28 @@ wxd_FileDialog_Create(wxd_Window_t* parent, const char* message, const char* def
                       int y, int width, int height);
 
 WXD_EXPORTED int
-wxd_FileDialog_GetPath(wxd_FileDialog_t* self, char* buffer, int bufLen);
+wxd_FileDialog_GetPath(wxd_FileDialog_t* self, char* buffer, size_t bufLen);
 
 WXD_EXPORTED void
 wxd_FileDialog_GetPaths(wxd_FileDialog_t* self, wxd_ArrayString_t* paths);
 
 WXD_EXPORTED int
-wxd_FileDialog_GetFilename(wxd_FileDialog_t* self, char* buffer, int bufLen);
+wxd_FileDialog_GetFilename(const wxd_FileDialog_t* self, char* buffer, size_t bufLen);
 
 WXD_EXPORTED void
 wxd_FileDialog_GetFilenames(wxd_FileDialog_t* self, wxd_ArrayString_t* filenames);
 
 WXD_EXPORTED int
-wxd_FileDialog_GetDirectory(wxd_FileDialog_t* self, char* buffer, int bufLen);
+wxd_FileDialog_GetDirectory(wxd_FileDialog_t* self, char* buffer, size_t bufLen);
 
 WXD_EXPORTED int
 wxd_FileDialog_GetFilterIndex(wxd_FileDialog_t* self);
 
 WXD_EXPORTED int
-wxd_FileDialog_GetMessage(wxd_FileDialog_t* self, char* buffer, int bufLen);
+wxd_FileDialog_GetMessage(wxd_FileDialog_t* self, char* buffer, size_t bufLen);
 
 WXD_EXPORTED int
-wxd_FileDialog_GetWildcard(wxd_FileDialog_t* self, char* buffer, int bufLen);
+wxd_FileDialog_GetWildcard(wxd_FileDialog_t* self, char* buffer, size_t bufLen);
 
 WXD_EXPORTED int
 wxd_FileDialog_GetCurrentlySelectedFilterIndex(wxd_FileDialog_t* self);
@@ -153,7 +153,7 @@ WXD_EXPORTED void
 wxd_Font_SetUnderlined(wxd_Font_t* self, bool underlined);
 
 WXD_EXPORTED int
-wxd_Font_GetFaceName(wxd_Font_t* self, char* buffer, int buffer_len);
+wxd_Font_GetFaceName(wxd_Font_t* self, char* buffer, size_t buffer_len);
 
 WXD_EXPORTED bool
 wxd_Font_IsOk(wxd_Font_t* self);
@@ -174,7 +174,7 @@ wxd_TextEntryDialog_Create(wxd_Window_t* parent, const char* message, const char
                            int height);
 
 WXD_EXPORTED int
-wxd_TextEntryDialog_GetValue(wxd_TextEntryDialog_t* self, char* buffer, int bufLen);
+wxd_TextEntryDialog_GetValue(wxd_TextEntryDialog_t* self, char* buffer, size_t bufLen);
 
 // --- ProgressDialog ---
 WXD_EXPORTED wxd_ProgressDialog_t*
@@ -253,7 +253,8 @@ WXD_EXPORTED void
 wxd_SingleChoiceDialog_SetSelection(wxd_SingleChoiceDialog_t* self, int selection);
 
 WXD_EXPORTED int
-wxd_SingleChoiceDialog_GetStringSelection(wxd_SingleChoiceDialog_t* self, char* buffer, int bufLen);
+wxd_SingleChoiceDialog_GetStringSelection(wxd_SingleChoiceDialog_t* self, char* buffer,
+                                          size_t bufLen);
 
 // --- MultiChoiceDialog ---
 WXD_EXPORTED wxd_MultiChoiceDialog_t*
@@ -279,18 +280,18 @@ wxd_DirDialog_Create(wxd_Window_t* parent, const char* message, const char* defa
 
 /**
  * Gets the currently selected path.
- * Returns the length of the path string (not including the null terminator).
+ * Returns the length of the path string (not including the null terminator), or -1 on error.
  * If buffer is not null and bufLen is non-zero, copies up to bufLen-1 characters into buffer,
  * null-terminating it.
  */
-WXD_EXPORTED size_t
+WXD_EXPORTED int
 wxd_DirDialog_GetPath(const wxd_DirDialog_t* self, char* buffer, size_t bufLen);
 
 WXD_EXPORTED void
 wxd_DirDialog_SetPath(wxd_DirDialog_t* self, const char* path);
 
 WXD_EXPORTED int
-wxd_DirDialog_GetMessage(wxd_DirDialog_t* self, char* buffer, int bufLen);
+wxd_DirDialog_GetMessage(wxd_DirDialog_t* self, char* buffer, size_t bufLen);
 
 WXD_EXPORTED void
 wxd_DirDialog_SetMessage(wxd_DirDialog_t* self, const char* message);

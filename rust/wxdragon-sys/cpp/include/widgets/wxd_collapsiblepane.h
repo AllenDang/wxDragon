@@ -26,11 +26,11 @@ wxd_CollapsiblePane_SetLabel(wxd_CollapsiblePane_t* self, const char* label);
 
 /**
  * @brief Get the label of the CollapsiblePane
- * Returns the required UTF-8 byte length (excluding the null terminator).
+ * Returns the required UTF-8 byte length (excluding the null terminator), if any error returned -1.
  * If out is not null and out_len > 0, copies up to out_len - 1 bytes and null-terminates.
  * If out is null or out_len == 0, nothing is written.
  */
-WXD_EXPORTED size_t
+WXD_EXPORTED int
 wxd_CollapsiblePane_GetLabel(const wxd_CollapsiblePane_t* self, char* out, size_t out_len);
 
 #ifdef __cplusplus

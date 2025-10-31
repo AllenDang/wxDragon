@@ -334,14 +334,14 @@ wxd_TreeEvent_GetOldItem(wxd_Event_t* event)
 
 // Get the label from a tree event (for label editing events)
 WXD_EXPORTED int
-wxd_TreeEvent_GetLabel(wxd_Event_t* event, char* buffer, int buffer_len)
+wxd_TreeEvent_GetLabel(wxd_Event_t* event, char* buffer, size_t buffer_len)
 {
     wxTreeEvent* treeEvent = GetTreeEvent(event);
-    if (!treeEvent || !buffer || buffer_len <= 0)
+    if (!treeEvent)
         return -1;
 
     wxString label = treeEvent->GetLabel();
-    return wxd_cpp_utils::copy_wxstring_to_buffer(label, buffer, static_cast<size_t>(buffer_len));
+    return (int)wxd_cpp_utils::copy_wxstring_to_buffer(label, buffer, buffer_len);
 }
 
 // Check if label editing was cancelled

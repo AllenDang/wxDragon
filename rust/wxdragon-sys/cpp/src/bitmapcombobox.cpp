@@ -77,16 +77,16 @@ wxd_BitmapComboBox_SetSelection(wxd_BitmapComboBox_t* self, int index)
 }
 
 WXD_EXPORTED int
-wxd_BitmapComboBox_GetString(wxd_BitmapComboBox_t* self, int index, char* buffer, int buffer_len)
+wxd_BitmapComboBox_GetString(wxd_BitmapComboBox_t* self, int index, char* buffer, size_t buffer_len)
 {
-    if (!self || !buffer || buffer_len <= 0)
+    if (!self)
         return -1;
     wxBitmapComboBox* cb = (wxBitmapComboBox*)self;
     if (index < 0 || (unsigned int)index >= cb->GetCount())
         return -1;
 
     wxString item = cb->GetString((unsigned int)index);
-    return wxd_cpp_utils::copy_wxstring_to_buffer(item, buffer, (size_t)buffer_len);
+    return (int)wxd_cpp_utils::copy_wxstring_to_buffer(item, buffer, buffer_len);
 }
 
 WXD_EXPORTED unsigned int
@@ -108,13 +108,13 @@ wxd_BitmapComboBox_SetValue(wxd_BitmapComboBox_t* self, const char* value)
 }
 
 WXD_EXPORTED int
-wxd_BitmapComboBox_GetValue(wxd_BitmapComboBox_t* self, char* buffer, int buffer_len)
+wxd_BitmapComboBox_GetValue(wxd_BitmapComboBox_t* self, char* buffer, size_t buffer_len)
 {
-    if (!self || !buffer || buffer_len <= 0)
+    if (!self)
         return -1;
     wxBitmapComboBox* cb = (wxBitmapComboBox*)self;
     wxString value = cb->GetValue();
-    return wxd_cpp_utils::copy_wxstring_to_buffer(value, buffer, (size_t)buffer_len);
+    return (int)wxd_cpp_utils::copy_wxstring_to_buffer(value, buffer, buffer_len);
 }
 
 WXD_EXPORTED wxd_Bitmap_t*

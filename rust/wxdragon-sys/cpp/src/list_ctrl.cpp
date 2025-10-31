@@ -209,21 +209,15 @@ wxd_ListEvent_GetColumn(wxd_Event_t* event)
     return evt->GetColumn(); // For column click events
 }
 
-WXD_EXPORTED size_t
+WXD_EXPORTED int
 wxd_ListEvent_GetLabel(const wxd_Event_t* event, char* buffer, size_t buffer_len)
 {
     if (!event)
-        return 0;
+        return -1;
     const wxListEvent* evt =
         static_cast<const wxListEvent*>(reinterpret_cast<const wxEvent*>(event));
     wxString label = evt->GetLabel();
-    wxScopedCharBuffer scopedBuffer = label.ToUTF8();
-    if (buffer && buffer_len > 0) {
-        size_t copy_len = wxMin(scopedBuffer.length(), buffer_len - 1);
-        memcpy(buffer, scopedBuffer.data(), copy_len);
-        buffer[copy_len] = '\0'; // Null-terminate
-    }
-    return scopedBuffer.length();
+    return (int)wxd_cpp_utils::copy_wxstring_to_buffer(label, buffer, buffer_len);
 }
 
 WXD_EXPORTED bool

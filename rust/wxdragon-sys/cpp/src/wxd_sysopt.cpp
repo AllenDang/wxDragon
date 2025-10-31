@@ -23,10 +23,10 @@ wxd_SystemOptions_SetOption_Int(const char* name, int value)
 }
 
 WXD_EXPORTED int
-wxd_SystemOptions_GetOption_String(const char* name, char* buffer, int buffer_len)
+wxd_SystemOptions_GetOption_String(const char* name, char* buffer, size_t buffer_len)
 {
     wxString text = wxSystemOptions::GetOption(wxString::FromUTF8(name ? name : ""));
-    return wxd_cpp_utils::copy_wxstring_to_buffer(text, buffer, (size_t)buffer_len);
+    return (int)wxd_cpp_utils::copy_wxstring_to_buffer(text, buffer, (size_t)buffer_len);
 }
 
 WXD_EXPORTED int

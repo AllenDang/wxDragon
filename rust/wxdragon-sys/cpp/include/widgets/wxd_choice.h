@@ -12,12 +12,16 @@ WXD_EXPORTED void
 wxd_Choice_Clear(wxd_Choice_t* choice);
 WXD_EXPORTED int
 wxd_Choice_GetSelection(wxd_Choice_t* choice);
+
 WXD_EXPORTED int
-wxd_Choice_GetStringSelection(wxd_Choice_t* choice, char* buffer, int buffer_len);
+wxd_Choice_GetStringSelection(wxd_Choice_t* choice, char* buffer, size_t buffer_len);
+
 WXD_EXPORTED void
 wxd_Choice_SetSelection(wxd_Choice_t* choice, int index);
+
 WXD_EXPORTED int
-wxd_Choice_GetString(wxd_Choice_t* choice, int index, char* buffer, int buffer_len);
+wxd_Choice_GetString(wxd_Choice_t* choice, int index, char* buffer, size_t buffer_len);
+
 WXD_EXPORTED unsigned int
 wxd_Choice_GetCount(wxd_Choice_t* choice);
 

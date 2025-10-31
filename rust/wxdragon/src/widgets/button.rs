@@ -8,7 +8,6 @@ use crate::widget_style_enum;
 // Make sure WxEvtHandler is imported
 use crate::window::{Window, WxWidget};
 use std::ffi::{CStr, CString};
-use std::os::raw::c_char;
 use wxdragon_sys as ffi; // ADDED for enum bitwise operations
 
 /// Enum for specifying bitmap position on a button.
@@ -80,37 +79,13 @@ impl Button {
 
     /// Gets the button's label.
     pub fn get_label(&self) -> String {
-        let mut buffer: [c_char; 256] = [0; 256]; // Reasonable buffer size
-        let len_needed = unsafe {
-            ffi::wxd_Button_GetLabel(
-                self.window.as_ptr() as *mut ffi::wxd_Button_t,
-                buffer.as_mut_ptr(),
-                buffer.len() as i32,
-            )
-        };
-
-        if len_needed > 0 && (len_needed as usize) <= buffer.len() {
-            unsafe { CStr::from_ptr(buffer.as_ptr()).to_string_lossy().into_owned() }
-        } else if len_needed > (buffer.len() as i32) {
-            // Buffer too small, try again with required size
-            let mut vec_buffer: Vec<c_char> = vec![0; len_needed as usize];
-            let len_needed_2 = unsafe {
-                ffi::wxd_Button_GetLabel(
-                    self.window.as_ptr() as *mut ffi::wxd_Button_t,
-                    vec_buffer.as_mut_ptr(),
-                    vec_buffer.len() as i32,
-                )
-            };
-            if len_needed_2 == len_needed {
-                unsafe { CStr::from_ptr(vec_buffer.as_ptr()).to_string_lossy().into_owned() }
-            } else {
-                // Something went wrong
-                String::new()
-            }
-        } else {
-            // Error or empty label
-            String::new()
+        let len = unsafe { ffi::wxd_Button_GetLabel(self.window.as_ptr() as *mut ffi::wxd_Button_t, std::ptr::null_mut(), 0) };
+        if len <= 0 {
+            return String::new();
         }
+        let mut buf = vec![0; len as usize + 1];
+        unsafe { ffi::wxd_Button_GetLabel(self.window.as_ptr() as *mut _, buf.as_mut_ptr(), buf.len()) };
+        unsafe { CStr::from_ptr(buf.as_ptr()).to_string_lossy().into_owned() }
     }
 
     // --- Bitmap Methods ---

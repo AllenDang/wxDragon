@@ -9,7 +9,6 @@ use crate::widget_builder;
 use crate::widget_style_enum;
 use crate::window::{Window, WxWidget};
 use std::ffi::{CStr, CString};
-use std::os::raw::c_char;
 use wxdragon_sys as ffi;
 
 // --- Toggle Button Styles ---
@@ -92,31 +91,23 @@ impl ToggleButton {
 
     /// Gets the button label.
     pub fn get_label(&self) -> String {
-        unsafe {
-            let mut buffer: [c_char; 1024] = [0; 1024];
-            let len_needed =
-                ffi::wxd_ToggleButton_GetLabel(self.window.as_ptr() as *mut _, buffer.as_mut_ptr(), buffer.len() as i32);
+        let btn = self.window.as_ptr() as *mut _;
+        let mut buffer = [0; 1024];
+        let len_needed = unsafe { ffi::wxd_ToggleButton_GetLabel(btn, buffer.as_mut_ptr(), buffer.len()) };
 
-            if len_needed < 0 {
-                return String::new(); // Error
-            }
+        if len_needed < 0 {
+            return String::new(); // Error
+        }
 
-            let len_needed_usize = len_needed as usize;
-            if len_needed_usize < buffer.len() {
-                CStr::from_ptr(buffer.as_ptr()).to_string_lossy().into_owned()
+        if len_needed < buffer.len() as i32 {
+            unsafe { CStr::from_ptr(buffer.as_ptr()).to_string_lossy().into_owned() }
+        } else {
+            let mut vec_buffer = vec![0; len_needed as usize + 1];
+            let len_copied = unsafe { ffi::wxd_ToggleButton_GetLabel(btn, vec_buffer.as_mut_ptr(), vec_buffer.len()) };
+            if len_copied == len_needed {
+                unsafe { CStr::from_ptr(vec_buffer.as_ptr()).to_string_lossy().into_owned() }
             } else {
-                let mut vec_buffer: Vec<u8> = vec![0; len_needed_usize + 1];
-                let len_copied = ffi::wxd_ToggleButton_GetLabel(
-                    self.window.as_ptr() as *mut _,
-                    vec_buffer.as_mut_ptr() as *mut c_char,
-                    vec_buffer.len() as i32,
-                );
-                if len_copied == len_needed {
-                    vec_buffer.pop(); // Remove null terminator
-                    String::from_utf8(vec_buffer).unwrap_or_default()
-                } else {
-                    String::new() // Error on second call
-                }
+                String::new() // Error on second call
             }
         }
     }

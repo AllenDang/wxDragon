@@ -138,37 +138,24 @@ impl RearrangeList {
     /// Gets the string at the specified index.
     /// Returns `None` if the index is out of bounds.
     pub fn get_string(&self, index: u32) -> Option<String> {
-        unsafe {
-            let mut buffer: [c_char; 1024] = [0; 1024];
-            let len_needed = ffi::wxd_RearrangeList_GetString(
-                self.window.as_ptr() as *mut _,
-                index as i32,
-                buffer.as_mut_ptr(),
-                buffer.len() as i32,
-            );
+        let ptr = self.window.as_ptr() as *mut _;
+        let mut buffer = [0; 1024];
+        let len_needed = unsafe { ffi::wxd_RearrangeList_GetString(ptr, index as i32, buffer.as_mut_ptr(), buffer.len()) };
 
-            if len_needed < 0 {
-                return None; // Error or invalid index
-            }
+        if len_needed < 0 {
+            return None; // Error or invalid index
+        }
 
-            let len_needed_usize = len_needed as usize;
-            if len_needed_usize < buffer.len() {
-                let c_str = CStr::from_ptr(buffer.as_ptr());
-                Some(c_str.to_string_lossy().into_owned())
+        if len_needed < buffer.len() as i32 {
+            let c_str = unsafe { CStr::from_ptr(buffer.as_ptr()) };
+            Some(c_str.to_string_lossy().into_owned())
+        } else {
+            let mut buf = vec![0; len_needed as usize + 1];
+            let len_copied = unsafe { ffi::wxd_RearrangeList_GetString(ptr, index as i32, buf.as_mut_ptr(), buf.len()) };
+            if len_copied == len_needed {
+                Some(unsafe { CStr::from_ptr(buf.as_ptr()).to_string_lossy().to_string() })
             } else {
-                let mut vec_buffer: Vec<u8> = vec![0; len_needed_usize + 1];
-                let len_copied = ffi::wxd_RearrangeList_GetString(
-                    self.window.as_ptr() as *mut _,
-                    index as i32,
-                    vec_buffer.as_mut_ptr() as *mut c_char,
-                    vec_buffer.len() as i32,
-                );
-                if len_copied == len_needed {
-                    vec_buffer.pop();
-                    String::from_utf8(vec_buffer).ok()
-                } else {
-                    None
-                }
+                None
             }
         }
     }

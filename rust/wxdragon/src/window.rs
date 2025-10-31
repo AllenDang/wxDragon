@@ -539,11 +539,11 @@ pub trait WxWidget: std::any::Any {
         }
 
         let len = unsafe { ffi::wxd_Window_GetLabel(handle, std::ptr::null_mut(), 0) };
-        if len == 0 {
+        if len < 0 {
             return None; // No label set
         }
 
-        let mut buf = vec![0; len + 1];
+        let mut buf = vec![0; len as usize + 1];
         unsafe { ffi::wxd_Window_GetLabel(handle, buf.as_mut_ptr(), buf.len()) };
         Some(unsafe { CStr::from_ptr(buf.as_ptr()).to_string_lossy().to_string() })
     }
@@ -876,11 +876,11 @@ pub trait WxWidget: std::any::Any {
         }
 
         let len = unsafe { ffi::wxd_Window_GetName(handle, std::ptr::null_mut(), 0) };
-        if len == 0 {
+        if len <= 0 {
             return String::new();
         }
 
-        let mut b = vec![0; len + 1];
+        let mut b = vec![0; len as usize + 1];
         unsafe { ffi::wxd_Window_GetName(handle, b.as_mut_ptr(), b.len()) };
         unsafe { CStr::from_ptr(b.as_ptr()).to_string_lossy().to_string() }
     }
@@ -1543,11 +1543,11 @@ impl Window {
         }
 
         let len = unsafe { ffi::wxd_Window_GetClassName(handle, std::ptr::null_mut(), 0) };
-        if len == 0 {
+        if len < 0 {
             return None;
         }
 
-        let mut buf = vec![0; len + 1];
+        let mut buf = vec![0; len as usize + 1];
         unsafe { ffi::wxd_Window_GetClassName(handle, buf.as_mut_ptr(), buf.len()) };
         Some(unsafe { CStr::from_ptr(buf.as_ptr()).to_string_lossy().to_string() })
     }

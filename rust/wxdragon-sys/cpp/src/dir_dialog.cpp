@@ -22,22 +22,15 @@ wxd_DirDialog_Create(wxd_Window_t* parent, const char* message, const char* defa
     return reinterpret_cast<wxd_DirDialog_t*>(dialog);
 }
 
-WXD_EXPORTED size_t
+WXD_EXPORTED int
 wxd_DirDialog_GetPath(const wxd_DirDialog_t* self, char* buffer, size_t bufLen)
 {
     if (!self)
-        return 0;
+        return -1;
 
     const wxDirDialog* dialog = reinterpret_cast<const wxDirDialog*>(self);
     wxString path = dialog->GetPath();
-    wxScopedCharBuffer pathBuf = path.ToUTF8();
-    if (buffer && bufLen > 0) {
-        size_t copyLen = std::min(static_cast<size_t>(pathBuf.length()), bufLen - 1);
-        std::memcpy(buffer, pathBuf.data(), copyLen);
-        buffer[copyLen] = '\0';
-    }
-
-    return pathBuf.length();
+    return (int)wxd_cpp_utils::copy_wxstring_to_buffer(path, buffer, bufLen);
 }
 
 WXD_EXPORTED void
@@ -51,15 +44,15 @@ wxd_DirDialog_SetPath(wxd_DirDialog_t* self, const char* path)
 }
 
 WXD_EXPORTED int
-wxd_DirDialog_GetMessage(wxd_DirDialog_t* self, char* buffer, int bufLen)
+wxd_DirDialog_GetMessage(wxd_DirDialog_t* self, char* buffer, size_t bufLen)
 {
-    if (!self || !buffer || bufLen <= 0)
-        return 0;
+    if (!self)
+        return -1;
 
     wxDirDialog* dialog = reinterpret_cast<wxDirDialog*>(self);
     wxString message = dialog->GetMessage();
 
-    return wxd_cpp_utils::copy_wxstring_to_buffer(message, buffer, bufLen);
+    return (int)wxd_cpp_utils::copy_wxstring_to_buffer(message, buffer, bufLen);
 }
 
 WXD_EXPORTED void

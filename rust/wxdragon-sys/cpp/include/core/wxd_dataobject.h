@@ -17,7 +17,7 @@ wxd_TextDataObject_Create(const char* text);
  * If buffer is not null and buffer_len is non-zero, copies up to buffer_len-1 characters into buffer,
  * null-terminating it.
  */
-WXD_EXPORTED size_t
+WXD_EXPORTED int
 wxd_TextDataObject_GetText(const wxd_TextDataObject_t* data_object, char* buffer,
                            size_t buffer_len);
 
@@ -33,9 +33,10 @@ WXD_EXPORTED void
 wxd_FileDataObject_AddFile(wxd_FileDataObject_t* data_object, const char* file);
 WXD_EXPORTED int
 wxd_FileDataObject_GetFileCount(wxd_FileDataObject_t* data_object);
+
 WXD_EXPORTED int
 wxd_FileDataObject_GetFile(wxd_FileDataObject_t* data_object, int index, char* buffer,
-                           int buffer_len);
+                           size_t buffer_len);
 WXD_EXPORTED int
 wxd_FileDataObject_GetFilenames(wxd_FileDataObject_t* obj, wxd_ArrayString_t* filenames);
 

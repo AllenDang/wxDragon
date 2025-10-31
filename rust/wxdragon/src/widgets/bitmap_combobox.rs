@@ -9,7 +9,6 @@ use crate::widget_builder;
 use crate::widgets::combobox::ComboBoxStyle;
 use crate::window::{Window, WxWidget};
 use std::ffi::{CStr, CString};
-use std::os::raw::c_char;
 use std::ptr;
 use wxdragon_sys as ffi;
 
@@ -81,26 +80,13 @@ impl BitmapComboBox {
 
     /// Gets the string at the specified index.
     pub fn get_string(&self, index: u32) -> String {
-        unsafe {
-            let required_len_p1 = ffi::wxd_BitmapComboBox_GetString(self.as_ptr(), index as i32, ptr::null_mut(), 0);
-            if required_len_p1 <= 0 {
-                return String::new();
-            }
-            let capacity = required_len_p1 as usize;
-            let mut buffer: Vec<u8> = Vec::with_capacity(capacity);
-            let success_code = ffi::wxd_BitmapComboBox_GetString(
-                self.as_ptr(),
-                index as i32,
-                buffer.as_mut_ptr() as *mut c_char,
-                capacity as i32,
-            );
-            if success_code == 0 {
-                let c_str = CStr::from_ptr(buffer.as_ptr() as *const c_char);
-                String::from_utf8_lossy(c_str.to_bytes()).into_owned()
-            } else {
-                String::new()
-            }
+        let len = unsafe { ffi::wxd_BitmapComboBox_GetString(self.as_ptr(), index as i32, std::ptr::null_mut(), 0) };
+        if len <= 0 {
+            return String::new();
         }
+        let mut buf = vec![0; len as usize + 1];
+        unsafe { ffi::wxd_BitmapComboBox_GetString(self.as_ptr(), index as i32, buf.as_mut_ptr(), buf.len()) };
+        unsafe { CStr::from_ptr(buf.as_ptr()).to_string_lossy().to_string() }
     }
 
     /// Gets the number of items in the control.
@@ -116,22 +102,13 @@ impl BitmapComboBox {
 
     /// Gets the text from the text entry part of the control.
     pub fn get_value(&self) -> String {
-        unsafe {
-            let required_len_p1 = ffi::wxd_BitmapComboBox_GetValue(self.as_ptr(), ptr::null_mut(), 0);
-            if required_len_p1 <= 0 {
-                return String::new();
-            }
-            let capacity = required_len_p1 as usize;
-            let mut buffer: Vec<u8> = Vec::with_capacity(capacity);
-            let success_code =
-                ffi::wxd_BitmapComboBox_GetValue(self.as_ptr(), buffer.as_mut_ptr() as *mut c_char, capacity as i32);
-            if success_code == 0 {
-                let c_str = CStr::from_ptr(buffer.as_ptr() as *const c_char);
-                String::from_utf8_lossy(c_str.to_bytes()).into_owned()
-            } else {
-                String::new()
-            }
+        let len = unsafe { ffi::wxd_BitmapComboBox_GetValue(self.as_ptr(), std::ptr::null_mut(), 0) };
+        if len <= 0 {
+            return String::new();
         }
+        let mut buf = vec![0; len as usize + 1];
+        unsafe { ffi::wxd_BitmapComboBox_GetValue(self.as_ptr(), buf.as_mut_ptr(), buf.len()) };
+        unsafe { CStr::from_ptr(buf.as_ptr()).to_string_lossy().to_string() }
     }
 
     /// Gets the bitmap associated with the item at the specified index.

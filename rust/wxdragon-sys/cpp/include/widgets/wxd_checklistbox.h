@@ -16,11 +16,12 @@ wxd_CheckListBox_GetSelection(wxd_CheckListBox_t* clbox);
 
 /**
  * Retrieves the currently selected string from the wxCheckListBox.
- * Returns the length of the string copied into the buffer, excluding the null terminator.
+ * Returns the length of the string copied into the buffer, excluding the null terminator,
+ * if any error, -1 returned.
  * If the buffer is too small, it copies as much as fits and returns the required size.
  * If no selection is made, returns 0 and does not modify the buffer.
  */
-WXD_EXPORTED size_t
+WXD_EXPORTED int
 wxd_CheckListBox_GetStringSelection(const wxd_CheckListBox_t* clbox, char* buffer,
                                     size_t buffer_len);
 
@@ -29,11 +30,12 @@ wxd_CheckListBox_SetSelection(wxd_CheckListBox_t* clbox, int index, bool select)
 
 /**
  * Retrieves the string at the specified index from the wxCheckListBox.
- * Returns the length of the string copied into the buffer, excluding the null terminator.
+ * Returns the length of the string copied into the buffer, excluding the null terminator,
+ * if any error, -1 returned.
  * If the buffer is too small, it copies as much as fits and returns the required size.
  * If the index is out of bounds, returns 0 and does not modify the buffer.
  */
-WXD_EXPORTED size_t
+WXD_EXPORTED int
 wxd_CheckListBox_GetString(const wxd_CheckListBox_t* clbox, size_t index, char* buffer,
                            size_t buffer_len);
 

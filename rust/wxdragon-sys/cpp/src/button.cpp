@@ -41,14 +41,13 @@ wxd_Button_SetLabel(wxd_Button_t* button, const char* label)
 }
 
 int
-wxd_Button_GetLabel(wxd_Button_t* button, char* buffer, int buffer_len)
+wxd_Button_GetLabel(wxd_Button_t* button, char* buffer, size_t buffer_len)
 {
-    if (!button || !buffer || buffer_len <= 0)
+    if (!button)
         return -1;
     wxButton* wx_button = reinterpret_cast<wxButton*>(button);
     wxString label_str = wx_button->GetLabel();
-    return wxd_cpp_utils::copy_wxstring_to_buffer(label_str, buffer,
-                                                  static_cast<size_t>(buffer_len));
+    return (int)wxd_cpp_utils::copy_wxstring_to_buffer(label_str, buffer, buffer_len);
 }
 
 // --- Bitmap related functions for wxButton ---

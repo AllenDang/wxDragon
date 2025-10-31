@@ -337,26 +337,18 @@ wxd_SystemAppearance_IsUsingDarkBackground(wxd_SystemAppearance_t* appearance)
 }
 
 // Get the system appearance name (mainly for macOS)
-WXD_EXPORTED size_t
+WXD_EXPORTED int
 wxd_SystemAppearance_GetName(const wxd_SystemAppearance_t* appearance, char* out, size_t out_len)
 {
     if (!appearance)
-        return 0;
+        return -1;
 
 #if wxCHECK_VERSION(3, 3, 0)
     const wxSystemAppearance* a = reinterpret_cast<const wxSystemAppearance*>(appearance);
     wxString name = a->GetName();
-    const wxScopedCharBuffer utf8_buf = name.ToUTF8();
-    if (utf8_buf.data()) {
-        if (out && out_len > 0) {
-            size_t copy_len = std::min(static_cast<size_t>(utf8_buf.length()), out_len - 1);
-            memcpy(out, utf8_buf.data(), copy_len);
-            out[copy_len] = '\0'; // Null-terminate
-        }
-        return utf8_buf.length();
-    }
+    return (int)wxd_cpp_utils::copy_wxstring_to_buffer(name, out, out_len);
 #endif
-    return 0;
+    return -1;
 }
 
 // Free system appearance object

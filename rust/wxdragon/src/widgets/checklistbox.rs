@@ -106,11 +106,11 @@ impl CheckListBox {
         let ptr = self.window.as_ptr() as *mut _;
         let len = unsafe { ffi::wxd_CheckListBox_GetStringSelection(ptr, std::ptr::null_mut(), 0) };
 
-        if len == 0 {
+        if len < 0 {
             return None; // Error or no selection
         }
 
-        let mut buf = vec![0; len + 1];
+        let mut buf = vec![0; len as usize + 1];
         unsafe { ffi::wxd_CheckListBox_GetStringSelection(ptr, buf.as_mut_ptr(), buf.len()) };
         Some(unsafe { CStr::from_ptr(buf.as_ptr()).to_string_lossy().to_string() })
     }
@@ -126,11 +126,11 @@ impl CheckListBox {
         let ptr = self.window.as_ptr() as *mut _;
         let len = unsafe { ffi::wxd_CheckListBox_GetString(ptr, index, std::ptr::null_mut(), 0) };
 
-        if len == 0 {
+        if len < 0 {
             return None; // Index out of bounds
         }
 
-        let mut buf = vec![0; len + 1];
+        let mut buf = vec![0; len as usize + 1];
         unsafe { ffi::wxd_CheckListBox_GetString(ptr, index, buf.as_mut_ptr(), buf.len()) };
         Some(unsafe { CStr::from_ptr(buf.as_ptr()).to_string_lossy().to_string() })
     }

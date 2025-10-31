@@ -58,8 +58,7 @@ impl WxdArrayString {
 
         // Need a larger buffer
         let mut buf = vec![0; len as usize + 1];
-        let bl = buf.len() as i32;
-        unsafe { ffi::wxd_ArrayString_GetString(self.ptr, index, buf.as_mut_ptr(), bl) };
+        unsafe { ffi::wxd_ArrayString_GetString(self.ptr, index, buf.as_mut_ptr(), buf.len()) };
         Some(unsafe { CStr::from_ptr(buf.as_ptr()).to_string_lossy().into_owned() })
     }
 

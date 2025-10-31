@@ -52,16 +52,16 @@ wxd_RadioBox_SetSelection(wxd_RadioBox_t* self, int n)
 }
 
 WXD_EXPORTED int
-wxd_RadioBox_GetString(wxd_RadioBox_t* self, int n, char* buffer, int buffer_len)
+wxd_RadioBox_GetString(wxd_RadioBox_t* self, int n, char* buffer, size_t buffer_len)
 {
-    if (!self || !buffer || buffer_len <= 0)
+    if (!self)
         return -1;
     wxRadioBox* rbox = (wxRadioBox*)self;
     if (n < 0 || (unsigned int)n >= rbox->GetCount())
         return -1;
 
     wxString item = rbox->GetString((unsigned int)n);
-    return wxd_cpp_utils::copy_wxstring_to_buffer(item, buffer, (size_t)buffer_len);
+    return (int)wxd_cpp_utils::copy_wxstring_to_buffer(item, buffer, buffer_len);
 }
 
 WXD_EXPORTED unsigned int

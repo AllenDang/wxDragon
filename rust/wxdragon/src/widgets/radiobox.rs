@@ -122,23 +122,13 @@ impl RadioBox {
     }
 
     pub fn get_string(&self, n: i32) -> String {
-        unsafe {
-            let required_len_p1 = ffi::wxd_RadioBox_GetString(self.as_ptr(), n, ptr::null_mut(), 0);
-            if required_len_p1 <= 0 {
-                return String::new();
-            }
-            let capacity = required_len_p1 as usize;
-            let mut buffer: Vec<u8> = Vec::with_capacity(capacity);
-            let success_code = ffi::wxd_RadioBox_GetString(self.as_ptr(), n, buffer.as_mut_ptr() as *mut c_char, capacity as i32);
-
-            if success_code == 0 {
-                // Use CStr to find the length, including potential embedded nulls handled correctly.
-                let c_str = CStr::from_ptr(buffer.as_ptr() as *const c_char);
-                String::from_utf8_lossy(c_str.to_bytes()).into_owned()
-            } else {
-                String::new() // Error occurred during copy
-            }
+        let len = unsafe { ffi::wxd_RadioBox_GetString(self.as_ptr(), n, ptr::null_mut(), 0) };
+        if len <= 0 {
+            return String::new();
         }
+        let mut buffer = vec![0; len as usize + 1];
+        unsafe { ffi::wxd_RadioBox_GetString(self.as_ptr(), n, buffer.as_mut_ptr(), buffer.len()) };
+        unsafe { CStr::from_ptr(buffer.as_ptr()).to_string_lossy().to_string() }
     }
 
     pub fn get_count(&self) -> u32 {

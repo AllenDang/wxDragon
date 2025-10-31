@@ -36,12 +36,13 @@ wxd_AuiManager_Delete(wxd_AuiManager_t* self);
 
 /**
  * Serialize the current AUI layout to a string perspective.
- * The returned value is the required UTF-8 byte length (excluding the null terminator).
+ * The returned value is the required UTF-8 byte length (excluding the null terminator),
+ * if any error, -1 returned.
  * If out is not null and out_len > 0, copies up to out_len - 1 bytes and null-terminates.
  * If out is null or out_len == 0, nothing is written.
  * @return Required UTF-8 byte length (excluding null terminator)
  */
-WXD_EXPORTED size_t
+WXD_EXPORTED int
 wxd_AuiManager_SavePerspective(const wxd_AuiManager_t* self, char* out, size_t out_len);
 
 WXD_EXPORTED bool

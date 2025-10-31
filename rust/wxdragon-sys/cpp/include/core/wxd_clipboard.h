@@ -33,11 +33,11 @@ wxd_Clipboard_SetText(wxd_Clipboard_t* clipboard, const char* text);
 
 /**
  * Gets text from the clipboard.
- * Returns the length of the text retrieved.
+ * Returns the length of the text retrieved (not including the null terminator), or -1 on error.
  * If buffer is not null and buffer_len is non-zero, copies up to buffer_len-1 characters into buffer,
  * null-terminating it.
  */
-WXD_EXPORTED size_t
+WXD_EXPORTED int
 wxd_Clipboard_GetText(const wxd_Clipboard_t* clipboard, char* buffer, size_t buffer_len);
 
 #endif // WXD_CLIPBOARD_H

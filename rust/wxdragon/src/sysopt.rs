@@ -1,4 +1,4 @@
-use std::ffi::CString;
+use std::ffi::{CStr, CString};
 
 pub struct SystemOptions;
 
@@ -16,26 +16,16 @@ impl SystemOptions {
 
     pub fn get_option_by_string(name: &str) -> Option<String> {
         let name = std::ffi::CString::new(name).unwrap();
-        unsafe {
-            if !crate::ffi::wxd_SystemOptions_HasOption(name.as_ptr()) {
-                return None;
-            }
-            let len = crate::ffi::wxd_SystemOptions_GetOption_String(name.as_ptr(), std::ptr::null_mut(), 0);
-            if len <= 0 {
-                return Some(String::new());
-            }
-            let mut buffer = vec![0u8; len as usize + 1];
-            let actual_len = crate::ffi::wxd_SystemOptions_GetOption_String(
-                name.as_ptr(),
-                buffer.as_mut_ptr() as *mut i8,
-                buffer.len() as ::std::os::raw::c_int,
-            );
-            if actual_len <= 0 {
-                return Some(String::new());
-            }
-            let cstr = std::ffi::CStr::from_ptr(buffer.as_ptr() as *const i8);
-            Some(cstr.to_string_lossy().into_owned())
+        if !unsafe { crate::ffi::wxd_SystemOptions_HasOption(name.as_ptr()) } {
+            return None;
         }
+        let len = unsafe { crate::ffi::wxd_SystemOptions_GetOption_String(name.as_ptr(), std::ptr::null_mut(), 0) };
+        if len < 0 {
+            return None;
+        }
+        let mut buffer = vec![0; len as usize + 1];
+        unsafe { crate::ffi::wxd_SystemOptions_GetOption_String(name.as_ptr(), buffer.as_mut_ptr(), buffer.len()) };
+        Some(unsafe { CStr::from_ptr(buffer.as_ptr()).to_string_lossy().to_string() })
     }
 
     pub fn get_option_by_int(name: &str) -> Option<i32> {

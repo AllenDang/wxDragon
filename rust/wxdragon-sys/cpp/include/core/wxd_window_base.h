@@ -67,7 +67,7 @@ wxd_Window_SetLabel(wxd_Window_t* self, const char* label);
  * If outLabel is not null and maxLen > 0, the label is copied into outLabel
  * up to maxLen - 1 characters, and null-terminated.
  */
-WXD_EXPORTED size_t
+WXD_EXPORTED int
 wxd_Window_GetLabel(const wxd_Window_t* self, char* outLabel, size_t maxLen);
 
 WXD_EXPORTED bool
@@ -135,11 +135,11 @@ wxd_Window_SetName(wxd_Window_t* window, const char* name);
 
 /**
  * @brief Get the name of the window.
- * The returned value is the length of the name (excluding null terminator).
+ * The returned value is the length of the name (excluding null terminator), or -1 on error.
  * If outName is not null and maxLen > 0, the name is copied into outName
  * up to maxLen - 1 characters, and null-terminated.
  */
-WXD_EXPORTED size_t
+WXD_EXPORTED int
 wxd_Window_GetName(const wxd_Window_t* window, char* outName, size_t maxLen);
 
 // Window finding functions
@@ -207,11 +207,11 @@ wxd_Window_GetLastPosition(wxd_Window_t* window);
 
 /**
  * @brief Get the wxWidgets class name of the window.
- * The returned value is the length of the class name (excluding null terminator).
+ * The returned value is the length of the class name (excluding null terminator), or -1 on error.
  * If outName is not null and maxLen > 0, the class name is copied into outName
  * up to maxLen - 1 characters, and null-terminated.
  */
-WXD_EXPORTED size_t
+WXD_EXPORTED int
 wxd_Window_GetClassName(const wxd_Window_t* window, char* outName, size_t maxLen);
 
 // --- Tab Order Functions ---

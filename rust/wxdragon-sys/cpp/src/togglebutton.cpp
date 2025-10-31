@@ -58,16 +58,14 @@ wxd_ToggleButton_SetLabel(wxd_ToggleButton_t* tglbtn, const char* label)
 }
 
 WXD_EXPORTED int
-wxd_ToggleButton_GetLabel(wxd_ToggleButton_t* tglbtn, char* buffer, int buffer_len)
+wxd_ToggleButton_GetLabel(const wxd_ToggleButton_t* tglbtn, char* buffer, size_t buffer_len)
 {
-    wxToggleButton* wxTglBtn = reinterpret_cast<wxToggleButton*>(tglbtn);
-    if (wxTglBtn) {
-        return static_cast<int>(wxd_cpp_utils::copy_wxstring_to_buffer(
-            wxTglBtn->GetLabel(), buffer, static_cast<size_t>(buffer_len)));
+    const wxToggleButton* wxTglBtn = reinterpret_cast<const wxToggleButton*>(tglbtn);
+    if (!wxTglBtn) {
+        return -1;
     }
-    if (buffer && buffer_len > 0)
-        buffer[0] = '\0';
-    return 0;
+    wxString label = wxTglBtn->GetLabel();
+    return static_cast<int>(wxd_cpp_utils::copy_wxstring_to_buffer(label, buffer, buffer_len));
 }
 
 } // extern "C"

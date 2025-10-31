@@ -14,7 +14,7 @@ WXD_EXPORTED void
 wxd_SystemOptions_SetOption_Int(const char* name, int value);
 
 WXD_EXPORTED int
-wxd_SystemOptions_GetOption_String(const char* name, char* buffer, int buffer_len);
+wxd_SystemOptions_GetOption_String(const char* name, char* buffer, size_t buffer_len);
 
 WXD_EXPORTED int
 wxd_SystemOptions_GetOption_Int(const char* name);

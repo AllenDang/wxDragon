@@ -52,10 +52,12 @@ wxd_SingleChoiceDialog_SetSelection(wxd_SingleChoiceDialog_t* self, int selectio
 }
 
 WXD_EXPORTED int
-wxd_SingleChoiceDialog_GetStringSelection(wxd_SingleChoiceDialog_t* self, char* buffer, int bufLen)
+wxd_SingleChoiceDialog_GetStringSelection(wxd_SingleChoiceDialog_t* self, char* buffer,
+                                          size_t bufLen)
 {
     if (!self)
         return -1;
     wxSingleChoiceDialog* dialog = (wxSingleChoiceDialog*)self;
-    return GET_WX_STRING_RESULT(dialog->GetStringSelection(), buffer, bufLen);
+    wxString val = dialog->GetStringSelection();
+    return (int)wxd_cpp_utils::copy_wxstring_to_buffer(val, buffer, bufLen);
 }

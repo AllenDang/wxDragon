@@ -18,6 +18,6 @@ WXD_EXPORTED void
 wxd_ToggleButton_SetLabel(wxd_ToggleButton_t* tglbtn, const char* label);
 
 WXD_EXPORTED int
-wxd_ToggleButton_GetLabel(wxd_ToggleButton_t* tglbtn, char* buffer, int buffer_len);
+wxd_ToggleButton_GetLabel(const wxd_ToggleButton_t* tglbtn, char* buffer, size_t buffer_len);
 
 #endif // WXD_TOGGLEBUTTON_H

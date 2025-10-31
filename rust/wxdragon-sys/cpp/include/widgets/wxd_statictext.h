@@ -16,11 +16,11 @@ wxd_StaticText_SetLabel(wxd_StaticText_t* stext, const char* label);
 
 /**
  * Gets the label of the static text control.
- * Returns the length of the label string (not including the null terminator).
+ * Returns the length of the label string (not including the null terminator) or -1 if stext is null.
  * If buffer is not null and buffer_len is non-zero, copies up to buffer_len-1 characters into buffer,
  * null-terminating it.
  */
-WXD_EXPORTED size_t
+WXD_EXPORTED int
 wxd_StaticText_GetLabel(const wxd_StaticText_t* stext, char* buffer, size_t buffer_len);
 
 WXD_EXPORTED void

@@ -59,13 +59,13 @@ wxd_ListBox_GetSelection(wxd_ListBox_t* listbox)
 }
 
 WXD_EXPORTED int
-wxd_ListBox_GetStringSelection(wxd_ListBox_t* listbox, char* buffer, int buffer_len)
+wxd_ListBox_GetStringSelection(wxd_ListBox_t* listbox, char* buffer, size_t buffer_len)
 {
-    if (!listbox || !buffer || buffer_len <= 0)
+    if (!listbox)
         return -1;
     wxListBox* lb = (wxListBox*)listbox;
     wxString selection = lb->GetStringSelection();
-    return wxd_cpp_utils::copy_wxstring_to_buffer(selection, buffer, (size_t)buffer_len);
+    return (int)wxd_cpp_utils::copy_wxstring_to_buffer(selection, buffer, buffer_len);
 }
 
 WXD_EXPORTED void
@@ -87,16 +87,16 @@ wxd_ListBox_SetStringSelection(wxd_ListBox_t* listbox, const char* item, bool se
 }
 
 WXD_EXPORTED int
-wxd_ListBox_GetString(wxd_ListBox_t* listbox, int index, char* buffer, int buffer_len)
+wxd_ListBox_GetString(wxd_ListBox_t* listbox, int index, char* buffer, size_t buffer_len)
 {
-    if (!listbox || !buffer || buffer_len <= 0)
+    if (!listbox)
         return -1;
     wxListBox* lb = (wxListBox*)listbox;
     if (index < 0 || (unsigned int)index >= lb->GetCount())
         return -1;
 
     wxString item = lb->GetString((unsigned int)index);
-    return wxd_cpp_utils::copy_wxstring_to_buffer(item, buffer, (size_t)buffer_len);
+    return (int)wxd_cpp_utils::copy_wxstring_to_buffer(item, buffer, buffer_len);
 }
 
 WXD_EXPORTED unsigned int

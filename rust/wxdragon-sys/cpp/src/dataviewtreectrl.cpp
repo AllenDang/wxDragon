@@ -177,26 +177,18 @@ wxd_DataViewTreeCtrl_DeleteAllItems(wxd_Window_t* self)
 }
 
 // --- Item Attributes ---
-WXD_EXPORTED size_t
+WXD_EXPORTED int
 wxd_DataViewTreeCtrl_GetItemText(const wxd_Window_t* self, const wxd_DataViewItem_t* item_wrapper,
                                  char* out, size_t out_len)
 {
     const wxDataViewTreeCtrl* ctrl = reinterpret_cast<const wxDataViewTreeCtrl*>(self);
     if (!ctrl)
-        return 0;
+        return -1;
     const wxDataViewItem& item = ToWxDVI(item_wrapper);
     if (!item.IsOk())
-        return 0;
+        return -1;
     wxString text = ctrl->GetItemText(item);
-    wxScopedCharBuffer utf8_buf = text.ToUTF8();
-    size_t required_len = utf8_buf.length(); // Length without null terminator
-    if (out && out_len > 0) {
-        size_t copy_len = std::min(required_len, out_len - 1);
-        memcpy(out, utf8_buf.data(), copy_len);
-        out[copy_len] = '\0'; // Null-terminate
-    }
-
-    return required_len;
+    return (int)wxd_cpp_utils::copy_wxstring_to_buffer(text, out, out_len);
 }
 
 WXD_EXPORTED void

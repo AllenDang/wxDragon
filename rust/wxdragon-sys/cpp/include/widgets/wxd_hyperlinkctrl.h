@@ -7,8 +7,14 @@
 WXD_EXPORTED wxd_HyperlinkCtrl_t*
 wxd_HyperlinkCtrl_Create(wxd_Window_t* parent, int id, const char* label, const char* url, int x,
                          int y, int w, int h, int64_t style);
-WXD_EXPORTED const char*
-wxd_HyperlinkCtrl_GetURL(wxd_HyperlinkCtrl_t* self);
+
+/**
+ * Get URL string.
+ * Returns the length of the string (excluding the null terminator), if any error, -1 returned.
+ */
+WXD_EXPORTED int
+wxd_HyperlinkCtrl_GetURL(const wxd_HyperlinkCtrl_t* self, char* buf, size_t buf_len);
+
 WXD_EXPORTED void
 wxd_HyperlinkCtrl_SetURL(wxd_HyperlinkCtrl_t* self, const char* url);
 WXD_EXPORTED bool

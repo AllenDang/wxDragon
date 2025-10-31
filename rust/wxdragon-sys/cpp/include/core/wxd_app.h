@@ -44,7 +44,7 @@ wxd_SystemAppearance_IsUsingDarkBackground(wxd_SystemAppearance_t* appearance);
  * If out is null or out_len == 0, nothing is written.
  * @return Required UTF-8 byte length (excluding null terminator)
  */
-WXD_EXPORTED size_t
+WXD_EXPORTED int
 wxd_SystemAppearance_GetName(const wxd_SystemAppearance_t* appearance, char* out, size_t out_len);
 
 // Free system appearance object

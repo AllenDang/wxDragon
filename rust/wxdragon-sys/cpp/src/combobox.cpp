@@ -55,13 +55,13 @@ wxd_ComboBox_GetSelection(wxd_ComboBox_t* combo)
 }
 
 WXD_EXPORTED int
-wxd_ComboBox_GetStringSelection(wxd_ComboBox_t* combo, char* buffer, int buffer_len)
+wxd_ComboBox_GetStringSelection(wxd_ComboBox_t* combo, char* buffer, size_t buffer_len)
 {
-    if (!combo || !buffer || buffer_len <= 0)
+    if (!combo)
         return -1;
     wxComboBox* cb = (wxComboBox*)combo;
     wxString selection = cb->GetStringSelection();
-    return wxd_cpp_utils::copy_wxstring_to_buffer(selection, buffer, (size_t)buffer_len);
+    return (int)wxd_cpp_utils::copy_wxstring_to_buffer(selection, buffer, buffer_len);
 }
 
 WXD_EXPORTED void
@@ -75,16 +75,16 @@ wxd_ComboBox_SetSelection(wxd_ComboBox_t* combo, int index)
 }
 
 WXD_EXPORTED int
-wxd_ComboBox_GetString(wxd_ComboBox_t* combo, int index, char* buffer, int buffer_len)
+wxd_ComboBox_GetString(wxd_ComboBox_t* combo, int index, char* buffer, size_t buffer_len)
 {
-    if (!combo || !buffer || buffer_len <= 0)
+    if (!combo)
         return -1;
     wxComboBox* cb = (wxComboBox*)combo;
     if (index < 0 || (unsigned int)index >= cb->GetCount())
         return -1;
 
     wxString item = cb->GetString((unsigned int)index);
-    return wxd_cpp_utils::copy_wxstring_to_buffer(item, buffer, (size_t)buffer_len);
+    return (int)wxd_cpp_utils::copy_wxstring_to_buffer(item, buffer, buffer_len);
 }
 
 WXD_EXPORTED unsigned int
@@ -106,13 +106,13 @@ wxd_ComboBox_SetValue(wxd_ComboBox_t* combo, const char* value)
 }
 
 WXD_EXPORTED int
-wxd_ComboBox_GetValue(wxd_ComboBox_t* combo, char* buffer, int buffer_len)
+wxd_ComboBox_GetValue(wxd_ComboBox_t* combo, char* buffer, size_t buffer_len)
 {
-    if (!combo || !buffer || buffer_len <= 0)
+    if (!combo)
         return -1;
     wxComboBox* cb = (wxComboBox*)combo;
     wxString value = cb->GetValue();
-    return wxd_cpp_utils::copy_wxstring_to_buffer(value, buffer, (size_t)buffer_len);
+    return (int)wxd_cpp_utils::copy_wxstring_to_buffer(value, buffer, buffer_len);
 }
 
 // Text Selection Functions (inherited from wxTextEntry)

@@ -79,12 +79,14 @@ impl HyperlinkCtrl {
 
     /// Gets the URL associated with the hyperlink.
     pub fn get_url(&self) -> String {
-        let c_str_ptr = unsafe { ffi::wxd_HyperlinkCtrl_GetURL(self.window.as_ptr() as *mut ffi::wxd_HyperlinkCtrl_t) };
-        if c_str_ptr.is_null() {
-            String::new()
-        } else {
-            unsafe { CStr::from_ptr(c_str_ptr).to_string_lossy().into_owned() }
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_HyperlinkCtrl_t;
+        let len = unsafe { ffi::wxd_HyperlinkCtrl_GetURL(ptr, std::ptr::null_mut(), 0) };
+        if len <= 0 {
+            return String::new();
         }
+        let mut buf = vec![0; len as usize + 1];
+        unsafe { ffi::wxd_HyperlinkCtrl_GetURL(ptr, buf.as_mut_ptr(), buf.len()) };
+        unsafe { CStr::from_ptr(buf.as_ptr()).to_string_lossy().into_owned() }
     }
 
     /// Sets the URL associated with the hyperlink.

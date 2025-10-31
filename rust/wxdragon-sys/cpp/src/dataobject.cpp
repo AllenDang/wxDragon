@@ -33,7 +33,7 @@ wxd_TextDataObject_Destroy(wxd_TextDataObject_t* obj)
     }
 }
 
-WXD_EXPORTED size_t
+WXD_EXPORTED int
 wxd_TextDataObject_GetText(const wxd_TextDataObject_t* data_object, char* buffer, size_t buffer_len)
 {
     if (!data_object)
@@ -41,15 +41,7 @@ wxd_TextDataObject_GetText(const wxd_TextDataObject_t* data_object, char* buffer
     const wxTextDataObject* wx_data_object = reinterpret_cast<const wxTextDataObject*>(data_object);
 
     wxString text = wx_data_object->GetText();
-    wxScopedCharBuffer scoped_buf = text.utf8_str();
-
-    if (buffer && buffer_len > 0) {
-        size_t to_copy = std::min(scoped_buf.length(), buffer_len - 1);
-        memcpy(buffer, scoped_buf.data(), to_copy);
-        buffer[to_copy] = '\0'; // Null-terminate
-    }
-
-    return scoped_buf.length();
+    return (int)wxd_cpp_utils::copy_wxstring_to_buffer(text, buffer, buffer_len);
 }
 
 void
@@ -98,9 +90,9 @@ wxd_FileDataObject_GetFileCount(wxd_FileDataObject_t* data_object)
 
 int
 wxd_FileDataObject_GetFile(wxd_FileDataObject_t* data_object, int index, char* buffer,
-                           int buffer_len)
+                           size_t buffer_len)
 {
-    if (!data_object || !buffer || buffer_len <= 0)
+    if (!data_object)
         return -1;
     wxFileDataObject* wx_data_object = reinterpret_cast<wxFileDataObject*>(data_object);
 
@@ -110,7 +102,7 @@ wxd_FileDataObject_GetFile(wxd_FileDataObject_t* data_object, int index, char* b
     }
 
     wxString file = filenames[index];
-    return wxd_cpp_utils::copy_wxstring_to_buffer(file, buffer, static_cast<size_t>(buffer_len));
+    return (int)wxd_cpp_utils::copy_wxstring_to_buffer(file, buffer, buffer_len);
 }
 
 int

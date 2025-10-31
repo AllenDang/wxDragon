@@ -490,20 +490,12 @@ extern "C" fn file_on_drop_files_trampoline(
         filenames.reserve(count as usize);
 
         for i in 0..count {
-            let mut buffer = vec![0u8; 2048]; // Buffer for path
-            let len = ffi::wxd_ArrayString_GetString(
-                filenames_ptr as *mut _,
-                i,
-                buffer.as_mut_ptr() as *mut i8,
-                buffer.len() as i32,
-            );
+            let mut buffer = vec![0; 2048]; // Buffer for path
+            let len = ffi::wxd_ArrayString_GetString(filenames_ptr as *mut _, i, buffer.as_mut_ptr(), buffer.len());
 
             if len > 0 {
-                buffer.truncate(len as usize);
-                // Convert to UTF-8 String
-                if let Ok(s) = String::from_utf8(buffer) {
-                    filenames.push(s);
-                }
+                let s = CStr::from_ptr(buffer.as_ptr()).to_string_lossy().to_string();
+                filenames.push(s);
             }
         }
     }

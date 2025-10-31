@@ -143,29 +143,23 @@ wxd_Clipboard_SetText(wxd_Clipboard_t* clipboard, const char* text)
     return success;
 }
 
-WXD_EXPORTED size_t
+WXD_EXPORTED int
 wxd_Clipboard_GetText(const wxd_Clipboard_t* clipboard, char* buffer, size_t buffer_len)
 {
     if (!clipboard)
-        return 0;
+        return -1;
     wxClipboard* cb = const_cast<wxClipboard*>(reinterpret_cast<const wxClipboard*>(clipboard));
 
     if (!cb->Open()) {
-        return 0;
+        return -1;
     }
 
-    size_t len = 0;
+    int len = -1;
     if (cb->IsSupported(wxDF_TEXT)) {
         wxTextDataObject data;
         if (cb->GetData(data)) {
             wxString text = data.GetText();
-            const wxScopedCharBuffer utf8_buffer = text.utf8_str();
-            len = utf8_buffer.length();
-            if (buffer && buffer_len > 0) {
-                size_t cp = std::min(static_cast<size_t>(buffer_len - 1), utf8_buffer.length());
-                memcpy(buffer, utf8_buffer.data(), cp);
-                buffer[cp] = '\0';
-            }
+            len = (int)wxd_cpp_utils::copy_wxstring_to_buffer(text, buffer, buffer_len);
         }
     }
 

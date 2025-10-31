@@ -40,11 +40,11 @@ wxd_Event_GetEventType(wxd_Event_t* event);
 
 /**
  * Get string from wxCommandEvent.
- * Returns the length of the string (excluding null terminator).
+ * Returns the length of the string (excluding null terminator), if any error, -1 returned.
  * If buffer is non-null and buffer_len > 0, copies up to buffer_len - 1 characters and null-terminates.
  * If buffer is null or buffer_len == 0, does not copy anything.
  */
-WXD_EXPORTED size_t
+WXD_EXPORTED int
 wxd_CommandEvent_GetString(const wxd_Event_t* event, char* buffer, size_t buffer_len);
 
 WXD_EXPORTED bool
@@ -89,8 +89,10 @@ wxd_ColourPickerEvent_GetColour(wxd_Event_t* event);
 // Corrected Tree Event Data Accessors
 WXD_EXPORTED wxd_TreeItemId_t*
 wxd_TreeEvent_GetItem(wxd_Event_t* event);
+
 WXD_EXPORTED int
-wxd_TreeEvent_GetLabel(wxd_Event_t* event, char* buffer, int buffer_len);
+wxd_TreeEvent_GetLabel(wxd_Event_t* event, char* buffer, size_t buffer_len);
+
 WXD_EXPORTED wxd_TreeItemId_t*
 wxd_TreeEvent_GetOldItem(wxd_Event_t* event);
 WXD_EXPORTED int
@@ -103,11 +105,11 @@ wxd_ListEvent_GetColumn(wxd_Event_t* event);
 
 /**
  * Get the label from the ListEvent.
- * Returns the length of the label (excluding null terminator).
+ * Returns the length of the label (excluding null terminator), if the event is null, -1 returned.
  * If buffer is non-null and buffer_len > 0, copies up to buffer_len - 1 characters and null-terminates.
  * If buffer is null or buffer_len == 0, does not copy anything.
  */
-WXD_EXPORTED size_t
+WXD_EXPORTED int
 wxd_ListEvent_GetLabel(const wxd_Event_t* event, char* buffer, size_t buffer_len);
 
 WXD_EXPORTED bool

@@ -176,10 +176,10 @@ impl Clipboard {
         }
 
         let len = unsafe { ffi::wxd_Clipboard_GetText(self.ptr, std::ptr::null_mut(), 0) };
-        if len == 0 {
+        if len < 0 {
             return None;
         }
-        let mut buf: Vec<c_char> = vec![0; len + 1];
+        let mut buf: Vec<c_char> = vec![0; len as usize + 1];
         unsafe { ffi::wxd_Clipboard_GetText(self.ptr, buf.as_mut_ptr(), buf.len()) };
         Some(unsafe { CStr::from_ptr(buf.as_ptr()).to_string_lossy().to_string() })
     }
