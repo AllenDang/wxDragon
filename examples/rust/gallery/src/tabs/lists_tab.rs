@@ -94,7 +94,14 @@ pub fn create_lists_tab(notebook: &Notebook, _frame: &Frame) -> ListsTabControls
     // --- ADDED: ListCtrl Example ---
     let list_ctrl = ListCtrl::builder(&panel)
         .with_id(ID_HIGHEST + 7) // ID_LIST_CTRL
-        .with_style(ListCtrlStyle::Report | ListCtrlStyle::SingleSel | ListCtrlStyle::HRules | ListCtrlStyle::VRules) // Report style, single selection, rules
+        // Enable in-place label editing to allow calling edit_label without assertions on MSW
+        .with_style(
+            ListCtrlStyle::Report
+                | ListCtrlStyle::SingleSel
+                | ListCtrlStyle::HRules
+                | ListCtrlStyle::VRules
+                | ListCtrlStyle::EditLabels,
+        )
         .build();
 
     // Add columns
