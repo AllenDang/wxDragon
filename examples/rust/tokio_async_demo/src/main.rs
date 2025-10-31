@@ -28,11 +28,7 @@ struct AsyncMessageHandler {
 }
 
 impl AsyncMessageHandler {
-    fn new(
-        receiver: tokio_mpsc::UnboundedReceiver<AsyncMessage>,
-        counter_text: StaticText,
-        status_text: StaticText,
-    ) -> Self {
+    fn new(receiver: tokio_mpsc::UnboundedReceiver<AsyncMessage>, counter_text: StaticText, status_text: StaticText) -> Self {
         Self {
             receiver,
             counter_text,
@@ -84,8 +80,7 @@ impl AsyncMessageHandler {
                 self.status_text.set_label(&status);
             }
             AsyncMessage::TaskCompleted(task_name) => {
-                self.status_text
-                    .set_label(&format!("Task completed: {task_name}"));
+                self.status_text.set_label(&format!("Task completed: {task_name}"));
             }
         }
     }
@@ -134,8 +129,7 @@ async fn main() {
         let (sender, receiver) = tokio_mpsc::unbounded_channel::<AsyncMessage>();
 
         // Create our async message handler
-        let mut message_handler =
-            AsyncMessageHandler::new(receiver, counter_text, status_text.clone());
+        let mut message_handler = AsyncMessageHandler::new(receiver, counter_text, status_text.clone());
 
         // Use idle events for efficient async message processing
         // This is the recommended approach for wxDragon async integration
@@ -195,16 +189,12 @@ async fn main() {
                     for status in statuses.iter() {
                         tokio::time::sleep(Duration::from_secs(1)).await;
                         println!("Sending status update: {status}");
-                        if sender_status
-                            .send(AsyncMessage::UpdateStatus(status.to_string()))
-                            .is_err()
-                        {
+                        if sender_status.send(AsyncMessage::UpdateStatus(status.to_string())).is_err() {
                             println!("Failed to send status message");
                             break;
                         }
                     }
-                    let _ = sender_status
-                        .send(AsyncMessage::TaskCompleted("Status Updates".to_string()));
+                    let _ = sender_status.send(AsyncMessage::TaskCompleted("Status Updates".to_string()));
                 });
 
                 // Simulate some async work
@@ -212,11 +202,8 @@ async fn main() {
                 tokio::spawn(async move {
                     println!("Background work task started");
                     tokio::time::sleep(Duration::from_secs(3)).await;
-                    let _ = sender_work.send(AsyncMessage::UpdateStatus(
-                        "Background work completed!".to_string(),
-                    ));
-                    let _ = sender_work
-                        .send(AsyncMessage::TaskCompleted("Background Work".to_string()));
+                    let _ = sender_work.send(AsyncMessage::UpdateStatus("Background work completed!".to_string()));
+                    let _ = sender_work.send(AsyncMessage::TaskCompleted("Background Work".to_string()));
                 });
             });
         });

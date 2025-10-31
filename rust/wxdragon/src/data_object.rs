@@ -147,11 +147,7 @@ impl DataObject for TextDataObject {
 impl Drop for TextDataObject {
     fn drop(&mut self) {
         if !self.data_object.as_ptr().is_null() && self.data_object.owned {
-            unsafe {
-                ffi::wxd_TextDataObject_Destroy(
-                    self.data_object.as_ptr() as *mut ffi::wxd_TextDataObject_t
-                );
-            }
+            unsafe { ffi::wxd_TextDataObject_Destroy(self.data_object.as_ptr() as *mut ffi::wxd_TextDataObject_t) };
         }
     }
 }
@@ -180,21 +176,12 @@ impl FileDataObject {
     /// Adds a file to the data object.
     pub fn add_file(&mut self, file_path: &str) {
         let c_path = CString::new(file_path).unwrap_or_default();
-        unsafe {
-            ffi::wxd_FileDataObject_AddFile(
-                self.data_object.as_ptr() as *mut ffi::wxd_FileDataObject_t,
-                c_path.as_ptr(),
-            );
-        }
+        unsafe { ffi::wxd_FileDataObject_AddFile(self.data_object.as_ptr() as *mut ffi::wxd_FileDataObject_t, c_path.as_ptr()) };
     }
 
     /// Gets the number of files in the data object.
     pub fn get_file_count(&self) -> usize {
-        unsafe {
-            ffi::wxd_FileDataObject_GetFileCount(
-                self.data_object.as_ptr() as *mut ffi::wxd_FileDataObject_t
-            ) as usize
-        }
+        unsafe { ffi::wxd_FileDataObject_GetFileCount(self.data_object.as_ptr() as *mut ffi::wxd_FileDataObject_t) as usize }
     }
 
     /// Gets a file path from the data object at the specified index.
@@ -253,11 +240,7 @@ impl DataObject for FileDataObject {
 impl Drop for FileDataObject {
     fn drop(&mut self) {
         if !self.data_object.as_ptr().is_null() && self.data_object.owned {
-            unsafe {
-                ffi::wxd_FileDataObject_Destroy(
-                    self.data_object.as_ptr() as *mut ffi::wxd_FileDataObject_t
-                );
-            }
+            unsafe { ffi::wxd_FileDataObject_Destroy(self.data_object.as_ptr() as *mut ffi::wxd_FileDataObject_t) };
         }
     }
 }
@@ -291,11 +274,7 @@ impl BitmapDataObject {
 
     /// Gets the bitmap from the data object.
     pub fn get_bitmap(&self) -> Option<crate::bitmap::Bitmap> {
-        let ptr = unsafe {
-            ffi::wxd_BitmapDataObject_GetBitmap(
-                self.data_object.as_ptr() as *mut ffi::wxd_BitmapDataObject_t
-            )
-        };
+        let ptr = unsafe { ffi::wxd_BitmapDataObject_GetBitmap(self.data_object.as_ptr() as *mut ffi::wxd_BitmapDataObject_t) };
 
         if ptr.is_null() {
             None

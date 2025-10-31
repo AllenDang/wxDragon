@@ -51,14 +51,7 @@ impl ToggleButton {
     }
 
     /// Internal implementation used by the builder.
-    fn new_impl(
-        parent_ptr: *mut ffi::wxd_Window_t,
-        id: Id,
-        label: &str,
-        pos: Point,
-        size: Size,
-        style: i64,
-    ) -> Self {
+    fn new_impl(parent_ptr: *mut ffi::wxd_Window_t, id: Id, label: &str, pos: Point, size: Size, style: i64) -> Self {
         let c_label = CString::new(label).unwrap_or_default();
 
         let ptr = unsafe {
@@ -101,11 +94,8 @@ impl ToggleButton {
     pub fn get_label(&self) -> String {
         unsafe {
             let mut buffer: [c_char; 1024] = [0; 1024];
-            let len_needed = ffi::wxd_ToggleButton_GetLabel(
-                self.window.as_ptr() as *mut _,
-                buffer.as_mut_ptr(),
-                buffer.len() as i32,
-            );
+            let len_needed =
+                ffi::wxd_ToggleButton_GetLabel(self.window.as_ptr() as *mut _, buffer.as_mut_ptr(), buffer.len() as i32);
 
             if len_needed < 0 {
                 return String::new(); // Error
@@ -113,9 +103,7 @@ impl ToggleButton {
 
             let len_needed_usize = len_needed as usize;
             if len_needed_usize < buffer.len() {
-                CStr::from_ptr(buffer.as_ptr())
-                    .to_string_lossy()
-                    .into_owned()
+                CStr::from_ptr(buffer.as_ptr()).to_string_lossy().into_owned()
             } else {
                 let mut vec_buffer: Vec<u8> = vec![0; len_needed_usize + 1];
                 let len_copied = ffi::wxd_ToggleButton_GetLabel(

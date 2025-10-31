@@ -55,9 +55,7 @@ pub fn create_lists_tab(notebook: &Notebook, _frame: &Frame) -> ListsTabControls
         // .with_style(ListBoxStyle::Default | ListBoxStyle::Sort | ListBoxStyle::AlwaysScrollbar | ListBoxStyle::HorizontalScrollbar) // Old complex
         .with_style(ListBoxStyle::Sort) // Simplified to test
         .build();
-    let listbox_status_label = StaticText::builder(&panel)
-        .with_label("List Selection: None")
-        .build();
+    let listbox_status_label = StaticText::builder(&panel).with_label("List Selection: None").build();
     let checklistbox = CheckListBox::builder(&panel)
         .with_id(109)
         .with_choices(vec![
@@ -76,17 +74,13 @@ pub fn create_lists_tab(notebook: &Notebook, _frame: &Frame) -> ListsTabControls
     let checklistbox_status_label = StaticText::builder(&panel)
         .with_label("CheckList Status: B (Checked)")
         .build();
-    let choice_items = [
-        "Red", "Green", "Blue", "Yellow", "Purple", "Orange", "Cyan", "Magenta",
-    ];
+    let choice_items = ["Red", "Green", "Blue", "Yellow", "Purple", "Orange", "Cyan", "Magenta"];
     let choice_ctrl = Choice::builder(&panel)
         .with_choices(choice_items.iter().map(|s| s.to_string()).collect())
         .with_style(ChoiceStyle::Sort) // Now we can use the enum
         .build();
     choice_ctrl.set_selection(0);
-    let choice_status_label = StaticText::builder(&panel)
-        .with_label("Choice Selection: Red")
-        .build();
+    let choice_status_label = StaticText::builder(&panel).with_label("Choice Selection: Red").build();
     let combo_items = [
         "Cabbage", "Carrot", "Cucumber", "Celery", "Broccoli", "Spinach", "Kale", "Lettuce",
     ];
@@ -95,19 +89,12 @@ pub fn create_lists_tab(notebook: &Notebook, _frame: &Frame) -> ListsTabControls
         // .with_style(CB_SORT) // Old
         .with_style(ComboBoxStyle::Sort | ComboBoxStyle::ProcessEnter) // Ensure ProcessEnter for TEXT_ENTER event
         .build();
-    let combo_status_label = StaticText::builder(&panel)
-        .with_label("Combo Status: Initial Combo")
-        .build();
+    let combo_status_label = StaticText::builder(&panel).with_label("Combo Status: Initial Combo").build();
 
     // --- ADDED: ListCtrl Example ---
     let list_ctrl = ListCtrl::builder(&panel)
         .with_id(ID_HIGHEST + 7) // ID_LIST_CTRL
-        .with_style(
-            ListCtrlStyle::Report
-                | ListCtrlStyle::SingleSel
-                | ListCtrlStyle::HRules
-                | ListCtrlStyle::VRules,
-        ) // Report style, single selection, rules
+        .with_style(ListCtrlStyle::Report | ListCtrlStyle::SingleSel | ListCtrlStyle::HRules | ListCtrlStyle::VRules) // Report style, single selection, rules
         .build();
 
     // Add columns
@@ -119,27 +106,17 @@ pub fn create_lists_tab(notebook: &Notebook, _frame: &Frame) -> ListsTabControls
     // --- ImageList Setup for ListCtrl ---
     let list_ctrl_image_list = ImageList::new(16, 16, true, 3);
     let mut list_ctrl_icons: Vec<i32> = Vec::new();
-    if let Some(bmp) = ArtProvider::get_bitmap(
-        ArtId::NormalFile,
-        ArtClient::FrameIcon,
-        Some(Size::new(16, 16)),
-    ) {
+    if let Some(bmp) = ArtProvider::get_bitmap(ArtId::NormalFile, ArtClient::FrameIcon, Some(Size::new(16, 16))) {
         list_ctrl_icons.push(list_ctrl_image_list.add_bitmap(&bmp));
     } else {
         list_ctrl_icons.push(-1);
     } // 0: File
-    if let Some(bmp) =
-        ArtProvider::get_bitmap(ArtId::Folder, ArtClient::FrameIcon, Some(Size::new(16, 16)))
-    {
+    if let Some(bmp) = ArtProvider::get_bitmap(ArtId::Folder, ArtClient::FrameIcon, Some(Size::new(16, 16))) {
         list_ctrl_icons.push(list_ctrl_image_list.add_bitmap(&bmp));
     } else {
         list_ctrl_icons.push(-1);
     } // 1: Folder
-    if let Some(bmp) = ArtProvider::get_bitmap(
-        ArtId::Information,
-        ArtClient::FrameIcon,
-        Some(Size::new(16, 16)),
-    ) {
+    if let Some(bmp) = ArtProvider::get_bitmap(ArtId::Information, ArtClient::FrameIcon, Some(Size::new(16, 16))) {
         list_ctrl_icons.push(list_ctrl_image_list.add_bitmap(&bmp));
     } else {
         list_ctrl_icons.push(-1);
@@ -218,9 +195,7 @@ pub fn create_lists_tab(notebook: &Notebook, _frame: &Frame) -> ListsTabControls
 
     let add_button = Button::builder(&panel).with_label("Add Item").build();
 
-    let remove_button = Button::builder(&panel)
-        .with_label("Remove Selected")
-        .build();
+    let remove_button = Button::builder(&panel).with_label("Remove Selected").build();
 
     let select_button = Button::builder(&panel).with_label("Select First").build();
 
@@ -240,11 +215,7 @@ pub fn create_lists_tab(notebook: &Notebook, _frame: &Frame) -> ListsTabControls
     // --- ADDED: EditableListBox Example ---
     let editable_listbox = EditableListBox::builder(&panel)
         .with_label("Editable List")
-        .with_style(
-            EditableListBoxStyle::AllowNew
-                | EditableListBoxStyle::AllowEdit
-                | EditableListBoxStyle::AllowDelete,
-        )
+        .with_style(EditableListBoxStyle::AllowNew | EditableListBoxStyle::AllowEdit | EditableListBoxStyle::AllowDelete)
         .build();
 
     // Add some initial items to the editable listbox
@@ -294,12 +265,7 @@ pub fn create_lists_tab(notebook: &Notebook, _frame: &Frame) -> ListsTabControls
     // TODO: Re-evaluate create_section_title usage
     // listbox_sizer.add(&create_section_title(&panel, "ListBox"), 0, SizerFlag::Expand | SizerFlag::Bottom, 5);
     list_box_col.add(&list_box, 1, SizerFlag::Expand | SizerFlag::All, 5);
-    list_box_col.add(
-        &listbox_status_label,
-        0,
-        SizerFlag::AlignCenterHorizontal | SizerFlag::All,
-        5,
-    );
+    list_box_col.add(&listbox_status_label, 0, SizerFlag::AlignCenterHorizontal | SizerFlag::All, 5);
     list_row_sizer.add_sizer(&list_box_col, 1, SizerFlag::Expand | SizerFlag::All, 5);
     let check_list_col = BoxSizer::builder(Orientation::Vertical).build();
     check_list_col.add(&checklistbox, 1, SizerFlag::Expand | SizerFlag::All, 5);
@@ -315,22 +281,12 @@ pub fn create_lists_tab(notebook: &Notebook, _frame: &Frame) -> ListsTabControls
     let choice_row_sizer = BoxSizer::builder(Orientation::Horizontal).build();
     let choice_col = BoxSizer::builder(Orientation::Vertical).build();
     choice_col.add(&choice_ctrl, 0, SizerFlag::All, 5);
-    choice_col.add(
-        &choice_status_label,
-        0,
-        SizerFlag::AlignCenterHorizontal | SizerFlag::All,
-        5,
-    );
+    choice_col.add(&choice_status_label, 0, SizerFlag::AlignCenterHorizontal | SizerFlag::All, 5);
     choice_row_sizer.add_sizer(&choice_col, 1, SizerFlag::Expand | SizerFlag::All, 5);
 
     let combo_col = BoxSizer::builder(Orientation::Vertical).build();
     combo_col.add(&combo_box, 0, SizerFlag::All, 5);
-    combo_col.add(
-        &combo_status_label,
-        0,
-        SizerFlag::AlignCenterHorizontal | SizerFlag::All,
-        5,
-    );
+    combo_col.add(&combo_status_label, 0, SizerFlag::AlignCenterHorizontal | SizerFlag::All, 5);
     choice_row_sizer.add_sizer(&combo_col, 1, SizerFlag::Expand | SizerFlag::All, 5);
 
     // ADDED: Add the choice/combo row sizer to the main vertical sizer
@@ -346,18 +302,8 @@ pub fn create_lists_tab(notebook: &Notebook, _frame: &Frame) -> ListsTabControls
         5,
     );
     // Make sure status label has enough space and uses the full width
-    list_ctrl_col_sizer.add(
-        &list_ctrl_status_label,
-        0,
-        SizerFlag::Expand | SizerFlag::All,
-        5,
-    );
-    list_sizer_main.add_sizer(
-        &list_ctrl_col_sizer,
-        1,
-        SizerFlag::Expand | SizerFlag::All,
-        5,
-    ); // Add ListCtrl sizer to main, taking space
+    list_ctrl_col_sizer.add(&list_ctrl_status_label, 0, SizerFlag::Expand | SizerFlag::All, 5);
+    list_sizer_main.add_sizer(&list_ctrl_col_sizer, 1, SizerFlag::Expand | SizerFlag::All, 5); // Add ListCtrl sizer to main, taking space
 
     // Add EditableListBox and its status label
     let editable_listbox_sizer = BoxSizer::builder(Orientation::Vertical).build();
@@ -368,12 +314,7 @@ pub fn create_lists_tab(notebook: &Notebook, _frame: &Frame) -> ListsTabControls
         SizerFlag::AlignCenterHorizontal | SizerFlag::All,
         5,
     );
-    list_sizer_main.add_sizer(
-        &editable_listbox_sizer,
-        1,
-        SizerFlag::Expand | SizerFlag::All,
-        5,
-    );
+    list_sizer_main.add_sizer(&editable_listbox_sizer, 1, SizerFlag::Expand | SizerFlag::All, 5);
 
     // Add RearrangeList and its status label
     let rearrangelist_sizer = BoxSizer::builder(Orientation::Vertical).build();
@@ -392,12 +333,7 @@ pub fn create_lists_tab(notebook: &Notebook, _frame: &Frame) -> ListsTabControls
     );
 
     // Add RearrangeList sizer after EditableListBox
-    list_sizer_main.add_sizer(
-        &rearrangelist_sizer,
-        1,
-        SizerFlag::Expand | SizerFlag::All,
-        5,
-    );
+    list_sizer_main.add_sizer(&rearrangelist_sizer, 1, SizerFlag::Expand | SizerFlag::All, 5);
 
     panel.set_sizer(list_sizer_main, true);
     // Fit the inner panel to its contents initially
@@ -554,8 +490,7 @@ pub fn create_lists_tab(notebook: &Notebook, _frame: &Frame) -> ListsTabControls
             if list_ctrl_clone.delete_item(selected_item as i64) {
                 list_ctrl_status_label_clone.set_label(&format!("Removed item {selected_item}"));
             } else {
-                list_ctrl_status_label_clone
-                    .set_label(&format!("Failed to remove item {selected_item}"));
+                list_ctrl_status_label_clone.set_label(&format!("Failed to remove item {selected_item}"));
             }
         } else {
             list_ctrl_status_label_clone.set_label("Please select an item to remove");
@@ -592,9 +527,7 @@ pub fn create_lists_tab(notebook: &Notebook, _frame: &Frame) -> ListsTabControls
             list_ctrl_status_label_clone.set_label("Label edit cancelled");
         } else {
             let _item_index = event_data.get_item_index();
-            let label = event_data
-                .get_label()
-                .unwrap_or_else(|| String::from("<no label>"));
+            let label = event_data.get_label().unwrap_or_else(|| String::from("<no label>"));
             list_ctrl_status_label_clone.set_label(&format!("Label changed to: {label}"));
         }
     });
@@ -701,8 +634,7 @@ pub fn create_lists_tab(notebook: &Notebook, _frame: &Frame) -> ListsTabControls
     let rearrangelist_clone = rearrangelist.clone();
     rearrangelist.on_rearranged(move |_| {
         let order = rearrangelist_clone.get_current_order();
-        rearrangelist_status_label_clone
-            .set_label(&format!("Rearranged: current order is {order:?}"));
+        rearrangelist_status_label_clone.set_label(&format!("Rearranged: current order is {order:?}"));
     });
 
     // Button event handlers for RearrangeList

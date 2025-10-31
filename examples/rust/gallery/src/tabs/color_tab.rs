@@ -1,9 +1,6 @@
 use wxdragon::prelude::*;
 
-const SWATCH_SIZE: Size = Size {
-    width: 35,
-    height: 20,
-};
+const SWATCH_SIZE: Size = Size { width: 35, height: 20 };
 const COLORS_PER_ROW: i32 = 5;
 
 #[allow(dead_code)]
@@ -13,9 +10,7 @@ pub struct ColorTabControls {
 }
 
 pub fn create_color_tab(notebook: &Notebook, _frame: &Frame) -> ColorTabControls {
-    let color_panel = Panel::builder(notebook)
-        .with_style(PanelStyle::TabTraversal)
-        .build();
+    let color_panel = Panel::builder(notebook).with_style(PanelStyle::TabTraversal).build();
 
     // Create a scrolled window for the colors
     let scrolled_win = ScrolledWindow::builder(&color_panel)
@@ -176,9 +171,7 @@ pub fn create_color_tab(notebook: &Notebook, _frame: &Frame) -> ColorTabControls
         let family_sizer = BoxSizer::builder(Orientation::Vertical).build();
 
         // Family header
-        let header = StaticText::builder(&scrolled_win)
-            .with_label(family_name)
-            .build();
+        let header = StaticText::builder(&scrolled_win).with_label(family_name).build();
 
         // Style the family header with bold font
         if let Some(mut font) = header.get_font() {
@@ -199,12 +192,7 @@ pub fn create_color_tab(notebook: &Notebook, _frame: &Frame) -> ColorTabControls
 
             // Add a tooltip with the color details
             let rgb = format!("RGB: {}, {}, {}", color.r, color.g, color.b);
-            swatch_panel.set_tooltip(&format!(
-                "{}-{}\n{}",
-                family_name.to_lowercase(),
-                shade,
-                rgb
-            ));
+            swatch_panel.set_tooltip(&format!("{}-{}\n{}", family_name.to_lowercase(), shade, rgb));
 
             // Add to the family grid
             family_grid.add(&swatch_panel, 0, SizerFlag::Expand | SizerFlag::All, 1);

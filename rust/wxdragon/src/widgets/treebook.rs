@@ -67,11 +67,7 @@ impl TreebookEventData {
             return None;
         }
         let val = unsafe { ffi::wxd_NotebookEvent_GetSelection(self.base.0) };
-        if val == ffi::WXD_NOT_FOUND as i32 {
-            None
-        } else {
-            Some(val)
-        }
+        if val == ffi::WXD_NOT_FOUND as i32 { None } else { Some(val) }
     }
 
     /// Gets the page that was selected before the change.
@@ -81,11 +77,7 @@ impl TreebookEventData {
             return None;
         }
         let val = unsafe { ffi::wxd_NotebookEvent_GetOldSelection(self.base.0) };
-        if val == ffi::WXD_NOT_FOUND as i32 {
-            None
-        } else {
-            Some(val)
-        }
+        if val == ffi::WXD_NOT_FOUND as i32 { None } else { Some(val) }
     }
 }
 
@@ -111,13 +103,7 @@ impl Treebook {
     }
 
     /// Internal implementation used by the builder.
-    fn new_impl(
-        parent_ptr: *mut ffi::wxd_Window_t,
-        id: Id,
-        pos: Point,
-        size: Size,
-        style: i64,
-    ) -> Self {
+    fn new_impl(parent_ptr: *mut ffi::wxd_Window_t, id: Id, pos: Point, size: Size, style: i64) -> Self {
         assert!(!parent_ptr.is_null(), "Treebook parent cannot be null");
 
         let ptr = unsafe {
@@ -148,36 +134,14 @@ impl Treebook {
     pub fn add_page<W: WxWidget>(&self, page: &W, text: &str, select: bool, image_id: i32) -> i32 {
         let page_ptr = page.handle_ptr();
         let text_c = CString::new(text).unwrap_or_default();
-        unsafe {
-            ffi::wxd_Treebook_AddPage(
-                self.as_ptr(),
-                page_ptr,
-                text_c.as_ptr(),
-                select as i32,
-                image_id,
-            )
-        }
+        unsafe { ffi::wxd_Treebook_AddPage(self.as_ptr(), page_ptr, text_c.as_ptr(), select as i32, image_id) }
     }
 
     /// Adds a new sub-page to the last top-level page added to the treebook control.
-    pub fn add_sub_page<W: WxWidget>(
-        &self,
-        page: &W,
-        text: &str,
-        select: bool,
-        image_id: i32,
-    ) -> i32 {
+    pub fn add_sub_page<W: WxWidget>(&self, page: &W, text: &str, select: bool, image_id: i32) -> i32 {
         let page_ptr = page.handle_ptr();
         let text_c = CString::new(text).unwrap_or_default();
-        unsafe {
-            ffi::wxd_Treebook_AddSubPage(
-                self.as_ptr(),
-                page_ptr,
-                text_c.as_ptr(),
-                select as i32,
-                image_id,
-            )
-        }
+        unsafe { ffi::wxd_Treebook_AddSubPage(self.as_ptr(), page_ptr, text_c.as_ptr(), select as i32, image_id) }
     }
 
     /// Gets the number of pages in the treebook.
@@ -207,8 +171,7 @@ impl Treebook {
     pub fn get_page_text(&self, n: usize) -> String {
         unsafe {
             // First call to get the size needed
-            let needed_len_with_null =
-                ffi::wxd_Treebook_GetPageText(self.as_ptr(), n, std::ptr::null_mut(), 0);
+            let needed_len_with_null = ffi::wxd_Treebook_GetPageText(self.as_ptr(), n, std::ptr::null_mut(), 0);
             if needed_len_with_null <= 1 {
                 // 0 or 1 means error or empty string
                 return String::new();
@@ -218,12 +181,8 @@ impl Treebook {
             let mut buffer: Vec<u8> = Vec::with_capacity(buffer_size);
 
             // Second call to actually get the string
-            let copied_len_with_null = ffi::wxd_Treebook_GetPageText(
-                self.as_ptr(),
-                n,
-                buffer.as_mut_ptr() as *mut i8,
-                buffer_size as i32,
-            );
+            let copied_len_with_null =
+                ffi::wxd_Treebook_GetPageText(self.as_ptr(), n, buffer.as_mut_ptr() as *mut i8, buffer_size as i32);
 
             if copied_len_with_null <= 0 {
                 // Check for error on second call

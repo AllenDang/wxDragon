@@ -288,19 +288,13 @@ impl Point {
 
 impl From<Point> for wxdragon_sys::wxd_Point {
     fn from(point: Point) -> Self {
-        wxdragon_sys::wxd_Point {
-            x: point.x,
-            y: point.y,
-        }
+        wxdragon_sys::wxd_Point { x: point.x, y: point.y }
     }
 }
 
 impl From<wxdragon_sys::wxd_Point> for Point {
     fn from(point: wxdragon_sys::wxd_Point) -> Self {
-        Point {
-            x: point.x,
-            y: point.y,
-        }
+        Point { x: point.x, y: point.y }
     }
 }
 
@@ -315,12 +309,7 @@ pub struct Rect {
 
 impl Rect {
     pub fn new(x: i32, y: i32, width: i32, height: i32) -> Self {
-        Self {
-            x,
-            y,
-            width,
-            height,
-        }
+        Self { x, y, width, height }
     }
 }
 
@@ -574,14 +563,7 @@ pub trait DeviceContext {
         if let Ok(c_text) = CString::new(text) {
             let mut width = 0;
             let mut height = 0;
-            unsafe {
-                wxdragon_sys::wxd_DC_GetTextExtent(
-                    self.dc_ptr(),
-                    c_text.as_ptr(),
-                    &mut width,
-                    &mut height,
-                );
-            }
+            unsafe { wxdragon_sys::wxd_DC_GetTextExtent(self.dc_ptr(), c_text.as_ptr(), &mut width, &mut height) };
             (width, height)
         } else {
             (0, 0)
@@ -597,25 +579,16 @@ pub trait DeviceContext {
 
     /// Remove the current clipping region
     fn destroy_clipping_region(&self) {
-        unsafe {
-            wxdragon_sys::wxd_DC_DestroyClippingRegion(self.dc_ptr());
-        }
+        unsafe { wxdragon_sys::wxd_DC_DestroyClippingRegion(self.dc_ptr()) };
     }
 
     /// Draw a polygon using the specified points
-    fn draw_polygon(
-        &self,
-        points: &[Point],
-        x_offset: i32,
-        y_offset: i32,
-        fill_mode: PolygonFillMode,
-    ) {
+    fn draw_polygon(&self, points: &[Point], x_offset: i32, y_offset: i32, fill_mode: PolygonFillMode) {
         if points.is_empty() {
             return;
         }
 
-        let mut ffi_points: Vec<wxdragon_sys::wxd_Point> =
-            points.iter().map(|p| (*p).into()).collect();
+        let mut ffi_points: Vec<wxdragon_sys::wxd_Point> = points.iter().map(|p| (*p).into()).collect();
 
         unsafe {
             wxdragon_sys::wxd_DC_DrawPolygon(
@@ -625,31 +598,13 @@ pub trait DeviceContext {
                 x_offset,
                 y_offset,
                 fill_mode.to_raw(),
-            );
-        }
+            )
+        };
     }
 
     /// Draw an elliptic arc
-    fn draw_elliptic_arc(
-        &self,
-        x: i32,
-        y: i32,
-        width: i32,
-        height: i32,
-        start_angle: f64,
-        end_angle: f64,
-    ) {
-        unsafe {
-            wxdragon_sys::wxd_DC_DrawEllipticArc(
-                self.dc_ptr(),
-                x,
-                y,
-                width,
-                height,
-                start_angle,
-                end_angle,
-            );
-        }
+    fn draw_elliptic_arc(&self, x: i32, y: i32, width: i32, height: i32, start_angle: f64, end_angle: f64) {
+        unsafe { wxdragon_sys::wxd_DC_DrawEllipticArc(self.dc_ptr(), x, y, width, height, start_angle, end_angle) };
     }
 
     /// Draw multiple connected lines
@@ -658,8 +613,7 @@ pub trait DeviceContext {
             return;
         }
 
-        let mut ffi_points: Vec<wxdragon_sys::wxd_Point> =
-            points.iter().map(|p| (*p).into()).collect();
+        let mut ffi_points: Vec<wxdragon_sys::wxd_Point> = points.iter().map(|p| (*p).into()).collect();
 
         unsafe {
             wxdragon_sys::wxd_DC_DrawLines(
@@ -668,8 +622,8 @@ pub trait DeviceContext {
                 ffi_points.as_mut_ptr(),
                 x_offset,
                 y_offset,
-            );
-        }
+            )
+        };
     }
 
     /// Draw an arc from (x1, y1) to (x2, y2) with center at (xc, yc)
@@ -685,25 +639,16 @@ pub trait DeviceContext {
             return;
         }
 
-        let mut ffi_points: Vec<wxdragon_sys::wxd_Point> =
-            points.iter().map(|p| (*p).into()).collect();
+        let mut ffi_points: Vec<wxdragon_sys::wxd_Point> = points.iter().map(|p| (*p).into()).collect();
 
-        unsafe {
-            wxdragon_sys::wxd_DC_DrawSpline(
-                self.dc_ptr(),
-                ffi_points.len() as i32,
-                ffi_points.as_mut_ptr(),
-            );
-        }
+        unsafe { wxdragon_sys::wxd_DC_DrawSpline(self.dc_ptr(), ffi_points.len() as i32, ffi_points.as_mut_ptr()) };
     }
 
     /// Draw rotated text at the specified position
     fn draw_rotated_text(&self, text: &str, x: i32, y: i32, angle: f64) {
         use std::ffi::CString;
         if let Ok(c_text) = CString::new(text) {
-            unsafe {
-                wxdragon_sys::wxd_DC_DrawRotatedText(self.dc_ptr(), c_text.as_ptr(), x, y, angle);
-            }
+            unsafe { wxdragon_sys::wxd_DC_DrawRotatedText(self.dc_ptr(), c_text.as_ptr(), x, y, angle) };
         }
     }
 
@@ -711,15 +656,7 @@ pub trait DeviceContext {
     fn draw_label(&self, text: &str, rect: Rect, alignment: TextAlignment, index_accel: i32) {
         use std::ffi::CString;
         if let Ok(c_text) = CString::new(text) {
-            unsafe {
-                wxdragon_sys::wxd_DC_DrawLabel(
-                    self.dc_ptr(),
-                    c_text.as_ptr(),
-                    rect.into(),
-                    alignment.bits(),
-                    index_accel,
-                );
-            }
+            unsafe { wxdragon_sys::wxd_DC_DrawLabel(self.dc_ptr(), c_text.as_ptr(), rect.into(), alignment.bits(), index_accel) };
         }
     }
 
@@ -771,16 +708,11 @@ pub trait DeviceContext {
             return;
         }
 
-        let mut ffi_points: Vec<wxdragon_sys::wxd_Point> =
-            points.iter().map(|p| (*p).into()).collect();
+        let mut ffi_points: Vec<wxdragon_sys::wxd_Point> = points.iter().map(|p| (*p).into()).collect();
 
         unsafe {
-            wxdragon_sys::wxd_DC_SetClippingRegionFromPoints(
-                self.dc_ptr(),
-                ffi_points.len() as i32,
-                ffi_points.as_mut_ptr(),
-            );
-        }
+            wxdragon_sys::wxd_DC_SetClippingRegionFromPoints(self.dc_ptr(), ffi_points.len() as i32, ffi_points.as_mut_ptr())
+        };
     }
 
     /// Get the clipping box coordinates
@@ -790,68 +722,46 @@ pub trait DeviceContext {
         let mut width = 0;
         let mut height = 0;
 
-        unsafe {
-            wxdragon_sys::wxd_DC_GetClippingBox(
-                self.dc_ptr(),
-                &mut x,
-                &mut y,
-                &mut width,
-                &mut height,
-            );
-        }
+        unsafe { wxdragon_sys::wxd_DC_GetClippingBox(self.dc_ptr(), &mut x, &mut y, &mut width, &mut height) };
 
         Rect::new(x, y, width, height)
     }
 
     /// Set the device origin
     fn set_device_origin(&self, x: i32, y: i32) {
-        unsafe {
-            wxdragon_sys::wxd_DC_SetDeviceOrigin(self.dc_ptr(), x, y);
-        }
+        unsafe { wxdragon_sys::wxd_DC_SetDeviceOrigin(self.dc_ptr(), x, y) };
     }
 
     /// Set the logical origin
     fn set_logical_origin(&self, x: i32, y: i32) {
-        unsafe {
-            wxdragon_sys::wxd_DC_SetLogicalOrigin(self.dc_ptr(), x, y);
-        }
+        unsafe { wxdragon_sys::wxd_DC_SetLogicalOrigin(self.dc_ptr(), x, y) };
     }
 
     /// Set the user scale factors
     fn set_user_scale(&self, x_scale: f64, y_scale: f64) {
-        unsafe {
-            wxdragon_sys::wxd_DC_SetUserScale(self.dc_ptr(), x_scale, y_scale);
-        }
+        unsafe { wxdragon_sys::wxd_DC_SetUserScale(self.dc_ptr(), x_scale, y_scale) };
     }
 
     /// Set the logical scale factors
     fn set_logical_scale(&self, x_scale: f64, y_scale: f64) {
-        unsafe {
-            wxdragon_sys::wxd_DC_SetLogicalScale(self.dc_ptr(), x_scale, y_scale);
-        }
+        unsafe { wxdragon_sys::wxd_DC_SetLogicalScale(self.dc_ptr(), x_scale, y_scale) };
     }
 
     /// Set the mapping mode
     fn set_map_mode(&self, mode: MapMode) {
-        unsafe {
-            wxdragon_sys::wxd_DC_SetMapMode(self.dc_ptr(), mode.to_raw());
-        }
+        unsafe { wxdragon_sys::wxd_DC_SetMapMode(self.dc_ptr(), mode.to_raw()) };
     }
 
     /// Get the device origin
     fn get_device_origin(&self) -> Point {
-        unsafe {
-            let origin = wxdragon_sys::wxd_DC_GetDeviceOrigin(self.dc_ptr());
-            origin.into()
-        }
+        let origin = unsafe { wxdragon_sys::wxd_DC_GetDeviceOrigin(self.dc_ptr()) };
+        origin.into()
     }
 
     /// Get the logical origin
     fn get_logical_origin(&self) -> Point {
-        unsafe {
-            let origin = wxdragon_sys::wxd_DC_GetLogicalOrigin(self.dc_ptr());
-            origin.into()
-        }
+        let origin = unsafe { wxdragon_sys::wxd_DC_GetLogicalOrigin(self.dc_ptr()) };
+        origin.into()
     }
 
     /// Get the user scale factors
@@ -859,9 +769,7 @@ pub trait DeviceContext {
         let mut x_scale = 0.0;
         let mut y_scale = 0.0;
 
-        unsafe {
-            wxdragon_sys::wxd_DC_GetUserScale(self.dc_ptr(), &mut x_scale, &mut y_scale);
-        }
+        unsafe { wxdragon_sys::wxd_DC_GetUserScale(self.dc_ptr(), &mut x_scale, &mut y_scale) };
 
         (x_scale, y_scale)
     }
@@ -871,19 +779,15 @@ pub trait DeviceContext {
         let mut x_scale = 0.0;
         let mut y_scale = 0.0;
 
-        unsafe {
-            wxdragon_sys::wxd_DC_GetLogicalScale(self.dc_ptr(), &mut x_scale, &mut y_scale);
-        }
+        unsafe { wxdragon_sys::wxd_DC_GetLogicalScale(self.dc_ptr(), &mut x_scale, &mut y_scale) };
 
         (x_scale, y_scale)
     }
 
     /// Get the current mapping mode
     fn get_map_mode(&self) -> MapMode {
-        unsafe {
-            let mode = wxdragon_sys::wxd_DC_GetMapMode(self.dc_ptr());
-            MapMode::from_raw(mode)
-        }
+        let mode = unsafe { wxdragon_sys::wxd_DC_GetMapMode(self.dc_ptr()) };
+        MapMode::from_raw(mode)
     }
 
     /// Convert device coordinates to logical coordinates (X)
@@ -908,10 +812,8 @@ pub trait DeviceContext {
 
     /// Get the size in millimeters
     fn get_size_mm(&self) -> (i32, i32) {
-        unsafe {
-            let size = wxdragon_sys::wxd_DC_GetSizeMM(self.dc_ptr());
-            (size.width, size.height)
-        }
+        let size = unsafe { wxdragon_sys::wxd_DC_GetSizeMM(self.dc_ptr()) };
+        (size.width, size.height)
     }
 
     /// Get full text extent including descent and external leading
@@ -976,46 +878,36 @@ pub trait DeviceContext {
 
     /// Get the current background color
     fn get_background(&self) -> Colour {
-        unsafe {
-            let colour = wxdragon_sys::wxd_DC_GetBackground(self.dc_ptr());
-            Colour::new(colour.r, colour.g, colour.b, colour.a)
-        }
+        let colour = unsafe { wxdragon_sys::wxd_DC_GetBackground(self.dc_ptr()) };
+        Colour::new(colour.r, colour.g, colour.b, colour.a)
     }
 
     /// Get the current background mode
     fn get_background_mode(&self) -> BackgroundMode {
-        unsafe {
-            let mode = wxdragon_sys::wxd_DC_GetBackgroundMode(self.dc_ptr());
-            if mode == wxdragon_sys::WXD_TRANSPARENT as i32 {
-                BackgroundMode::Transparent
-            } else {
-                BackgroundMode::Solid
-            }
+        let mode = unsafe { wxdragon_sys::wxd_DC_GetBackgroundMode(self.dc_ptr()) };
+        if mode == wxdragon_sys::WXD_TRANSPARENT as i32 {
+            BackgroundMode::Transparent
+        } else {
+            BackgroundMode::Solid
         }
     }
 
     /// Get the current text background color
     fn get_text_background(&self) -> Colour {
-        unsafe {
-            let colour = wxdragon_sys::wxd_DC_GetTextBackground(self.dc_ptr());
-            Colour::new(colour.r, colour.g, colour.b, colour.a)
-        }
+        let colour = unsafe { wxdragon_sys::wxd_DC_GetTextBackground(self.dc_ptr()) };
+        Colour::new(colour.r, colour.g, colour.b, colour.a)
     }
 
     /// Get the current text foreground color
     fn get_text_foreground(&self) -> Colour {
-        unsafe {
-            let colour = wxdragon_sys::wxd_DC_GetTextForeground(self.dc_ptr());
-            Colour::new(colour.r, colour.g, colour.b, colour.a)
-        }
+        let colour = unsafe { wxdragon_sys::wxd_DC_GetTextForeground(self.dc_ptr()) };
+        Colour::new(colour.r, colour.g, colour.b, colour.a)
     }
 
     /// Get the pixels per inch (DPI)
     fn get_ppi(&self) -> (i32, i32) {
-        unsafe {
-            let ppi = wxdragon_sys::wxd_DC_GetPPI(self.dc_ptr());
-            (ppi.width, ppi.height)
-        }
+        let ppi = unsafe { wxdragon_sys::wxd_DC_GetPPI(self.dc_ptr()) };
+        (ppi.width, ppi.height)
     }
 
     /// Get the content scale factor (for high-DPI displays)
@@ -1024,13 +916,7 @@ pub trait DeviceContext {
     }
 
     /// Fill a rectangle with a linear gradient
-    fn gradient_fill_linear(
-        &self,
-        rect: Rect,
-        initial_colour: Colour,
-        dest_colour: Colour,
-        direction: GradientDirection,
-    ) {
+    fn gradient_fill_linear(&self, rect: Rect, initial_colour: Colour, dest_colour: Colour, direction: GradientDirection) {
         unsafe {
             wxdragon_sys::wxd_DC_GradientFillLinear(
                 self.dc_ptr(),
@@ -1038,18 +924,12 @@ pub trait DeviceContext {
                 initial_colour.into(),
                 dest_colour.into(),
                 direction.to_raw(),
-            );
-        }
+            )
+        };
     }
 
     /// Fill a rectangle with a concentric gradient
-    fn gradient_fill_concentric(
-        &self,
-        rect: Rect,
-        initial_colour: Colour,
-        dest_colour: Colour,
-        circle_center: Point,
-    ) {
+    fn gradient_fill_concentric(&self, rect: Rect, initial_colour: Colour, dest_colour: Colour, circle_center: Point) {
         unsafe {
             wxdragon_sys::wxd_DC_GradientFillConcentric(
                 self.dc_ptr(),
@@ -1057,29 +937,23 @@ pub trait DeviceContext {
                 initial_colour.into(),
                 dest_colour.into(),
                 circle_center.into(),
-            );
-        }
+            )
+        };
     }
 
     /// Flood fill starting from a point
     fn flood_fill(&self, x: i32, y: i32, colour: Colour, style: FloodFillMode) -> bool {
-        unsafe {
-            wxdragon_sys::wxd_DC_FloodFill(self.dc_ptr(), x, y, colour.into(), style.to_raw())
-        }
+        unsafe { wxdragon_sys::wxd_DC_FloodFill(self.dc_ptr(), x, y, colour.into(), style.to_raw()) }
     }
 
     /// Set the logical function for drawing operations
     fn set_logical_function(&self, function: LogicalFunction) {
-        unsafe {
-            wxdragon_sys::wxd_DC_SetLogicalFunction(self.dc_ptr(), function.to_raw());
-        }
+        unsafe { wxdragon_sys::wxd_DC_SetLogicalFunction(self.dc_ptr(), function.to_raw()) };
     }
 
     /// Get the current logical function
     fn get_logical_function(&self) -> LogicalFunction {
-        unsafe {
-            let function = wxdragon_sys::wxd_DC_GetLogicalFunction(self.dc_ptr());
-            LogicalFunction::from_raw(function)
-        }
+        let function = unsafe { wxdragon_sys::wxd_DC_GetLogicalFunction(self.dc_ptr()) };
+        LogicalFunction::from_raw(function)
     }
 }

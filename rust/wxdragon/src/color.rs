@@ -170,12 +170,7 @@ pub mod colours {
         a: 255,
     };
 
-    pub const TRANSPARENT: Colour = Colour {
-        r: 0,
-        g: 0,
-        b: 0,
-        a: 0,
-    };
+    pub const TRANSPARENT: Colour = Colour { r: 0, g: 0, b: 0, a: 0 };
 
     pub const GRAY: Colour = Colour {
         r: 128,

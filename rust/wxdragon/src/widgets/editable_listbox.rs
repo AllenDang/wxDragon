@@ -121,28 +121,10 @@ impl EditableListBox {
     }
 
     /// Internal implementation for creating an EditableListBox directly.
-    fn new_impl(
-        parent_ptr: *mut ffi::wxd_Window_t,
-        id: i32,
-        label: &str,
-        pos: Point,
-        size: Size,
-        style: i64,
-    ) -> Self {
-        let label_c = CString::new(label).unwrap_or_default();
+    fn new_impl(parent: *mut ffi::wxd_Window_t, id: i32, label: &str, pos: Point, size: Size, style: i64) -> Self {
+        let lab = CString::new(label).unwrap_or_default();
 
-        let ptr = unsafe {
-            ffi::wxd_EditableListBox_New(
-                parent_ptr,
-                id,
-                label_c.as_ptr(),
-                pos.x,
-                pos.y,
-                size.width,
-                size.height,
-                style,
-            )
-        };
+        let ptr = unsafe { ffi::wxd_EditableListBox_New(parent, id, lab.as_ptr(), pos.x, pos.y, size.width, size.height, style) };
 
         assert!(!ptr.is_null(), "Failed to create EditableListBox");
 
@@ -153,8 +135,7 @@ impl EditableListBox {
 
     /// Get all strings in the listbox.
     pub fn get_strings(&self) -> Vec<String> {
-        let array_str_ptr =
-            unsafe { ffi::wxd_EditableListBox_CopyStringsToArrayString(self.window.handle_ptr()) };
+        let array_str_ptr = unsafe { ffi::wxd_EditableListBox_CopyStringsToArrayString(self.window.handle_ptr()) };
 
         if array_str_ptr.is_null() {
             return Vec::new();
@@ -166,20 +147,11 @@ impl EditableListBox {
 
     /// Set all strings in the listbox.
     pub fn set_strings(&self, strings: &[&str]) {
-        let c_strings: Vec<CString> = strings
-            .iter()
-            .map(|s| CString::new(*s).unwrap_or_default())
-            .collect();
+        let c_strings: Vec<CString> = strings.iter().map(|s| CString::new(*s).unwrap_or_default()).collect();
 
         let mut c_ptrs: Vec<*const i8> = c_strings.iter().map(|s| s.as_ptr()).collect();
 
-        unsafe {
-            ffi::wxd_EditableListBox_SetStrings(
-                self.window.handle_ptr(),
-                c_ptrs.as_mut_ptr(),
-                c_strings.len() as i32,
-            )
-        }
+        unsafe { ffi::wxd_EditableListBox_SetStrings(self.window.handle_ptr(), c_ptrs.as_mut_ptr(), c_strings.len() as i32) }
     }
 
     /// Add a string to the listbox.

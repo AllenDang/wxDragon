@@ -35,8 +35,7 @@ fn create_bitmap_for_tab(art_id: ArtId, client: ArtClient) -> Bitmap {
                 // For now, let's assume unwrap is okay for a demo if ArtProvider works.
                 // A more robust solution would be a default placeholder bitmap.
                 let fallback_rgba = [0, 0, 0, 255]; // Black
-                Bitmap::from_rgba(&fallback_rgba, 1, 1)
-                    .expect("Failed to create ultimate fallback bitmap")
+                Bitmap::from_rgba(&fallback_rgba, 1, 1).expect("Failed to create ultimate fallback bitmap")
             })
         }
     }
@@ -102,15 +101,7 @@ pub fn create_dataview_virtual_tab(parent: &impl WxWidget) -> DataViewVirtualTab
         ArtId::DeleteBookmark,
         ArtId::HelpBook,
     ];
-    let departments = [
-        "Engineering",
-        "Marketing",
-        "Finance",
-        "HR",
-        "Sales",
-        "Operations",
-        "R&D",
-    ];
+    let departments = ["Engineering", "Marketing", "Finance", "HR", "Sales", "Operations", "R&D"];
     let statuses = ["Full-time", "Part-time", "Contract", "Intern"];
 
     let mut icon_bitmaps_master = Vec::new();
@@ -145,49 +136,13 @@ pub fn create_dataview_virtual_tab(parent: &impl WxWidget) -> DataViewVirtualTab
         .with_style(DataViewStyle::RowLines | DataViewStyle::HorizontalRules)
         .build();
 
-    dvc.append_text_column(
-        "ID",
-        0,
-        60,
-        DataViewAlign::Left,
-        DataViewColumnFlags::Resizable,
-    );
-    dvc.append_text_column(
-        "Name",
-        1,
-        180,
-        DataViewAlign::Left,
-        DataViewColumnFlags::Resizable,
-    );
-    dvc.append_text_column(
-        "Department",
-        2,
-        150,
-        DataViewAlign::Left,
-        DataViewColumnFlags::Resizable,
-    );
-    dvc.append_toggle_column(
-        "Active",
-        3,
-        80,
-        DataViewAlign::Center,
-        DataViewColumnFlags::Resizable,
-    );
+    dvc.append_text_column("ID", 0, 60, DataViewAlign::Left, DataViewColumnFlags::Resizable);
+    dvc.append_text_column("Name", 1, 180, DataViewAlign::Left, DataViewColumnFlags::Resizable);
+    dvc.append_text_column("Department", 2, 150, DataViewAlign::Left, DataViewColumnFlags::Resizable);
+    dvc.append_toggle_column("Active", 3, 80, DataViewAlign::Center, DataViewColumnFlags::Resizable);
     dvc.append_progress_column("Performance", 4, 120, DataViewColumnFlags::Resizable);
-    dvc.append_bitmap_column(
-        "Icon",
-        5,
-        80,
-        DataViewAlign::Center,
-        DataViewColumnFlags::Resizable,
-    );
-    dvc.append_date_column(
-        "Hire Date",
-        6,
-        120,
-        DataViewAlign::Center,
-        DataViewColumnFlags::Resizable,
-    );
+    dvc.append_bitmap_column("Icon", 5, 80, DataViewAlign::Center, DataViewColumnFlags::Resizable);
+    dvc.append_date_column("Hire Date", 6, 120, DataViewAlign::Center, DataViewColumnFlags::Resizable);
     dvc.append_spin_column(
         SpinColumnConfig::new("Hourly Rate", 7, 10, 100)
             .with_width(100)

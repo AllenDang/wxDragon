@@ -96,13 +96,8 @@ impl CheckListBox {
     /// Gets the index of the currently selected item.
     /// Returns `None` if no item is selected (matches `NOT_FOUND`).
     pub fn get_selection(&self) -> Option<u32> {
-        let selection =
-            unsafe { ffi::wxd_CheckListBox_GetSelection(self.window.as_ptr() as *mut _) };
-        if selection == -1 {
-            None
-        } else {
-            Some(selection as u32)
-        }
+        let selection = unsafe { ffi::wxd_CheckListBox_GetSelection(self.window.as_ptr() as *mut _) };
+        if selection == -1 { None } else { Some(selection as u32) }
     }
 
     /// Gets the string value of the currently selected item.
@@ -122,13 +117,7 @@ impl CheckListBox {
 
     /// Selects or deselects an item at the given index.
     pub fn set_selection(&self, index: u32, select: bool) {
-        unsafe {
-            ffi::wxd_CheckListBox_SetSelection(
-                self.window.as_ptr() as *mut _,
-                index as i32,
-                select,
-            );
-        }
+        unsafe { ffi::wxd_CheckListBox_SetSelection(self.window.as_ptr() as *mut _, index as i32, select) };
     }
 
     /// Gets the string at the specified index.

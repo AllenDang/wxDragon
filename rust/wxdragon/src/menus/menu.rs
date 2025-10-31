@@ -96,28 +96,15 @@ impl Menu {
 
     /// Appends a menu item.
     /// Returns a wrapper for the created item (for potential modification), but ownership remains with the menu.
-    pub fn append(
-        &self,
-        id: Id,
-        item: &str,
-        help_string: &str,
-        kind: ItemKind,
-    ) -> Option<MenuItem> {
+    pub fn append(&self, id: Id, item: &str, help_string: &str, kind: ItemKind) -> Option<MenuItem> {
         self.append_raw(id, item, help_string, kind)
     }
 
     /// Appends a submenu.
-    pub fn append_submenu(
-        &self,
-        submenu: &mut Menu,
-        title: &str,
-        help_string: &str,
-    ) -> Option<MenuItem> {
+    pub fn append_submenu(&self, submenu: &mut Menu, title: &str, help_string: &str) -> Option<MenuItem> {
         let title_c = CString::new(title).unwrap_or_default();
         let help_c = CString::new(help_string).unwrap_or_default();
-        let item_ptr = unsafe {
-            ffi::wxd_Menu_AppendSubMenu(self.ptr, **submenu, title_c.as_ptr(), help_c.as_ptr())
-        };
+        let item_ptr = unsafe { ffi::wxd_Menu_AppendSubMenu(self.ptr, **submenu, title_c.as_ptr(), help_c.as_ptr()) };
         if item_ptr.is_null() {
             return None;
         }
@@ -165,18 +152,10 @@ impl Menu {
     }
 
     // Make append private as it's called by builder
-    fn append_raw(
-        &self,
-        id: Id,
-        item: &str,
-        help_string: &str,
-        kind: ItemKind,
-    ) -> Option<MenuItem> {
+    fn append_raw(&self, id: Id, item: &str, help_string: &str, kind: ItemKind) -> Option<MenuItem> {
         let item_c = CString::new(item).unwrap_or_default();
         let help_c = CString::new(help_string).unwrap_or_default();
-        let item_ptr = unsafe {
-            ffi::wxd_Menu_Append(self.ptr, id, item_c.as_ptr(), help_c.as_ptr(), kind.into())
-        };
+        let item_ptr = unsafe { ffi::wxd_Menu_Append(self.ptr, id, item_c.as_ptr(), help_c.as_ptr(), kind.into()) };
         if item_ptr.is_null() {
             None
         } else {
@@ -276,12 +255,7 @@ impl MenuBuilder {
         // Perform actions
         for action in self.actions {
             match action {
-                MenuAction::AppendItem {
-                    id,
-                    item,
-                    help,
-                    kind,
-                } => {
+                MenuAction::AppendItem { id, item, help, kind } => {
                     // We might ignore the returned MenuItem here, as the builder doesn't expose it.
                     let _ = menu.append_raw(id, &item, &help, kind);
                 }

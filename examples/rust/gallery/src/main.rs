@@ -67,9 +67,7 @@ fn main() {
         let mut image_ids: Vec<i32> = Vec::new();
 
         let size = Size::new(16, 16);
-        if let Some(bmp_info) =
-            ArtProvider::get_bitmap(ArtId::Information, ArtClient::Menu, Some(size))
-        {
+        if let Some(bmp_info) = ArtProvider::get_bitmap(ArtId::Information, ArtClient::Menu, Some(size)) {
             let idx = image_list.add_bitmap(&bmp_info);
             if idx != -1 {
                 image_ids.push(idx);
@@ -80,9 +78,7 @@ fn main() {
             log::warn!("Failed to get ArtId::Information for Notebook");
         }
 
-        if let Some(bmp_find_and_replace) =
-            ArtProvider::get_bitmap(ArtId::FindAndReplace, ArtClient::Menu, Some(size))
-        {
+        if let Some(bmp_find_and_replace) = ArtProvider::get_bitmap(ArtId::FindAndReplace, ArtClient::Menu, Some(size)) {
             let idx = image_list.add_bitmap(&bmp_find_and_replace);
             if idx != -1 {
                 image_ids.push(idx);
@@ -130,21 +126,13 @@ fn main() {
         if let Some(toolbar) = frame.create_tool_bar(Some(tb_style), ID_ANY as i32) {
             // Get sizes for the toolbar icons (platform-dependent)
             let icon_size = ArtProvider::get_native_dip_size_hint(ArtClient::Toolbar);
-            log::info!(
-                "Native toolbar icon size: {}x{}",
-                icon_size.width,
-                icon_size.height
-            );
+            log::info!("Native toolbar icon size: {}x{}", icon_size.width, icon_size.height);
 
             // New Tool
-            if let Some(new_bundle) =
-                ArtProvider::get_bitmap_bundle(ArtId::New, ArtClient::Toolbar, None)
-            {
+            if let Some(new_bundle) = ArtProvider::get_bitmap_bundle(ArtId::New, ArtClient::Toolbar, None) {
                 toolbar.add_tool_bundle(ID_TOOL_NEW, "New", &new_bundle, "Create a new file");
                 log::debug!("Using BitmapBundle for New tool");
-            } else if let Some(new_icon) =
-                ArtProvider::get_bitmap(ArtId::New, ArtClient::Toolbar, None)
-            {
+            } else if let Some(new_icon) = ArtProvider::get_bitmap(ArtId::New, ArtClient::Toolbar, None) {
                 toolbar.add_tool(ID_TOOL_NEW, "New", &new_icon, "Create a new file");
                 log::debug!("Fallback to Bitmap for New tool");
             } else {
@@ -152,19 +140,10 @@ fn main() {
             }
 
             // Open Tool
-            if let Some(open_bundle) =
-                ArtProvider::get_bitmap_bundle(ArtId::FileOpen, ArtClient::Toolbar, None)
-            {
-                toolbar.add_tool_bundle(
-                    ID_TOOL_OPEN,
-                    "Open",
-                    &open_bundle,
-                    "Open an existing file",
-                );
+            if let Some(open_bundle) = ArtProvider::get_bitmap_bundle(ArtId::FileOpen, ArtClient::Toolbar, None) {
+                toolbar.add_tool_bundle(ID_TOOL_OPEN, "Open", &open_bundle, "Open an existing file");
                 log::debug!("Using BitmapBundle for Open tool");
-            } else if let Some(open_icon) =
-                ArtProvider::get_bitmap(ArtId::FileOpen, ArtClient::Toolbar, None)
-            {
+            } else if let Some(open_icon) = ArtProvider::get_bitmap(ArtId::FileOpen, ArtClient::Toolbar, None) {
                 toolbar.add_tool(ID_TOOL_OPEN, "Open", &open_icon, "Open an existing file");
                 log::debug!("Fallback to Bitmap for Open tool");
             } else {
@@ -172,19 +151,10 @@ fn main() {
             }
 
             // Save Tool
-            if let Some(save_bundle) =
-                ArtProvider::get_bitmap_bundle(ArtId::FileSave, ArtClient::Toolbar, None)
-            {
-                toolbar.add_tool_bundle(
-                    ID_TOOL_SAVE,
-                    "Save",
-                    &save_bundle,
-                    "Save the current file",
-                );
+            if let Some(save_bundle) = ArtProvider::get_bitmap_bundle(ArtId::FileSave, ArtClient::Toolbar, None) {
+                toolbar.add_tool_bundle(ID_TOOL_SAVE, "Save", &save_bundle, "Save the current file");
                 log::debug!("Using BitmapBundle for Save tool");
-            } else if let Some(save_icon) =
-                ArtProvider::get_bitmap(ArtId::FileSave, ArtClient::Toolbar, None)
-            {
+            } else if let Some(save_icon) = ArtProvider::get_bitmap(ArtId::FileSave, ArtClient::Toolbar, None) {
                 toolbar.add_tool(ID_TOOL_SAVE, "Save", &save_icon, "Save the current file");
                 log::debug!("Fallback to Bitmap for Save tool");
             } else {
@@ -205,54 +175,19 @@ fn main() {
             Some(id)
         };
 
-        notebook.add_page(
-            &basic_controls.panel,
-            "Basic Controls",
-            true,
-            next_image_id(),
-        );
+        notebook.add_page(&basic_controls.panel, "Basic Controls", true, next_image_id());
         notebook.add_page(&list_controls.panel, "Lists", false, next_image_id());
         notebook.add_page(&advanced_splitter, "Advanced", false, next_image_id());
-        notebook.add_page(
-            &book_controls.tab_panel,
-            "Book Controls",
-            false,
-            next_image_id(),
-        );
+        notebook.add_page(&book_controls.tab_panel, "Book Controls", false, next_image_id());
         notebook.add_page(&dialog_controls.panel, "Dialogs", false, next_image_id());
         notebook.add_page(&media_controls.panel, "Media", false, next_image_id());
-        notebook.add_page(
-            &tree_controls.panel,
-            "Tree Controls",
-            false,
-            next_image_id(),
-        );
-        notebook.add_page(
-            &treelist_controls.panel,
-            "TreeList Controls",
-            false,
-            next_image_id(),
-        );
+        notebook.add_page(&tree_controls.panel, "Tree Controls", false, next_image_id());
+        notebook.add_page(&treelist_controls.panel, "TreeList Controls", false, next_image_id());
         notebook.add_page(&aui_controls.panel, "AUI", false, next_image_id());
         notebook.add_page(&color_controls.panel, "Color", false, next_image_id());
-        notebook.add_page(
-            &dataview_virtual_controls.panel,
-            "DataView Virtual",
-            false,
-            next_image_id(),
-        );
-        notebook.add_page(
-            &dataview_tree_controls.panel,
-            "DataView Tree",
-            false,
-            next_image_id(),
-        );
-        notebook.add_page(
-            &richtext_controls.panel,
-            "Rich Text",
-            false,
-            next_image_id(),
-        );
+        notebook.add_page(&dataview_virtual_controls.panel, "DataView Virtual", false, next_image_id());
+        notebook.add_page(&dataview_tree_controls.panel, "DataView Tree", false, next_image_id());
+        notebook.add_page(&richtext_controls.panel, "Rich Text", false, next_image_id());
 
         // --- Set Frame Sizer ---
         let main_sizer = BoxSizer::builder(Orientation::Vertical).build();
@@ -300,26 +235,15 @@ fn main() {
 
             let new_page_text = notebook_clone_page_changed
                 .get_page(new_page_index as usize)
-                .map_or_else(
-                    || "<unknown page>".to_string(),
-                    |p| p.get_label().unwrap_or_default(),
-                );
+                .map_or_else(|| "<unknown page>".to_string(), |p| p.get_label().unwrap_or_default());
             let old_page_text = notebook_clone_page_changed
                 .get_page(old_page_index as usize)
-                .map_or_else(
-                    || "<unknown page>".to_string(),
-                    |p| p.get_label().unwrap_or_default(),
-                );
+                .map_or_else(|| "<unknown page>".to_string(), |p| p.get_label().unwrap_or_default());
 
             log::info!(
                 "Notebook PageChanged: New={new_page_index}, Old={old_page_index}, NewLabel='{new_page_text}', OldLabel='{old_page_text}'"
             );
-            frame_clone_page_changed.set_status_text(
-                &format!(
-                    "Switched from tab '{old_page_text}' to '{new_page_text}'"
-                ),
-                0,
-            );
+            frame_clone_page_changed.set_status_text(&format!("Switched from tab '{old_page_text}' to '{new_page_text}'"), 0);
         });
 
         // Second notebook event binding for page changing
@@ -330,16 +254,10 @@ fn main() {
 
             let new_page_text = notebook_clone_page_changing
                 .get_page(new_page_index as usize)
-                .map_or_else(
-                    || "<unknown page>".to_string(),
-                    |p| p.get_label().unwrap_or_default(),
-                );
+                .map_or_else(|| "<unknown page>".to_string(), |p| p.get_label().unwrap_or_default());
             let old_page_text = notebook_clone_page_changing
                 .get_page(old_page_index as usize)
-                .map_or_else(
-                    || "<unknown page>".to_string(),
-                    |p| p.get_label().unwrap_or_default(),
-                );
+                .map_or_else(|| "<unknown page>".to_string(), |p| p.get_label().unwrap_or_default());
 
             log::info!(
                 "Notebook PageChanging: New={new_page_index}, Old={old_page_index}, NewLabel='{new_page_text}', OldLabel='{old_page_text}'"

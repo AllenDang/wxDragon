@@ -35,9 +35,7 @@ fn embed_windows_manifest(name: &str) {
     if let Err(e) = embed_manifest(manifest) {
         // This should not happen with embed-manifest as it supports cross-compilation
         println!("cargo:warning=Failed to embed manifest: {e}");
-        println!(
-            "cargo:warning=The application will still work but may lack optimal Windows theming"
-        );
+        println!("cargo:warning=The application will still work but may lack optimal Windows theming");
     }
 }
 
@@ -70,9 +68,7 @@ fn get_crate_dir(crate_name: &str) -> std::io::Result<std::path::PathBuf> {
         .output()?;
 
     let metadata: serde_json::Value = serde_json::from_slice(&output.stdout)?;
-    let packages = metadata["packages"]
-        .as_array()
-        .ok_or(std::io::Error::other("packages"))?;
+    let packages = metadata["packages"].as_array().ok_or(std::io::Error::other("packages"))?;
 
     for package in packages {
         if package["name"] == crate_name {
@@ -112,9 +108,7 @@ fn get_wx_rc_path(wx_dir: &std::path::Path) -> std::io::Result<std::path::PathBu
     }
 
     if !wx_rc_path.exists() {
-        println!(
-            "cargo::warning=wx.rc not found at {wx_rc_path:?} after {MAX_RETRIES} retries, skipping resource embedding"
-        );
+        println!("cargo::warning=wx.rc not found at {wx_rc_path:?} after {MAX_RETRIES} retries, skipping resource embedding");
         return Err(std::io::Error::other("wx.rc not found"));
     }
     Ok(wx_rc_path)

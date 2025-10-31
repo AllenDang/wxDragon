@@ -65,13 +65,7 @@ impl MultiChoiceDialog {
         let mut selections = vec![0i32; 1000];
         let mut count = 0i32;
 
-        unsafe {
-            ffi::wxd_MultiChoiceDialog_GetSelections(
-                self.as_ptr(),
-                selections.as_mut_ptr(),
-                &mut count,
-            );
-        }
+        unsafe { ffi::wxd_MultiChoiceDialog_GetSelections(self.as_ptr(), selections.as_mut_ptr(), &mut count) };
 
         if count <= 0 {
             return Vec::new();
@@ -88,13 +82,7 @@ impl MultiChoiceDialog {
             return;
         }
 
-        unsafe {
-            ffi::wxd_MultiChoiceDialog_SetSelections(
-                self.as_ptr(),
-                selections.as_ptr(),
-                selections.len() as i32,
-            );
-        }
+        unsafe { ffi::wxd_MultiChoiceDialog_SetSelections(self.as_ptr(), selections.as_ptr(), selections.len() as i32) };
     }
 
     /// Gets the strings of the selections made by the user.
@@ -136,12 +124,7 @@ pub struct MultiChoiceDialogBuilder<'a> {
 }
 
 impl<'a> MultiChoiceDialogBuilder<'a> {
-    pub fn new(
-        parent: &'a dyn WxWidget,
-        message: &str,
-        caption: &str,
-        choices: &[&'a str],
-    ) -> Self {
+    pub fn new(parent: &'a dyn WxWidget, message: &str, caption: &str, choices: &[&'a str]) -> Self {
         MultiChoiceDialogBuilder {
             parent,
             message: message.to_string(),

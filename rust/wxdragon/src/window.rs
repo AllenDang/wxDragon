@@ -11,10 +11,7 @@ unsafe extern "C" {
         window: *mut ffi::wxd_Window_t,
         name: *const std::os::raw::c_char,
     ) -> *mut ffi::wxd_Window_t;
-    unsafe fn wxd_Window_FindWindowById(
-        window: *mut ffi::wxd_Window_t,
-        id: std::os::raw::c_int,
-    ) -> *mut ffi::wxd_Window_t;
+    unsafe fn wxd_Window_FindWindowById(window: *mut ffi::wxd_Window_t, id: std::os::raw::c_int) -> *mut ffi::wxd_Window_t;
 }
 
 // Use the widget_style_enum macro to define ExtraWindowStyle
@@ -218,10 +215,7 @@ pub trait WxWidget: std::any::Any {
     fn get_best_size(&self) -> crate::geometry::Size {
         let handle = self.handle_ptr();
         if handle.is_null() {
-            crate::geometry::Size {
-                width: -1,
-                height: -1,
-            }
+            crate::geometry::Size { width: -1, height: -1 }
         } else {
             let c_size = unsafe { ffi::wxd_Window_GetBestSize(handle) };
             crate::geometry::Size {
@@ -306,11 +300,7 @@ pub trait WxWidget: std::any::Any {
             }
             unsafe {
                 // Ensure eraseBackground is passed as int (0 or 1)
-                ffi::wxd_Window_Refresh(
-                    window_ptr,
-                    if erase_background { 1 } else { 0 },
-                    c_rect_ptr,
-                );
+                ffi::wxd_Window_Refresh(window_ptr, if erase_background { 1 } else { 0 }, c_rect_ptr);
             }
         }
     }
@@ -429,10 +419,7 @@ pub trait WxWidget: std::any::Any {
     fn get_size(&self) -> Size {
         let handle = self.handle_ptr();
         if handle.is_null() {
-            Size {
-                width: -1,
-                height: -1,
-            }
+            Size { width: -1, height: -1 }
         } else {
             let size = unsafe { ffi::wxd_Window_GetSize(handle) };
             Size {
@@ -454,16 +441,7 @@ pub trait WxWidget: std::any::Any {
     fn set_size_with_pos(&self, x: i32, y: i32, width: i32, height: i32) {
         let handle = self.handle_ptr();
         if !handle.is_null() {
-            unsafe {
-                ffi::wxd_Window_SetSizeWithPos(
-                    handle,
-                    x,
-                    y,
-                    width,
-                    height,
-                    ffi::WXD_SIZE_AUTO as i32,
-                )
-            }
+            unsafe { ffi::wxd_Window_SetSizeWithPos(handle, x, y, width, height, ffi::WXD_SIZE_AUTO as i32) }
         }
     }
 
@@ -479,10 +457,7 @@ pub trait WxWidget: std::any::Any {
     fn get_client_size(&self) -> Size {
         let handle = self.handle_ptr();
         if handle.is_null() {
-            Size {
-                width: -1,
-                height: -1,
-            }
+            Size { width: -1, height: -1 }
         } else {
             let size = unsafe { ffi::wxd_Window_GetClientSize(handle) };
             Size {
@@ -496,10 +471,7 @@ pub trait WxWidget: std::any::Any {
     fn get_min_size(&self) -> Size {
         let handle = self.handle_ptr();
         if handle.is_null() {
-            Size {
-                width: -1,
-                height: -1,
-            }
+            Size { width: -1, height: -1 }
         } else {
             let size = unsafe { ffi::wxd_Window_GetMinSize(handle) };
             Size {
@@ -862,10 +834,7 @@ pub trait WxWidget: std::any::Any {
     fn get_max_size(&self) -> crate::geometry::Size {
         let handle = self.handle_ptr();
         if handle.is_null() {
-            crate::geometry::Size {
-                width: -1,
-                height: -1,
-            }
+            crate::geometry::Size { width: -1, height: -1 }
         } else {
             let size = unsafe { ffi::wxd_Window_GetMaxSize(handle) };
             crate::geometry::Size {
@@ -1158,10 +1127,7 @@ pub trait WxWidget: std::any::Any {
     fn get_text_extent(&self, text: &str) -> crate::geometry::Size {
         let handle = self.handle_ptr();
         if handle.is_null() {
-            return crate::geometry::Size {
-                width: 0,
-                height: 0,
-            };
+            return crate::geometry::Size { width: 0, height: 0 };
         }
 
         match std::ffi::CString::new(text) {
@@ -1172,10 +1138,7 @@ pub trait WxWidget: std::any::Any {
                     height: size.height,
                 }
             }
-            Err(_) => crate::geometry::Size {
-                width: 0,
-                height: 0,
-            },
+            Err(_) => crate::geometry::Size { width: 0, height: 0 },
         }
     }
 
@@ -1192,29 +1155,15 @@ pub trait WxWidget: std::any::Any {
     /// - `Size`: The width and height of the text
     /// - `i32`: The descent (portion below baseline)
     /// - `i32`: The external leading (spacing between lines)
-    fn get_full_text_extent(
-        &self,
-        text: &str,
-        font: Option<&crate::font::Font>,
-    ) -> (crate::geometry::Size, i32, i32) {
+    fn get_full_text_extent(&self, text: &str, font: Option<&crate::font::Font>) -> (crate::geometry::Size, i32, i32) {
         let handle = self.handle_ptr();
         if handle.is_null() {
-            return (
-                crate::geometry::Size {
-                    width: 0,
-                    height: 0,
-                },
-                0,
-                0,
-            );
+            return (crate::geometry::Size { width: 0, height: 0 }, 0, 0);
         }
 
         match std::ffi::CString::new(text) {
             Ok(c_text) => {
-                let mut size = wxdragon_sys::wxd_Size {
-                    width: 0,
-                    height: 0,
-                };
+                let mut size = wxdragon_sys::wxd_Size { width: 0, height: 0 };
                 let mut descent = 0i32;
                 let mut external_leading = 0i32;
                 let font_ptr = font.map(|f| f.as_ptr()).unwrap_or(std::ptr::null_mut());
@@ -1239,14 +1188,7 @@ pub trait WxWidget: std::any::Any {
                     external_leading,
                 )
             }
-            Err(_) => (
-                crate::geometry::Size {
-                    width: 0,
-                    height: 0,
-                },
-                0,
-                0,
-            ),
+            Err(_) => (crate::geometry::Size { width: 0, height: 0 }, 0, 0),
         }
     }
 
@@ -1565,9 +1507,7 @@ pub trait WxWidget: std::any::Any {
         if handle.is_null() || menu_ptr.is_null() {
             return false;
         }
-        let pos = pos
-            .map(|p| self.screen_to_client(p))
-            .unwrap_or(crate::DEFAULT_POSITION);
+        let pos = pos.map(|p| self.screen_to_client(p)).unwrap_or(crate::DEFAULT_POSITION);
         let pos_ptr = &pos as *const crate::geometry::Point as *const ffi::wxd_Point;
 
         unsafe { ffi::wxd_Window_PopupMenu(handle, menu_ptr, pos_ptr) }

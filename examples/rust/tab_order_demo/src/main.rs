@@ -28,9 +28,7 @@ impl TabOrderDemo {
             .with_size(Size::new(600, 500))
             .build();
 
-        let main_panel = Panel::builder(&frame)
-            .with_style(PanelStyle::TabTraversal)
-            .build();
+        let main_panel = Panel::builder(&frame).with_style(PanelStyle::TabTraversal).build();
 
         // Create main controls to demonstrate tab order
         let button1 = Button::builder(&main_panel).with_label("Button 1").build();
@@ -39,30 +37,20 @@ impl TabOrderDemo {
 
         let button3 = Button::builder(&main_panel).with_label("Button 3").build();
 
-        let text_ctrl1 = TextCtrl::builder(&main_panel)
-            .with_value("Text Control 1")
-            .build();
+        let text_ctrl1 = TextCtrl::builder(&main_panel).with_value("Text Control 1").build();
 
-        let text_ctrl2 = TextCtrl::builder(&main_panel)
-            .with_value("Text Control 2")
-            .build();
+        let text_ctrl2 = TextCtrl::builder(&main_panel).with_value("Text Control 2").build();
 
-        let checkbox = CheckBox::builder(&main_panel)
-            .with_label("Checkbox Control")
-            .build();
+        let checkbox = CheckBox::builder(&main_panel).with_label("Checkbox Control").build();
 
         let radio1 = RadioButton::builder(&main_panel)
             .with_label("Radio Option 1")
             .first_in_group()
             .build();
 
-        let radio2 = RadioButton::builder(&main_panel)
-            .with_label("Radio Option 2")
-            .build();
+        let radio2 = RadioButton::builder(&main_panel).with_label("Radio Option 2").build();
 
-        let combo_box = ComboBox::builder(&main_panel)
-            .with_value("Combo Box")
-            .build();
+        let combo_box = ComboBox::builder(&main_panel).with_value("Combo Box").build();
         combo_box.append("Option 1");
         combo_box.append("Option 2");
         combo_box.append("Option 3");
@@ -72,21 +60,13 @@ impl TabOrderDemo {
             .build();
 
         // Control buttons for testing tab order functionality
-        let reset_order_btn = Button::builder(&main_panel)
-            .with_label("Reset to Default Order")
-            .build();
+        let reset_order_btn = Button::builder(&main_panel).with_label("Reset to Default Order").build();
 
-        let reverse_order_btn = Button::builder(&main_panel)
-            .with_label("Reverse Tab Order")
-            .build();
+        let reverse_order_btn = Button::builder(&main_panel).with_label("Reverse Tab Order").build();
 
-        let custom_order_btn = Button::builder(&main_panel)
-            .with_label("Custom Tab Order")
-            .build();
+        let custom_order_btn = Button::builder(&main_panel).with_label("Custom Tab Order").build();
 
-        let test_navigate_btn = Button::builder(&main_panel)
-            .with_label("Test Navigate() Function")
-            .build();
+        let test_navigate_btn = Button::builder(&main_panel).with_label("Test Navigate() Function").build();
 
         Self {
             frame,
@@ -139,10 +119,7 @@ impl TabOrderDemo {
         main_sizer.add(&separator, 0, SizerFlag::Expand | SizerFlag::All, 5);
 
         // Controls grid
-        let controls_sizer = FlexGridSizer::builder(0, 3)
-            .with_vgap(10)
-            .with_hgap(10)
-            .build();
+        let controls_sizer = FlexGridSizer::builder(0, 3).with_vgap(10).with_hgap(10).build();
 
         // Add all the main controls to the grid
         controls_sizer.add(&self.button1, 0, SizerFlag::Expand, 0);
@@ -174,12 +151,7 @@ impl TabOrderDemo {
         button_sizer.add(&self.custom_order_btn, 0, SizerFlag::All, 5);
         button_sizer.add(&self.test_navigate_btn, 0, SizerFlag::All, 5);
 
-        main_sizer.add_sizer(
-            &button_sizer,
-            0,
-            SizerFlag::AlignCentre | SizerFlag::All,
-            10,
-        );
+        main_sizer.add_sizer(&button_sizer, 0, SizerFlag::AlignCentre | SizerFlag::All, 10);
 
         // Status text at bottom
         main_sizer.add(&self.status_text, 0, SizerFlag::Expand | SizerFlag::All, 10);
@@ -246,9 +218,7 @@ impl TabOrderDemo {
             // Reset to creation order (which should be the default tab order)
             // This demonstrates that the order can be restored
             status.set_label("Status: Reset to default tab order (restart app to see effect)");
-            println!(
-                "Resetting to default tab order - restart application to see the default order"
-            );
+            println!("Resetting to default tab order - restart application to see the default order");
         });
 
         // Reverse order button

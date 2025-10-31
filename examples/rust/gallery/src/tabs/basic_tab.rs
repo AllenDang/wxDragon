@@ -37,27 +37,19 @@ pub struct BasicTabControls {
 }
 
 pub fn create_basic_tab(notebook: &Notebook, _frame: &Frame) -> BasicTabControls {
-    let basic_panel = Panel::builder(notebook)
-        .with_style(PanelStyle::TabTraversal)
-        .build();
+    let basic_panel = Panel::builder(notebook).with_style(PanelStyle::TabTraversal).build();
 
-    let static_text_label = StaticText::builder(&basic_panel)
-        .with_label("Text Input:")
-        .build();
+    let static_text_label = StaticText::builder(&basic_panel).with_label("Text Input:").build();
     static_text_label.set_tooltip("This is a label for the text input field.");
     let text_ctrl = TextCtrl::builder(&basic_panel)
         .with_value("Edit me!")
         .with_style(TextCtrlStyle::ProcessEnter)
         .build();
     text_ctrl.set_tooltip("Enter text here.");
-    let spin_button_label = StaticText::builder(&basic_panel)
-        .with_label("Spin Button:")
-        .build();
+    let spin_button_label = StaticText::builder(&basic_panel).with_label("Spin Button:").build();
     let spin_button = SpinButton::builder(&basic_panel).build();
     spin_button.set_tooltip("Click arrows or use keys to change the value (wraps around).");
-    let spinctrl_double_label_widget = StaticText::builder(&basic_panel)
-        .with_label("Spin Double:")
-        .build();
+    let spinctrl_double_label_widget = StaticText::builder(&basic_panel).with_label("Spin Double:").build();
     let spinctrl_double = SpinCtrlDouble::builder(&basic_panel)
         .with_range(0.0, 100.0)
         .with_initial_value(50.5)
@@ -68,16 +60,10 @@ pub fn create_basic_tab(notebook: &Notebook, _frame: &Frame) -> BasicTabControls
         .with_label(&format!("{:.2}", spinctrl_double.get_value()))
         .build();
 
-    let checkbox_label_widget = StaticText::builder(&basic_panel)
-        .with_label("Checkbox:")
-        .build();
-    let checkbox = CheckBox::builder(&basic_panel)
-        .with_label("Enable Feature")
-        .build();
+    let checkbox_label_widget = StaticText::builder(&basic_panel).with_label("Checkbox:").build();
+    let checkbox = CheckBox::builder(&basic_panel).with_label("Enable Feature").build();
     checkbox.set_tooltip("Toggle this checkbox.");
-    let radio_box_label = StaticText::builder(&basic_panel)
-        .with_label("Radio Box:")
-        .build();
+    let radio_box_label = StaticText::builder(&basic_panel).with_label("Radio Box:").build();
     let radio_box_choices = ["Option 1", "Option 2", "Option 3"];
     let radio_box = RadioBox::builder(&basic_panel, &radio_box_choices)
         .with_label("RadioBox Title")
@@ -86,36 +72,24 @@ pub fn create_basic_tab(notebook: &Notebook, _frame: &Frame) -> BasicTabControls
         .build();
     radio_box.set_selection(0);
     radio_box.set_tooltip("Select one option from the radio box.");
-    let radio_label = StaticText::builder(&basic_panel)
-        .with_label("Radio Buttons:")
-        .build();
+    let radio_label = StaticText::builder(&basic_panel).with_label("Radio Buttons:").build();
     let radio1 = RadioButton::builder(&basic_panel)
         .with_label("Option 1")
         .first_in_group()
         .build();
     radio1.set_tooltip("Select Option 1.");
-    let radio2 = RadioButton::builder(&basic_panel)
-        .with_label("Option 2")
-        .build();
+    let radio2 = RadioButton::builder(&basic_panel).with_label("Option 2").build();
     radio2.set_tooltip("Select Option 2.");
     radio1.set_value(true);
-    let radio_status_label = StaticText::builder(&basic_panel)
-        .with_label("Selected: Option 1")
-        .build();
+    let radio_status_label = StaticText::builder(&basic_panel).with_label("Selected: Option 1").build();
 
-    let toggle_button_label = StaticText::builder(&basic_panel)
-        .with_label("Toggle Button:")
-        .build();
-    let toggle_button = ToggleButton::builder(&basic_panel)
-        .with_label("Toggle Status")
-        .build();
+    let toggle_button_label = StaticText::builder(&basic_panel).with_label("Toggle Button:").build();
+    let toggle_button = ToggleButton::builder(&basic_panel).with_label("Toggle Status").build();
     toggle_button.set_value(true);
     toggle_button.set_tooltip("Click to toggle ON/OFF.");
     let toggle_status_label = StaticText::builder(&basic_panel).with_label("ON").build();
 
-    let cmd_link_button_label = StaticText::builder(&basic_panel)
-        .with_label("Cmd Link Btn:")
-        .build();
+    let cmd_link_button_label = StaticText::builder(&basic_panel).with_label("Cmd Link Btn:").build();
     let cmd_link_button = CommandLinkButton::builder(&basic_panel)
         .with_label("Open System Settings")
         .with_note("Configure your display, network, and other system preferences.")
@@ -137,39 +111,28 @@ pub fn create_basic_tab(notebook: &Notebook, _frame: &Frame) -> BasicTabControls
             }
         }
     }
-    let red_bitmap =
-        Bitmap::from_rgba(&bmp_data, BMP_WIDTH, BMP_HEIGHT).expect("Failed to create test bitmap");
-    let bitmap_button_label = StaticText::builder(&basic_panel)
-        .with_label("Bitmap Button:")
-        .build();
-    let bitmap_button = BitmapButton::builder(&basic_panel)
-        .with_bitmap(Some(red_bitmap))
-        .build();
+    let red_bitmap = Bitmap::from_rgba(&bmp_data, BMP_WIDTH, BMP_HEIGHT).expect("Failed to create test bitmap");
+    let bitmap_button_label = StaticText::builder(&basic_panel).with_label("Bitmap Button:").build();
+    let bitmap_button = BitmapButton::builder(&basic_panel).with_bitmap(Some(red_bitmap)).build();
     bitmap_button.set_tooltip("A button with a custom red square bitmap.");
 
     let open_icon_bitmap = ArtProvider::get_bitmap(ArtId::FileOpen, ArtClient::Button, None)
         .or_else(|| ArtProvider::get_bitmap(ArtId::Error, ArtClient::Button, None))
         .expect("Failed to get ART_FILE_OPEN or ART_ERROR icon");
-    let art_button_label = StaticText::builder(&basic_panel)
-        .with_label("Art Button:")
-        .build();
+    let art_button_label = StaticText::builder(&basic_panel).with_label("Art Button:").build();
     let art_button = BitmapButton::builder(&basic_panel)
         .with_bitmap(Some(open_icon_bitmap))
         .build();
     art_button.set_tooltip("A button using an icon from the ArtProvider.");
 
-    let activity_label = StaticText::builder(&basic_panel)
-        .with_label("Activity:")
-        .build();
+    let activity_label = StaticText::builder(&basic_panel).with_label("Activity:").build();
     let activity_indicator = ActivityIndicator::builder(&basic_panel).build();
     let activity_start_btn = Button::builder(&basic_panel).with_label("Start").build();
     activity_start_btn.set_tooltip("Start the activity indicator.");
     let activity_stop_btn = Button::builder(&basic_panel).with_label("Stop").build();
     activity_stop_btn.set_tooltip("Stop the activity indicator.");
 
-    let colour_picker_label = StaticText::builder(&basic_panel)
-        .with_label("Colour Picker:")
-        .build();
+    let colour_picker_label = StaticText::builder(&basic_panel).with_label("Colour Picker:").build();
     let colour_picker = ColourPickerCtrl::builder(&basic_panel)
         .with_initial_colour(colours::RED)
         .build();
@@ -177,9 +140,7 @@ pub fn create_basic_tab(notebook: &Notebook, _frame: &Frame) -> BasicTabControls
     let colour_status_label = StaticText::builder(&basic_panel)
         .with_label(&format!("{:?}", colours::RED))
         .build();
-    let date_picker_label_widget = StaticText::builder(&basic_panel)
-        .with_label("Date Picker:")
-        .build();
+    let date_picker_label_widget = StaticText::builder(&basic_panel).with_label("Date Picker:").build();
     let date_picker = DatePickerCtrl::builder(&basic_panel).build();
     date_picker.set_tooltip("Click to choose a date.");
     let initial_selected_date = date_picker.get_value();
@@ -191,9 +152,7 @@ pub fn create_basic_tab(notebook: &Notebook, _frame: &Frame) -> BasicTabControls
             initial_selected_date.day()
         ))
         .build();
-    let calendar_label_widget = StaticText::builder(&basic_panel)
-        .with_label("Calendar:")
-        .build();
+    let calendar_label_widget = StaticText::builder(&basic_panel).with_label("Calendar:").build();
     let calendar_ctrl = CalendarCtrl::builder(&basic_panel).build();
     calendar_ctrl.set_tooltip("Select a date from the calendar.");
 
@@ -211,9 +170,7 @@ pub fn create_basic_tab(notebook: &Notebook, _frame: &Frame) -> BasicTabControls
         ))
         .build();
 
-    let search_ctrl_label = StaticText::builder(&basic_panel)
-        .with_label("Search Ctrl:")
-        .build();
+    let search_ctrl_label = StaticText::builder(&basic_panel).with_label("Search Ctrl:").build();
     let search_ctrl = SearchCtrl::builder(&basic_panel)
         .with_value("Search...")
         .with_style(SearchCtrlStyle::ProcessEnter)
@@ -221,13 +178,9 @@ pub fn create_basic_tab(notebook: &Notebook, _frame: &Frame) -> BasicTabControls
     search_ctrl.show_search_button(true);
     search_ctrl.show_cancel_button(true);
     search_ctrl.set_tooltip("Enter search text here.");
-    let bitmap_combo_box_label = StaticText::builder(&basic_panel)
-        .with_label("Bitmap Combo:")
-        .build();
-    let open_bmp =
-        ArtProvider::get_bitmap(ArtId::FileOpen, ArtClient::Menu, None).expect("Failed art");
-    let save_bmp =
-        ArtProvider::get_bitmap(ArtId::FileSave, ArtClient::Menu, None).expect("Failed art");
+    let bitmap_combo_box_label = StaticText::builder(&basic_panel).with_label("Bitmap Combo:").build();
+    let open_bmp = ArtProvider::get_bitmap(ArtId::FileOpen, ArtClient::Menu, None).expect("Failed art");
+    let save_bmp = ArtProvider::get_bitmap(ArtId::FileSave, ArtClient::Menu, None).expect("Failed art");
     let new_bmp = ArtProvider::get_bitmap(ArtId::New, ArtClient::Menu, None).expect("Failed art");
     let bitmap_combo_box = BitmapComboBox::builder(&basic_panel)
         .with_size(Size::new(200, -1))
@@ -240,18 +193,14 @@ pub fn create_basic_tab(notebook: &Notebook, _frame: &Frame) -> BasicTabControls
     bitmap_combo_box.set_selection(0);
     bitmap_combo_box.set_tooltip("Select an item from the list with icons.");
 
-    let hyperlink_label = StaticText::builder(&basic_panel)
-        .with_label("Hyperlink:")
-        .build();
+    let hyperlink_label = StaticText::builder(&basic_panel).with_label("Hyperlink:").build();
     let hyperlink_ctrl = HyperlinkCtrl::builder(&basic_panel)
         .with_label("wxWidgets Official Website")
         .with_url("https://www.wxwidgets.org")
         .build();
     hyperlink_ctrl.set_tooltip("Click to visit the wxWidgets website.");
 
-    let scrollbar_label = StaticText::builder(&basic_panel)
-        .with_label("Scroll Bar:")
-        .build();
+    let scrollbar_label = StaticText::builder(&basic_panel).with_label("Scroll Bar:").build();
     let scroll_bar = ScrollBar::builder(&basic_panel)
         .with_style(ScrollBarStyle::Default) // Use Default for Horizontal
         .build();
@@ -261,9 +210,7 @@ pub fn create_basic_tab(notebook: &Notebook, _frame: &Frame) -> BasicTabControls
         .build();
 
     // CollapsiblePane
-    let collapsible_pane_label = StaticText::builder(&basic_panel)
-        .with_label("Collapsible:")
-        .build();
+    let collapsible_pane_label = StaticText::builder(&basic_panel).with_label("Collapsible:").build();
     let collapsible_pane = CollapsiblePane::builder(&basic_panel)
         .with_label("Click to expand/collapse")
         .with_style(CollapsiblePaneStyle::Default)
@@ -273,14 +220,10 @@ pub fn create_basic_tab(notebook: &Notebook, _frame: &Frame) -> BasicTabControls
     // Add content to the collapsible pane
     if let Some(pane_window) = collapsible_pane.get_pane() {
         let pane_content_text = StaticText::builder(&pane_window)
-            .with_label(
-                "This content is inside the collapsible pane!\nYou can add any widgets here.",
-            )
+            .with_label("This content is inside the collapsible pane!\nYou can add any widgets here.")
             .build();
 
-        let pane_button = Button::builder(&pane_window)
-            .with_label("Button in pane")
-            .build();
+        let pane_button = Button::builder(&pane_window).with_label("Button in pane").build();
 
         // Layout the content in the pane
         let pane_sizer = BoxSizer::builder(Orientation::Vertical).build();
@@ -294,10 +237,7 @@ pub fn create_basic_tab(notebook: &Notebook, _frame: &Frame) -> BasicTabControls
     let label_flags = SizerFlag::AlignRight | SizerFlag::AlignCenterVertical;
     let control_flags = SizerFlag::Expand;
 
-    let grid = FlexGridSizer::builder(0, 2)
-        .with_vgap(5)
-        .with_hgap(5)
-        .build();
+    let grid = FlexGridSizer::builder(0, 2).with_vgap(5).with_hgap(5).build();
     // Let the right column grow more space for controls
     grid.add_growable_col(0, 1);
     grid.add_growable_col(1, 3);
@@ -307,12 +247,7 @@ pub fn create_basic_tab(notebook: &Notebook, _frame: &Frame) -> BasicTabControls
     grid.add(&text_ctrl, 1, control_flags, 0);
 
     grid.add(&spin_button_label, 0, label_flags, 0);
-    grid.add(
-        &spin_button,
-        0,
-        SizerFlag::AlignLeft | SizerFlag::AlignCenterVertical,
-        0,
-    );
+    grid.add(&spin_button, 0, SizerFlag::AlignLeft | SizerFlag::AlignCenterVertical, 0);
 
     grid.add(&spinctrl_double_label_widget, 0, label_flags, 0);
     let spin_double_sizer = BoxSizer::builder(Orientation::Horizontal).build();
@@ -322,22 +257,13 @@ pub fn create_basic_tab(notebook: &Notebook, _frame: &Frame) -> BasicTabControls
     grid.add_sizer(&spin_double_sizer, 1, control_flags, 0);
 
     // Full-width separator simulated by two StaticLines (one per column)
-    let static_line_left = StaticLine::builder(&basic_panel)
-        .with_style(StaticLineStyle::Default)
-        .build();
-    let static_line_right = StaticLine::builder(&basic_panel)
-        .with_style(StaticLineStyle::Default)
-        .build();
+    let static_line_left = StaticLine::builder(&basic_panel).with_style(StaticLineStyle::Default).build();
+    let static_line_right = StaticLine::builder(&basic_panel).with_style(StaticLineStyle::Default).build();
     grid.add(&static_line_left, 0, SizerFlag::Expand | SizerFlag::All, 5);
     grid.add(&static_line_right, 0, SizerFlag::Expand | SizerFlag::All, 5);
 
     grid.add(&checkbox_label_widget, 0, label_flags, 0);
-    grid.add(
-        &checkbox,
-        1,
-        SizerFlag::AlignLeft | SizerFlag::AlignCenterVertical,
-        0,
-    );
+    grid.add(&checkbox, 1, SizerFlag::AlignLeft | SizerFlag::AlignCenterVertical, 0);
     grid.add(&radio_label, 0, label_flags, 0);
     let radio_button_sizer = BoxSizer::builder(Orientation::Horizontal).build();
     radio_button_sizer.add(&radio1, 0, SizerFlag::AlignCenterVertical, 0);
@@ -354,26 +280,11 @@ pub fn create_basic_tab(notebook: &Notebook, _frame: &Frame) -> BasicTabControls
     toggle_sizer.add(&toggle_button, 0, SizerFlag::AlignCenterVertical, 0);
     toggle_sizer.add_spacer(5);
     toggle_sizer.add(&toggle_status_label, 1, SizerFlag::Expand, 0);
-    grid.add_sizer(
-        &toggle_sizer,
-        1,
-        SizerFlag::AlignLeft | SizerFlag::AlignCenterVertical,
-        0,
-    );
+    grid.add_sizer(&toggle_sizer, 1, SizerFlag::AlignLeft | SizerFlag::AlignCenterVertical, 0);
     grid.add(&bitmap_button_label, 0, label_flags, 0);
-    grid.add(
-        &bitmap_button,
-        0,
-        SizerFlag::AlignLeft | SizerFlag::AlignCenterVertical,
-        0,
-    );
+    grid.add(&bitmap_button, 0, SizerFlag::AlignLeft | SizerFlag::AlignCenterVertical, 0);
     grid.add(&art_button_label, 0, label_flags, 0);
-    grid.add(
-        &art_button,
-        0,
-        SizerFlag::AlignLeft | SizerFlag::AlignCenterVertical,
-        0,
-    );
+    grid.add(&art_button, 0, SizerFlag::AlignLeft | SizerFlag::AlignCenterVertical, 0);
     grid.add(&activity_label, 0, label_flags, 0);
     let activity_sizer = BoxSizer::builder(Orientation::Horizontal).build();
     activity_sizer.add(&activity_indicator, 0, SizerFlag::AlignCenterVertical, 0);
@@ -381,22 +292,12 @@ pub fn create_basic_tab(notebook: &Notebook, _frame: &Frame) -> BasicTabControls
     activity_sizer.add(&activity_start_btn, 0, SizerFlag::AlignCenterVertical, 5);
     activity_sizer.add_spacer(5);
     activity_sizer.add(&activity_stop_btn, 0, SizerFlag::AlignCenterVertical, 5);
-    grid.add_sizer(
-        &activity_sizer,
-        1,
-        SizerFlag::AlignLeft | SizerFlag::AlignCenterVertical,
-        0,
-    );
+    grid.add_sizer(&activity_sizer, 1, SizerFlag::AlignLeft | SizerFlag::AlignCenterVertical, 0);
     grid.add(&scrollbar_label, 0, label_flags, 0);
     let scrollbar_h_sizer = BoxSizer::builder(Orientation::Horizontal).build();
     scrollbar_h_sizer.add(&scroll_bar, 1, SizerFlag::Expand, 0);
     scrollbar_h_sizer.add_spacer(5);
-    scrollbar_h_sizer.add(
-        &scrollbar_status_label,
-        0,
-        SizerFlag::AlignCenterVertical,
-        0,
-    );
+    scrollbar_h_sizer.add(&scrollbar_status_label, 0, SizerFlag::AlignCenterVertical, 0);
     grid.add_sizer(&scrollbar_h_sizer, 1, control_flags, 0);
 
     grid.add(&colour_picker_label, 0, label_flags, 0);
@@ -404,28 +305,16 @@ pub fn create_basic_tab(notebook: &Notebook, _frame: &Frame) -> BasicTabControls
     colour_sizer.add(&colour_picker, 0, SizerFlag::AlignCenterVertical, 0);
     colour_sizer.add_spacer(5);
     colour_sizer.add(&colour_status_label, 1, SizerFlag::Expand, 0);
-    grid.add_sizer(
-        &colour_sizer,
-        1,
-        SizerFlag::AlignLeft | SizerFlag::AlignCenterVertical,
-        0,
-    );
+    grid.add_sizer(&colour_sizer, 1, SizerFlag::AlignLeft | SizerFlag::AlignCenterVertical, 0);
     grid.add(&date_picker_label_widget, 0, label_flags, 0);
     let date_sizer = BoxSizer::builder(Orientation::Horizontal).build();
     date_sizer.add(&date_picker, 0, SizerFlag::AlignCenterVertical, 0);
     date_sizer.add_spacer(5);
     date_sizer.add(&date_picker_status_label, 1, SizerFlag::Expand, 0);
-    grid.add_sizer(
-        &date_sizer,
-        1,
-        SizerFlag::AlignLeft | SizerFlag::AlignCenterVertical,
-        0,
-    );
+    grid.add_sizer(&date_sizer, 1, SizerFlag::AlignLeft | SizerFlag::AlignCenterVertical, 0);
 
     // Add Time Picker
-    let time_picker_label_widget = StaticText::builder(&basic_panel)
-        .with_label("Time Picker:")
-        .build();
+    let time_picker_label_widget = StaticText::builder(&basic_panel).with_label("Time Picker:").build();
     let time_picker = TimePickerCtrl::builder(&basic_panel).build();
     time_picker.set_tooltip("Click to choose a time.");
     let initial_time = time_picker.get_value();
@@ -442,36 +331,21 @@ pub fn create_basic_tab(notebook: &Notebook, _frame: &Frame) -> BasicTabControls
     time_sizer.add(&time_picker, 0, SizerFlag::AlignCenterVertical, 0);
     time_sizer.add_spacer(5);
     time_sizer.add(&time_picker_status_label, 1, SizerFlag::Expand, 0);
-    grid.add_sizer(
-        &time_sizer,
-        1,
-        SizerFlag::AlignLeft | SizerFlag::AlignCenterVertical,
-        0,
-    );
+    grid.add_sizer(&time_sizer, 1, SizerFlag::AlignLeft | SizerFlag::AlignCenterVertical, 0);
 
     grid.add(&calendar_label_widget, 0, label_flags, 0);
     let calendar_sizer = BoxSizer::builder(Orientation::Horizontal).build();
     calendar_sizer.add(&calendar_ctrl, 1, SizerFlag::Expand, 0);
     calendar_sizer.add_spacer(5);
     calendar_sizer.add(&calendar_status_label, 1, SizerFlag::Expand, 0);
-    grid.add_sizer(
-        &calendar_sizer,
-        1,
-        SizerFlag::AlignLeft | SizerFlag::AlignCenterVertical,
-        0,
-    );
+    grid.add_sizer(&calendar_sizer, 1, SizerFlag::AlignLeft | SizerFlag::AlignCenterVertical, 0);
 
     grid.add(&search_ctrl_label, 0, label_flags, 0);
     grid.add(&search_ctrl, 1, control_flags, 0);
     grid.add(&bitmap_combo_box_label, 0, label_flags, 0);
     grid.add(&bitmap_combo_box, 1, control_flags, 0);
     grid.add(&hyperlink_label, 0, label_flags, 0);
-    grid.add(
-        &hyperlink_ctrl,
-        1,
-        SizerFlag::AlignLeft | SizerFlag::AlignCenterVertical,
-        0,
-    );
+    grid.add(&hyperlink_ctrl, 1, SizerFlag::AlignLeft | SizerFlag::AlignCenterVertical, 0);
     grid.add(&collapsible_pane_label, 0, label_flags, 0);
     grid.add(&collapsible_pane, 1, control_flags, 0);
     grid.add(&cmd_link_button_label, 0, label_flags, 0);
@@ -562,8 +436,7 @@ impl BasicTabControls {
                     let max = spin_button_clone_bind_events.max();
                     spin_button_clone_bind_events.set_value(num.clamp(min, max));
                 } else {
-                    text_ctrl_clone_bind_events
-                        .set_value(&spin_button_clone_bind_events.value().to_string());
+                    text_ctrl_clone_bind_events.set_value(&spin_button_clone_bind_events.value().to_string());
                 }
             }
         });
@@ -572,9 +445,7 @@ impl BasicTabControls {
         let radio_status_label_clone1 = self.radio_status_label.clone();
         let radio1_clone = self.radio1.clone();
         self.radio1.on_selected(move |event_data| {
-            let radio1_label_str = radio1_clone
-                .get_label()
-                .unwrap_or_else(|| "<unknown>".to_string());
+            let radio1_label_str = radio1_clone.get_label().unwrap_or_else(|| "<unknown>".to_string());
             println!(
                 "Radio Button Selected: ID {}, Label: {}",
                 event_data.get_id(),
@@ -586,9 +457,7 @@ impl BasicTabControls {
         let radio_status_label_clone2 = self.radio_status_label.clone();
         let radio2_clone = self.radio2.clone();
         self.radio2.on_selected(move |event_data| {
-            let radio2_label_str = radio2_clone
-                .get_label()
-                .unwrap_or_else(|| "<unknown>".to_string());
+            let radio2_label_str = radio2_clone.get_label().unwrap_or_else(|| "<unknown>".to_string());
             println!(
                 "Radio Button Selected: ID {}, Label: {}",
                 event_data.get_id(),

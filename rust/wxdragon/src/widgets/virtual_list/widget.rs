@@ -282,24 +282,12 @@ impl LayoutBatch {
     }
 
     /// Add a panel creation operation
-    fn add_create_operation(
-        &mut self,
-        index: usize,
-        panel: Panel,
-        data: Box<dyn Any + Send + Sync>,
-    ) {
-        self.panels_to_create
-            .push(PanelCreateOperation { index, panel, data });
+    fn add_create_operation(&mut self, index: usize, panel: Panel, data: Box<dyn Any + Send + Sync>) {
+        self.panels_to_create.push(PanelCreateOperation { index, panel, data });
     }
 
     /// Add a panel content/size update operation
-    fn add_update_operation(
-        &mut self,
-        index: usize,
-        panel: Panel,
-        data: Box<dyn Any + Send + Sync>,
-        new_size: Size,
-    ) {
+    fn add_update_operation(&mut self, index: usize, panel: Panel, data: Box<dyn Any + Send + Sync>, new_size: Size) {
         self.panels_to_update.push(PanelUpdateOperation {
             index,
             panel,
@@ -335,10 +323,9 @@ impl LayoutBatch {
         for create_op in &self.panels_to_create {
             // CRITICAL FIX: Set correct initial size based on layout mode
             let initial_size = match state.layout_mode {
-                VirtualListLayoutMode::Vertical => Size::new(
-                    state.viewport_size.width,
-                    state.internal_params.temporary_panel_height,
-                ),
+                VirtualListLayoutMode::Vertical => {
+                    Size::new(state.viewport_size.width, state.internal_params.temporary_panel_height)
+                }
                 VirtualListLayoutMode::Horizontal => Size::new(
                     2000, // Give plenty of width for natural text flow measurement
                     state.viewport_size.height,
@@ -401,9 +388,7 @@ impl LayoutBatch {
             position_op.panel.set_size(position_op.final_size);
 
             // Apply position
-            position_op
-                .panel
-                .move_window(position_op.position.x, position_op.position.y);
+            position_op.panel.move_window(position_op.position.x, position_op.position.y);
 
             // Show panel
             position_op.panel.show(true);
@@ -490,14 +475,8 @@ impl std::fmt::Debug for VirtualListState {
             .field("data_source", &self.data_source.is_some())
             .field("item_renderer", &self.item_renderer.is_some())
             .field("item_pool", &self.item_pool)
-            .field(
-                "item_to_panel",
-                &format!("{} items", self.item_to_panel.len()),
-            )
-            .field(
-                "item_size_cache",
-                &format!("{} cached sizes", self.item_size_cache.len()),
-            )
+            .field("item_to_panel", &format!("{} items", self.item_to_panel.len()))
+            .field("item_size_cache", &format!("{} cached sizes", self.item_size_cache.len()))
             .field("cache_generation", &self.cache_generation)
             .field("viewport_size", &self.viewport_size)
             .field("scroll_position", &self.scroll_position)
@@ -509,12 +488,7 @@ impl std::fmt::Debug for VirtualListState {
 
 impl VirtualListState {
     /// Store or update a measurement with progressive enhancement
-    fn store_progressive_measurement(
-        &mut self,
-        index: usize,
-        measured_size: Size,
-        current_dimension: i32,
-    ) {
+    fn store_progressive_measurement(&mut self, index: usize, measured_size: Size, current_dimension: i32) {
         let size_value = match self.layout_mode {
             VirtualListLayoutMode::Vertical => measured_size.height,
             VirtualListLayoutMode::Horizontal => measured_size.width,
@@ -609,8 +583,7 @@ impl VirtualListState {
 
     fn hide_all_items(&mut self) {
         // Return all panels to the pool and clean up their context
-        let panels_to_clean: Vec<Panel> =
-            self.item_to_panel.drain().map(|(_, panel)| panel).collect();
+        let panels_to_clean: Vec<Panel> = self.item_to_panel.drain().map(|(_, panel)| panel).collect();
 
         for panel in panels_to_clean {
             self.remove_panel_context(&panel);
@@ -624,12 +597,11 @@ impl VirtualListState {
     /// Complexity reduced from 300+ lines to ~80 lines using focused helper methods + batching
     fn update_visible_items(&mut self, parent: &Panel) {
         // Early return if we don't have both data source and renderer
-        let (data_source, item_renderer) =
-            if let (Some(ds), Some(ir)) = (&self.data_source, &self.item_renderer) {
-                (ds.clone(), ir.clone())
-            } else {
-                return;
-            };
+        let (data_source, item_renderer) = if let (Some(ds), Some(ir)) = (&self.data_source, &self.item_renderer) {
+            (ds.clone(), ir.clone())
+        } else {
+            return;
+        };
 
         // Update current cycle for measurement deduplication
         self.current_update_cycle = self.current_update_cycle.wrapping_add(1);
@@ -655,12 +627,10 @@ impl VirtualListState {
         }
 
         // STEP 1: Calculate which items should be visible
-        let items_to_show =
-            self.extract_visible_range_calculation(&data_source, &item_renderer, parent);
+        let items_to_show = self.extract_visible_range_calculation(&data_source, &item_renderer, parent);
 
         // STEP 2: PHASE 2.3 - Execute all operations using batched layout system
-        let new_visible_items: HashSet<usize> =
-            items_to_show.iter().map(|(idx, _, _)| *idx).collect();
+        let new_visible_items: HashSet<usize> = items_to_show.iter().map(|(idx, _, _)| *idx).collect();
         let current_visible_items: HashSet<usize> = self.item_to_panel.keys().cloned().collect();
 
         // Only update if the set of visible items has changed OR if dimensions changed
@@ -726,10 +696,7 @@ impl VirtualListState {
         // CRITICAL: Set proper size BEFORE updating content for accurate measurement
         let temp_size = match self.layout_mode {
             VirtualListLayoutMode::Vertical => Size::new(self.viewport_size.width, 100), // Fixed width, temporary height
-            VirtualListLayoutMode::Horizontal => Size::new(
-                self.internal_params.temporary_panel_width,
-                self.viewport_size.height,
-            ), // Temporary width, fixed height
+            VirtualListLayoutMode::Horizontal => Size::new(self.internal_params.temporary_panel_width, self.viewport_size.height), // Temporary width, fixed height
         };
         temp_panel.set_size(temp_size);
 
@@ -745,12 +712,8 @@ impl VirtualListState {
 
         // Cache the result with layout-aware dimensions
         let cached_size = match self.layout_mode {
-            VirtualListLayoutMode::Vertical => {
-                Size::new(self.viewport_size.width, measured_size.height)
-            }
-            VirtualListLayoutMode::Horizontal => {
-                Size::new(measured_size.width, self.viewport_size.height)
-            }
+            VirtualListLayoutMode::Vertical => Size::new(self.viewport_size.width, measured_size.height),
+            VirtualListLayoutMode::Horizontal => Size::new(measured_size.width, self.viewport_size.height),
         };
 
         let current_dimension = match self.layout_mode {
@@ -788,11 +751,7 @@ impl VirtualListState {
     }
 
     /// Calculate total content size using progressive measurement approach
-    fn calculate_total_content_size_progressive(
-        &self,
-        total_items: usize,
-        estimated_item_size: i32,
-    ) -> Size {
+    fn calculate_total_content_size_progressive(&self, total_items: usize, estimated_item_size: i32) -> Size {
         let total_size = match self.item_sizing_mode {
             ItemSizingMode::FixedSize => {
                 // For fixed size items, use pure estimation without measurements
@@ -884,10 +843,7 @@ impl VirtualListState {
             // CRITICAL FIX: Don't early terminate when near the end of content to ensure last items are considered
             let is_near_end = index >= total_items.saturating_sub(5); // Always process last 5 items
             if !is_near_end
-                && current_position
-                    > scroll_position
-                        + viewport_length
-                        + self.internal_params.early_termination_threshold
+                && current_position > scroll_position + viewport_length + self.internal_params.early_termination_threshold
             {
                 break;
             }
@@ -906,15 +862,10 @@ impl VirtualListState {
                 }
             } else if potentially_visible_items.contains(&index) {
                 // Only measure items that are confirmed to be visible
-                let measured_size = self.measure_item_size_for_visible(
-                    index,
-                    data_source.as_ref(),
-                    item_renderer.as_ref(),
-                    parent,
-                );
+                let size = self.measure_item_size_for_visible(index, data_source.as_ref(), item_renderer.as_ref(), parent);
                 match self.layout_mode {
-                    VirtualListLayoutMode::Vertical => measured_size.height,
-                    VirtualListLayoutMode::Horizontal => measured_size.width,
+                    VirtualListLayoutMode::Vertical => size.height,
+                    VirtualListLayoutMode::Horizontal => size.width,
                 }
             } else {
                 // Use estimate for all other items
@@ -935,10 +886,7 @@ impl VirtualListState {
             // CRITICAL FIX: Don't early terminate when near the end of content to ensure last items are considered
             let is_near_end = index >= total_items.saturating_sub(5); // Always process last 5 items
             if !is_near_end
-                && current_position
-                    > scroll_position
-                        + viewport_length
-                        + self.internal_params.early_termination_threshold
+                && current_position > scroll_position + viewport_length + self.internal_params.early_termination_threshold
             {
                 break;
             }
@@ -950,8 +898,7 @@ impl VirtualListState {
     /// Update total content size and scrollbar state
     fn update_scrollbar_state(&mut self, total_items: usize, estimated_item_size: i32) {
         // Update total content size using mix of actual + estimated
-        self.total_content_size =
-            self.calculate_total_content_size_progressive(total_items, estimated_item_size);
+        self.total_content_size = self.calculate_total_content_size_progressive(total_items, estimated_item_size);
 
         // TODO: Add actual scrollbar updates here in future (Phase 2.2)
         // For now, the content size update is sufficient
@@ -988,11 +935,7 @@ impl VirtualListState {
     }
 
     /// Selective invalidation for dynamic size items
-    fn selective_dynamic_cache_invalidation(
-        &mut self,
-        current_dimension: i32,
-        previous_dimension: i32,
-    ) {
+    fn selective_dynamic_cache_invalidation(&mut self, current_dimension: i32, previous_dimension: i32) {
         let dimension_change = current_dimension - previous_dimension;
         let change_ratio = dimension_change.abs() as f64 / previous_dimension.max(1) as f64;
 
@@ -1037,13 +980,8 @@ impl VirtualListState {
             .iter()
             .filter_map(|(&index, cached_entry)| {
                 // Use the stored measured_at_dimension for more accurate comparison
-                let dimension_diff =
-                    (cached_entry.measured_at_dimension - current_dimension).abs() as f64;
-                if dimension_diff > threshold {
-                    Some(index)
-                } else {
-                    None
-                }
+                let dimension_diff = (cached_entry.measured_at_dimension - current_dimension).abs() as f64;
+                if dimension_diff > threshold { Some(index) } else { None }
             })
             .collect();
 
@@ -1053,11 +991,7 @@ impl VirtualListState {
     }
 
     /// Invalidate only items that are likely to be affected by small dimension changes
-    fn invalidate_potentially_affected_items(
-        &mut self,
-        current_dimension: i32,
-        previous_dimension: i32,
-    ) {
+    fn invalidate_potentially_affected_items(&mut self, current_dimension: i32, previous_dimension: i32) {
         // For small changes, use heuristics to identify items that might reflow
 
         // Invalidate items near text wrapping boundaries
@@ -1071,8 +1005,7 @@ impl VirtualListState {
         if crossed_boundary {
             // Only invalidate items that might be affected by text wrapping
             // Priority: recently visible items and items near current scroll position
-            let visible_items: std::collections::HashSet<usize> =
-                self.item_to_panel.keys().copied().collect();
+            let visible_items: std::collections::HashSet<usize> = self.item_to_panel.keys().copied().collect();
 
             // Calculate scroll-based priority range
             let estimated_item_height = self.internal_params.estimated_item_height;
@@ -1082,8 +1015,7 @@ impl VirtualListState {
                 0
             };
 
-            let priority_range =
-                current_scroll_item.saturating_sub(50)..=(current_scroll_item + 100);
+            let priority_range = current_scroll_item.saturating_sub(50)..=(current_scroll_item + 100);
 
             let items_to_invalidate: Vec<usize> = self
                 .item_size_cache
@@ -1114,12 +1046,11 @@ impl VirtualListState {
 
         // For now, we'll store a simplified version of the data
         // In a real implementation, data sources would provide Clone + Send + Sync data
-        let stored_data: Arc<dyn Any + Send + Sync> =
-            if let Some(string_data) = data.downcast_ref::<String>() {
-                Arc::new(string_data.clone())
-            } else {
-                Arc::new(format!("Item {index}"))
-            };
+        let stored_data: Arc<dyn Any + Send + Sync> = if let Some(string_data) = data.downcast_ref::<String>() {
+            Arc::new(string_data.clone())
+        } else {
+            Arc::new(format!("Item {index}"))
+        };
 
         let context = ItemContext {
             index,
@@ -1206,9 +1137,9 @@ impl VirtualListState {
         for (data_index, _item_start, _) in context.items_to_show {
             if !self.item_to_panel.contains_key(data_index) {
                 // NEW PANEL: Need to create this item
-                let item_panel = self.item_pool.get_or_create_item(context.parent, || {
-                    context.item_renderer.create_item(context.parent)
-                });
+                let item_panel = self
+                    .item_pool
+                    .get_or_create_item(context.parent, || context.item_renderer.create_item(context.parent));
 
                 let item_data = context.data_source.get_item_data(*data_index);
                 batch.add_create_operation(*data_index, item_panel.clone(), item_data);
@@ -1220,10 +1151,9 @@ impl VirtualListState {
                 if let Some(panel) = self.item_to_panel.get(data_index) {
                     let item_data = context.data_source.get_item_data(*data_index);
                     let initial_size = match self.layout_mode {
-                        VirtualListLayoutMode::Vertical => Size::new(
-                            self.viewport_size.width,
-                            self.internal_params.temporary_panel_height,
-                        ),
+                        VirtualListLayoutMode::Vertical => {
+                            Size::new(self.viewport_size.width, self.internal_params.temporary_panel_height)
+                        }
                         VirtualListLayoutMode::Horizontal => Size::new(
                             2000, // Give plenty of width for natural text flow measurement
                             self.viewport_size.height,
@@ -1241,11 +1171,7 @@ impl VirtualListState {
         let mut fresh_measurements = std::collections::HashMap::new();
         for (index, measured_size) in &execution_result.final_measurements {
             // PHASE 1.2: Store progressive measurement in cache
-            self.store_progressive_measurement(
-                *index,
-                *measured_size,
-                context.current_viewport_dimension,
-            );
+            self.store_progressive_measurement(*index, *measured_size, context.current_viewport_dimension);
             fresh_measurements.insert(*index, *measured_size);
         }
 
@@ -1258,44 +1184,30 @@ impl VirtualListState {
                 let final_size = if let Some(fresh_size) = fresh_measurements.get(data_index) {
                     // Use fresh measurement from this update cycle
                     match self.layout_mode {
-                        VirtualListLayoutMode::Vertical => {
-                            Size::new(self.viewport_size.width, fresh_size.height)
-                        }
-                        VirtualListLayoutMode::Horizontal => {
-                            Size::new(fresh_size.width, self.viewport_size.height)
-                        }
+                        VirtualListLayoutMode::Vertical => Size::new(self.viewport_size.width, fresh_size.height),
+                        VirtualListLayoutMode::Horizontal => Size::new(fresh_size.width, self.viewport_size.height),
                     }
                 } else if let Some(cached_size) = self.item_size_cache.peek(*data_index) {
                     // Use cached measurement
                     match self.layout_mode {
-                        VirtualListLayoutMode::Vertical => {
-                            Size::new(self.viewport_size.width, cached_size.size.height)
-                        }
-                        VirtualListLayoutMode::Horizontal => {
-                            Size::new(cached_size.size.width, self.viewport_size.height)
-                        }
+                        VirtualListLayoutMode::Vertical => Size::new(self.viewport_size.width, cached_size.size.height),
+                        VirtualListLayoutMode::Horizontal => Size::new(cached_size.size.width, self.viewport_size.height),
                     }
                 } else {
                     // Fallback to estimated size
                     match self.layout_mode {
-                        VirtualListLayoutMode::Vertical => Size::new(
-                            self.viewport_size.width,
-                            self.internal_params.estimated_item_height,
-                        ),
-                        VirtualListLayoutMode::Horizontal => Size::new(
-                            self.internal_params.estimated_item_width,
-                            self.viewport_size.height,
-                        ),
+                        VirtualListLayoutMode::Vertical => {
+                            Size::new(self.viewport_size.width, self.internal_params.estimated_item_height)
+                        }
+                        VirtualListLayoutMode::Horizontal => {
+                            Size::new(self.internal_params.estimated_item_width, self.viewport_size.height)
+                        }
                     }
                 };
 
                 let position = match self.layout_mode {
-                    VirtualListLayoutMode::Vertical => {
-                        Point::new(0, item_start - context.scroll_position)
-                    }
-                    VirtualListLayoutMode::Horizontal => {
-                        Point::new(item_start - context.scroll_position, 0)
-                    }
+                    VirtualListLayoutMode::Vertical => Point::new(0, item_start - context.scroll_position),
+                    VirtualListLayoutMode::Horizontal => Point::new(item_start - context.scroll_position, 0),
                 };
 
                 position_batch.add_position_operation(panel.clone(), position, final_size);
@@ -1922,10 +1834,7 @@ impl VirtualList {
     pub fn set_data_source<T: VirtualListDataSource + 'static>(&self, data_source: T) {
         // Setting data source
 
-        self.config()
-            .state
-            .borrow_mut()
-            .set_data_source(Rc::new(data_source));
+        self.config().state.borrow_mut().set_data_source(Rc::new(data_source));
 
         // Total content size will be recalculated on next update
 
@@ -1939,10 +1848,7 @@ impl VirtualList {
     pub fn set_item_renderer<T: VirtualListItemRenderer + 'static>(&self, item_renderer: T) {
         // Setting item renderer
 
-        self.config()
-            .state
-            .borrow_mut()
-            .set_item_renderer(Rc::new(item_renderer));
+        self.config().state.borrow_mut().set_item_renderer(Rc::new(item_renderer));
 
         // Total content size will be recalculated on next update
 
@@ -1978,11 +1884,7 @@ impl VirtualList {
     pub fn scroll_to_item(&self, index: usize) -> VirtualListResult<()> {
         let state = self.config().state.clone();
 
-        let total_items = state
-            .borrow()
-            .data_source
-            .clone()
-            .map(|ds| ds.get_item_count());
+        let total_items = state.borrow().data_source.clone().map(|ds| ds.get_item_count());
         let Some(total_items) = total_items else {
             return Err(VirtualListError::data_source_error("No data source set"));
         };

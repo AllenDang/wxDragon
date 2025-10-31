@@ -90,9 +90,7 @@ impl From<ffi::wxd_AppearanceResult> for AppearanceResult {
         match result {
             ffi::wxd_AppearanceResult_WXD_APPEARANCE_RESULT_OK => AppearanceResult::Ok,
             ffi::wxd_AppearanceResult_WXD_APPEARANCE_RESULT_FAILURE => AppearanceResult::Failure,
-            ffi::wxd_AppearanceResult_WXD_APPEARANCE_RESULT_CANNOT_CHANGE => {
-                AppearanceResult::CannotChange
-            }
+            ffi::wxd_AppearanceResult_WXD_APPEARANCE_RESULT_CANNOT_CHANGE => AppearanceResult::CannotChange,
             _ => AppearanceResult::Failure, // Default fallback
         }
     }
@@ -112,11 +110,7 @@ impl SystemAppearance {
     /// # Safety
     /// The pointer must be valid and point to a wxd_SystemAppearance_t object.
     pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_SystemAppearance_t) -> Option<Self> {
-        if ptr.is_null() {
-            None
-        } else {
-            Some(SystemAppearance { ptr })
-        }
+        if ptr.is_null() { None } else { Some(SystemAppearance { ptr }) }
     }
 
     /// Returns `true` if the system is using a dark theme.
@@ -274,11 +268,7 @@ impl App {
     /// # Safety
     /// The pointer must be valid and point to a wxd_App_t object.
     pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_App_t) -> Option<Self> {
-        if ptr.is_null() {
-            None
-        } else {
-            Some(App { ptr })
-        }
+        if ptr.is_null() { None } else { Some(App { ptr }) }
     }
 }
 

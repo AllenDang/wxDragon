@@ -77,29 +77,19 @@ impl StatusBar {
     ///   - A width of 0 makes the field flexible.
     pub fn set_status_widths(&self, widths: &[i32]) {
         if !widths.is_empty() {
-            unsafe {
-                ffi::wxd_StatusBar_SetStatusWidths(
-                    self.as_ptr(),
-                    widths.len() as c_int,
-                    widths.as_ptr(),
-                );
-            }
+            unsafe { ffi::wxd_StatusBar_SetStatusWidths(self.as_ptr(), widths.len() as c_int, widths.as_ptr()) };
         }
     }
 
     /// Pushes text onto the stack for a field. Reverts on PopStatusText.
     pub fn push_status_text(&self, text: &str, field_index: usize) {
         let c_text = CString::new(text).unwrap_or_default();
-        unsafe {
-            ffi::wxd_StatusBar_PushStatusText(self.as_ptr(), c_text.as_ptr(), field_index as c_int);
-        }
+        unsafe { ffi::wxd_StatusBar_PushStatusText(self.as_ptr(), c_text.as_ptr(), field_index as c_int) };
     }
 
     /// Pops the last pushed text from the stack for a field.
     pub fn pop_status_text(&self, field_index: usize) {
-        unsafe {
-            ffi::wxd_StatusBar_PopStatusText(self.as_ptr(), field_index as c_int);
-        }
+        unsafe { ffi::wxd_StatusBar_PopStatusText(self.as_ptr(), field_index as c_int) };
     }
 }
 
@@ -186,13 +176,8 @@ impl<'a> StatusBarBuilder<'a> {
             panic!("Cannot create StatusBar with a null parent frame");
         }
 
-        let status_bar_ptr = unsafe {
-            ffi::wxd_StatusBar_Create(
-                self.parent.handle_ptr(),
-                self.id,
-                self.style.bits() as ffi::wxd_Style_t,
-            )
-        };
+        let ptr = self.parent.handle_ptr();
+        let status_bar_ptr = unsafe { ffi::wxd_StatusBar_Create(ptr, self.id, self.style.bits() as ffi::wxd_Style_t) };
 
         if status_bar_ptr.is_null() {
             panic!("Failed to create wxStatusBar via FFI");
@@ -214,12 +199,7 @@ impl<'a> StatusBarBuilder<'a> {
         }
 
         // Attach the status bar to the frame (Frame takes ownership)
-        unsafe {
-            ffi::wxd_Frame_SetStatusBar(
-                self.parent.handle_ptr() as *mut ffi::wxd_Frame_t,
-                status_bar.as_ptr(),
-            );
-        }
+        unsafe { ffi::wxd_Frame_SetStatusBar(self.parent.handle_ptr() as *mut ffi::wxd_Frame_t, status_bar.as_ptr()) };
 
         status_bar
     }

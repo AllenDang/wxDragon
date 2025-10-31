@@ -65,12 +65,7 @@ impl StaticText {
     /// Sets the text control's label.
     pub fn set_label(&self, label: &str) {
         let c_label = CString::new(label).unwrap_or_default();
-        unsafe {
-            ffi::wxd_StaticText_SetLabel(
-                self.window.as_ptr() as *mut ffi::wxd_StaticText_t,
-                c_label.as_ptr(),
-            );
-        }
+        unsafe { ffi::wxd_StaticText_SetLabel(self.window.as_ptr() as *mut ffi::wxd_StaticText_t, c_label.as_ptr()) };
     }
 
     /// Gets the text control's label.

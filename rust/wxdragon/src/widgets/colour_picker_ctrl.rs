@@ -69,16 +69,13 @@ impl ColourPickerCtrl {
 
     /// Gets the currently selected colour.
     pub fn get_colour(&self) -> Colour {
-        let c_colour =
-            unsafe { ffi::wxd_ColourPickerCtrl_GetColour(self.window.as_ptr() as *mut _) };
+        let c_colour = unsafe { ffi::wxd_ColourPickerCtrl_GetColour(self.window.as_ptr() as *mut _) };
         Colour::from(c_colour)
     }
 
     /// Sets the currently selected colour.
     pub fn set_colour(&self, colour: Colour) {
-        unsafe {
-            ffi::wxd_ColourPickerCtrl_SetColour(self.window.as_ptr() as *mut _, colour.into())
-        };
+        unsafe { ffi::wxd_ColourPickerCtrl_SetColour(self.window.as_ptr() as *mut _, colour.into()) };
     }
 }
 

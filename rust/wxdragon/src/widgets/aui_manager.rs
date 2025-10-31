@@ -379,21 +379,9 @@ impl AuiManager {
     }
 
     /// Add a pane to the manager with a simple direction
-    pub fn add_pane(
-        &self,
-        window: &impl WxWidget,
-        direction: DockDirection,
-        caption: &str,
-    ) -> bool {
+    pub fn add_pane(&self, window: &impl WxWidget, direction: DockDirection, caption: &str) -> bool {
         let c_caption = CString::new(caption).expect("CString::new failed for caption");
-        unsafe {
-            ffi::wxd_AuiManager_AddPane(
-                self.ptr,
-                window.handle_ptr(),
-                direction as i32,
-                c_caption.as_ptr(),
-            )
-        }
+        unsafe { ffi::wxd_AuiManager_AddPane(self.ptr, window.handle_ptr(), direction as i32, c_caption.as_ptr()) }
     }
 
     /// Add a pane with detailed pane information

@@ -16,12 +16,7 @@ fn main() {
         let title = StaticText::builder(&panel)
             .with_label("Sizer Demo - WrapSizer and GridSizer")
             .build();
-        main_sizer.add(
-            &title,
-            0,
-            SizerFlag::All | SizerFlag::AlignCenterHorizontal,
-            10,
-        );
+        main_sizer.add(&title, 0, SizerFlag::All | SizerFlag::AlignCenterHorizontal, 10);
 
         // Create a WrapSizer with default flags
         let wrap_sizer = WrapSizer::builder(Orientation::Horizontal)
@@ -30,9 +25,7 @@ fn main() {
 
         // Add some buttons to the wrap sizer
         for i in 1..=12 {
-            let button = Button::builder(&panel)
-                .with_label(&format!("Button {i}"))
-                .build();
+            let button = Button::builder(&panel).with_label(&format!("Button {i}")).build();
             wrap_sizer.add(&button, 0, SizerFlag::All, 5);
         }
 
@@ -43,12 +36,7 @@ fn main() {
         let section_title = StaticText::builder(&panel)
             .with_label("WrapSizer with ExtendLastOnEachLine disabled:")
             .build();
-        main_sizer.add(
-            &section_title,
-            0,
-            SizerFlag::All | SizerFlag::AlignCenterHorizontal,
-            10,
-        );
+        main_sizer.add(&section_title, 0, SizerFlag::All | SizerFlag::AlignCenterHorizontal, 10);
 
         let wrap_sizer2 = WrapSizer::builder(Orientation::Horizontal)
             .with_flags(WrapSizerFlag::RemoveLeadingSpaces)
@@ -56,33 +44,22 @@ fn main() {
 
         // Add some checkboxes to the second wrap sizer
         for i in 1..=8 {
-            let checkbox = CheckBox::builder(&panel)
-                .with_label(&format!("Option {i}"))
-                .build();
+            let checkbox = CheckBox::builder(&panel).with_label(&format!("Option {i}")).build();
             wrap_sizer2.add(&checkbox, 0, SizerFlag::All, 5);
         }
 
         main_sizer.add_sizer(&wrap_sizer2, 1, SizerFlag::Expand | SizerFlag::All, 10);
 
         // Add a separator
-        let separator = StaticText::builder(&panel)
-            .with_label("GridSizer Demo (2x3 grid):")
-            .build();
-        main_sizer.add(
-            &separator,
-            0,
-            SizerFlag::All | SizerFlag::AlignCenterHorizontal,
-            10,
-        );
+        let separator = StaticText::builder(&panel).with_label("GridSizer Demo (2x3 grid):").build();
+        main_sizer.add(&separator, 0, SizerFlag::All | SizerFlag::AlignCenterHorizontal, 10);
 
         // Create a GridSizer with 2 rows, 3 columns, and gaps
         let grid_sizer = GridSizer::builder(2, 3).with_vgap(5).with_hgap(5).build();
 
         // Add some buttons to the grid
         for i in 1..=6 {
-            let button = Button::builder(&panel)
-                .with_label(&format!("Grid {i}"))
-                .build();
+            let button = Button::builder(&panel).with_label(&format!("Grid {i}")).build();
             grid_sizer.add(&button, 0, SizerFlag::Expand, 0);
         }
 

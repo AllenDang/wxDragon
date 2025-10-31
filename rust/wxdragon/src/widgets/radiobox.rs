@@ -129,12 +129,7 @@ impl RadioBox {
             }
             let capacity = required_len_p1 as usize;
             let mut buffer: Vec<u8> = Vec::with_capacity(capacity);
-            let success_code = ffi::wxd_RadioBox_GetString(
-                self.as_ptr(),
-                n,
-                buffer.as_mut_ptr() as *mut c_char,
-                capacity as i32,
-            );
+            let success_code = ffi::wxd_RadioBox_GetString(self.as_ptr(), n, buffer.as_mut_ptr() as *mut c_char, capacity as i32);
 
             if success_code == 0 {
                 // Use CStr to find the length, including potential embedded nulls handled correctly.

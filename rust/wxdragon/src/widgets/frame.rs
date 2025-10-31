@@ -98,13 +98,10 @@ impl Default for FrameBuilder {
     fn default() -> Self {
         Self {
             parent_ptr: ptr::null_mut(),
-            id: ID_ANY as i32, // Use ID_ANY from base (already i32)
-            title: "wxDragon Frame".to_string(), // Default title
-            pos: DEFAULT_POSITION, // Default position
-            size: Size {
-                width: 500,
-                height: 400,
-            }, // Specific default size for Frame
+            id: ID_ANY as i32,                      // Use ID_ANY from base (already i32)
+            title: "wxDragon Frame".to_string(),    // Default title
+            pos: DEFAULT_POSITION,                  // Default position
+            size: Size { width: 500, height: 400 }, // Specific default size for Frame
             style: FrameStyle::Default,
             // name: String::new(),
         }
@@ -194,22 +191,12 @@ impl Frame {
     /// Sets the frame's title.
     pub fn set_title(&self, title: &str) {
         let title_c = CString::new(title).expect("CString::new failed");
-        unsafe {
-            ffi::wxd_Frame_SetTitle(
-                self.window.as_ptr() as *mut ffi::wxd_Frame_t,
-                title_c.as_ptr(),
-            );
-        }
+        unsafe { ffi::wxd_Frame_SetTitle(self.window.as_ptr() as *mut ffi::wxd_Frame_t, title_c.as_ptr()) };
     }
 
     /// Centers the frame on the screen or parent. (wxWidgets `Centre` method)
     pub fn centre(&self) {
-        unsafe {
-            ffi::wxd_Frame_Centre(
-                self.window.as_ptr() as *mut ffi::wxd_Frame_t,
-                ffi::WXD_ALIGN_CENTRE as i32,
-            );
-        }
+        unsafe { ffi::wxd_Frame_Centre(self.window.as_ptr() as *mut ffi::wxd_Frame_t, ffi::WXD_ALIGN_CENTRE as i32) };
     }
 
     /// Centers the frame on the screen. (wxWidgets `CenterOnScreen` method)
@@ -219,9 +206,7 @@ impl Frame {
 
     /// Shows the frame.
     pub fn show(&self, show: bool) {
-        unsafe {
-            ffi::wxd_Frame_Show(self.window.as_ptr() as *mut ffi::wxd_Frame_t, show);
-        }
+        unsafe { ffi::wxd_Frame_Show(self.window.as_ptr() as *mut ffi::wxd_Frame_t, show) };
     }
 
     /// Sets the menu bar for this frame.
@@ -230,16 +215,13 @@ impl Frame {
         let menu_bar_ptr = unsafe { menu_bar.as_ptr() };
         // Frame takes ownership of the menu bar pointer, but MenuBar doesn't implement Drop
         // so no need to forget it
-        unsafe {
-            ffi::wxd_Frame_SetMenuBar(self.window.as_ptr() as *mut _, menu_bar_ptr);
-        }
+        unsafe { ffi::wxd_Frame_SetMenuBar(self.window.as_ptr() as *mut _, menu_bar_ptr) };
     }
 
     /// Gets the menu bar for this frame.
     /// Returns None if no menu bar is set.
     pub fn get_menu_bar(&self) -> Option<MenuBar> {
-        let menu_bar_ptr =
-            unsafe { ffi::wxd_Frame_GetMenuBar(self.window.as_ptr() as *mut ffi::wxd_Frame_t) };
+        let menu_bar_ptr = unsafe { ffi::wxd_Frame_GetMenuBar(self.window.as_ptr() as *mut ffi::wxd_Frame_t) };
         if menu_bar_ptr.is_null() {
             None
         } else {
@@ -249,34 +231,24 @@ impl Frame {
 
     /// Closes the frame.
     pub fn close(&self, force: bool) {
-        unsafe {
-            // false = don't force close, allow events like EVT_CLOSE_WINDOW
-            ffi::wxd_Frame_Close(self.window.as_ptr() as *mut ffi::wxd_Frame_t, force);
-        }
+        // false = don't force close, allow events like EVT_CLOSE_WINDOW
+        unsafe { ffi::wxd_Frame_Close(self.window.as_ptr() as *mut ffi::wxd_Frame_t, force) };
     }
 
     /// Sets the frame's status bar.
     pub fn set_existing_status_bar(&self, status_bar: Option<&StatusBar>) {
         let sb_ptr = status_bar.map_or(ptr::null_mut(), |sb| sb.as_ptr() as *mut _);
-        unsafe {
-            ffi::wxd_Frame_SetStatusBar(self.window.as_ptr() as *mut ffi::wxd_Frame_t, sb_ptr);
-        }
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_Frame_t;
+        unsafe { ffi::wxd_Frame_SetStatusBar(ptr, sb_ptr) };
     }
 
     /// Creates and assigns a toolbar to the frame.
     /// Returns `Some(ToolBar)` if successful, `None` otherwise.
     pub fn create_tool_bar(&self, style: Option<ToolBarStyle>, id: Id) -> Option<ToolBar> {
-        let style_bits = style
-            .map(|s| s.bits())
-            .unwrap_or(ToolBarStyle::default().bits()); // Use ToolBarStyle default bits if None
+        // Use ToolBarStyle default bits if None
+        let style_bits = style.map(|s| s.bits()).unwrap_or(ToolBarStyle::default().bits());
 
-        let tb_ptr = unsafe {
-            ffi::wxd_Frame_CreateToolBar(
-                self.window.as_ptr() as *mut _,
-                style_bits as ffi::wxd_Style_t, // Use bits()
-                id,
-            )
-        };
+        let tb_ptr = unsafe { ffi::wxd_Frame_CreateToolBar(self.window.as_ptr() as *mut _, style_bits as ffi::wxd_Style_t, id) };
         if tb_ptr.is_null() {
             None
         } else {
@@ -302,23 +274,16 @@ impl Frame {
     // New safe wrapper methods for wxFrame
     pub fn set_status_text(&self, text: &str, number: i32) {
         let c_text = CString::new(text).expect("CString::new for status text failed");
-        unsafe {
-            ffi::wxd_Frame_SetStatusText(
-                self.window.as_ptr() as *mut ffi::wxd_Frame_t,
-                c_text.as_ptr(),
-                number,
-            )
-        }
+        unsafe { ffi::wxd_Frame_SetStatusText(self.window.as_ptr() as *mut ffi::wxd_Frame_t, c_text.as_ptr(), number) }
     }
 
     pub fn get_title(&self) -> String {
+        let c_title_ptr = unsafe { ffi::wxd_Frame_GetTitle(self.window.as_ptr() as *mut ffi::wxd_Frame_t) };
+        if c_title_ptr.is_null() {
+            return String::new(); // Should ideally not happen if C returns empty string for null frame
+        }
+        // CString::from_raw takes ownership and will free the memory.
         unsafe {
-            let c_title_ptr =
-                ffi::wxd_Frame_GetTitle(self.window.as_ptr() as *mut ffi::wxd_Frame_t);
-            if c_title_ptr.is_null() {
-                return String::new(); // Should ideally not happen if C returns empty string for null frame
-            }
-            // CString::from_raw takes ownership and will free the memory.
             CString::from_raw(c_title_ptr)
                 .into_string()
                 .unwrap_or_else(|_| String::from("Error converting title"))
@@ -344,12 +309,7 @@ impl Frame {
     /// Sets the frame's icon from a bitmap.
     /// The bitmap will be converted to an icon internally.
     pub fn set_icon(&self, bitmap: &Bitmap) {
-        unsafe {
-            ffi::wxd_Frame_SetIconFromBitmap(
-                self.window.as_ptr() as *mut ffi::wxd_Frame_t,
-                **bitmap,
-            );
-        }
+        unsafe { ffi::wxd_Frame_SetIconFromBitmap(self.window.as_ptr() as *mut ffi::wxd_Frame_t, **bitmap) };
     }
 }
 

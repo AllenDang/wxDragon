@@ -71,20 +71,13 @@ impl DatePickerCtrl {
 
     /// Gets the currently selected date.
     pub fn get_value(&self) -> DateTime {
-        let ffi_dt = unsafe {
-            ffi::wxd_DatePickerCtrl_GetValue(self.window.as_ptr() as *mut ffi::wxd_DatePickerCtrl_t)
-        };
+        let ffi_dt = unsafe { ffi::wxd_DatePickerCtrl_GetValue(self.window.as_ptr() as *mut ffi::wxd_DatePickerCtrl_t) };
         DateTime::from(ffi_dt)
     }
 
     /// Sets the currently selected date.
     pub fn set_value(&self, dt: &DateTime) {
-        unsafe {
-            ffi::wxd_DatePickerCtrl_SetValue(
-                self.window.as_ptr() as *mut ffi::wxd_DatePickerCtrl_t,
-                **dt,
-            );
-        }
+        unsafe { ffi::wxd_DatePickerCtrl_SetValue(self.window.as_ptr() as *mut ffi::wxd_DatePickerCtrl_t, **dt) };
     }
 
     /// Gets the valid range for dates on the control.
@@ -94,24 +87,11 @@ impl DatePickerCtrl {
         let mut p1: *mut ffi::wxd_DateTime_t = std::ptr::null_mut();
         let mut p2: *mut ffi::wxd_DateTime_t = std::ptr::null_mut();
 
-        let _has_range = unsafe {
-            ffi::wxd_DatePickerCtrl_GetRange(
-                self.window.as_ptr() as *mut ffi::wxd_DatePickerCtrl_t,
-                &mut p1,
-                &mut p2,
-            )
-        };
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_DatePickerCtrl_t;
+        let _has_range = unsafe { ffi::wxd_DatePickerCtrl_GetRange(ptr, &mut p1, &mut p2) };
 
-        let opt_dt1 = if p1.is_null() {
-            None
-        } else {
-            Some(DateTime::from(p1))
-        };
-        let opt_dt2 = if p2.is_null() {
-            None
-        } else {
-            Some(DateTime::from(p2))
-        };
+        let opt_dt1 = if p1.is_null() { None } else { Some(DateTime::from(p1)) };
+        let opt_dt2 = if p2.is_null() { None } else { Some(DateTime::from(p2)) };
 
         Ok((opt_dt1, opt_dt2))
     }
@@ -122,13 +102,7 @@ impl DatePickerCtrl {
         let ptr_dt1 = dt_start.map_or(ptr::null(), |dt| **dt);
         let ptr_dt2 = dt_end.map_or(ptr::null(), |dt| **dt);
 
-        unsafe {
-            ffi::wxd_DatePickerCtrl_SetRange(
-                self.window.as_ptr() as *mut ffi::wxd_DatePickerCtrl_t,
-                ptr_dt1,
-                ptr_dt2,
-            );
-        }
+        unsafe { ffi::wxd_DatePickerCtrl_SetRange(self.window.as_ptr() as *mut ffi::wxd_DatePickerCtrl_t, ptr_dt1, ptr_dt2) };
     }
 
     /// Creates a DatePickerCtrl from a raw pointer.

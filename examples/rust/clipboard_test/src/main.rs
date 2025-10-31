@@ -27,14 +27,10 @@ fn main() {
         let text_button_sizer = BoxSizer::builder(Orientation::Horizontal).build();
 
         // Create copy button
-        let copy_button = Button::builder(&panel)
-            .with_label("Copy to Clipboard")
-            .build();
+        let copy_button = Button::builder(&panel).with_label("Copy to Clipboard").build();
 
         // Create paste button
-        let paste_button = Button::builder(&panel)
-            .with_label("Paste from Clipboard")
-            .build();
+        let paste_button = Button::builder(&panel).with_label("Paste from Clipboard").build();
 
         // Add buttons to the horizontal sizer
         text_button_sizer.add(&copy_button, 0, SizerFlag::All, 5);
@@ -47,9 +43,7 @@ fn main() {
         let bitmap_button_sizer = BoxSizer::builder(Orientation::Horizontal).build();
 
         // Create a button to test bitmap clipboard
-        let bitmap_button = Button::builder(&panel)
-            .with_label("Copy Test Bitmap")
-            .build();
+        let bitmap_button = Button::builder(&panel).with_label("Copy Test Bitmap").build();
 
         // Create a button to paste bitmap
         let paste_bitmap_button = Button::builder(&panel).with_label("Paste Bitmap").build();
@@ -76,14 +70,10 @@ fn main() {
         let file_button_sizer = BoxSizer::builder(Orientation::Horizontal).build();
 
         // Create a button to copy a file to clipboard
-        let copy_file_button = Button::builder(&panel)
-            .with_label("Copy File to Clipboard")
-            .build();
+        let copy_file_button = Button::builder(&panel).with_label("Copy File to Clipboard").build();
 
         // Create a button to paste files from clipboard
-        let paste_file_button = Button::builder(&panel)
-            .with_label("Paste Files from Clipboard")
-            .build();
+        let paste_file_button = Button::builder(&panel).with_label("Paste Files from Clipboard").build();
 
         // Add buttons to the horizontal sizer
         file_button_sizer.add(&copy_file_button, 0, SizerFlag::All, 5);

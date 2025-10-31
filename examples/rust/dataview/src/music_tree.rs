@@ -3,9 +3,7 @@ use std::cell::RefCell;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
-#[derive(
-    Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Default, Hash, Serialize, Deserialize,
-)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Default, Hash, Serialize, Deserialize)]
 pub enum NodeType {
     Branch,
     #[default]
@@ -40,12 +38,7 @@ impl MusicNode {
     ) -> Rc<RefCell<Self>> {
         let (artist_s, year_o, quality_s, children) = match node_type {
             NodeType::Branch => (None, None, None, Some(Vec::new())),
-            NodeType::Leaf => (
-                artist.map(|s| s.to_string()),
-                year,
-                quality.map(|s| s.to_string()),
-                None,
-            ),
+            NodeType::Leaf => (artist.map(|s| s.to_string()), year, quality.map(|s| s.to_string()), None),
         };
         Rc::new(RefCell::new(Self {
             node_type,
@@ -190,13 +183,9 @@ impl MusicTree {
             }
         }
 
-        fn dfs(
-            cur: &Rc<RefCell<MusicNode>>,
-            target_ptr: *const MusicNode,
-        ) -> Option<Rc<RefCell<MusicNode>>> {
+        fn dfs(cur: &Rc<RefCell<MusicNode>>, target_ptr: *const MusicNode) -> Option<Rc<RefCell<MusicNode>>> {
             // Clone children Rc list to limit RefCell borrow scope
-            let children: Vec<Rc<RefCell<MusicNode>>> =
-                cur.borrow().children.as_ref().cloned().unwrap_or_default();
+            let children: Vec<Rc<RefCell<MusicNode>>> = cur.borrow().children.as_ref().cloned().unwrap_or_default();
             for child in children.iter() {
                 let child_ptr: *const MusicNode = &*child.borrow();
                 if child_ptr == target_ptr {
@@ -242,23 +231,11 @@ pub fn generate_initial_music_tree() -> MusicTree {
     );
     MusicNode::push_child(
         &pop,
-        MusicNode::new(
-            NodeType::Leaf,
-            "Yesterday",
-            Some("The Beatles"),
-            None,
-            Some("good"),
-        ),
+        MusicNode::new(NodeType::Leaf, "Yesterday", Some("The Beatles"), None, Some("good")),
     );
     MusicNode::push_child(
         &pop,
-        MusicNode::new(
-            NodeType::Leaf,
-            "Take a bow",
-            Some("Madonna"),
-            Some(1994),
-            Some("good"),
-        ),
+        MusicNode::new(NodeType::Leaf, "Take a bow", Some("Madonna"), Some(1994), Some("good")),
     );
     MusicNode::push_child(&root, pop);
 
@@ -285,8 +262,5 @@ pub fn generate_initial_music_tree() -> MusicTree {
     );
     MusicNode::push_child(&root, classical);
 
-    MusicTree {
-        root,
-        filepath: None,
-    }
+    MusicTree { root, filepath: None }
 }

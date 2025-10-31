@@ -187,20 +187,12 @@ impl Variant {
 
     pub fn get_datetime(&self) -> Option<DateTime> {
         let ptr = unsafe { ffi::wxd_Variant_GetDateTime(self.ptr) };
-        if ptr.is_null() {
-            None
-        } else {
-            Some(DateTime::from(ptr))
-        }
+        if ptr.is_null() { None } else { Some(DateTime::from(ptr)) }
     }
 
     pub fn get_bitmap(&self) -> Option<Bitmap> {
         let ptr = unsafe { ffi::wxd_Variant_GetBitmapClone(**self) };
-        if ptr.is_null() {
-            None
-        } else {
-            Some(Bitmap::from(ptr))
-        }
+        if ptr.is_null() { None } else { Some(Bitmap::from(ptr)) }
     }
 }
 
@@ -348,10 +340,9 @@ impl TryFrom<Variant> for bool {
 
     fn try_from(value: Variant) -> Result<Self, Self::Error> {
         let type_name = value.type_name();
-        value.get_bool().ok_or(Error::new(
-            InvalidData,
-            format!("Not a bool, it's a {type_name}"),
-        ))
+        value
+            .get_bool()
+            .ok_or(Error::new(InvalidData, format!("Not a bool, it's a {type_name}")))
     }
 }
 
@@ -360,10 +351,9 @@ impl TryFrom<Variant> for i32 {
 
     fn try_from(value: Variant) -> Result<Self, Self::Error> {
         let type_name = value.type_name();
-        value.get_i32().ok_or(Error::new(
-            InvalidData,
-            format!("Not an i32, it's a {type_name}"),
-        ))
+        value
+            .get_i32()
+            .ok_or(Error::new(InvalidData, format!("Not an i32, it's a {type_name}")))
     }
 }
 
@@ -372,10 +362,9 @@ impl TryFrom<Variant> for i64 {
 
     fn try_from(value: Variant) -> Result<Self, Self::Error> {
         let type_name = value.type_name();
-        value.get_i64().ok_or(Error::new(
-            InvalidData,
-            format!("Not an i64, it's a {type_name}"),
-        ))
+        value
+            .get_i64()
+            .ok_or(Error::new(InvalidData, format!("Not an i64, it's a {type_name}")))
     }
 }
 
@@ -384,10 +373,9 @@ impl TryFrom<Variant> for f64 {
 
     fn try_from(value: Variant) -> Result<Self, Self::Error> {
         let type_name = value.type_name();
-        value.get_f64().ok_or(Error::new(
-            InvalidData,
-            format!("Not an f64, it's a {type_name}"),
-        ))
+        value
+            .get_f64()
+            .ok_or(Error::new(InvalidData, format!("Not an f64, it's a {type_name}")))
     }
 }
 
@@ -396,10 +384,9 @@ impl TryFrom<Variant> for String {
 
     fn try_from(value: Variant) -> Result<Self, Self::Error> {
         let type_name = value.type_name();
-        value.get_string().ok_or(Error::new(
-            InvalidData,
-            format!("Not a String, it's a {type_name}"),
-        ))
+        value
+            .get_string()
+            .ok_or(Error::new(InvalidData, format!("Not a String, it's a {type_name}")))
     }
 }
 
@@ -408,10 +395,9 @@ impl TryFrom<Variant> for DateTime {
 
     fn try_from(value: Variant) -> Result<Self, Self::Error> {
         let type_name = value.type_name();
-        value.get_datetime().ok_or(Error::new(
-            InvalidData,
-            format!("Not a DateTime, it's a {type_name}"),
-        ))
+        value
+            .get_datetime()
+            .ok_or(Error::new(InvalidData, format!("Not a DateTime, it's a {type_name}")))
     }
 }
 
@@ -420,9 +406,8 @@ impl TryFrom<Variant> for Bitmap {
 
     fn try_from(value: Variant) -> Result<Self, Self::Error> {
         let type_name = value.type_name();
-        value.get_bitmap().ok_or(Error::new(
-            InvalidData,
-            format!("Not a Bitmap, it's a {type_name}"),
-        ))
+        value
+            .get_bitmap()
+            .ok_or(Error::new(InvalidData, format!("Not a Bitmap, it's a {type_name}")))
     }
 }

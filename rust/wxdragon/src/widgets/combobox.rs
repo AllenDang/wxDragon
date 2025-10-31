@@ -150,11 +150,7 @@ impl ComboBox {
     pub fn get_value(&self) -> String {
         unsafe {
             let mut buffer: [c_char; 256] = [0; 256]; // Reasonable buffer size
-            let len_needed = ffi::wxd_ComboBox_GetValue(
-                self.window.as_ptr() as *mut _,
-                buffer.as_mut_ptr(),
-                buffer.len() as i32,
-            );
+            let len_needed = ffi::wxd_ComboBox_GetValue(self.window.as_ptr() as *mut _, buffer.as_mut_ptr(), buffer.len() as i32);
 
             if len_needed <= 0 {
                 return String::new(); // Return empty string for errors

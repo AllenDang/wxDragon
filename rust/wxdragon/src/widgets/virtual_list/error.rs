@@ -13,10 +13,7 @@ pub enum VirtualListError {
     InvalidConfig { message: String },
 
     /// Panel operation failed
-    PanelOperationFailed {
-        operation: String,
-        details: Option<String>,
-    },
+    PanelOperationFailed { operation: String, details: Option<String> },
 
     /// Data source operation failed
     DataSourceError { message: String },
@@ -45,10 +42,7 @@ impl fmt::Display for VirtualListError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             VirtualListError::InvalidIndex { index, total_items } => {
-                write!(
-                    f,
-                    "Invalid item index: {index} (total items: {total_items})"
-                )
+                write!(f, "Invalid item index: {index} (total items: {total_items})")
             }
             VirtualListError::MeasurementFailed { index, reason } => {
                 write!(f, "Measurement failed for item {index}: {reason}")
@@ -68,14 +62,8 @@ impl fmt::Display for VirtualListError {
                 operation,
                 details,
             } => match details {
-                Some(details) => write!(
-                    f,
-                    "Renderer operation '{operation}' failed for item {index}: {details}"
-                ),
-                None => write!(
-                    f,
-                    "Renderer operation '{operation}' failed for item {index}"
-                ),
+                Some(details) => write!(f, "Renderer operation '{operation}' failed for item {index}: {details}"),
+                None => write!(f, "Renderer operation '{operation}' failed for item {index}"),
             },
             VirtualListError::PoolError { operation, reason } => {
                 write!(f, "Pool operation '{operation}' failed: {reason}")
@@ -115,16 +103,11 @@ impl VirtualListError {
 
     /// Create an invalid config error
     pub fn invalid_config(message: impl Into<String>) -> Self {
-        Self::InvalidConfig {
-            message: message.into(),
-        }
+        Self::InvalidConfig { message: message.into() }
     }
 
     /// Create a panel operation failed error
-    pub fn panel_operation_failed(
-        operation: impl Into<String>,
-        details: Option<impl Into<String>>,
-    ) -> Self {
+    pub fn panel_operation_failed(operation: impl Into<String>, details: Option<impl Into<String>>) -> Self {
         Self::PanelOperationFailed {
             operation: operation.into(),
             details: details.map(|d| d.into()),
@@ -133,17 +116,11 @@ impl VirtualListError {
 
     /// Create a data source error
     pub fn data_source_error(message: impl Into<String>) -> Self {
-        Self::DataSourceError {
-            message: message.into(),
-        }
+        Self::DataSourceError { message: message.into() }
     }
 
     /// Create a renderer error
-    pub fn renderer_error(
-        index: usize,
-        operation: impl Into<String>,
-        details: Option<impl Into<String>>,
-    ) -> Self {
+    pub fn renderer_error(index: usize, operation: impl Into<String>, details: Option<impl Into<String>>) -> Self {
         Self::RendererError {
             index,
             operation: operation.into(),
@@ -192,12 +169,7 @@ pub trait IntoVirtualListError<T> {
 
 impl<T> IntoVirtualListError<T> for Option<T> {
     fn into_vl_error(self, operation: impl Into<String>) -> VirtualListResult<T> {
-        self.ok_or_else(|| {
-            VirtualListError::panel_operation_failed(
-                operation,
-                Some("Operation returned None".to_string()),
-            )
-        })
+        self.ok_or_else(|| VirtualListError::panel_operation_failed(operation, Some("Operation returned None".to_string())))
     }
 }
 

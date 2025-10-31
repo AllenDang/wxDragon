@@ -149,14 +149,9 @@ impl Cursor {
     /// let _cursor = Cursor::from_file("cursor.cur", BitmapType::Cur, 8, 8).unwrap();
     /// let _png_cursor = Cursor::from_file("cursor.png", BitmapType::Png, 16, 16).unwrap();
     /// ```
-    pub fn from_file(
-        filename: &str,
-        bitmap_type: BitmapType,
-        hotspot_x: i32,
-        hotspot_y: i32,
-    ) -> Option<Self> {
+    pub fn from_file(filename: &str, bitmap_type: BitmapType, hotspot_x: i32, hotspot_y: i32) -> Option<Self> {
         let c_filename = CString::new(filename).ok()?;
-        let ptr = unsafe {
+        let ptr = {
             let ffi_bitmap_type = match bitmap_type {
                 BitmapType::Invalid => ffi::wxd_BitmapType_WXD_BITMAP_TYPE_INVALID,
                 BitmapType::Bmp => ffi::wxd_BitmapType_WXD_BITMAP_TYPE_BMP,
@@ -170,12 +165,7 @@ impl Cursor {
                 BitmapType::Ani => ffi::wxd_BitmapType_WXD_BITMAP_TYPE_ANI,
                 BitmapType::Any => ffi::wxd_BitmapType_WXD_BITMAP_TYPE_ANY,
             };
-            ffi::wxd_Cursor_CreateFromFile(
-                c_filename.as_ptr(),
-                ffi_bitmap_type,
-                hotspot_x,
-                hotspot_y,
-            )
+            unsafe { ffi::wxd_Cursor_CreateFromFile(c_filename.as_ptr(), ffi_bitmap_type, hotspot_x, hotspot_y) }
         };
         if ptr.is_null() { None } else { Some(Self(ptr)) }
     }
@@ -220,16 +210,7 @@ impl Cursor {
         }
 
         let mask_ptr = mask_bits.map(|m| m.as_ptr()).unwrap_or(std::ptr::null());
-        let ptr = unsafe {
-            ffi::wxd_Cursor_CreateFromData(
-                bits.as_ptr(),
-                width,
-                height,
-                hotspot_x,
-                hotspot_y,
-                mask_ptr,
-            )
-        };
+        let ptr = unsafe { ffi::wxd_Cursor_CreateFromData(bits.as_ptr(), width, height, hotspot_x, hotspot_y, mask_ptr) };
 
         if ptr.is_null() { None } else { Some(Self(ptr)) }
     }

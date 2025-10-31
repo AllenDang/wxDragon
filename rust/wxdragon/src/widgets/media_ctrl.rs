@@ -138,13 +138,7 @@ impl MediaCtrl {
     pub fn load_uri_with_proxy(&self, uri: &str, proxy: &str) -> bool {
         let c_uri = CString::new(uri).expect("CString::new failed for uri");
         let c_proxy = CString::new(proxy).expect("CString::new failed for proxy");
-        unsafe {
-            ffi::wxd_MediaCtrl_LoadURIWithProxy(
-                self.window.as_ptr() as *mut _,
-                c_uri.as_ptr(),
-                c_proxy.as_ptr(),
-            )
-        }
+        unsafe { ffi::wxd_MediaCtrl_LoadURIWithProxy(self.window.as_ptr() as *mut _, c_uri.as_ptr(), c_proxy.as_ptr()) }
     }
 
     /// Get the current state of the media.
@@ -206,12 +200,7 @@ impl MediaCtrl {
 
     /// Show player controls.
     pub fn show_player_controls(&self, controls: MediaCtrlPlayerControls) -> bool {
-        unsafe {
-            ffi::wxd_MediaCtrl_ShowPlayerControls(
-                self.window.as_ptr() as *mut _,
-                controls.bits() as u32 as i32,
-            )
-        }
+        unsafe { ffi::wxd_MediaCtrl_ShowPlayerControls(self.window.as_ptr() as *mut _, controls.bits() as u32 as i32) }
     }
 }
 

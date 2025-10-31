@@ -119,19 +119,9 @@ impl SplitterWindow {
     /// * `sash_position` - The initial position of the sash. If 0 or negative, a default position is used.
     ///
     /// Returns `true` on success.
-    pub fn split_vertically<W1: WxWidget, W2: WxWidget>(
-        &self,
-        window1: &W1,
-        window2: &W2,
-        sash_position: i32,
-    ) -> bool {
+    pub fn split_vertically<W1: WxWidget, W2: WxWidget>(&self, window1: &W1, window2: &W2, sash_position: i32) -> bool {
         unsafe {
-            ffi::wxd_SplitterWindow_SplitVertically(
-                self.0,
-                window1.handle_ptr(),
-                window2.handle_ptr(),
-                sash_position as c_int,
-            )
+            ffi::wxd_SplitterWindow_SplitVertically(self.0, window1.handle_ptr(), window2.handle_ptr(), sash_position as c_int)
         }
     }
 
@@ -143,19 +133,9 @@ impl SplitterWindow {
     /// * `sash_position` - The initial position of the sash. If 0 or negative, a default position is used.
     ///
     /// Returns `true` on success.
-    pub fn split_horizontally<W1: WxWidget, W2: WxWidget>(
-        &self,
-        window1: &W1,
-        window2: &W2,
-        sash_position: i32,
-    ) -> bool {
+    pub fn split_horizontally<W1: WxWidget, W2: WxWidget>(&self, window1: &W1, window2: &W2, sash_position: i32) -> bool {
         unsafe {
-            ffi::wxd_SplitterWindow_SplitHorizontally(
-                self.0,
-                window1.handle_ptr(),
-                window2.handle_ptr(),
-                sash_position as c_int,
-            )
+            ffi::wxd_SplitterWindow_SplitHorizontally(self.0, window1.handle_ptr(), window2.handle_ptr(), sash_position as c_int)
         }
     }
 

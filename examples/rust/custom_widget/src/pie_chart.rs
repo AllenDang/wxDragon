@@ -355,10 +355,7 @@ impl PieChart {
         let mut points = Vec::new();
 
         // Start from center
-        points.push(Point::new(
-            adjusted_center_x as i32,
-            adjusted_center_y as i32,
-        ));
+        points.push(Point::new(adjusted_center_x as i32, adjusted_center_y as i32));
 
         // Add arc points
         let num_segments = 32;

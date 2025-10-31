@@ -14,8 +14,7 @@ pub fn show_qrcode_dlg(parent: &dyn WxWidget) {
 
     let panel = Panel::builder(&dialog).build();
 
-    let bmp = create_bitmap_from_memory(MAIN_ICON, Some((200, 200)))
-        .unwrap_or_else(|_| Bitmap::new(200, 200).unwrap());
+    let bmp = create_bitmap_from_memory(MAIN_ICON, Some((200, 200))).unwrap_or_else(|_| Bitmap::new(200, 200).unwrap());
     let bmp_ctrl = StaticBitmap::builder(&panel)
         .with_bitmap(Some(bmp))
         .with_size(Size::new(200, 200))
@@ -26,10 +25,7 @@ pub fn show_qrcode_dlg(parent: &dyn WxWidget) {
         .build();
 
     // OK button with id of ID_CANCEL to respond to Esc key
-    let ok_btn = Button::builder(&panel)
-        .with_label("OK")
-        .with_id(ID_CANCEL)
-        .build();
+    let ok_btn = Button::builder(&panel).with_label("OK").with_id(ID_CANCEL).build();
     let dialog_clone = dialog.clone();
     ok_btn.on_click(move |_data| {
         dialog_clone.end_modal(ID_OK);

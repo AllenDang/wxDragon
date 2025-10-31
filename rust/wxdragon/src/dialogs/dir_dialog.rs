@@ -26,11 +26,7 @@ pub struct DirDialog {
 
 impl DirDialog {
     /// Creates a new builder for a DirDialog.
-    pub fn builder<'a>(
-        parent: &'a dyn WxWidget,
-        message: &str,
-        default_path: &str,
-    ) -> DirDialogBuilder<'a> {
+    pub fn builder<'a>(parent: &'a dyn WxWidget, message: &str, default_path: &str) -> DirDialogBuilder<'a> {
         DirDialogBuilder::new(parent, message, default_path)
     }
 
@@ -62,8 +58,7 @@ impl DirDialog {
     pub fn get_message(&self) -> Option<String> {
         unsafe {
             let mut buffer = vec![0 as c_char; 1024];
-            let len =
-                ffi::wxd_DirDialog_GetMessage(self.ptr, buffer.as_mut_ptr(), buffer.len() as i32);
+            let len = ffi::wxd_DirDialog_GetMessage(self.ptr, buffer.as_mut_ptr(), buffer.len() as i32);
             if len > 0 {
                 let c_str = CStr::from_ptr(buffer.as_ptr());
                 Some(c_str.to_string_lossy().into_owned())

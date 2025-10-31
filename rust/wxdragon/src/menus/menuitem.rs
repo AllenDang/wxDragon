@@ -122,11 +122,7 @@ impl MenuItem {
         let item_id = XmlResource::get_xrc_id(item_name);
 
         if item_id != -1 {
-            Some(MenuItem::new(
-                *parent_window,
-                item_id,
-                item_name.to_string(),
-            ))
+            Some(MenuItem::new(*parent_window, item_id, item_name.to_string()))
         } else {
             None
         }

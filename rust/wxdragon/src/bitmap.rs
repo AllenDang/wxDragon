@@ -88,10 +88,7 @@ impl Bitmap {
         if ptr.is_null() {
             None
         } else {
-            Some(Bitmap {
-                ptr,
-                is_owned: true,
-            }) // We own bitmaps created this way
+            Some(Bitmap { ptr, is_owned: true }) // We own bitmaps created this way
         }
     }
 
@@ -200,10 +197,7 @@ impl From<*const ffi::wxd_Bitmap_t> for Bitmap {
     /// Creates a non-owning Bitmap wrapper from a raw pointer.
     /// The pointer must be valid for the lifetime of the Bitmap object.
     fn from(ptr: *const ffi::wxd_Bitmap_t) -> Self {
-        Bitmap {
-            ptr,
-            is_owned: false,
-        }
+        Bitmap { ptr, is_owned: false }
     }
 }
 
@@ -211,10 +205,7 @@ impl From<*mut ffi::wxd_Bitmap_t> for Bitmap {
     /// Creates an owning Bitmap wrapper from a raw pointer.
     /// The pointer must be valid and Rust will take ownership of it.
     fn from(ptr: *mut ffi::wxd_Bitmap_t) -> Self {
-        Bitmap {
-            ptr,
-            is_owned: true,
-        }
+        Bitmap { ptr, is_owned: true }
     }
 }
 
@@ -238,9 +229,7 @@ impl TryFrom<Bitmap> for *mut ffi::wxd_Bitmap_t {
             bitmap.is_owned = false; // Prevent Drop from freeing it
             Ok(bitmap.ptr as *mut ffi::wxd_Bitmap_t)
         } else {
-            Err(std::io::Error::other(
-                "Cannot convert unowned Bitmap to mutable raw pointer",
-            ))
+            Err(std::io::Error::other("Cannot convert unowned Bitmap to mutable raw pointer"))
         }
     }
 }

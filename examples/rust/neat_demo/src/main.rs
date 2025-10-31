@@ -64,17 +64,9 @@ fn main() {
 
         // Create popup menu for taskbar icon
         let mut tray_icon_menu = Menu::builder()
-            .append_item(
-                MenuId::Open.into(),
-                "Open Application",
-                "Open the main application window",
-            )
+            .append_item(MenuId::Open.into(), "Open Application", "Open the main application window")
             .append_separator()
-            .append_item(
-                MenuId::Settings.into(),
-                "Settings",
-                "Open application settings",
-            )
+            .append_item(MenuId::Settings.into(), "Settings", "Open application settings")
             .append_item(MenuId::About.into(), "About", "About this application")
             .append_separator()
             .append_item(MenuId::Quit.into(), "Quit", "Quit the application")
@@ -122,22 +114,14 @@ fn main() {
         // --- Menu Bar Setup ---
         // Main menu
         let main_menu = Menu::builder()
-            .append_item(
-                MenuId::Settings.into(),
-                "Settings",
-                "Open application settings",
-            )
+            .append_item(MenuId::Settings.into(), "Settings", "Open application settings")
             .append_separator()
             .append_item(
                 MenuId::ScanQrCode.into(),
                 "Scan QR Code from screen",
                 "Scan QR code from screen",
             )
-            .append_item(
-                MenuId::ImportNodeFile.into(),
-                "Import Node File",
-                "Import node file",
-            )
+            .append_item(MenuId::ImportNodeFile.into(), "Import Node File", "Import node file")
             .append_item(MenuId::New.into(), "New", "Create new node")
             .append_separator()
             .append_item(MenuId::Run.into(), "Run", "Run node")
@@ -148,17 +132,9 @@ fn main() {
 
         // Node menu
         let node_menu = Menu::builder()
-            .append_item(
-                MenuId::ViewDetails.into(),
-                "View Details",
-                "View node details",
-            )
+            .append_item(MenuId::ViewDetails.into(), "View Details", "View node details")
             .append_item(MenuId::ExportNode.into(), "Export Node", "Export node")
-            .append_item(
-                MenuId::ShowQrCode.into(),
-                "Show QR Code",
-                "Show QR code for node",
-            )
+            .append_item(MenuId::ShowQrCode.into(), "Show QR Code", "Show QR code for node")
             .append_separator()
             .append_item(MenuId::Delete.into(), "Delete", "Delete node")
             .append_separator()

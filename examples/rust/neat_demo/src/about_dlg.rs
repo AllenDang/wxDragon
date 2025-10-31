@@ -5,10 +5,7 @@ pub fn show_about_dialog(parent: &dyn WxWidget) {
     let title = format!("About {}", APP_TITLE);
     let (w, h) = (400, 250);
     let (x, y) = center_rect(parent, w, h);
-    let dlg = Dialog::builder(parent, &title)
-        .with_position(x, y)
-        .with_size(w, h)
-        .build();
+    let dlg = Dialog::builder(parent, &title).with_position(x, y).with_size(w, h).build();
 
     let icon_bitmap = create_bitmap_from_memory(MAIN_ICON, Some((ICON_SIZE, ICON_SIZE))).unwrap();
     dlg.set_icon(&icon_bitmap);
@@ -26,15 +23,10 @@ pub fn show_about_dialog(parent: &dyn WxWidget) {
 
     // right: text vertical sizer
     let right_sizer = BoxSizer::builder(Orientation::Vertical).build();
-    let info = format!(
-        "{APP_TITLE}\n\nAn Neet demo server node GUI manager.\n\nCopyright © 2025 Neet.\nAll rights reserved."
-    );
+    let info = format!("{APP_TITLE}\n\nAn Neet demo server node GUI manager.\n\nCopyright © 2025 Neet.\nAll rights reserved.");
     let text = StaticText::builder(&dlg).with_label(&info).build();
     right_sizer.add(&text, 1, SizerFlag::Expand | SizerFlag::All, 20);
-    let ok_btn = Button::builder(&dlg)
-        .with_id(ID_CANCEL)
-        .with_label("OK")
-        .build();
+    let ok_btn = Button::builder(&dlg).with_id(ID_CANCEL).with_label("OK").build();
     let flags = SizerFlag::AlignCenterHorizontal | SizerFlag::All;
     right_sizer.add(&ok_btn, 0, flags, 10);
 

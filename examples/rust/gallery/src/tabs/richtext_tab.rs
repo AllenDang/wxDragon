@@ -30,9 +30,7 @@ pub struct RichTextTabControls {
 }
 
 pub fn create_richtext_tab(notebook: &Notebook, _frame: &Frame) -> RichTextTabControls {
-    let panel = Panel::builder(notebook)
-        .with_style(PanelStyle::TabTraversal)
-        .build();
+    let panel = Panel::builder(notebook).with_style(PanelStyle::TabTraversal).build();
 
     // Create the RichTextCtrl
     let rich_text_ctrl = RichTextCtrl::builder(&panel)
@@ -107,14 +105,10 @@ pub fn create_richtext_tab(notebook: &Notebook, _frame: &Frame) -> RichTextTabCo
     let scroll_to_end_btn = Button::builder(&panel).with_label("Scroll to End").build();
     scroll_to_end_btn.set_tooltip("Scroll to the end of the RichTextCtrl");
 
-    let scroll_to_beginning_btn = Button::builder(&panel)
-        .with_label("Scroll to Beginning")
-        .build();
+    let scroll_to_beginning_btn = Button::builder(&panel).with_label("Scroll to Beginning").build();
     scroll_to_beginning_btn.set_tooltip("Scroll to the beginning of the RichTextCtrl");
 
-    let check_visibility_btn = Button::builder(&panel)
-        .with_label("Check Visibility")
-        .build();
+    let check_visibility_btn = Button::builder(&panel).with_label("Check Visibility").build();
     check_visibility_btn.set_tooltip("Check if specific positions are visible in the RichTextCtrl");
 
     // Status label
@@ -360,9 +354,7 @@ impl RichTextTabControls {
                 .with_message("Save RichText Content")
                 .with_default_dir(".")
                 .with_default_file("document.rtf")
-                .with_wildcard(
-                    "RTF files (*.rtf)|*.rtf|Text files (*.txt)|*.txt|All files (*.*)|*.*",
-                )
+                .with_wildcard("RTF files (*.rtf)|*.rtf|Text files (*.txt)|*.txt|All files (*.*)|*.*")
                 .with_style(FileDialogStyle::Save | FileDialogStyle::OverwritePrompt)
                 .build();
 
@@ -405,7 +397,9 @@ impl RichTextTabControls {
             let open_dialog = FileDialog::builder(&panel_clone)
                 .with_message("Open Text File")
                 .with_default_dir(".")
-                .with_wildcard("All supported files|*.rtf;*.txt|RTF files (*.rtf)|*.rtf|Text files (*.txt)|*.txt|All files (*.*)|*.*")
+                .with_wildcard(
+                    "All supported files|*.rtf;*.txt|RTF files (*.rtf)|*.rtf|Text files (*.txt)|*.txt|All files (*.*)|*.*",
+                )
                 .with_style(FileDialogStyle::Open | FileDialogStyle::FileMustExist)
                 .build();
 
@@ -419,10 +413,13 @@ impl RichTextTabControls {
                     };
 
                     if rich_text_clone.load_file(&file_path, file_type) {
-                        status_label_clone.set_label(&format!("Loaded content from {}", 
-                            std::path::Path::new(&file_path).file_name()
+                        status_label_clone.set_label(&format!(
+                            "Loaded content from {}",
+                            std::path::Path::new(&file_path)
+                                .file_name()
                                 .and_then(|name| name.to_str())
-                                .unwrap_or(&file_path)));
+                                .unwrap_or(&file_path)
+                        ));
                         log::info!("Successfully loaded content from {file_path}");
                     } else {
                         status_label_clone.set_label("Failed to load file");
@@ -492,10 +489,7 @@ impl RichTextTabControls {
         self.rich_text_ctrl.on_selection_changed(move |_event| {
             let (from, to) = rich_text_clone.get_selection();
             if from != to {
-                status_label_clone.set_label(&format!(
-                    "Selection: {} characters ({from}-{to})",
-                    to - from
-                ));
+                status_label_clone.set_label(&format!("Selection: {} characters ({from}-{to})", to - from));
             } else {
                 status_label_clone.set_label(&format!("Cursor at position {from}"));
             }
@@ -551,7 +545,9 @@ impl RichTextTabControls {
             } else if is_visible {
                 status_label_clone.set_label(&format!("Position {test_position} is visible on screen"));
             } else {
-                status_label_clone.set_label(&format!("Position {test_position} is not visible - use scroll buttons to see it"));
+                status_label_clone.set_label(&format!(
+                    "Position {test_position} is not visible - use scroll buttons to see it"
+                ));
             }
             log::info!("Checked visibility of position {test_position} (visible: {is_visible}, last_pos: {last_pos})");
         });

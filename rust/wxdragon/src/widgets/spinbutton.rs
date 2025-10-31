@@ -100,9 +100,7 @@ impl SpinButton {
 
     /// Sets the allowed range.
     pub fn set_range(&self, min_value: i32, max_value: i32) {
-        unsafe {
-            ffi::wxd_SpinButton_SetRange(self.as_ptr(), min_value as c_int, max_value as c_int)
-        };
+        unsafe { ffi::wxd_SpinButton_SetRange(self.as_ptr(), min_value as c_int, max_value as c_int) };
     }
 
     /// Gets the minimum allowed value.

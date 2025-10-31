@@ -32,10 +32,7 @@ fn main() {
         let content_panel = &frame_ui.content_panel;
 
         // Set minimum size on main_panel to ensure proper space allocation
-        main_panel.set_min_size(wxdragon::geometry::Size {
-            width: 450,
-            height: 250,
-        });
+        main_panel.set_min_size(wxdragon::geometry::Size { width: 450, height: 250 });
 
         // 2. Load panel.xrc and embed the panel in main frame
         let panel_ui = PanelUI::new(Some(content_panel), false);
@@ -43,35 +40,19 @@ fn main() {
         log::info!("✓ Loaded panel.xrc and embedded in frame");
 
         // IMPORTANT: Set a minimum size for content_panel to prevent it from shrinking to zero
-        content_panel.set_min_size(wxdragon::geometry::Size {
-            width: 400,
-            height: 200,
-        });
+        content_panel.set_min_size(wxdragon::geometry::Size { width: 400, height: 200 });
 
         // Use a sizer to properly layout the embedded panel
         let sizer = BoxSizer::builder(Orientation::Vertical).build();
-        sizer.add(
-            &panel_ui.widget_panel,
-            1,
-            SizerFlag::Expand | SizerFlag::All,
-            5,
-        );
+        sizer.add(&panel_ui.widget_panel, 1, SizerFlag::Expand | SizerFlag::All, 5);
         content_panel.set_sizer(sizer, true);
 
         // Debug: Print sizes before layout
         log::info!("🔧 Debug sizes before layout:");
         let content_size = content_panel.get_size();
-        log::info!(
-            "  content_panel size: {}x{}",
-            content_size.width,
-            content_size.height
-        );
+        log::info!("  content_panel size: {}x{}", content_size.width, content_size.height);
         let widget_size = panel_ui.widget_panel.get_size();
-        log::info!(
-            "  widget_panel size: {}x{}",
-            widget_size.width,
-            widget_size.height
-        );
+        log::info!("  widget_panel size: {}x{}", widget_size.width, widget_size.height);
 
         // Force layout on the content panel specifically
         content_panel.layout();
@@ -312,9 +293,7 @@ fn main() {
         search_ctrl.set_value("Search widgets...");
 
         // Update the frame title to show it's using XRC
-        frame_ui
-            .main_frame
-            .set_title("wxDragon XRC Multi-File Demo");
+        frame_ui.main_frame.set_title("wxDragon XRC Multi-File Demo");
         frame_ui.main_frame.set_size(Size::new(700, 500));
 
         let title_label = &frame_ui.title_label;

@@ -141,13 +141,7 @@ impl ToolBar {
     }
 
     /// Adds a check tool (toggle tool) to the toolbar.
-    pub fn add_check_tool(
-        &self,
-        tool_id: Id,
-        label: &str,
-        bitmap: &Bitmap,
-        short_help: &str,
-    ) -> bool {
+    pub fn add_check_tool(&self, tool_id: Id, label: &str, bitmap: &Bitmap, short_help: &str) -> bool {
         self.add_tool_raw(ToolConfig {
             tool_id,
             label,
@@ -161,13 +155,7 @@ impl ToolBar {
 
     /// Adds a radio tool to the toolbar.
     /// Radio tools require grouping with separators or other radio tools.
-    pub fn add_radio_tool(
-        &self,
-        tool_id: Id,
-        label: &str,
-        bitmap: &Bitmap,
-        short_help: &str,
-    ) -> bool {
+    pub fn add_radio_tool(&self, tool_id: Id, label: &str, bitmap: &Bitmap, short_help: &str) -> bool {
         self.add_tool_raw(ToolConfig {
             tool_id,
             label,
@@ -227,13 +215,7 @@ impl ToolBar {
     /// Sets the short help string (tooltip) for a tool.
     pub fn set_tool_short_help(&self, tool_id: Id, help_string: &str) {
         let c_help = CString::new(help_string).unwrap_or_default();
-        unsafe {
-            ffi::wxd_ToolBar_SetToolShortHelp(
-                self.window.as_ptr() as *mut _,
-                tool_id,
-                c_help.as_ptr(),
-            );
-        }
+        unsafe { ffi::wxd_ToolBar_SetToolShortHelp(self.window.as_ptr() as *mut _, tool_id, c_help.as_ptr()) };
     }
 
     /// Adds a normal tool to the toolbar using a BitmapBundle instead of a Bitmap.
@@ -244,13 +226,7 @@ impl ToolBar {
     /// * `label` - Label shown if `TB_TEXT` style is used.
     /// * `bundle` - The bitmap bundle containing icons at various resolutions.
     /// * `short_help` - Short help string (tooltip).
-    pub fn add_tool_bundle(
-        &self,
-        tool_id: Id,
-        label: &str,
-        bundle: &BitmapBundle,
-        short_help: &str,
-    ) -> bool {
+    pub fn add_tool_bundle(&self, tool_id: Id, label: &str, bundle: &BitmapBundle, short_help: &str) -> bool {
         let c_label = CString::new(label).unwrap_or_default();
         let c_short_help = CString::new(short_help).unwrap_or_default();
 
@@ -314,11 +290,7 @@ impl ToolBar {
         let tool_id = XmlResource::get_xrc_id(tool_name);
 
         if tool_id != -1 {
-            Some(crate::widgets::Tool::new(
-                self.window,
-                tool_id,
-                tool_name.to_string(),
-            ))
+            Some(crate::widgets::Tool::new(self.window, tool_id, tool_name.to_string()))
         } else {
             None
         }

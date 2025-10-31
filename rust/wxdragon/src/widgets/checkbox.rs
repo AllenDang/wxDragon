@@ -24,14 +24,7 @@ impl CheckBox {
     }
 
     /// Low-level constructor used by the builder.
-    fn new_impl(
-        parent_ptr: *mut ffi::wxd_Window_t,
-        id: Id,
-        label: &str,
-        pos: Point,
-        size: Size,
-        style: i64,
-    ) -> Self {
+    fn new_impl(parent_ptr: *mut ffi::wxd_Window_t, id: Id, label: &str, pos: Point, size: Size, style: i64) -> Self {
         let label_c = CString::new(label).unwrap_or_default();
         let ctrl_ptr = unsafe {
             ffi::wxd_CheckBox_Create(

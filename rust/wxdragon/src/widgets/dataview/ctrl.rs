@@ -8,9 +8,9 @@ use wxdragon_sys as ffi;
 use super::enums::DataViewColumnFlags;
 use super::renderer::DataViewIconTextRenderer;
 use super::{
-    DataViewAlign, DataViewBitmapRenderer, DataViewCellMode, DataViewChoiceRenderer,
-    DataViewColumn, DataViewDateRenderer, DataViewItem, DataViewModel, DataViewProgressRenderer,
-    DataViewSpinRenderer, DataViewTextRenderer, DataViewToggleRenderer, VariantType,
+    DataViewAlign, DataViewBitmapRenderer, DataViewCellMode, DataViewChoiceRenderer, DataViewColumn, DataViewDateRenderer,
+    DataViewItem, DataViewModel, DataViewProgressRenderer, DataViewSpinRenderer, DataViewTextRenderer, DataViewToggleRenderer,
+    VariantType,
 };
 
 use crate::color::Colour;
@@ -118,13 +118,7 @@ impl DataViewCtrl {
         DataViewCtrlBuilder::new(parent)
     }
 
-    fn new_impl(
-        parent_ptr: *mut ffi::wxd_Window_t,
-        id: i32,
-        pos: Point,
-        size: Size,
-        style: i64,
-    ) -> Self {
+    fn new_impl(parent_ptr: *mut ffi::wxd_Window_t, id: i32, pos: Point, size: Size, style: i64) -> Self {
         let handle = unsafe {
             ffi::wxd_DataViewCtrl_Create(
                 parent_ptr,
@@ -191,13 +185,7 @@ impl DataViewCtrl {
     ///
     /// `true` if the column was successfully inserted, `false` otherwise.
     pub fn insert_column(&self, pos: usize, column: &DataViewColumn) -> bool {
-        unsafe {
-            ffi::wxd_DataViewCtrl_InsertColumn(
-                self.window.handle_ptr(),
-                pos as i64,
-                column.as_raw(),
-            )
-        }
+        unsafe { ffi::wxd_DataViewCtrl_InsertColumn(self.window.handle_ptr(), pos as i64, column.as_raw()) }
     }
 
     /// Selects the specified row.
@@ -247,8 +235,7 @@ impl DataViewCtrl {
         align: DataViewAlign,
         flags: DataViewColumnFlags,
     ) -> bool {
-        let renderer =
-            DataViewTextRenderer::new(VariantType::String, DataViewCellMode::Inert, align);
+        let renderer = DataViewTextRenderer::new(VariantType::String, DataViewCellMode::Inert, align);
         let column = DataViewColumn::new(label, &renderer, model_column, width, align, flags);
         self.append_column(&column)
     }
@@ -276,8 +263,7 @@ impl DataViewCtrl {
         align: DataViewAlign,
         flags: DataViewColumnFlags,
     ) -> bool {
-        let renderer =
-            DataViewToggleRenderer::new(VariantType::Bool, DataViewCellMode::Activatable, align);
+        let renderer = DataViewToggleRenderer::new(VariantType::Bool, DataViewCellMode::Activatable, align);
         let column = DataViewColumn::new(label, &renderer, model_column, width, align, flags);
         self.append_column(&column)
     }
@@ -296,22 +282,9 @@ impl DataViewCtrl {
     /// # Returns
     ///
     /// `true` if the column was successfully appended, `false` otherwise.
-    pub fn append_progress_column(
-        &self,
-        label: &str,
-        model_column: usize,
-        width: i32,
-        flags: DataViewColumnFlags,
-    ) -> bool {
+    pub fn append_progress_column(&self, label: &str, model_column: usize, width: i32, flags: DataViewColumnFlags) -> bool {
         let renderer = DataViewProgressRenderer::new(VariantType::Int32, DataViewCellMode::Inert);
-        let column = DataViewColumn::new(
-            label,
-            &renderer,
-            model_column,
-            width,
-            DataViewAlign::Center,
-            flags,
-        );
+        let column = DataViewColumn::new(label, &renderer, model_column, width, DataViewAlign::Center, flags);
         self.append_column(&column)
     }
 
@@ -366,8 +339,7 @@ impl DataViewCtrl {
         align: DataViewAlign,
         flags: DataViewColumnFlags,
     ) -> bool {
-        let renderer =
-            DataViewDateRenderer::new(VariantType::DateTime, DataViewCellMode::Activatable, align);
+        let renderer = DataViewDateRenderer::new(VariantType::DateTime, DataViewCellMode::Activatable, align);
         let column = DataViewColumn::new(label, &renderer, model_column, width, align, flags);
         self.append_column(&column)
     }
@@ -397,12 +369,7 @@ impl DataViewCtrl {
         choices: &[&str],
         flags: DataViewColumnFlags,
     ) -> bool {
-        let renderer = DataViewChoiceRenderer::new(
-            VariantType::String,
-            choices,
-            DataViewCellMode::Editable,
-            align,
-        );
+        let renderer = DataViewChoiceRenderer::new(VariantType::String, choices, DataViewCellMode::Editable, align);
         let column = DataViewColumn::new(label, &renderer, model_column, width, align, flags);
         self.append_column(&column)
     }
@@ -459,8 +426,7 @@ impl DataViewCtrl {
         align: DataViewAlign,
         flags: DataViewColumnFlags,
     ) -> bool {
-        let renderer =
-            DataViewIconTextRenderer::new(VariantType::String, DataViewCellMode::Inert, align);
+        let renderer = DataViewIconTextRenderer::new(VariantType::String, DataViewCellMode::Inert, align);
         let column = DataViewColumn::new(label, &renderer, model_column, width, align, flags);
         self.append_column(&column)
     }
@@ -487,8 +453,7 @@ impl DataViewCtrl {
         if pos >= self.get_column_count() {
             return None; // Prevent out-of-bounds access
         }
-        let raw_col =
-            unsafe { ffi::wxd_DataViewCtrl_GetColumn(self.window.handle_ptr(), pos as u32) };
+        let raw_col = unsafe { ffi::wxd_DataViewCtrl_GetColumn(self.window.handle_ptr(), pos as u32) };
         if raw_col.is_null() {
             None
         } else {
@@ -507,9 +472,7 @@ impl DataViewCtrl {
     ///
     /// The position of the column, or -1 if not found.
     pub fn get_column_position(&self, column: &DataViewColumn) -> i32 {
-        unsafe {
-            ffi::wxd_DataViewCtrl_GetColumnPosition(self.window.handle_ptr(), column.as_raw())
-        }
+        unsafe { ffi::wxd_DataViewCtrl_GetColumnPosition(self.window.handle_ptr(), column.as_raw()) }
     }
 
     /// Removes all columns from the control.
@@ -609,13 +572,7 @@ impl DataViewCtrl {
     /// * `items` - The items to select.
     pub fn set_selections(&self, items: &[DataViewItem]) {
         let items_raw: Vec<_> = items.iter().map(|item| **item).collect();
-        unsafe {
-            ffi::wxd_DataViewCtrl_SetSelections(
-                self.window.handle_ptr(),
-                items_raw.as_ptr(),
-                items_raw.len() as u32,
-            );
-        }
+        unsafe { ffi::wxd_DataViewCtrl_SetSelections(self.window.handle_ptr(), items_raw.as_ptr(), items_raw.len() as u32) };
     }
 
     /// Gets the currently focused item.
@@ -634,8 +591,7 @@ impl DataViewCtrl {
 
     /// Gets the nth child of a parent item (works for tree models attached to a DataViewCtrl)
     pub fn get_nth_child(&self, parent: &DataViewItem, pos: u32) -> DataViewItem {
-        let item =
-            unsafe { ffi::wxd_DataViewCtrl_GetNthChild(self.window.handle_ptr(), **parent, pos) };
+        let item = unsafe { ffi::wxd_DataViewCtrl_GetNthChild(self.window.handle_ptr(), **parent, pos) };
         DataViewItem::from(item)
     }
 
@@ -710,9 +666,7 @@ impl DataViewCtrl {
     ///
     /// * `column` - The column to use as the expander column.
     pub fn set_expander_column(&self, column: &DataViewColumn) {
-        unsafe {
-            ffi::wxd_DataViewCtrl_SetExpanderColumn(self.window.handle_ptr(), column.as_raw())
-        }
+        unsafe { ffi::wxd_DataViewCtrl_SetExpanderColumn(self.window.handle_ptr(), column.as_raw()) }
     }
 
     /// Sets the height of each row.
@@ -743,9 +697,7 @@ impl DataViewCtrl {
     /// `true` if the operation was successful, `false` otherwise.
     pub fn set_alternate_row_colour(&self, colour: &Colour) -> bool {
         let colour_raw = colour.to_raw();
-        unsafe {
-            ffi::wxd_DataViewCtrl_SetAlternateRowColour(self.window.handle_ptr(), &colour_raw)
-        }
+        unsafe { ffi::wxd_DataViewCtrl_SetAlternateRowColour(self.window.handle_ptr(), &colour_raw) }
     }
 }
 

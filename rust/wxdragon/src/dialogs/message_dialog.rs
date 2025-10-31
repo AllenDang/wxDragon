@@ -45,11 +45,7 @@ impl MessageDialog {
         }
     }
 
-    pub fn builder<'a>(
-        parent: &'a dyn WxWidget,
-        message: &str,
-        caption: &str,
-    ) -> MessageDialogBuilder<'a> {
+    pub fn builder<'a>(parent: &'a dyn WxWidget, message: &str, caption: &str) -> MessageDialogBuilder<'a> {
         MessageDialogBuilder::new(parent, message, caption)
     }
 
@@ -124,10 +120,7 @@ impl<'a> MessageDialogBuilder<'a> {
         let c_message = CString::new(self.message).expect("CString::new failed for message");
         let c_caption = CString::new(self.caption).expect("CString::new failed for caption");
         let parent_ptr = self.parent.handle_ptr();
-        assert!(
-            !parent_ptr.is_null(),
-            "MessageDialog requires a valid parent window pointer."
-        );
+        assert!(!parent_ptr.is_null(), "MessageDialog requires a valid parent window pointer.");
 
         let ptr = unsafe {
             ffi::wxd_MessageDialog_Create(

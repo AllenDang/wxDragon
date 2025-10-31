@@ -46,14 +46,8 @@ impl AnimationCtrl {
 
     /// Load an animation from a file.
     pub fn load_file(&self, animation_file: &str) -> bool {
-        let c_animation_file =
-            CString::new(animation_file).expect("CString::new failed for animation_file");
-        unsafe {
-            ffi::wxd_AnimationCtrl_LoadFile(
-                self.window.as_ptr() as *mut _,
-                c_animation_file.as_ptr(),
-            )
-        }
+        let c_animation_file = CString::new(animation_file).expect("CString::new failed for animation_file");
+        unsafe { ffi::wxd_AnimationCtrl_LoadFile(self.window.as_ptr() as *mut _, c_animation_file.as_ptr()) }
     }
 
     /// Load an animation from bytes.
@@ -61,13 +55,7 @@ impl AnimationCtrl {
         if data.is_empty() {
             return false;
         }
-        unsafe {
-            ffi::wxd_AnimationCtrl_LoadFromBytes(
-                self.window.as_ptr() as *mut _,
-                data.as_ptr(),
-                data.len(),
-            )
-        }
+        unsafe { ffi::wxd_AnimationCtrl_LoadFromBytes(self.window.as_ptr() as *mut _, data.as_ptr(), data.len()) }
     }
 }
 

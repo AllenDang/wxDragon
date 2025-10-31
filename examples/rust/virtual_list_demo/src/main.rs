@@ -1,8 +1,7 @@
 use std::any::Any;
 use wxdragon::prelude::*;
 use wxdragon::widgets::virtual_list::{
-    ItemSizingMode, VirtualList, VirtualListDataSource, VirtualListItemRenderer,
-    VirtualListLayoutMode,
+    ItemSizingMode, VirtualList, VirtualListDataSource, VirtualListItemRenderer, VirtualListLayoutMode,
 };
 
 // Sample data structure for our virtual list
@@ -23,9 +22,7 @@ pub struct ListItemRenderer;
 
 impl VirtualListItemRenderer for ListItemRenderer {
     fn create_item(&self, parent: &Panel) -> Panel {
-        let panel = Panel::builder(parent)
-            .with_style(PanelStyle::TabTraversal)
-            .build();
+        let panel = Panel::builder(parent).with_style(PanelStyle::TabTraversal).build();
 
         // Create widgets with specific IDs for later lookup
         let title = StaticText::builder(&panel)
@@ -38,10 +35,7 @@ impl VirtualListItemRenderer for ListItemRenderer {
             .with_label("") // Empty initially
             .build();
 
-        let button = Button::builder(&panel)
-            .with_id(BUTTON_ID)
-            .with_label("Click me!")
-            .build();
+        let button = Button::builder(&panel).with_id(BUTTON_ID).with_label("Click me!").build();
 
         // Set up button click handler ONCE during creation
         // Use find_window_by_id to get current item data at click time
@@ -97,20 +91,10 @@ impl VirtualListItemRenderer for ListItemRenderer {
         );
 
         // Description with minimal padding - let it take only the space it needs
-        sizer.add(
-            &description,
-            0,
-            SizerFlag::Expand | SizerFlag::Left | SizerFlag::Right,
-            2,
-        );
+        sizer.add(&description, 0, SizerFlag::Expand | SizerFlag::Left | SizerFlag::Right, 2);
 
         // Button with minimal bottom padding
-        sizer.add(
-            &button,
-            0,
-            SizerFlag::Left | SizerFlag::Right | SizerFlag::Bottom,
-            4,
-        );
+        sizer.add(&button, 0, SizerFlag::Left | SizerFlag::Right | SizerFlag::Bottom, 4);
 
         panel.set_sizer(sizer, true);
 
@@ -125,11 +109,7 @@ impl VirtualListItemRenderer for ListItemRenderer {
                 && let Some(title) = title_window.as_widget::<StaticText>()
             {
                 let panel_width = panel.get_size().width;
-                let wrap_width = if panel_width > 60 {
-                    panel_width - 20
-                } else {
-                    350
-                };
+                let wrap_width = if panel_width > 60 { panel_width - 20 } else { 350 };
 
                 // Reset text to remove existing line breaks, then apply new wrap
                 title.set_label(&item_data.title);
@@ -140,11 +120,7 @@ impl VirtualListItemRenderer for ListItemRenderer {
                 && let Some(description) = desc_window.as_widget::<StaticText>()
             {
                 let panel_width = panel.get_size().width;
-                let wrap_width = if panel_width > 60 {
-                    panel_width - 20
-                } else {
-                    400
-                };
+                let wrap_width = if panel_width > 60 { panel_width - 20 } else { 400 };
 
                 // Reset text to remove existing line breaks, then apply new wrap
                 description.set_label(&item_data.description);
@@ -169,9 +145,7 @@ pub struct HorizontalListItemRenderer;
 
 impl VirtualListItemRenderer for HorizontalListItemRenderer {
     fn create_item(&self, parent: &Panel) -> Panel {
-        let panel = Panel::builder(parent)
-            .with_style(PanelStyle::TabTraversal)
-            .build();
+        let panel = Panel::builder(parent).with_style(PanelStyle::TabTraversal).build();
 
         // Create widgets with specific IDs for later lookup
         let title = StaticText::builder(&panel)
@@ -184,10 +158,7 @@ impl VirtualListItemRenderer for HorizontalListItemRenderer {
             .with_label("") // Empty initially
             .build();
 
-        let button = Button::builder(&panel)
-            .with_id(BUTTON_ID)
-            .with_label("Click me!")
-            .build();
+        let button = Button::builder(&panel).with_id(BUTTON_ID).with_label("Click me!").build();
 
         // Set up button click handler ONCE during creation
         let panel_for_click = panel.clone();
@@ -250,12 +221,7 @@ impl VirtualListItemRenderer for HorizontalListItemRenderer {
         );
 
         // Button with minimal bottom padding
-        sizer.add(
-            &button,
-            0,
-            SizerFlag::Left | SizerFlag::Right | SizerFlag::Bottom,
-            4,
-        );
+        sizer.add(&button, 0, SizerFlag::Left | SizerFlag::Right | SizerFlag::Bottom, 4);
 
         panel.set_sizer(sizer, true);
 
@@ -361,9 +327,7 @@ fn main() {
         horizontal_list.set_item_sizing_mode(ItemSizingMode::FixedSize);
 
         // Create labels for the lists
-        let vertical_label = StaticText::builder(&main_panel)
-            .with_label("Vertical Virtual List:")
-            .build();
+        let vertical_label = StaticText::builder(&main_panel).with_label("Vertical Virtual List:").build();
 
         let horizontal_label = StaticText::builder(&main_panel)
             .with_label("Horizontal Virtual List:")

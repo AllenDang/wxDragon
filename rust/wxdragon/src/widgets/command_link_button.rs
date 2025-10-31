@@ -65,12 +65,8 @@ impl CommandLinkButton {
     /// Sets the note displayed on the button.
     pub fn set_note(&self, note: &str) {
         let c_note = CString::new(note).expect("CString::new for note failed");
-        unsafe {
-            ffi::wxd_CommandLinkButton_SetNote(
-                self.button.handle_ptr() as *mut ffi::wxd_CommandLinkButton_t, // Cast to specific type
-                c_note.as_ptr(),
-            );
-        }
+        let ptr = self.button.handle_ptr() as *mut ffi::wxd_CommandLinkButton_t;
+        unsafe { ffi::wxd_CommandLinkButton_SetNote(ptr, c_note.as_ptr()) };
     }
 
     // Getters for main label and note could be added if wxCommandLinkButton provides them

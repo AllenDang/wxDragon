@@ -84,8 +84,7 @@ impl DateTime {
         }
 
         let c_month = month - 1; // convert to 0-based
-        let ptr =
-            unsafe { ffi::wxd_DateTime_FromComponents(year, c_month, day, hour, minute, second) };
+        let ptr = unsafe { ffi::wxd_DateTime_FromComponents(year, c_month, day, hour, minute, second) };
         if ptr.is_null() {
             return Self::default();
         }

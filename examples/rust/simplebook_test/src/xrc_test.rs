@@ -66,14 +66,9 @@ fn setup_xrc_event_handlers(ui: &SimpleBookXrcUI) {
     // Listen for page change events
     let statusbar = ui.main_statusbar.clone();
     ui.demo_simplebook.on_page_changed(move |event| {
-        if let (Some(old_page), Some(new_page)) = (event.get_old_selection(), event.get_selection())
-        {
+        if let (Some(old_page), Some(new_page)) = (event.get_old_selection(), event.get_selection()) {
             statusbar.set_status_text(
-                &format!(
-                    "XRC Demo: Changed from page {} to page {}",
-                    old_page + 1,
-                    new_page + 1
-                ),
+                &format!("XRC Demo: Changed from page {} to page {}", old_page + 1, new_page + 1),
                 0,
             );
         }

@@ -47,12 +47,7 @@ fn main() {
         let title = StaticText::builder(&panel)
             .with_label("Custom Widgets Demo - Hover over the button and pie chart!")
             .build();
-        main_sizer.add(
-            &title,
-            0,
-            SizerFlag::AlignCenterHorizontal | SizerFlag::All,
-            10,
-        );
+        main_sizer.add(&title, 0, SizerFlag::AlignCenterHorizontal | SizerFlag::All, 10);
 
         main_sizer.add_spacer(20);
 
@@ -61,17 +56,13 @@ fn main() {
 
         // Left side - button
         let left_sizer = BoxSizer::builder(Orientation::Vertical).build();
-        let button_label = StaticText::builder(&panel)
-            .with_label("Animated Fill Button:")
-            .build();
+        let button_label = StaticText::builder(&panel).with_label("Animated Fill Button:").build();
         left_sizer.add(&button_label, 0, SizerFlag::All, 5);
         left_sizer.add(&button1, 0, SizerFlag::All, 10);
 
         // Right side - pie chart
         let right_sizer = BoxSizer::builder(Orientation::Vertical).build();
-        let chart_label = StaticText::builder(&panel)
-            .with_label("Interactive Pie Chart:")
-            .build();
+        let chart_label = StaticText::builder(&panel).with_label("Interactive Pie Chart:").build();
         right_sizer.add(&chart_label, 0, SizerFlag::All, 5);
         right_sizer.add(&pie_chart, 1, SizerFlag::Expand | SizerFlag::All, 10);
 

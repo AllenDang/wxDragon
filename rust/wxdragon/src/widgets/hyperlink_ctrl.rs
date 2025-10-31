@@ -54,14 +54,11 @@ impl HyperlinkCtrlEventData {
         // To get the URL, we need to find the HyperlinkCtrl that triggered this event
         if let Some(window_obj) = self.event.get_event_object() {
             // Create a HyperlinkCtrl from the window pointer
-            unsafe {
-                let hyperlink = HyperlinkCtrl::from_ptr(
-                    window_obj.handle_ptr() as *mut ffi::wxd_HyperlinkCtrl_t
-                );
-                let url = hyperlink.get_url();
-                if !url.is_empty() {
-                    return Some(url);
-                }
+
+            let hyperlink = unsafe { HyperlinkCtrl::from_ptr(window_obj.handle_ptr() as *mut ffi::wxd_HyperlinkCtrl_t) };
+            let url = hyperlink.get_url();
+            if !url.is_empty() {
+                return Some(url);
             }
         }
         None
@@ -82,53 +79,33 @@ impl HyperlinkCtrl {
 
     /// Gets the URL associated with the hyperlink.
     pub fn get_url(&self) -> String {
-        unsafe {
-            let c_str_ptr = ffi::wxd_HyperlinkCtrl_GetURL(
-                self.window.as_ptr() as *mut ffi::wxd_HyperlinkCtrl_t
-            );
-            if c_str_ptr.is_null() {
-                String::new()
-            } else {
-                CStr::from_ptr(c_str_ptr).to_string_lossy().into_owned()
-            }
+        let c_str_ptr = unsafe { ffi::wxd_HyperlinkCtrl_GetURL(self.window.as_ptr() as *mut ffi::wxd_HyperlinkCtrl_t) };
+        if c_str_ptr.is_null() {
+            String::new()
+        } else {
+            unsafe { CStr::from_ptr(c_str_ptr).to_string_lossy().into_owned() }
         }
     }
 
     /// Sets the URL associated with the hyperlink.
     pub fn set_url(&self, url: &str) {
         let c_url = CString::new(url).expect("CString::new failed for url");
-        unsafe {
-            ffi::wxd_HyperlinkCtrl_SetURL(
-                self.window.as_ptr() as *mut ffi::wxd_HyperlinkCtrl_t,
-                c_url.as_ptr(),
-            )
-        }
+        unsafe { ffi::wxd_HyperlinkCtrl_SetURL(self.window.as_ptr() as *mut ffi::wxd_HyperlinkCtrl_t, c_url.as_ptr()) }
     }
 
     /// Returns whether the hyperlink has been visited.
     pub fn get_visited(&self) -> bool {
-        unsafe {
-            ffi::wxd_HyperlinkCtrl_GetVisited(self.window.as_ptr() as *mut ffi::wxd_HyperlinkCtrl_t)
-        }
+        unsafe { ffi::wxd_HyperlinkCtrl_GetVisited(self.window.as_ptr() as *mut ffi::wxd_HyperlinkCtrl_t) }
     }
 
     /// Sets whether the hyperlink has been visited.
     pub fn set_visited(&self, visited: bool) {
-        unsafe {
-            ffi::wxd_HyperlinkCtrl_SetVisited(
-                self.window.as_ptr() as *mut ffi::wxd_HyperlinkCtrl_t,
-                visited,
-            )
-        }
+        unsafe { ffi::wxd_HyperlinkCtrl_SetVisited(self.window.as_ptr() as *mut ffi::wxd_HyperlinkCtrl_t, visited) }
     }
 
     /// Gets the colour used when the mouse hovers over the hyperlink.
     pub fn get_hover_colour(&self) -> Colour {
-        let val = unsafe {
-            ffi::wxd_HyperlinkCtrl_GetHoverColour(
-                self.window.as_ptr() as *mut ffi::wxd_HyperlinkCtrl_t
-            )
-        };
+        let val = unsafe { ffi::wxd_HyperlinkCtrl_GetHoverColour(self.window.as_ptr() as *mut ffi::wxd_HyperlinkCtrl_t) };
         Colour::from_u32(val as u32)
     }
 
@@ -144,11 +121,7 @@ impl HyperlinkCtrl {
 
     /// Gets the normal colour of the hyperlink.
     pub fn get_normal_colour(&self) -> Colour {
-        let val = unsafe {
-            ffi::wxd_HyperlinkCtrl_GetNormalColour(
-                self.window.as_ptr() as *mut ffi::wxd_HyperlinkCtrl_t
-            )
-        };
+        let val = unsafe { ffi::wxd_HyperlinkCtrl_GetNormalColour(self.window.as_ptr() as *mut ffi::wxd_HyperlinkCtrl_t) };
         Colour::from_u32(val as u32)
     }
 
@@ -164,11 +137,7 @@ impl HyperlinkCtrl {
 
     /// Gets the colour of the visited hyperlink.
     pub fn get_visited_colour(&self) -> Colour {
-        let val = unsafe {
-            ffi::wxd_HyperlinkCtrl_GetVisitedColour(
-                self.window.as_ptr() as *mut ffi::wxd_HyperlinkCtrl_t
-            )
-        };
+        let val = unsafe { ffi::wxd_HyperlinkCtrl_GetVisitedColour(self.window.as_ptr() as *mut ffi::wxd_HyperlinkCtrl_t) };
         Colour::from_u32(val as u32)
     }
 

@@ -70,16 +70,12 @@ impl FontPickerCtrl {
     /// Gets the currently selected font.
     /// Returns `None` if no font is selected or the font is invalid.
     pub fn get_selected_font(&self) -> Option<Font> {
-        unsafe {
-            let font_ptr = ffi::wxd_FontPickerCtrl_GetSelectedFont(
-                self.window.as_ptr() as *mut ffi::wxd_FontPickerCtrl_t
-            );
-            if font_ptr.is_null() {
-                None
-            } else {
-                // The C++ code creates a new wxFont that we take ownership of
-                Some(Font::from_ptr(font_ptr, true))
-            }
+        let font_ptr = unsafe { ffi::wxd_FontPickerCtrl_GetSelectedFont(self.window.as_ptr() as *mut ffi::wxd_FontPickerCtrl_t) };
+        if font_ptr.is_null() {
+            None
+        } else {
+            // The C++ code creates a new wxFont that we take ownership of
+            Some(unsafe { Font::from_ptr(font_ptr, true) })
         }
     }
 
@@ -87,13 +83,9 @@ impl FontPickerCtrl {
     pub fn set_selected_font(&self, font: &Font) {
         // Create a new font to ensure proper ownership
         let font_copy = font.to_owned();
-        unsafe {
-            // The C++ code makes a copy of the font, so we can just pass the pointer
-            ffi::wxd_FontPickerCtrl_SetSelectedFont(
-                self.window.as_ptr() as *mut ffi::wxd_FontPickerCtrl_t,
-                font_copy.as_ptr(),
-            );
-        }
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_FontPickerCtrl_t;
+        // The C++ code makes a copy of the font, so we can just pass the pointer
+        unsafe { ffi::wxd_FontPickerCtrl_SetSelectedFont(ptr, font_copy.as_ptr()) };
         // Intentionally leak the font as the C++ side now owns it
         std::mem::forget(font_copy);
     }

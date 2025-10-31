@@ -67,12 +67,8 @@ fn retrieve_config_path() -> std::path::PathBuf {
     config_path.join("settings.json")
 }
 
-pub fn create_bitmap_from_memory(
-    data: &[u8],
-    target_size: Option<(u32, u32)>,
-) -> std::io::Result<Bitmap> {
-    let img = image::load_from_memory(data)
-        .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
+pub fn create_bitmap_from_memory(data: &[u8], target_size: Option<(u32, u32)>) -> std::io::Result<Bitmap> {
+    let img = image::load_from_memory(data).map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
 
     if let Some((w, h)) = target_size {
         use image::imageops::FilterType;
@@ -86,8 +82,7 @@ pub fn create_bitmap_from_memory(
 pub fn convert_image_to_bitmap(image: &image::DynamicImage) -> std::io::Result<Bitmap> {
     let rgba = image.to_rgba8();
     let (width, height) = rgba.dimensions();
-    let icon_bitmap = Bitmap::from_rgba(&rgba, width, height)
-        .ok_or(std::io::Error::other("Failed to create bitmap"))?;
+    let icon_bitmap = Bitmap::from_rgba(&rgba, width, height).ok_or(std::io::Error::other("Failed to create bitmap"))?;
     Ok(icon_bitmap)
 }
 

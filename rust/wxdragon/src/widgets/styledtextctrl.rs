@@ -413,22 +413,8 @@ impl StyledTextCtrl {
     }
 
     /// Internal implementation used by the builder.
-    fn new_impl(
-        parent_ptr: *mut ffi::wxd_Window_t,
-        id: Id,
-        pos: Point,
-        size: Size,
-        style: i64,
-    ) -> Self {
-        let ptr = unsafe {
-            ffi::wxd_StyledTextCtrl_Create(
-                parent_ptr,
-                id,
-                pos.into(),
-                size.into(),
-                style as ffi::wxd_Style_t,
-            )
-        };
+    fn new_impl(parent_ptr: *mut ffi::wxd_Window_t, id: Id, pos: Point, size: Size, style: i64) -> Self {
+        let ptr = unsafe { ffi::wxd_StyledTextCtrl_Create(parent_ptr, id, pos.into(), size.into(), style as ffi::wxd_Style_t) };
 
         if ptr.is_null() {
             panic!("Failed to create StyledTextCtrl widget");
@@ -442,12 +428,7 @@ impl StyledTextCtrl {
     /// Sets the text content of the control.
     pub fn set_text(&self, text: &str) {
         let c_text = CString::new(text).unwrap_or_default();
-        unsafe {
-            ffi::wxd_StyledTextCtrl_SetText(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                c_text.as_ptr(),
-            );
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_SetText(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t, c_text.as_ptr()) };
     }
 
     /// Gets the current text content of the control.
@@ -460,8 +441,7 @@ impl StyledTextCtrl {
                 buffer.len() as i32,
             );
             if len >= 0 {
-                let byte_slice =
-                    std::slice::from_raw_parts(buffer.as_ptr() as *const u8, len as usize);
+                let byte_slice = std::slice::from_raw_parts(buffer.as_ptr() as *const u8, len as usize);
                 String::from_utf8_lossy(byte_slice).to_string()
             } else {
                 String::new()
@@ -472,202 +452,119 @@ impl StyledTextCtrl {
     /// Appends text to the end of the control.
     pub fn append_text(&self, text: &str) {
         let c_text = CString::new(text).unwrap_or_default();
-        unsafe {
-            ffi::wxd_StyledTextCtrl_AppendText(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                c_text.as_ptr(),
-            );
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_AppendText(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t, c_text.as_ptr()) };
     }
 
     /// Inserts text at the specified position.
     pub fn insert_text(&self, pos: i32, text: &str) {
         let c_text = CString::new(text).unwrap_or_default();
-        unsafe {
-            ffi::wxd_StyledTextCtrl_InsertText(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                pos,
-                c_text.as_ptr(),
-            );
-        }
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t;
+        unsafe { ffi::wxd_StyledTextCtrl_InsertText(ptr, pos, c_text.as_ptr()) };
     }
 
     /// Clears all text in the control.
     pub fn clear_all(&self) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_ClearAll(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t);
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_ClearAll(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t) };
     }
 
     /// Deletes a range of text.
     pub fn delete_range(&self, start: i32, length: i32) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_DeleteRange(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                start,
-                length,
-            );
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_DeleteRange(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t, start, length) };
     }
 
     /// Returns the length of the text.
     pub fn get_length(&self) -> i32 {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_GetLength(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t)
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_GetLength(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t) }
     }
 
     /// Returns the number of lines in the control.
     pub fn get_line_count(&self) -> i32 {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_GetLineCount(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t
-            )
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_GetLineCount(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t) }
     }
 
     /// Returns the character at the specified position.
     pub fn get_char_at(&self, pos: i32) -> i32 {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_GetCharAt(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                pos,
-            )
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_GetCharAt(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t, pos) }
     }
 
     /// Returns the style at the specified position.
     pub fn get_style_at(&self, pos: i32) -> i32 {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_GetStyleAt(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                pos,
-            )
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_GetStyleAt(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t, pos) }
     }
 
     // --- Clipboard Operations ---
 
     /// Cuts the selected text to the clipboard.
     pub fn cut(&self) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_Cut(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t);
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_Cut(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t) };
     }
 
     /// Copies the selected text to the clipboard.
     pub fn copy(&self) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_Copy(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t);
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_Copy(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t) };
     }
 
     /// Pastes text from the clipboard.
     pub fn paste(&self) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_Paste(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t);
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_Paste(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t) };
     }
 
     /// Undoes the last action.
     pub fn undo(&self) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_Undo(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t);
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_Undo(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t) };
     }
 
     /// Selects all text in the control.
     pub fn select_all(&self) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_SelectAll(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t
-            );
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_SelectAll(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t) };
     }
 
     // --- Read-only State ---
 
     /// Makes the text control editable or read-only.
     pub fn set_read_only(&self, read_only: bool) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_SetReadOnly(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                read_only,
-            );
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_SetReadOnly(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t, read_only) };
     }
 
     /// Returns true if the control is read-only.
     pub fn is_read_only(&self) -> bool {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_GetReadOnly(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t
-            )
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_GetReadOnly(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t) }
     }
 
     // --- Position and Selection Operations ---
 
     /// Returns the current position.
     pub fn get_current_pos(&self) -> i32 {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_GetCurrentPos(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t
-            )
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_GetCurrentPos(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t) }
     }
 
     /// Sets the current position.
     pub fn set_current_pos(&self, pos: i32) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_SetCurrentPos(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                pos,
-            );
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_SetCurrentPos(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t, pos) };
     }
 
     /// Gets the selection range.
     pub fn get_selection(&self) -> (i32, i32) {
         let mut start = 0;
         let mut end = 0;
-        unsafe {
-            ffi::wxd_StyledTextCtrl_GetSelection(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                &mut start,
-                &mut end,
-            );
-        }
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t;
+        unsafe { ffi::wxd_StyledTextCtrl_GetSelection(ptr, &mut start, &mut end) };
         (start, end)
     }
 
     /// Sets the selection range.
     pub fn set_selection(&self, start: i32, end: i32) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_SetSelection(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                start,
-                end,
-            );
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_SetSelection(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t, start, end) };
     }
 
     /// Returns the start of the selection.
     pub fn get_selection_start(&self) -> i32 {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_GetSelectionStart(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t
-            )
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_GetSelectionStart(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t) }
     }
 
     /// Returns the end of the selection.
     pub fn get_selection_end(&self) -> i32 {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_GetSelectionEnd(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t
-            )
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_GetSelectionEnd(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t) }
     }
 
     /// Gets the currently selected text.
@@ -680,8 +577,7 @@ impl StyledTextCtrl {
                 buffer.len() as i32,
             );
             if len >= 0 {
-                let byte_slice =
-                    std::slice::from_raw_parts(buffer.as_ptr() as *const u8, len as usize);
+                let byte_slice = std::slice::from_raw_parts(buffer.as_ptr() as *const u8, len as usize);
                 String::from_utf8_lossy(byte_slice).to_string()
             } else {
                 String::new()
@@ -691,12 +587,8 @@ impl StyledTextCtrl {
 
     /// Set the selection mode (stream, rectangle, lines, etc.)
     pub fn set_selection_mode(&self, selection_mode: i32) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_SetSelectionMode(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                selection_mode,
-            );
-        }
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t;
+        unsafe { ffi::wxd_StyledTextCtrl_SetSelectionMode(ptr, selection_mode) };
     }
 
     /// Set selection mode with type-safe enum
@@ -706,75 +598,41 @@ impl StyledTextCtrl {
 
     /// Gets the current selection mode.
     pub fn get_selection_mode(&self) -> i32 {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_GetSelectionMode(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t
-            )
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_GetSelectionMode(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t) }
     }
 
     // --- Navigation and View Operations ---
 
     /// Ensures the caret is visible in the view.
     pub fn ensure_caret_visible(&self) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_EnsureCaretVisible(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t
-            );
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_EnsureCaretVisible(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t) };
     }
 
     /// Scrolls the view by the specified number of columns and lines.
     pub fn line_scroll(&self, columns: i32, lines: i32) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_LineScroll(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                columns,
-                lines,
-            );
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_LineScroll(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t, columns, lines) };
     }
 
     /// Scrolls to make the specified line visible.
     pub fn scroll_to_line(&self, line: i32) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_ScrollToLine(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                line,
-            );
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_ScrollToLine(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t, line) };
     }
 
     /// Scrolls to make the specified column visible.
     pub fn scroll_to_column(&self, column: i32) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_ScrollToColumn(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                column,
-            );
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_ScrollToColumn(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t, column) };
     }
 
     // --- Line Operations ---
 
     /// Returns the line number for a position.
     pub fn line_from_position(&self, pos: i32) -> i32 {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_LineFromPosition(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                pos,
-            )
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_LineFromPosition(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t, pos) }
     }
 
     /// Returns the position at the start of a line.
     pub fn position_from_line(&self, line: i32) -> i32 {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_PositionFromLine(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                line,
-            )
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_PositionFromLine(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t, line) }
     }
 
     /// Gets the text for a specific line.
@@ -788,8 +646,7 @@ impl StyledTextCtrl {
                 buffer.len() as i32,
             );
             if len >= 0 {
-                let byte_slice =
-                    std::slice::from_raw_parts(buffer.as_ptr() as *const u8, len as usize);
+                let byte_slice = std::slice::from_raw_parts(buffer.as_ptr() as *const u8, len as usize);
                 String::from_utf8_lossy(byte_slice).to_string()
             } else {
                 String::new()
@@ -799,251 +656,135 @@ impl StyledTextCtrl {
 
     /// Returns the length of a specific line.
     pub fn get_line_length(&self, line: i32) -> i32 {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_GetLineLength(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                line,
-            )
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_GetLineLength(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t, line) }
     }
 
     // --- Marker Operations ---
 
     /// Define a marker with the specified symbol and colors
-    pub fn marker_define(
-        &self,
-        marker_number: i32,
-        marker_symbol: i32,
-        foreground: Colour,
-        background: Colour,
-    ) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_MarkerDefine(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                marker_number,
-                marker_symbol,
-                foreground.into(),
-                background.into(),
-            );
-        }
+    pub fn marker_define(&self, marker_number: i32, marker_symbol: i32, foreground: Colour, background: Colour) {
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t;
+        unsafe { ffi::wxd_StyledTextCtrl_MarkerDefine(ptr, marker_number, marker_symbol, foreground.into(), background.into()) };
     }
 
     /// Define a marker with type-safe marker symbol
-    pub fn marker_define_symbol(
-        &self,
-        marker_number: i32,
-        marker_symbol: MarkerSymbol,
-        foreground: Colour,
-        background: Colour,
-    ) {
+    pub fn marker_define_symbol(&self, marker_number: i32, marker_symbol: MarkerSymbol, foreground: Colour, background: Colour) {
         self.marker_define(marker_number, marker_symbol.into(), foreground, background);
     }
 
     /// Adds a marker to a line.
     pub fn marker_add(&self, line: i32, marker_number: i32) -> i32 {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_MarkerAdd(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                line,
-                marker_number,
-            )
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_MarkerAdd(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t, line, marker_number) }
     }
 
     /// Deletes a marker from a line.
     pub fn marker_delete(&self, line: i32, marker_number: i32) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_MarkerDelete(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                line,
-                marker_number,
-            );
-        }
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t;
+        unsafe { ffi::wxd_StyledTextCtrl_MarkerDelete(ptr, line, marker_number) };
     }
 
     /// Deletes all markers of a specific type.
     pub fn marker_delete_all(&self, marker_number: i32) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_MarkerDeleteAll(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                marker_number,
-            );
-        }
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t;
+        unsafe { ffi::wxd_StyledTextCtrl_MarkerDeleteAll(ptr, marker_number) };
     }
 
     /// Gets the markers on a line.
     pub fn marker_get(&self, line: i32) -> i32 {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_MarkerGet(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                line,
-            )
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_MarkerGet(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t, line) }
     }
 
     /// Finds the next line with a marker.
     pub fn marker_next(&self, line_start: i32, marker_mask: i32) -> i32 {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_MarkerNext(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                line_start,
-                marker_mask,
-            )
-        }
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t;
+        unsafe { ffi::wxd_StyledTextCtrl_MarkerNext(ptr, line_start, marker_mask) }
     }
 
     /// Finds the previous line with a marker.
     pub fn marker_previous(&self, line_start: i32, marker_mask: i32) -> i32 {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_MarkerPrevious(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                line_start,
-                marker_mask,
-            )
-        }
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t;
+        unsafe { ffi::wxd_StyledTextCtrl_MarkerPrevious(ptr, line_start, marker_mask) }
     }
 
     /// Sets the foreground color for a marker.
     pub fn marker_set_foreground(&self, marker_number: i32, color: Colour) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_MarkerSetForeground(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                marker_number,
-                color.into(),
-            );
-        }
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t;
+        unsafe { ffi::wxd_StyledTextCtrl_MarkerSetForeground(ptr, marker_number, color.into()) };
     }
 
     /// Sets the background color for a marker.
     pub fn marker_set_background(&self, marker_number: i32, color: Colour) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_MarkerSetBackground(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                marker_number,
-                color.into(),
-            );
-        }
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t;
+        unsafe { ffi::wxd_StyledTextCtrl_MarkerSetBackground(ptr, marker_number, color.into()) };
     }
 
     // --- Styling Operations ---
 
     /// Sets the font for a specific style.
     pub fn style_set_font(&self, style: i32, font: &Font) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_StyleSetFont(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                style,
-                font.as_ptr(),
-            );
-        }
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t;
+        unsafe { ffi::wxd_StyledTextCtrl_StyleSetFont(ptr, style, font.as_ptr()) };
     }
 
     /// Sets the foreground color for a specific style.
     pub fn style_set_foreground(&self, style: i32, color: Colour) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_StyleSetForeground(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                style,
-                color.into(),
-            );
-        }
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t;
+        unsafe { ffi::wxd_StyledTextCtrl_StyleSetForeground(ptr, style, color.into()) };
     }
 
     /// Sets the background color for a specific style.
     pub fn style_set_background(&self, style: i32, color: Colour) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_StyleSetBackground(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                style,
-                color.into(),
-            );
-        }
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t;
+        unsafe { ffi::wxd_StyledTextCtrl_StyleSetBackground(ptr, style, color.into()) };
     }
 
     /// Sets the bold attribute for a specific style.
     pub fn style_set_bold(&self, style: i32, bold: bool) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_StyleSetBold(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                style,
-                bold,
-            );
-        }
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t;
+        unsafe { ffi::wxd_StyledTextCtrl_StyleSetBold(ptr, style, bold) };
     }
 
     /// Sets the italic attribute for a specific style.
     pub fn style_set_italic(&self, style: i32, italic: bool) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_StyleSetItalic(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                style,
-                italic,
-            );
-        }
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t;
+        unsafe { ffi::wxd_StyledTextCtrl_StyleSetItalic(ptr, style, italic) };
     }
 
     /// Sets the underline attribute for a specific style.
     pub fn style_set_underline(&self, style: i32, underline: bool) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_StyleSetUnderline(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                style,
-                underline,
-            );
-        }
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t;
+        unsafe { ffi::wxd_StyledTextCtrl_StyleSetUnderline(ptr, style, underline) };
     }
 
     /// Sets the font size for a specific style.
     pub fn style_set_size(&self, style: i32, size: i32) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_StyleSetSize(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                style,
-                size,
-            );
-        }
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t;
+        unsafe { ffi::wxd_StyledTextCtrl_StyleSetSize(ptr, style, size) };
     }
 
     /// Clears all style definitions and sets them to default.
     pub fn style_clear_all(&self) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_StyleClearAll(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t
-            );
-        }
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t;
+        unsafe { ffi::wxd_StyledTextCtrl_StyleClearAll(ptr) };
     }
 
     /// Prepares to set styling for text starting at the given position.
     pub fn start_styling(&self, start: i32) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_StartStyling(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                start,
-            );
-        }
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t;
+        unsafe { ffi::wxd_StyledTextCtrl_StartStyling(ptr, start) };
     }
 
     /// Sets styling for a range of text.
     pub fn set_styling(&self, length: i32, style: i32) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_SetStyling(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                length,
-                style,
-            );
-        }
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t;
+        unsafe { ffi::wxd_StyledTextCtrl_SetStyling(ptr, length, style) };
     }
 
     // --- Lexer and Language Support ---
 
     /// Set the lexer for syntax highlighting
     pub fn set_lexer(&self, lexer: i32) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_SetLexer(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                lexer,
-            );
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_SetLexer(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t, lexer) };
     }
 
     /// Set lexer with type-safe enum
@@ -1053,33 +794,22 @@ impl StyledTextCtrl {
 
     /// Gets the current lexer.
     pub fn get_lexer(&self) -> i32 {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_GetLexer(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t)
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_GetLexer(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t) }
     }
 
     /// Sets the lexer language.
     pub fn set_lexer_language(&self, language: &str) {
         let c_language = CString::new(language).unwrap_or_default();
-        unsafe {
-            ffi::wxd_StyledTextCtrl_SetLexerLanguage(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                c_language.as_ptr(),
-            );
-        }
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t;
+        unsafe { ffi::wxd_StyledTextCtrl_SetLexerLanguage(ptr, c_language.as_ptr()) };
     }
 
     // --- Margin Operations ---
 
     /// Set the type of margin (symbol, number, text, etc.)
     pub fn set_margin_type(&self, margin: i32, margin_type: MarginType) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_SetMarginType(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                margin,
-                margin_type as i32,
-            );
-        }
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t;
+        unsafe { ffi::wxd_StyledTextCtrl_SetMarginType(ptr, margin, margin_type as i32) };
     }
 
     /// Set margin type with type-safe enum
@@ -1089,154 +819,91 @@ impl StyledTextCtrl {
 
     /// Sets the width of a margin in pixels.
     pub fn set_margin_width(&self, margin: i32, pixel_width: i32) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_SetMarginWidth(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                margin,
-                pixel_width,
-            );
-        }
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t;
+        unsafe { ffi::wxd_StyledTextCtrl_SetMarginWidth(ptr, margin, pixel_width) };
     }
 
     /// Sets whether a margin displays line numbers.
     pub fn set_margin_line_numbers(&self, margin: i32, line_numbers: bool) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_SetMarginLineNumbers(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                margin,
-                line_numbers,
-            );
-        }
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t;
+        unsafe { ffi::wxd_StyledTextCtrl_SetMarginLineNumbers(ptr, margin, line_numbers) };
     }
 
     // --- Zoom Operations ---
 
     /// Zooms in (increases font size).
     pub fn zoom_in(&self) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_ZoomIn(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t);
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_ZoomIn(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t) };
     }
 
     /// Zooms out (decreases font size).
     pub fn zoom_out(&self) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_ZoomOut(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t);
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_ZoomOut(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t) };
     }
 
     /// Sets the zoom level.
     pub fn set_zoom(&self, zoom_level: i32) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_SetZoom(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                zoom_level,
-            );
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_SetZoom(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t, zoom_level) };
     }
 
     /// Gets the current zoom level.
     pub fn get_zoom(&self) -> i32 {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_GetZoom(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t)
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_GetZoom(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t) }
     }
 
     // --- Modified State ---
 
     /// Returns true if the text has been modified.
     pub fn is_modified(&self) -> bool {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_GetModify(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t)
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_GetModify(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t) }
     }
 
     /// Sets the save point (marks the document as saved).
     pub fn set_save_point(&self) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_SetSavePoint(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t
-            );
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_SetSavePoint(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t) };
     }
 
     // --- Find and Replace ---
 
     pub fn search_anchor(&self) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_SearchAnchor(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t
-            )
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_SearchAnchor(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t) }
     }
 
     /// Find text in the document with specified flags
-    pub fn find_text(
-        &self,
-        min_pos: i32,
-        max_pos: i32,
-        text: &str,
-        flags: FindFlags,
-    ) -> Option<i32> {
+    pub fn find_text(&self, min_pos: i32, max_pos: i32, text: &str, flags: FindFlags) -> Option<i32> {
         let c_text = CString::new(text).unwrap();
-        unsafe {
-            let result = ffi::wxd_StyledTextCtrl_FindText(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                min_pos,
-                max_pos,
-                c_text.as_ptr(),
-                flags.bits_i32(),
-            );
-            if result >= 0 { Some(result) } else { None }
-        }
+
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t;
+        let result = unsafe { ffi::wxd_StyledTextCtrl_FindText(ptr, min_pos, max_pos, c_text.as_ptr(), flags.bits_i32()) };
+        if result >= 0 { Some(result) } else { None }
     }
 
     /// Find text with type-safe flags
-    pub fn find_text_typed(
-        &self,
-        min_pos: i32,
-        max_pos: i32,
-        text: &str,
-        flags: FindFlags,
-    ) -> Option<i32> {
+    pub fn find_text_typed(&self, min_pos: i32, max_pos: i32, text: &str, flags: FindFlags) -> Option<i32> {
         self.find_text(min_pos, max_pos, text, flags)
     }
 
     /// Find text with combined flags
-    pub fn find_text_combined_flags(
-        &self,
-        min_pos: i32,
-        max_pos: i32,
-        text: &str,
-        flags: i32,
-    ) -> Option<i32> {
+    pub fn find_text_combined_flags(&self, min_pos: i32, max_pos: i32, text: &str, flags: i32) -> Option<i32> {
         self.find_text(min_pos, max_pos, text, FindFlags::from(flags))
     }
 
     /// Search for text forwards from current position
     pub fn search_next(&self, search_flags: FindFlags, text: &str) -> Option<i32> {
         let c_text = CString::new(text).unwrap();
-        unsafe {
-            let result = ffi::wxd_StyledTextCtrl_SearchNext(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                search_flags.bits_i32(),
-                c_text.as_ptr(),
-            );
-            if result >= 0 { Some(result) } else { None }
-        }
+
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t;
+        let result = unsafe { ffi::wxd_StyledTextCtrl_SearchNext(ptr, search_flags.bits_i32(), c_text.as_ptr()) };
+        if result >= 0 { Some(result) } else { None }
     }
 
     /// Search for text backwards from current position
     pub fn search_prev(&self, search_flags: FindFlags, text: &str) -> Option<i32> {
         let c_text = CString::new(text).unwrap();
-        unsafe {
-            let result = ffi::wxd_StyledTextCtrl_SearchPrev(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                search_flags.bits_i32(),
-                c_text.as_ptr(),
-            );
-            if result >= 0 { Some(result) } else { None }
-        }
+
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t;
+        let result = unsafe { ffi::wxd_StyledTextCtrl_SearchPrev(ptr, search_flags.bits_i32(), c_text.as_ptr()) };
+        if result >= 0 { Some(result) } else { None }
     }
 
     /// Search next with type-safe flags
@@ -1252,201 +919,111 @@ impl StyledTextCtrl {
     /// Replace the current selection with text
     pub fn replace_selection(&self, text: &str) {
         let c_text = CString::new(text).unwrap_or_default();
-        unsafe {
-            ffi::wxd_StyledTextCtrl_ReplaceSelection(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                c_text.as_ptr(),
-            );
-        }
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t;
+        unsafe { ffi::wxd_StyledTextCtrl_ReplaceSelection(ptr, c_text.as_ptr()) };
     }
 
     /// Replace text in the target range
     pub fn replace_target(&self, text: &str) -> i32 {
         let c_text = CString::new(text).unwrap_or_default();
-        unsafe {
-            ffi::wxd_StyledTextCtrl_ReplaceTarget(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                c_text.as_ptr(),
-            )
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_ReplaceTarget(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t, c_text.as_ptr()) }
     }
 
     /// Set the start of the target range for search/replace operations
     pub fn set_target_start(&self, start: i32) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_SetTargetStart(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                start,
-            );
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_SetTargetStart(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t, start) };
     }
 
     /// Set the end of the target range for search/replace operations
     pub fn set_target_end(&self, end: i32) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_SetTargetEnd(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                end,
-            );
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_SetTargetEnd(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t, end) };
     }
 
     /// Get the start of the target range
     pub fn get_target_start(&self) -> i32 {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_GetTargetStart(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t
-            )
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_GetTargetStart(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t) }
     }
 
     /// Get the end of the target range
     pub fn get_target_end(&self) -> i32 {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_GetTargetEnd(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t
-            )
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_GetTargetEnd(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t) }
     }
 
     // --- Navigation Operations ---
 
     /// Get the line number containing the caret
     pub fn get_current_line(&self) -> i32 {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_GetCurrentLine(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t
-            )
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_GetCurrentLine(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t) }
     }
 
     /// Move the caret to the start of a line
     pub fn goto_line(&self, line: i32) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_GotoLine(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                line,
-            );
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_GotoLine(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t, line) };
     }
 
     /// Move the caret to a specific position
     pub fn goto_pos(&self, pos: i32) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_GotoPos(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                pos,
-            );
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_GotoPos(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t, pos) };
     }
 
     // --- Tab and Indentation ---
 
     /// Set the width of tabs in characters
     pub fn set_tab_width(&self, tab_width: i32) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_SetTabWidth(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                tab_width,
-            );
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_SetTabWidth(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t, tab_width) };
     }
 
     /// Get the width of tabs in characters
     pub fn get_tab_width(&self) -> i32 {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_GetTabWidth(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t
-            )
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_GetTabWidth(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t) }
     }
 
     /// Set the number of spaces used for one level of indentation
     pub fn set_indent(&self, indent_size: i32) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_SetIndent(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                indent_size,
-            );
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_SetIndent(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t, indent_size) };
     }
 
     /// Get the number of spaces used for one level of indentation
     pub fn get_indent(&self) -> i32 {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_GetIndent(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t)
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_GetIndent(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t) }
     }
 
     /// Set whether to use tabs for indentation
     pub fn set_use_tabs(&self, use_tabs: bool) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_SetUseTabs(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                use_tabs,
-            );
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_SetUseTabs(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t, use_tabs) };
     }
 
     /// Get whether tabs are used for indentation
     pub fn get_use_tabs(&self) -> bool {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_GetUseTabs(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t
-            )
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_GetUseTabs(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t) }
     }
 
     /// Set the indentation of a specific line
     pub fn set_line_indentation(&self, line: i32, indentation: i32) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_SetLineIndentation(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                line,
-                indentation,
-            );
-        }
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t;
+        unsafe { ffi::wxd_StyledTextCtrl_SetLineIndentation(ptr, line, indentation) };
     }
 
     /// Get the indentation of a specific line
     pub fn get_line_indentation(&self, line: i32) -> i32 {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_GetLineIndentation(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                line,
-            )
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_GetLineIndentation(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t, line) }
     }
 
     // --- View Options ---
 
     /// Set whether end-of-line characters are visible
     pub fn set_view_eol(&self, visible: bool) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_SetViewEOL(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                visible,
-            );
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_SetViewEOL(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t, visible) };
     }
 
     /// Get whether end-of-line characters are visible
     pub fn get_view_eol(&self) -> bool {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_GetViewEOL(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t
-            )
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_GetViewEOL(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t) }
     }
 
     /// Set whitespace visibility mode
     pub fn set_view_white_space(&self, view_ws: i32) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_SetViewWhiteSpace(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                view_ws,
-            );
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_SetViewWhiteSpace(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t, view_ws) };
     }
 
     /// Set whitespace visibility with type-safe enum
@@ -1456,113 +1033,68 @@ impl StyledTextCtrl {
 
     /// Get how white space is displayed
     pub fn get_view_white_space(&self) -> i32 {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_GetViewWhiteSpace(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t
-            )
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_GetViewWhiteSpace(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t) }
     }
 
     // --- Caret Operations ---
 
     /// Set the blink period of the caret in milliseconds
     pub fn set_caret_period(&self, period_ms: i32) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_SetCaretPeriod(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                period_ms,
-            );
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_SetCaretPeriod(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t, period_ms) };
     }
 
     /// Get the blink period of the caret in milliseconds
     pub fn get_caret_period(&self) -> i32 {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_GetCaretPeriod(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t
-            )
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_GetCaretPeriod(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t) }
     }
 
     /// Set the width of the caret in pixels
     pub fn set_caret_width(&self, pixel_width: i32) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_SetCaretWidth(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                pixel_width,
-            );
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_SetCaretWidth(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t, pixel_width) };
     }
 
     /// Get the width of the caret in pixels
     pub fn get_caret_width(&self) -> i32 {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_GetCaretWidth(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t
-            )
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_GetCaretWidth(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t) }
     }
 
     /// Set whether the line containing the caret is highlighted
     pub fn set_caret_line_visible(&self, show: bool) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_SetCaretLineVisible(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                show,
-            );
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_SetCaretLineVisible(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t, show) };
     }
 
     /// Get whether the line containing the caret is highlighted
     pub fn get_caret_line_visible(&self) -> bool {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_GetCaretLineVisible(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t
-            )
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_GetCaretLineVisible(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t) }
     }
 
     /// Set the background color of the line containing the caret
     pub fn set_caret_line_background(&self, color: Colour) {
         let c_color = color.to_raw();
-        unsafe {
-            ffi::wxd_StyledTextCtrl_SetCaretLineBackground(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                c_color,
-            );
-        }
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t;
+        unsafe { ffi::wxd_StyledTextCtrl_SetCaretLineBackground(ptr, c_color) };
     }
 
     // --- Undo/Redo Operations ---
 
     /// Redo the next action
     pub fn redo(&self) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_Redo(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t);
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_Redo(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t) };
     }
 
     /// Check if there are actions that can be undone
     pub fn can_undo(&self) -> bool {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_CanUndo(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t)
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_CanUndo(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t) }
     }
 
     /// Check if there are actions that can be redone
     pub fn can_redo(&self) -> bool {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_CanRedo(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t)
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_CanRedo(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t) }
     }
 
     /// Clear the undo buffer
     pub fn empty_undo_buffer(&self) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_EmptyUndoBuffer(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t
-            );
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_EmptyUndoBuffer(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t) };
     }
 
     // --- Autocompletion ---
@@ -1570,94 +1102,53 @@ impl StyledTextCtrl {
     /// Display an auto-completion list
     pub fn auto_comp_show(&self, length_entered: i32, item_list: &str) {
         let c_item_list = CString::new(item_list).unwrap_or_default();
-        unsafe {
-            ffi::wxd_StyledTextCtrl_AutoCompShow(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                length_entered,
-                c_item_list.as_ptr(),
-            );
-        }
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t;
+        unsafe { ffi::wxd_StyledTextCtrl_AutoCompShow(ptr, length_entered, c_item_list.as_ptr()) };
     }
 
     /// Cancel any displayed auto-completion list
     pub fn auto_comp_cancel(&self) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_AutoCompCancel(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t
-            );
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_AutoCompCancel(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t) };
     }
 
     /// Check if an auto-completion list is currently displayed
     pub fn auto_comp_active(&self) -> bool {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_AutoCompActive(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t
-            )
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_AutoCompActive(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t) }
     }
 
     /// Complete the word being entered
     pub fn auto_comp_complete(&self) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_AutoCompComplete(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t
-            );
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_AutoCompComplete(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t) };
     }
 
     /// Set the separator character for auto-completion lists
     pub fn auto_comp_set_separator(&self, separator_char: i32) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_AutoCompSetSeparator(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                separator_char,
-            );
-        }
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t;
+        unsafe { ffi::wxd_StyledTextCtrl_AutoCompSetSeparator(ptr, separator_char) };
     }
 
     /// Select an item in the auto-completion list
     pub fn auto_comp_select(&self, select: &str) {
         let c_select = CString::new(select).unwrap_or_default();
-        unsafe {
-            ffi::wxd_StyledTextCtrl_AutoCompSelect(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                c_select.as_ptr(),
-            );
-        }
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t;
+        unsafe { ffi::wxd_StyledTextCtrl_AutoCompSelect(ptr, c_select.as_ptr()) };
     }
 
     // --- Bracket Matching ---
 
     /// Highlight matching braces
     pub fn brace_highlight(&self, pos_a: i32, pos_b: i32) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_BraceHighlight(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                pos_a,
-                pos_b,
-            );
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_BraceHighlight(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t, pos_a, pos_b) };
     }
 
     /// Highlight an unmatched brace
     pub fn brace_bad_light(&self, pos: i32) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_BraceBadLight(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                pos,
-            );
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_BraceBadLight(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t, pos) };
     }
 
     /// Find the matching brace for the character at the given position
     pub fn brace_match(&self, pos: i32) -> i32 {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_BraceMatch(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                pos,
-            )
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_BraceMatch(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t, pos) }
     }
 
     // --- Call Tips ---
@@ -1665,141 +1156,79 @@ impl StyledTextCtrl {
     /// Show a call tip at the specified position
     pub fn call_tip_show(&self, pos: i32, definition: &str) {
         let c_definition = CString::new(definition).unwrap_or_default();
-        unsafe {
-            ffi::wxd_StyledTextCtrl_CallTipShow(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                pos,
-                c_definition.as_ptr(),
-            );
-        }
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t;
+        unsafe { ffi::wxd_StyledTextCtrl_CallTipShow(ptr, pos, c_definition.as_ptr()) };
     }
 
     /// Cancel any displayed call tip
     pub fn call_tip_cancel(&self) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_CallTipCancel(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t
-            );
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_CallTipCancel(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t) };
     }
 
     /// Check if a call tip is currently displayed
     pub fn call_tip_active(&self) -> bool {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_CallTipActive(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t
-            )
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_CallTipActive(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t) }
     }
 
     /// Set the highlight range in a call tip
     pub fn call_tip_set_highlight(&self, highlight_start: i32, highlight_end: i32) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_CallTipSetHighlight(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                highlight_start,
-                highlight_end,
-            );
-        }
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t;
+        unsafe { ffi::wxd_StyledTextCtrl_CallTipSetHighlight(ptr, highlight_start, highlight_end) };
     }
 
     // --- Folding Operations ---
 
     /// Set the fold level of a line
     pub fn set_fold_level(&self, line: i32, level: i32) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_SetFoldLevel(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                line,
-                level,
-            );
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_SetFoldLevel(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t, line, level) };
     }
 
     /// Get the fold level of a line
     pub fn get_fold_level(&self, line: i32) -> i32 {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_GetFoldLevel(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                line,
-            )
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_GetFoldLevel(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t, line) }
     }
 
     /// Toggle the fold state of a line
     pub fn toggle_fold(&self, line: i32) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_ToggleFold(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                line,
-            );
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_ToggleFold(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t, line) };
     }
 
     /// Set whether a fold header line is expanded
     pub fn set_fold_expanded(&self, line: i32, expanded: bool) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_SetFoldExpanded(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                line,
-                expanded,
-            );
-        }
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t;
+        unsafe { ffi::wxd_StyledTextCtrl_SetFoldExpanded(ptr, line, expanded) };
     }
 
     /// Get whether a fold header line is expanded
     pub fn get_fold_expanded(&self, line: i32) -> bool {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_GetFoldExpanded(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                line,
-            )
-        }
+        unsafe { ffi::wxd_StyledTextCtrl_GetFoldExpanded(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t, line) }
     }
 
     // --- Word Operations ---
 
     /// Find the start position of a word
     pub fn word_start_position(&self, pos: i32, only_word_chars: bool) -> i32 {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_WordStartPosition(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                pos,
-                only_word_chars,
-            )
-        }
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t;
+        unsafe { ffi::wxd_StyledTextCtrl_WordStartPosition(ptr, pos, only_word_chars) }
     }
 
     /// Find the end position of a word
     pub fn word_end_position(&self, pos: i32, only_word_chars: bool) -> i32 {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_WordEndPosition(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                pos,
-                only_word_chars,
-            )
-        }
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t;
+        unsafe { ffi::wxd_StyledTextCtrl_WordEndPosition(ptr, pos, only_word_chars) }
     }
 
     // --- Wrap Mode Operations ---
 
     /// Set the wrap mode for long lines
     pub fn set_wrap_mode(&self, wrap_mode: WrapMode) {
-        unsafe {
-            ffi::wxd_StyledTextCtrl_SetWrapMode(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t,
-                wrap_mode.into(),
-            );
-        }
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t;
+        unsafe { ffi::wxd_StyledTextCtrl_SetWrapMode(ptr, wrap_mode.into()) };
     }
 
     /// Get the current wrap mode
     pub fn get_wrap_mode(&self) -> WrapMode {
-        let mode = unsafe {
-            ffi::wxd_StyledTextCtrl_GetWrapMode(
-                self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t
-            )
-        };
+        let mode = unsafe { ffi::wxd_StyledTextCtrl_GetWrapMode(self.window.as_ptr() as *mut ffi::wxd_StyledTextCtrl_t) };
         WrapMode::from(mode)
     }
 }

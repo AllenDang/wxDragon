@@ -25,10 +25,7 @@ pub struct AuiMdiParentFrame {
 }
 
 impl AuiMdiParentFrame {
-    fn from_ptr(
-        ptr: *mut ffi::wxd_AuiMDIParentFrame_t,
-        parent_ptr: *mut ffi::wxd_Window_t,
-    ) -> Self {
+    fn from_ptr(ptr: *mut ffi::wxd_AuiMDIParentFrame_t, parent_ptr: *mut ffi::wxd_Window_t) -> Self {
         AuiMdiParentFrame {
             window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
             parent_ptr,
@@ -41,15 +38,7 @@ impl AuiMdiParentFrame {
     }
 
     // Implementation method called by the builder
-    fn new_impl(
-        parent_ptr: *mut ffi::wxd_Window_t,
-        id: Id,
-        title: &str,
-        pos: Point,
-        size: Size,
-        style: i64,
-        name: &str,
-    ) -> Self {
+    fn new_impl(parent_ptr: *mut ffi::wxd_Window_t, id: Id, title: &str, pos: Point, size: Size, style: i64, name: &str) -> Self {
         let title_c = CString::new(title).expect("CString::new failed for title");
         let name_c = CString::new(name).expect("CString::new failed for name");
 

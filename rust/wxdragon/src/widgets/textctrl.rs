@@ -97,14 +97,7 @@ impl TextCtrl {
     }
 
     /// Internal implementation used by the builder.
-    fn new_impl(
-        parent_ptr: *mut ffi::wxd_Window_t,
-        id: Id,
-        value: &str,
-        pos: Point,
-        size: Size,
-        style: i64,
-    ) -> Self {
+    fn new_impl(parent_ptr: *mut ffi::wxd_Window_t, id: Id, value: &str, pos: Point, size: Size, style: i64) -> Self {
         let c_value = CString::new(value).unwrap_or_default();
 
         let ptr = unsafe {
@@ -128,12 +121,7 @@ impl TextCtrl {
     /// Sets the text value of the control.
     pub fn set_value(&self, value: &str) {
         let c_value = CString::new(value).unwrap_or_default();
-        unsafe {
-            ffi::wxd_TextCtrl_SetValue(
-                self.window.as_ptr() as *mut ffi::wxd_TextCtrl_t,
-                c_value.as_ptr(),
-            );
-        }
+        unsafe { ffi::wxd_TextCtrl_SetValue(self.window.as_ptr() as *mut ffi::wxd_TextCtrl_t, c_value.as_ptr()) };
     }
 
     /// Gets the current text value of the control.
@@ -146,8 +134,7 @@ impl TextCtrl {
                 buffer.len() as i32,
             );
             if len >= 0 {
-                let byte_slice =
-                    std::slice::from_raw_parts(buffer.as_ptr() as *const u8, len as usize);
+                let byte_slice = std::slice::from_raw_parts(buffer.as_ptr() as *const u8, len as usize);
                 String::from_utf8_lossy(byte_slice).to_string()
             } else {
                 String::new()
@@ -158,12 +145,7 @@ impl TextCtrl {
     /// Appends text to the end of the control.
     pub fn append_text(&self, text: &str) {
         let c_text = CString::new(text).unwrap_or_default();
-        unsafe {
-            ffi::wxd_TextCtrl_AppendText(
-                self.window.as_ptr() as *mut ffi::wxd_TextCtrl_t,
-                c_text.as_ptr(),
-            );
-        }
+        unsafe { ffi::wxd_TextCtrl_AppendText(self.window.as_ptr() as *mut ffi::wxd_TextCtrl_t, c_text.as_ptr()) };
     }
 
     /// Clears the text in the control.
@@ -181,22 +163,12 @@ impl TextCtrl {
 
     /// Marks the control as modified or unmodified.
     pub fn set_modified(&self, modified: bool) {
-        unsafe {
-            ffi::wxd_TextCtrl_SetModified(
-                self.window.as_ptr() as *mut ffi::wxd_TextCtrl_t,
-                modified,
-            );
-        }
+        unsafe { ffi::wxd_TextCtrl_SetModified(self.window.as_ptr() as *mut ffi::wxd_TextCtrl_t, modified) };
     }
 
     /// Makes the text control editable or read-only, overriding the style setting.
     pub fn set_editable(&self, editable: bool) {
-        unsafe {
-            ffi::wxd_TextCtrl_SetEditable(
-                self.window.as_ptr() as *mut ffi::wxd_TextCtrl_t,
-                editable,
-            );
-        }
+        unsafe { ffi::wxd_TextCtrl_SetEditable(self.window.as_ptr() as *mut ffi::wxd_TextCtrl_t, editable) };
     }
 
     /// Returns true if the control is editable.
@@ -207,38 +179,24 @@ impl TextCtrl {
     /// Gets the insertion point of the control.
     /// The insertion point is the position at which the caret is currently positioned.
     pub fn get_insertion_point(&self) -> i64 {
-        unsafe {
-            ffi::wxd_TextCtrl_GetInsertionPoint(self.window.as_ptr() as *mut ffi::wxd_TextCtrl_t)
-        }
+        unsafe { ffi::wxd_TextCtrl_GetInsertionPoint(self.window.as_ptr() as *mut ffi::wxd_TextCtrl_t) }
     }
 
     /// Sets the insertion point of the control.
     pub fn set_insertion_point(&self, pos: i64) {
-        unsafe {
-            ffi::wxd_TextCtrl_SetInsertionPoint(
-                self.window.as_ptr() as *mut ffi::wxd_TextCtrl_t,
-                pos,
-            );
-        }
+        unsafe { ffi::wxd_TextCtrl_SetInsertionPoint(self.window.as_ptr() as *mut ffi::wxd_TextCtrl_t, pos) };
     }
 
     /// Sets the maximum number of characters that may be entered in the control.
     ///
     /// If `len` is 0, the maximum length limit is removed.
     pub fn set_max_length(&self, len: usize) {
-        unsafe {
-            ffi::wxd_TextCtrl_SetMaxLength(
-                self.window.as_ptr() as *mut ffi::wxd_TextCtrl_t,
-                len as i64,
-            );
-        }
+        unsafe { ffi::wxd_TextCtrl_SetMaxLength(self.window.as_ptr() as *mut ffi::wxd_TextCtrl_t, len as i64) };
     }
 
     /// Returns the last position in the control.
     pub fn get_last_position(&self) -> i64 {
-        unsafe {
-            ffi::wxd_TextCtrl_GetLastPosition(self.window.as_ptr() as *mut ffi::wxd_TextCtrl_t)
-        }
+        unsafe { ffi::wxd_TextCtrl_GetLastPosition(self.window.as_ptr() as *mut ffi::wxd_TextCtrl_t) }
     }
 
     /// Returns true if this is a multi-line text control.
@@ -259,13 +217,7 @@ impl TextCtrl {
     /// * `from` - The start position of the selection
     /// * `to` - The end position of the selection
     pub fn set_selection(&self, from: i64, to: i64) {
-        unsafe {
-            ffi::wxd_TextCtrl_SetSelection(
-                self.window.as_ptr() as *mut ffi::wxd_TextCtrl_t,
-                from,
-                to,
-            );
-        }
+        unsafe { ffi::wxd_TextCtrl_SetSelection(self.window.as_ptr() as *mut ffi::wxd_TextCtrl_t, from, to) };
     }
 
     /// Gets the current selection range.
@@ -275,21 +227,13 @@ impl TextCtrl {
     pub fn get_selection(&self) -> (i64, i64) {
         let mut from = 0i64;
         let mut to = 0i64;
-        unsafe {
-            ffi::wxd_TextCtrl_GetSelection(
-                self.window.as_ptr() as *mut ffi::wxd_TextCtrl_t,
-                &mut from,
-                &mut to,
-            );
-        }
+        unsafe { ffi::wxd_TextCtrl_GetSelection(self.window.as_ptr() as *mut ffi::wxd_TextCtrl_t, &mut from, &mut to) };
         (from, to)
     }
 
     /// Selects all text in the control.
     pub fn select_all(&self) {
-        unsafe {
-            ffi::wxd_TextCtrl_SelectAll(self.window.as_ptr() as *mut ffi::wxd_TextCtrl_t);
-        }
+        unsafe { ffi::wxd_TextCtrl_SelectAll(self.window.as_ptr() as *mut ffi::wxd_TextCtrl_t) };
     }
 
     /// Gets the currently selected text.
@@ -304,8 +248,7 @@ impl TextCtrl {
                 buffer.len() as i32,
             );
             if len >= 0 {
-                let byte_slice =
-                    std::slice::from_raw_parts(buffer.as_ptr() as *const u8, len as usize);
+                let byte_slice = std::slice::from_raw_parts(buffer.as_ptr() as *const u8, len as usize);
                 String::from_utf8_lossy(byte_slice).to_string()
             } else {
                 String::new()

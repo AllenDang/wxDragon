@@ -19,8 +19,8 @@ pub mod window_events;
 
 // Re-export window events for easier access
 pub use window_events::{
-    IdleEventData, KeyboardEvent, MouseButtonEvent, MouseEnterEvent, MouseLeaveEvent,
-    MouseMotionEvent, WindowEvent, WindowEventData, WindowEvents, WindowSizeEvent,
+    IdleEventData, KeyboardEvent, MouseButtonEvent, MouseEnterEvent, MouseLeaveEvent, MouseMotionEvent, WindowEvent,
+    WindowEventData, WindowEvents, WindowSizeEvent,
 };
 
 // Re-export button events for easier access
@@ -526,9 +526,7 @@ impl Event {
         // If event_type_c is WXD_EVENT_TYPE_NULL or an invalid value, return None
         use bitflags::Flags;
         EventType::iter_defined_names()
-            .find(|&(_, val)| {
-                val.bits() == event_type_c && val != EventType::NONE && val != EventType::INVALID
-            })
+            .find(|&(_, val)| val.bits() == event_type_c && val != EventType::NONE && val != EventType::INVALID)
             .map(|(_, val)| val)
     }
 
@@ -772,9 +770,7 @@ pub trait WxEvtHandler {
         let token = EventToken::from(user_data as usize);
 
         let et = event_type.bits();
-        unsafe {
-            ffi::wxd_EvtHandler_Bind(handler_ptr, et, trampoline_c_void, user_data, token.into())
-        };
+        unsafe { ffi::wxd_EvtHandler_Bind(handler_ptr, et, trampoline_c_void, user_data, token.into()) };
 
         token
     }
@@ -835,16 +831,7 @@ pub trait WxEvtHandler {
         let token = EventToken::from(user_data as usize);
 
         let et = event_type.bits();
-        unsafe {
-            ffi::wxd_EvtHandler_BindWithId(
-                handler_ptr,
-                et,
-                id,
-                trampoline_c_void,
-                user_data,
-                token.into(),
-            )
-        };
+        unsafe { ffi::wxd_EvtHandler_BindWithId(handler_ptr, et, id, trampoline_c_void, user_data, token.into()) };
 
         token
     }
@@ -862,10 +849,7 @@ pub trait WxEvtHandler {
 /// - The pointers must remain valid for the duration of this function call
 /// - This function must not be called from multiple threads simultaneously
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn rust_event_handler_trampoline(
-    user_data: *mut c_void,
-    event_ptr_cvoid: *mut c_void,
-) {
+pub unsafe extern "C" fn rust_event_handler_trampoline(user_data: *mut c_void, event_ptr_cvoid: *mut c_void) {
     if user_data.is_null() {
         /* ... error handling ... */
         return;

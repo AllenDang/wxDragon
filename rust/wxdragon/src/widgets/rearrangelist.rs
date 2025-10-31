@@ -91,11 +91,7 @@ impl RearrangeList {
             let mut buffer: Vec<i32> = vec![0; count];
 
             // Call the C API to fill the buffer
-            ffi::wxd_RearrangeList_GetCurrentOrder(
-                self.window.as_ptr() as *mut _,
-                buffer.as_mut_ptr(),
-                count as i32,
-            );
+            ffi::wxd_RearrangeList_GetCurrentOrder(self.window.as_ptr() as *mut _, buffer.as_mut_ptr(), count as i32);
 
             buffer
         }
@@ -130,24 +126,13 @@ impl RearrangeList {
     /// Gets the index of the currently selected item.
     /// Returns `None` if no item is selected.
     pub fn get_selection(&self) -> Option<u32> {
-        let selection =
-            unsafe { ffi::wxd_RearrangeList_GetSelection(self.window.as_ptr() as *mut _) };
-        if selection == -1 {
-            None
-        } else {
-            Some(selection as u32)
-        }
+        let selection = unsafe { ffi::wxd_RearrangeList_GetSelection(self.window.as_ptr() as *mut _) };
+        if selection == -1 { None } else { Some(selection as u32) }
     }
 
     /// Sets the selection to the item at the given index.
     pub fn set_selection(&self, index: u32, select: bool) {
-        unsafe {
-            ffi::wxd_RearrangeList_SetSelection(
-                self.window.as_ptr() as *mut _,
-                index as i32,
-                select,
-            );
-        }
+        unsafe { ffi::wxd_RearrangeList_SetSelection(self.window.as_ptr() as *mut _, index as i32, select) };
     }
 
     /// Gets the string at the specified index.

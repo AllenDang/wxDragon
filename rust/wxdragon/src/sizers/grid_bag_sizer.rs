@@ -112,10 +112,7 @@ impl GBSpan {
 pub const DEFAULT_GB_POSITION: GBPosition = GBPosition { row: 0, col: 0 };
 
 /// Default span (1, 1).
-pub const DEFAULT_GB_SPAN: GBSpan = GBSpan {
-    rowspan: 1,
-    colspan: 1,
-};
+pub const DEFAULT_GB_SPAN: GBSpan = GBSpan { rowspan: 1, colspan: 1 };
 
 // --- GridBagSizer ---
 /// A sizer that can lay out items in a grid with items at specified cells,
@@ -158,14 +155,7 @@ impl GridBagSizer {
     // --- Add methods with position and span ---
 
     /// Add a window at the specified position with optional span.
-    pub fn add_at<W: WxWidget>(
-        &self,
-        window: &W,
-        pos: GBPosition,
-        span: GBSpan,
-        flag: crate::sizers::SizerFlag,
-        border: i32,
-    ) {
+    pub fn add_at<W: WxWidget>(&self, window: &W, pos: GBPosition, span: GBSpan, flag: crate::sizers::SizerFlag, border: i32) {
         unsafe {
             ffi::wxd_GridBagSizer_AddWindow(
                 self.raw_specific_ptr,
@@ -226,152 +216,94 @@ impl GridBagSizer {
 
     /// Get the position of a window in the grid.
     pub fn get_item_position<W: WxWidget>(&self, window: &W) -> GBPosition {
-        unsafe {
-            let pos = ffi::wxd_GridBagSizer_GetItemPosition_Window(
-                self.raw_specific_ptr,
-                window.handle_ptr(),
-            );
-            GBPosition::from_ffi(pos)
-        }
+        let pos = unsafe { ffi::wxd_GridBagSizer_GetItemPosition_Window(self.raw_specific_ptr, window.handle_ptr()) };
+        GBPosition::from_ffi(pos)
     }
 
     /// Get the position of a sizer in the grid.
     pub fn get_sizer_position<S: WxSizerTrait>(&self, sizer: &S) -> GBPosition {
-        unsafe {
-            let pos = ffi::wxd_GridBagSizer_GetItemPosition_Sizer(
-                self.raw_specific_ptr,
-                sizer.as_sizer_ptr(),
-            );
-            GBPosition::from_ffi(pos)
-        }
+        let pos = unsafe { ffi::wxd_GridBagSizer_GetItemPosition_Sizer(self.raw_specific_ptr, sizer.as_sizer_ptr()) };
+        GBPosition::from_ffi(pos)
     }
 
     /// Get the position of an item by index.
     pub fn get_item_position_by_index(&self, index: usize) -> GBPosition {
-        unsafe {
-            let pos = ffi::wxd_GridBagSizer_GetItemPosition_Index(self.raw_specific_ptr, index);
-            GBPosition::from_ffi(pos)
-        }
+        let pos = unsafe { ffi::wxd_GridBagSizer_GetItemPosition_Index(self.raw_specific_ptr, index) };
+        GBPosition::from_ffi(pos)
     }
 
     /// Set the position of a window in the grid.
     pub fn set_item_position<W: WxWidget>(&self, window: &W, pos: GBPosition) -> bool {
-        unsafe {
-            ffi::wxd_GridBagSizer_SetItemPosition_Window(
-                self.raw_specific_ptr,
-                window.handle_ptr(),
-                pos.to_ffi(),
-            )
-        }
+        unsafe { ffi::wxd_GridBagSizer_SetItemPosition_Window(self.raw_specific_ptr, window.handle_ptr(), pos.to_ffi()) }
     }
 
     /// Set the position of a sizer in the grid.
     pub fn set_sizer_position<S: WxSizerTrait>(&self, sizer: &S, pos: GBPosition) -> bool {
-        unsafe {
-            ffi::wxd_GridBagSizer_SetItemPosition_Sizer(
-                self.raw_specific_ptr,
-                sizer.as_sizer_ptr(),
-                pos.to_ffi(),
-            )
-        }
+        unsafe { ffi::wxd_GridBagSizer_SetItemPosition_Sizer(self.raw_specific_ptr, sizer.as_sizer_ptr(), pos.to_ffi()) }
     }
 
     /// Set the position of an item by index.
     pub fn set_item_position_by_index(&self, index: usize, pos: GBPosition) -> bool {
-        unsafe {
-            ffi::wxd_GridBagSizer_SetItemPosition_Index(self.raw_specific_ptr, index, pos.to_ffi())
-        }
+        unsafe { ffi::wxd_GridBagSizer_SetItemPosition_Index(self.raw_specific_ptr, index, pos.to_ffi()) }
     }
 
     // --- Span management ---
 
     /// Get the span of a window in the grid.
     pub fn get_item_span<W: WxWidget>(&self, window: &W) -> GBSpan {
-        unsafe {
-            let span = ffi::wxd_GridBagSizer_GetItemSpan_Window(
-                self.raw_specific_ptr,
-                window.handle_ptr(),
-            );
-            GBSpan::from_ffi(span)
-        }
+        let span = unsafe { ffi::wxd_GridBagSizer_GetItemSpan_Window(self.raw_specific_ptr, window.handle_ptr()) };
+        GBSpan::from_ffi(span)
     }
 
     /// Get the span of a sizer in the grid.
     pub fn get_sizer_span<S: WxSizerTrait>(&self, sizer: &S) -> GBSpan {
-        unsafe {
-            let span = ffi::wxd_GridBagSizer_GetItemSpan_Sizer(
-                self.raw_specific_ptr,
-                sizer.as_sizer_ptr(),
-            );
-            GBSpan::from_ffi(span)
-        }
+        let span = unsafe { ffi::wxd_GridBagSizer_GetItemSpan_Sizer(self.raw_specific_ptr, sizer.as_sizer_ptr()) };
+        GBSpan::from_ffi(span)
     }
 
     /// Get the span of an item by index.
     pub fn get_item_span_by_index(&self, index: usize) -> GBSpan {
-        unsafe {
-            let span = ffi::wxd_GridBagSizer_GetItemSpan_Index(self.raw_specific_ptr, index);
-            GBSpan::from_ffi(span)
-        }
+        let span = unsafe { ffi::wxd_GridBagSizer_GetItemSpan_Index(self.raw_specific_ptr, index) };
+        GBSpan::from_ffi(span)
     }
 
     /// Set the span of a window in the grid.
     pub fn set_item_span<W: WxWidget>(&self, window: &W, span: GBSpan) -> bool {
-        unsafe {
-            ffi::wxd_GridBagSizer_SetItemSpan_Window(
-                self.raw_specific_ptr,
-                window.handle_ptr(),
-                span.to_ffi(),
-            )
-        }
+        unsafe { ffi::wxd_GridBagSizer_SetItemSpan_Window(self.raw_specific_ptr, window.handle_ptr(), span.to_ffi()) }
     }
 
     /// Set the span of a sizer in the grid.
     pub fn set_sizer_span<S: WxSizerTrait>(&self, sizer: &S, span: GBSpan) -> bool {
-        unsafe {
-            ffi::wxd_GridBagSizer_SetItemSpan_Sizer(
-                self.raw_specific_ptr,
-                sizer.as_sizer_ptr(),
-                span.to_ffi(),
-            )
-        }
+        unsafe { ffi::wxd_GridBagSizer_SetItemSpan_Sizer(self.raw_specific_ptr, sizer.as_sizer_ptr(), span.to_ffi()) }
     }
 
     /// Set the span of an item by index.
     pub fn set_item_span_by_index(&self, index: usize, span: GBSpan) -> bool {
-        unsafe {
-            ffi::wxd_GridBagSizer_SetItemSpan_Index(self.raw_specific_ptr, index, span.to_ffi())
-        }
+        unsafe { ffi::wxd_GridBagSizer_SetItemSpan_Index(self.raw_specific_ptr, index, span.to_ffi()) }
     }
 
     // --- Cell size management ---
 
     /// Get the size used for cells in the grid with no item.
     pub fn get_empty_cell_size(&self) -> Size {
-        unsafe {
-            let size = ffi::wxd_GridBagSizer_GetEmptyCellSize(self.raw_specific_ptr);
-            Size::new(size.width, size.height)
-        }
+        let size = unsafe { ffi::wxd_GridBagSizer_GetEmptyCellSize(self.raw_specific_ptr) };
+        Size::new(size.width, size.height)
     }
 
     /// Set the size used for cells in the grid with no item.
     pub fn set_empty_cell_size(&self, size: Size) {
-        unsafe {
-            let ffi_size = ffi::wxd_Size {
-                width: size.width,
-                height: size.height,
-            };
-            ffi::wxd_GridBagSizer_SetEmptyCellSize(self.raw_specific_ptr, ffi_size);
-        }
+        let ffi_size = ffi::wxd_Size {
+            width: size.width,
+            height: size.height,
+        };
+        unsafe { ffi::wxd_GridBagSizer_SetEmptyCellSize(self.raw_specific_ptr, ffi_size) };
     }
 
     /// Get the size of the specified cell, including hgap and vgap.
     /// Only valid after a Layout.
     pub fn get_cell_size(&self, row: i32, col: i32) -> Size {
-        unsafe {
-            let size = ffi::wxd_GridBagSizer_GetCellSize(self.raw_specific_ptr, row, col);
-            Size::new(size.width, size.height)
-        }
+        let size = unsafe { ffi::wxd_GridBagSizer_GetCellSize(self.raw_specific_ptr, row, col) };
+        Size::new(size.width, size.height)
     }
 }
 

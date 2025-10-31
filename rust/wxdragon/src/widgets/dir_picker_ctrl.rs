@@ -54,12 +54,8 @@ impl DirPickerCtrlEventData {
         if let Some(window_obj) = self.event.get_event_object() {
             // We need to find the DirPickerCtrl that corresponds to this window.
             // In wxdragon, we can create a DirPickerCtrl with the Window's handle pointer
-            unsafe {
-                let dir_picker = DirPickerCtrl::from_ptr(
-                    window_obj.handle_ptr() as *mut ffi::wxd_DirPickerCtrl_t
-                );
-                return dir_picker.get_path();
-            }
+            let dir_picker = unsafe { DirPickerCtrl::from_ptr(window_obj.handle_ptr() as *mut ffi::wxd_DirPickerCtrl_t) };
+            return dir_picker.get_path();
         }
         String::new()
     }
@@ -92,12 +88,7 @@ impl DirPickerCtrl {
     /// Sets the currently selected path.
     pub fn set_path(&self, path: &str) {
         let c_path = CString::new(path).expect("CString::new failed for path");
-        unsafe {
-            ffi::wxd_DirPickerCtrl_SetPath(
-                self.window.as_ptr() as *mut ffi::wxd_DirPickerCtrl_t,
-                c_path.as_ptr(),
-            );
-        }
+        unsafe { ffi::wxd_DirPickerCtrl_SetPath(self.window.as_ptr() as *mut ffi::wxd_DirPickerCtrl_t, c_path.as_ptr()) };
     }
 
     /// Creates a DirPickerCtrl from a raw pointer.

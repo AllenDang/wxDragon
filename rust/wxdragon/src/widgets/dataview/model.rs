@@ -224,10 +224,7 @@ impl DataViewVirtualListModel {
     /// Create a new virtual list model with the specified initial size
     pub fn new(initial_size: usize) -> Self {
         let ptr = unsafe { ffi::wxd_DataViewVirtualListModel_Create(initial_size as u64) };
-        Self {
-            ptr,
-            size: initial_size,
-        }
+        Self { ptr, size: initial_size }
     }
 
     /// Notify that a row has been prepended
@@ -260,9 +257,7 @@ impl DataViewVirtualListModel {
     pub fn rows_deleted(&mut self, rows: &[i32]) {
         // The C++ API expects a mutable array, so we'll need to cast away the const
         let rows_ptr = rows.as_ptr() as *mut i32;
-        unsafe {
-            ffi::wxd_DataViewVirtualListModel_RowsDeleted(self.ptr, rows_ptr, rows.len() as i32)
-        };
+        unsafe { ffi::wxd_DataViewVirtualListModel_RowsDeleted(self.ptr, rows_ptr, rows.len() as i32) };
         if self.size >= rows.len() {
             self.size -= rows.len();
         } else {
@@ -345,9 +340,7 @@ struct OwnedTreeCallbacks {
     get_value: Box<dyn Fn(&dyn Any, *mut std::ffi::c_void, u32) -> Variant>,
     set_value: Option<Box<dyn Fn(&dyn Any, *mut std::ffi::c_void, u32, &Variant) -> bool>>,
     is_enabled: Option<Box<dyn Fn(&dyn Any, *mut std::ffi::c_void, u32) -> bool>>,
-    compare: Option<
-        Box<dyn Fn(&dyn Any, *mut std::ffi::c_void, *mut std::ffi::c_void, u32, bool) -> i32>,
-    >,
+    compare: Option<Box<dyn Fn(&dyn Any, *mut std::ffi::c_void, *mut std::ffi::c_void, u32, bool) -> i32>>,
 }
 
 impl CustomDataViewTreeModel {
@@ -387,23 +380,7 @@ impl CustomDataViewTreeModel {
         let boxed_data: Box<dyn Any> = Box::new(data);
 
         // Adapt typed closures into closures working with &dyn Any and *mut c_void
-        let any_get_parent: Box<
-            dyn for<'a> Fn(&dyn Any, *mut std::ffi::c_void) -> *mut std::ffi::c_void,
-        > = Box::new(move |any_data, item| {
-            let t = any_data.downcast_ref::<T>().unwrap();
-            let item_opt: Option<&N> = if item.is_null() {
-                None
-            } else {
-                Some(unsafe { &*(item as *mut N) })
-            };
-            let ret_opt = get_parent(t, item_opt);
-            match ret_opt {
-                Some(ptr) => ptr as *mut std::ffi::c_void,
-                None => std::ptr::null_mut(),
-            }
-        });
-
-        let any_is_container: Box<dyn for<'a> Fn(&dyn Any, *mut std::ffi::c_void) -> bool> =
+        let any_get_parent: Box<dyn for<'a> Fn(&dyn Any, *mut std::ffi::c_void) -> *mut std::ffi::c_void> =
             Box::new(move |any_data, item| {
                 let t = any_data.downcast_ref::<T>().unwrap();
                 let item_opt: Option<&N> = if item.is_null() {
@@ -411,8 +388,22 @@ impl CustomDataViewTreeModel {
                 } else {
                     Some(unsafe { &*(item as *mut N) })
                 };
-                is_container(t, item_opt)
+                let ret_opt = get_parent(t, item_opt);
+                match ret_opt {
+                    Some(ptr) => ptr as *mut std::ffi::c_void,
+                    None => std::ptr::null_mut(),
+                }
             });
+
+        let any_is_container: Box<dyn for<'a> Fn(&dyn Any, *mut std::ffi::c_void) -> bool> = Box::new(move |any_data, item| {
+            let t = any_data.downcast_ref::<T>().unwrap();
+            let item_opt: Option<&N> = if item.is_null() {
+                None
+            } else {
+                Some(unsafe { &*(item as *mut N) })
+            };
+            is_container(t, item_opt)
+        });
         // Convert typed get_children into an Any-based callback. Note the
         // conversions between `*mut N` and `*mut c_void` (opaque ids used by
         // wxWidgets). We keep these casts explicit and document the invariant:
@@ -427,28 +418,24 @@ impl CustomDataViewTreeModel {
         // The casts are performed inside `unsafe` blocks and are intentionally
         // minimal and local to this closure so the unsafety surface is easy to
         // review and reason about.
-        let any_get_children: Box<
-            dyn for<'a> Fn(&dyn Any, *mut std::ffi::c_void) -> Vec<*mut std::ffi::c_void>,
-        > = Box::new(move |any_data, item| {
-            let t = any_data.downcast_ref::<T>().unwrap();
-            let item_opt: Option<&N> = if item.is_null() {
-                None
-            } else {
-                // SAFETY: We only cast the opaque id back to `*mut N` for the
-                // purpose of calling the user's typed closure. This is safe
-                // because the `new` constructor requires the caller to ensure
-                // the ids actually originate from pointers to `N` (or null).
-                // Dereferencing happens only to create a temporary `&N` which
-                // the user's closure observes; we don't mutate through the
-                // pointer here.
-                Some(unsafe { &*(item as *mut N) })
-            };
-            let vec_typed: Vec<*mut N> = get_children(t, item_opt);
-            vec_typed
-                .into_iter()
-                .map(|p| p as *mut std::ffi::c_void)
-                .collect()
-        });
+        let any_get_children: Box<dyn for<'a> Fn(&dyn Any, *mut std::ffi::c_void) -> Vec<*mut std::ffi::c_void>> =
+            Box::new(move |any_data, item| {
+                let t = any_data.downcast_ref::<T>().unwrap();
+                let item_opt: Option<&N> = if item.is_null() {
+                    None
+                } else {
+                    // SAFETY: We only cast the opaque id back to `*mut N` for the
+                    // purpose of calling the user's typed closure. This is safe
+                    // because the `new` constructor requires the caller to ensure
+                    // the ids actually originate from pointers to `N` (or null).
+                    // Dereferencing happens only to create a temporary `&N` which
+                    // the user's closure observes; we don't mutate through the
+                    // pointer here.
+                    Some(unsafe { &*(item as *mut N) })
+                };
+                let vec_typed: Vec<*mut N> = get_children(t, item_opt);
+                vec_typed.into_iter().map(|p| p as *mut std::ffi::c_void).collect()
+            });
         let any_get_value: Box<dyn for<'a> Fn(&dyn Any, *mut std::ffi::c_void, u32) -> Variant> =
             Box::new(move |any_data, item, col| {
                 let t = any_data.downcast_ref::<T>().unwrap();
@@ -461,41 +448,32 @@ impl CustomDataViewTreeModel {
             });
 
         let any_set_value = set_value.map(|f| {
-            Box::new(
-                move |any_data: &dyn Any, item: *mut std::ffi::c_void, col, var: &Variant| {
-                    let t = any_data.downcast_ref::<T>().unwrap();
-                    let item_opt: Option<&N> = if item.is_null() {
-                        None
-                    } else {
-                        Some(unsafe { &*(item as *mut N) })
-                    };
-                    f(t, item_opt, col, var)
-                },
-            )
-                as Box<dyn for<'a> Fn(&dyn Any, *mut std::ffi::c_void, u32, &Variant) -> bool>
+            Box::new(move |any_data: &dyn Any, item: *mut std::ffi::c_void, col, var: &Variant| {
+                let t = any_data.downcast_ref::<T>().unwrap();
+                let item_opt: Option<&N> = if item.is_null() {
+                    None
+                } else {
+                    Some(unsafe { &*(item as *mut N) })
+                };
+                f(t, item_opt, col, var)
+            }) as Box<dyn for<'a> Fn(&dyn Any, *mut std::ffi::c_void, u32, &Variant) -> bool>
         });
 
         let any_is_enabled = is_enabled.map(|f| {
-            Box::new(
-                move |any_data: &dyn Any, item: *mut std::ffi::c_void, col| {
-                    let t = any_data.downcast_ref::<T>().unwrap();
-                    let item_opt: Option<&N> = if item.is_null() {
-                        None
-                    } else {
-                        Some(unsafe { &*(item as *mut N) })
-                    };
-                    f(t, item_opt, col)
-                },
-            ) as Box<dyn for<'a> Fn(&dyn Any, *mut std::ffi::c_void, u32) -> bool>
+            Box::new(move |any_data: &dyn Any, item: *mut std::ffi::c_void, col| {
+                let t = any_data.downcast_ref::<T>().unwrap();
+                let item_opt: Option<&N> = if item.is_null() {
+                    None
+                } else {
+                    Some(unsafe { &*(item as *mut N) })
+                };
+                f(t, item_opt, col)
+            }) as Box<dyn for<'a> Fn(&dyn Any, *mut std::ffi::c_void, u32) -> bool>
         });
 
         let any_compare = compare.map(|f| {
             Box::new(
-                move |any_data: &dyn Any,
-                      a: *mut std::ffi::c_void,
-                      b: *mut std::ffi::c_void,
-                      col: u32,
-                      asc: bool| {
+                move |any_data: &dyn Any, a: *mut std::ffi::c_void, b: *mut std::ffi::c_void, col: u32, asc: bool| {
                     let t = any_data.downcast_ref::<T>().unwrap();
                     if a.is_null() || b.is_null() {
                         return 0;
@@ -504,16 +482,7 @@ impl CustomDataViewTreeModel {
                     let b_ref: &N = unsafe { &*(b as *mut N) };
                     f(t, a_ref, b_ref, col, asc)
                 },
-            )
-                as Box<
-                    dyn for<'a> Fn(
-                        &dyn Any,
-                        *mut std::ffi::c_void,
-                        *mut std::ffi::c_void,
-                        u32,
-                        bool,
-                    ) -> i32,
-                >
+            ) as Box<dyn for<'a> Fn(&dyn Any, *mut std::ffi::c_void, *mut std::ffi::c_void, u32, bool) -> i32>
         });
 
         // Build OwnedTreeCallbacks and move it to C as userdata.
@@ -570,10 +539,7 @@ extern "C" fn trampoline_free_children(items: *mut *mut std::ffi::c_void, count:
     unsafe { tree_helpers::free_children_array(items, count) };
 }
 
-extern "C" fn trampoline_get_parent(
-    userdata: *mut std::ffi::c_void,
-    item: *mut std::ffi::c_void,
-) -> *mut std::ffi::c_void {
+extern "C" fn trampoline_get_parent(userdata: *mut std::ffi::c_void, item: *mut std::ffi::c_void) -> *mut std::ffi::c_void {
     if userdata.is_null() {
         return std::ptr::null_mut();
     }
@@ -581,10 +547,7 @@ extern "C" fn trampoline_get_parent(
     (cb.get_parent)(&*cb.userdata, item)
 }
 
-extern "C" fn trampoline_is_container(
-    userdata: *mut std::ffi::c_void,
-    item: *mut std::ffi::c_void,
-) -> bool {
+extern "C" fn trampoline_is_container(userdata: *mut std::ffi::c_void, item: *mut std::ffi::c_void) -> bool {
     if userdata.is_null() {
         return false;
     }
@@ -651,11 +614,7 @@ extern "C" fn trampoline_set_value(
     }
 }
 
-extern "C" fn trampoline_is_enabled(
-    userdata: *mut std::ffi::c_void,
-    item: *mut std::ffi::c_void,
-    col: u32,
-) -> bool {
+extern "C" fn trampoline_is_enabled(userdata: *mut std::ffi::c_void, item: *mut std::ffi::c_void, col: u32) -> bool {
     if userdata.is_null() {
         return true;
     }
@@ -702,9 +661,7 @@ impl DataViewModel for CustomDataViewTreeModel {
 
 #[unsafe(no_mangle)]
 #[allow(clippy::not_unsafe_ptr_arg_deref)]
-pub extern "C" fn wxd_Drop_Rust_DataViewTreeModelCallbacks(
-    cb_ptr: *mut ffi::wxd_DataViewTreeModel_Callbacks,
-) {
+pub extern "C" fn wxd_Drop_Rust_DataViewTreeModelCallbacks(cb_ptr: *mut ffi::wxd_DataViewTreeModel_Callbacks) {
     if cb_ptr.is_null() {
         return;
     }
@@ -866,9 +823,7 @@ impl CustomDataViewVirtualListModel {
 
     /// Notify that a specific cell value has changed
     pub fn row_value_changed(&self, row: usize, col: usize) {
-        unsafe {
-            ffi::wxd_DataViewVirtualListModel_RowValueChanged(self.handle, row as u64, col as u64)
-        };
+        unsafe { ffi::wxd_DataViewVirtualListModel_RowValueChanged(self.handle, row as u64, col as u64) };
     }
 
     /// Reset the model with a new size
@@ -900,11 +855,7 @@ impl_refcounted_object!(
 );
 
 // Create C++ callbacks
-unsafe extern "C" fn get_value_callback(
-    userdata: *mut ::std::os::raw::c_void,
-    row: u64,
-    col: u64,
-) -> *mut ffi::wxd_Variant_t {
+unsafe extern "C" fn get_value_callback(userdata: *mut ::std::os::raw::c_void, row: u64, col: u64) -> *mut ffi::wxd_Variant_t {
     if userdata.is_null() {
         // Return an owned empty string variant to satisfy the API, C++ will destroy it.
         let v = Variant::from_string("");
@@ -955,11 +906,7 @@ unsafe extern "C" fn get_attr_callback(
     }
 }
 
-unsafe extern "C" fn is_enabled_callback(
-    userdata: *mut ::std::os::raw::c_void,
-    row: u64,
-    col: u64,
-) -> bool {
+unsafe extern "C" fn is_enabled_callback(userdata: *mut ::std::os::raw::c_void, row: u64, col: u64) -> bool {
     let callbacks = unsafe { &*(userdata as *const CustomModelCallbacks) };
     if let Some(is_enabled) = &callbacks.is_enabled {
         (is_enabled)(&*callbacks.userdata, row as usize, col as usize)

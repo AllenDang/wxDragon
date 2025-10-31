@@ -175,12 +175,7 @@ custom_widget!(
 );
 
 impl AniFillButton {
-    fn draw_custom_button(
-        panel: &Panel,
-        config: &AniFillButtonConfig,
-        progress: f32,
-        is_pressed: bool,
-    ) {
+    fn draw_custom_button(panel: &Panel, config: &AniFillButtonConfig, progress: f32, is_pressed: bool) {
         let dc = AutoBufferedPaintDC::new(panel);
         let size = panel.get_size();
         let width = size.width;

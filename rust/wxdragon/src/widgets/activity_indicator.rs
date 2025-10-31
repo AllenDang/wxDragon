@@ -30,26 +30,10 @@ impl ActivityIndicator {
     }
 
     /// Low-level constructor used by the builder.
-    fn new_impl(
-        parent_ptr: *mut ffi::wxd_Window_t,
-        id: Id,
-        pos: Point,
-        size: Size,
-        style: i64,
-    ) -> Self {
+    fn new_impl(parent_ptr: *mut ffi::wxd_Window_t, id: Id, pos: Point, size: Size, style: i64) -> Self {
         assert!(!parent_ptr.is_null(), "ActivityIndicator requires a parent");
 
-        let ptr = unsafe {
-            ffi::wxd_ActivityIndicator_Create(
-                parent_ptr,
-                id,
-                pos.x,
-                pos.y,
-                size.width,
-                size.height,
-                style,
-            )
-        };
+        let ptr = unsafe { ffi::wxd_ActivityIndicator_Create(parent_ptr, id, pos.x, pos.y, size.width, size.height, style) };
 
         if ptr.is_null() {
             panic!("Failed to create wxActivityIndicator");

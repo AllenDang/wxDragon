@@ -103,14 +103,7 @@ impl Font {
         };
         let ptr = unsafe {
             // This FFI function seems to be available based on lack of lint errors for it.
-            ffi::wxd_Font_CreateEx(
-                point_size,
-                family,
-                style,
-                weight,
-                underlined,
-                c_face_name.as_ptr(),
-            )
+            ffi::wxd_Font_CreateEx(point_size, family, style, weight, underlined, c_face_name.as_ptr())
         };
         if ptr.is_null() {
             None
@@ -162,13 +155,7 @@ impl Font {
     /// Get the font face name.
     pub fn get_face_name(&self) -> String {
         let mut buffer = vec![0u8; 256];
-        let len = unsafe {
-            ffi::wxd_Font_GetFaceName(
-                self.ptr,
-                buffer.as_mut_ptr() as *mut i8,
-                buffer.len() as i32,
-            )
-        };
+        let len = unsafe { ffi::wxd_Font_GetFaceName(self.ptr, buffer.as_mut_ptr() as *mut i8, buffer.len() as i32) };
         if len > 0 {
             buffer.resize((len + 1) as usize, 0);
             let c_str = unsafe { CStr::from_ptr(buffer.as_ptr() as *const i8) };
@@ -312,11 +299,7 @@ impl FontBuilder {
     }
 
     pub fn build(self) -> Option<Font> {
-        let point_size = if self.point_size == 0 {
-            10
-        } else {
-            self.point_size
-        };
+        let point_size = if self.point_size == 0 { 10 } else { self.point_size };
 
         Font::new_with_details(
             point_size as c_int,

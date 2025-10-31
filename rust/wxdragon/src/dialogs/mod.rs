@@ -93,9 +93,7 @@ impl Dialog {
     /// This method should be called from event handlers to close the dialog.
     /// The return code is what will be returned by show_modal().
     pub fn end_modal(&self, ret_code: i32) {
-        unsafe {
-            ffi::wxd_Dialog_EndModal(self.window.as_ptr() as *mut ffi::wxd_Dialog_t, ret_code)
-        }
+        unsafe { ffi::wxd_Dialog_EndModal(self.window.as_ptr() as *mut ffi::wxd_Dialog_t, ret_code) }
     }
 
     /// Returns the raw underlying dialog pointer.

@@ -64,10 +64,7 @@ impl Clipboard {
     /// # Safety
     /// This method transfers ownership of the data object to the clipboard if successful.
     /// The data object should no longer be used after a successful call.
-    pub fn add_data<T: DataObject + crate::data_object::TransferOwnership>(
-        &self,
-        data: &mut T,
-    ) -> bool {
+    pub fn add_data<T: DataObject + crate::data_object::TransferOwnership>(&self, data: &mut T) -> bool {
         if self.ptr.is_null() {
             return false;
         }
@@ -89,10 +86,7 @@ impl Clipboard {
     /// # Safety
     /// This method transfers ownership of the data object to the clipboard if successful.
     /// The data object should no longer be used after a successful call.
-    pub fn set_data<T: DataObject + crate::data_object::TransferOwnership>(
-        &self,
-        data: &mut T,
-    ) -> bool {
+    pub fn set_data<T: DataObject + crate::data_object::TransferOwnership>(&self, data: &mut T) -> bool {
         if self.ptr.is_null() {
             return false;
         }
@@ -204,11 +198,7 @@ pub struct ClipboardLocker<'a> {
 impl<'a> ClipboardLocker<'a> {
     /// Creates a new ClipboardLocker for the given clipboard
     pub fn new(clipboard: &'a Clipboard) -> Option<Self> {
-        if clipboard.open() {
-            Some(Self { clipboard })
-        } else {
-            None
-        }
+        if clipboard.open() { Some(Self { clipboard }) } else { None }
     }
 
     /// Returns true if the clipboard was successfully opened

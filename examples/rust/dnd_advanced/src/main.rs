@@ -4,17 +4,13 @@ struct DropTargetPanel;
 
 impl DropTargetPanel {
     fn setup(parent: &Frame) {
-        let panel = Panel::builder(parent)
-            .with_size(Size::new(500, 400))
-            .build();
+        let panel = Panel::builder(parent).with_size(Size::new(500, 400)).build();
 
         // Add a vertical sizer
         let sizer = BoxSizer::builder(Orientation::Vertical).build();
 
         // Create a title
-        let title = StaticText::builder(&panel)
-            .with_label("Drop files or text here:")
-            .build();
+        let title = StaticText::builder(&panel).with_label("Drop files or text here:").build();
         sizer.add_spacer(10);
         sizer.add(&title, 0, SizerFlag::Expand | SizerFlag::All, 5);
         sizer.add_spacer(10);

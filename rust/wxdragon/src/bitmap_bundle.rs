@@ -34,10 +34,7 @@ impl BitmapBundle {
     /// contain any bitmaps to be shown.
     pub fn new() -> Self {
         let ptr = unsafe { ffi::wxd_BitmapBundle_Create() };
-        BitmapBundle {
-            ptr,
-            is_owned: true,
-        }
+        BitmapBundle { ptr, is_owned: true }
     }
 
     /// Creates a BitmapBundle from an existing pointer, taking ownership of it.
@@ -48,10 +45,7 @@ impl BitmapBundle {
     /// The pointer must be a valid wxBitmapBundle pointer that can be owned
     /// and eventually destroyed by Rust.
     pub fn from_ptr_owned(ptr: *mut ffi::wxd_BitmapBundle_t) -> Self {
-        BitmapBundle {
-            ptr,
-            is_owned: true,
-        }
+        BitmapBundle { ptr, is_owned: true }
     }
 
     /// Creates a bitmap bundle from a single bitmap.
@@ -59,10 +53,7 @@ impl BitmapBundle {
     /// This is primarily for backward compatibility with APIs that used to take a wxBitmap.
     pub fn from_bitmap(bitmap: &Bitmap) -> Self {
         let ptr = unsafe { ffi::wxd_BitmapBundle_CreateFromBitmap(**bitmap) };
-        BitmapBundle {
-            ptr,
-            is_owned: true,
-        }
+        BitmapBundle { ptr, is_owned: true }
     }
 
     /// Creates a bitmap bundle from multiple bitmaps of different sizes.
@@ -88,10 +79,7 @@ impl BitmapBundle {
 
         let ptr = unsafe { ffi::wxd_BitmapBundle_FromBitmaps(bitmap_ptrs.as_ptr(), bitmaps.len()) };
 
-        BitmapBundle {
-            ptr,
-            is_owned: true,
-        }
+        BitmapBundle { ptr, is_owned: true }
     }
 
     /// Creates a bitmap bundle from an SVG file.
@@ -114,10 +102,7 @@ impl BitmapBundle {
         if ptr.is_null() {
             None
         } else {
-            Some(BitmapBundle {
-                ptr,
-                is_owned: true,
-            })
+            Some(BitmapBundle { ptr, is_owned: true })
         }
     }
 
@@ -141,10 +126,7 @@ impl BitmapBundle {
         if ptr.is_null() {
             None
         } else {
-            Some(BitmapBundle {
-                ptr,
-                is_owned: true,
-            })
+            Some(BitmapBundle { ptr, is_owned: true })
         }
     }
 
@@ -168,10 +150,7 @@ impl BitmapBundle {
         if ptr.is_null() {
             None
         } else {
-            Some(BitmapBundle {
-                ptr,
-                is_owned: true,
-            })
+            Some(BitmapBundle { ptr, is_owned: true })
         }
     }
 
@@ -211,8 +190,7 @@ impl BitmapBundle {
     /// # Returns
     /// None if the bundle is invalid, the window is invalid, or a bitmap couldn't be created.
     pub fn get_bitmap_for(&self, window: &dyn WxWidget) -> Option<Bitmap> {
-        let bitmap_ptr =
-            unsafe { ffi::wxd_BitmapBundle_GetBitmapFor(self.ptr, window.handle_ptr()) };
+        let bitmap_ptr = unsafe { ffi::wxd_BitmapBundle_GetBitmapFor(self.ptr, window.handle_ptr()) };
 
         if bitmap_ptr.is_null() {
             None
@@ -252,9 +230,7 @@ impl BitmapBundle {
     /// # Arguments
     /// * `window` - The window where the bitmap will be displayed.
     pub fn get_preferred_bitmap_size_for(&self, window: &dyn WxWidget) -> Size {
-        let size = unsafe {
-            ffi::wxd_BitmapBundle_GetPreferredBitmapSizeFor(self.ptr, window.handle_ptr())
-        };
+        let size = unsafe { ffi::wxd_BitmapBundle_GetPreferredBitmapSizeFor(self.ptr, window.handle_ptr()) };
         Size::from(size)
     }
 

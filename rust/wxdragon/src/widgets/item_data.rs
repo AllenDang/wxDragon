@@ -20,10 +20,7 @@ static NEXT_DATA_ID: AtomicU64 = AtomicU64::new(1);
 /// Store an item in the global registry and return a unique ID
 pub fn store_item_data<T: Any + Send + Sync + 'static>(data: T) -> u64 {
     let id = NEXT_DATA_ID.fetch_add(1, Ordering::SeqCst);
-    ITEM_DATA_REGISTRY
-        .write()
-        .unwrap()
-        .insert(id, Arc::new(data));
+    ITEM_DATA_REGISTRY.write().unwrap().insert(id, Arc::new(data));
     id
 }
 
@@ -75,11 +72,7 @@ pub trait HasItemData {
     /// # Returns
     /// The unique ID of the stored data that can be used for retrieval later,
     /// or 0 if the operation failed
-    fn set_custom_data<T: Any + Send + Sync + 'static>(
-        &self,
-        item_id: impl Into<u64>,
-        data: T,
-    ) -> u64;
+    fn set_custom_data<T: Any + Send + Sync + 'static>(&self, item_id: impl Into<u64>, data: T) -> u64;
 
     /// Retrieves custom data previously associated with an item
     fn get_custom_data(&self, item_id: impl Into<u64>) -> Option<Arc<dyn Any + Send + Sync>>;

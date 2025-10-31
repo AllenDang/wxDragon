@@ -43,44 +43,22 @@ impl Tool {
 
     /// Enables or disables this tool.
     pub fn enable(&self, enable: bool) {
-        unsafe {
-            ffi::wxd_ToolBar_EnableTool(
-                self.toolbar_window.as_ptr() as *mut ffi::wxd_ToolBar_t,
-                self.tool_id,
-                enable,
-            );
-        }
+        unsafe { ffi::wxd_ToolBar_EnableTool(self.toolbar_window.as_ptr() as *mut ffi::wxd_ToolBar_t, self.tool_id, enable) };
     }
 
     /// Toggles this tool (for checkable tools).
     pub fn toggle(&self, toggle: bool) {
-        unsafe {
-            ffi::wxd_ToolBar_ToggleTool(
-                self.toolbar_window.as_ptr() as *mut ffi::wxd_ToolBar_t,
-                self.tool_id,
-                toggle,
-            );
-        }
+        unsafe { ffi::wxd_ToolBar_ToggleTool(self.toolbar_window.as_ptr() as *mut ffi::wxd_ToolBar_t, self.tool_id, toggle) };
     }
 
     /// Returns whether this tool is enabled.
     pub fn is_enabled(&self) -> bool {
-        unsafe {
-            ffi::wxd_ToolBar_IsToolEnabled(
-                self.toolbar_window.as_ptr() as *mut ffi::wxd_ToolBar_t,
-                self.tool_id,
-            )
-        }
+        unsafe { ffi::wxd_ToolBar_IsToolEnabled(self.toolbar_window.as_ptr() as *mut ffi::wxd_ToolBar_t, self.tool_id) }
     }
 
     /// Returns the state of this tool (checked/unchecked for checkable tools).
     pub fn get_state(&self) -> bool {
-        unsafe {
-            ffi::wxd_ToolBar_GetToolState(
-                self.toolbar_window.as_ptr() as *mut ffi::wxd_ToolBar_t,
-                self.tool_id,
-            )
-        }
+        unsafe { ffi::wxd_ToolBar_GetToolState(self.toolbar_window.as_ptr() as *mut ffi::wxd_ToolBar_t, self.tool_id) }
     }
 
     /// Sets the short help string (tooltip) for this tool.

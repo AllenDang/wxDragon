@@ -22,20 +22,14 @@ pub fn details_dlg(parent: &dyn WxWidget) {
         .with_label("Remarks")
         .with_size(label_size)
         .build();
-    let remarks_input = TextCtrl::builder(&panel)
-        .with_size(input_size)
-        .with_value("")
-        .build();
+    let remarks_input = TextCtrl::builder(&panel).with_size(input_size).with_value("").build();
 
     let tunnel_label = StaticText::builder(&panel)
         .with_style(StaticTextStyle::AlignRight)
         .with_label("Tunnel Path")
         .with_size(label_size)
         .build();
-    let tunnel_input = TextCtrl::builder(&panel)
-        .with_size(input_size)
-        .with_value("")
-        .build();
+    let tunnel_input = TextCtrl::builder(&panel).with_size(input_size).with_value("").build();
 
     let disable_tls_label = StaticText::builder(&panel)
         .with_style(StaticTextStyle::AlignRight)
@@ -59,10 +53,7 @@ pub fn details_dlg(parent: &dyn WxWidget) {
         .with_label("Server Host")
         .with_size(label_size)
         .build();
-    let server_host_input = TextCtrl::builder(&panel)
-        .with_size(input_size)
-        .with_value("")
-        .build();
+    let server_host_input = TextCtrl::builder(&panel).with_size(input_size).with_value("").build();
 
     let server_port_label = StaticText::builder(&panel)
         .with_style(StaticTextStyle::AlignRight)
@@ -81,20 +72,14 @@ pub fn details_dlg(parent: &dyn WxWidget) {
         .with_label("Server Domain")
         .with_size(label_size)
         .build();
-    let server_domain_input = TextCtrl::builder(&panel)
-        .with_size(input_size)
-        .with_value("")
-        .build();
+    let server_domain_input = TextCtrl::builder(&panel).with_size(input_size).with_value("").build();
 
     let ca_file_label = StaticText::builder(&panel)
         .with_style(StaticTextStyle::AlignRight)
         .with_label("CA File/Content")
         .with_size(label_size)
         .build();
-    let ca_file_input = TextCtrl::builder(&panel)
-        .with_size(input_size)
-        .with_value("")
-        .build();
+    let ca_file_input = TextCtrl::builder(&panel).with_size(input_size).with_value("").build();
 
     let dangerous_label = StaticText::builder(&panel)
         .with_style(StaticTextStyle::AlignRight)
@@ -106,23 +91,10 @@ pub fn details_dlg(parent: &dyn WxWidget) {
         .with_label("Dangerous Mode")
         .build();
 
-    let grid = FlexGridSizer::builder(10, 2)
-        .with_vgap(8)
-        .with_hgap(10)
-        .build();
-    grid.add(
-        &remarks_label,
-        0,
-        SizerFlag::AlignRight | SizerFlag::AlignCenterVertical,
-        0,
-    );
+    let grid = FlexGridSizer::builder(10, 2).with_vgap(8).with_hgap(10).build();
+    grid.add(&remarks_label, 0, SizerFlag::AlignRight | SizerFlag::AlignCenterVertical, 0);
     grid.add(&remarks_input, 1, SizerFlag::Expand, 0);
-    grid.add(
-        &tunnel_label,
-        0,
-        SizerFlag::AlignRight | SizerFlag::AlignCenterVertical,
-        0,
-    );
+    grid.add(&tunnel_label, 0, SizerFlag::AlignRight | SizerFlag::AlignCenterVertical, 0);
     grid.add(&tunnel_input, 1, SizerFlag::Expand, 0);
     grid.add(
         &disable_tls_label,
@@ -136,12 +108,7 @@ pub fn details_dlg(parent: &dyn WxWidget) {
         SizerFlag::AlignLeft | SizerFlag::AlignCenterVertical,
         0,
     );
-    grid.add(
-        &client_id_label,
-        0,
-        SizerFlag::AlignRight | SizerFlag::AlignCenterVertical,
-        0,
-    );
+    grid.add(&client_id_label, 0, SizerFlag::AlignRight | SizerFlag::AlignCenterVertical, 0);
     grid.add(&client_id_input, 1, SizerFlag::Expand, 0);
     grid.add(
         &server_host_label,
@@ -164,19 +131,9 @@ pub fn details_dlg(parent: &dyn WxWidget) {
         0,
     );
     grid.add(&server_domain_input, 1, SizerFlag::Expand, 0);
-    grid.add(
-        &ca_file_label,
-        0,
-        SizerFlag::AlignRight | SizerFlag::AlignCenterVertical,
-        0,
-    );
+    grid.add(&ca_file_label, 0, SizerFlag::AlignRight | SizerFlag::AlignCenterVertical, 0);
     grid.add(&ca_file_input, 1, SizerFlag::Expand, 0);
-    grid.add(
-        &dangerous_label,
-        0,
-        SizerFlag::AlignRight | SizerFlag::AlignCenterVertical,
-        0,
-    );
+    grid.add(&dangerous_label, 0, SizerFlag::AlignRight | SizerFlag::AlignCenterVertical, 0);
     grid.add(
         &dangerous_checkbox,
         1,
@@ -185,10 +142,7 @@ pub fn details_dlg(parent: &dyn WxWidget) {
     );
 
     let submit_btn = Button::builder(&panel).with_label("Submit").build();
-    let cancel_btn = Button::builder(&panel)
-        .with_label("Cancel")
-        .with_id(ID_CANCEL)
-        .build();
+    let cancel_btn = Button::builder(&panel).with_label("Cancel").with_id(ID_CANCEL).build();
     let dialog_clone = dialog.clone();
     submit_btn.on_click(move |_data| {
         dialog_clone.end_modal(ID_OK);

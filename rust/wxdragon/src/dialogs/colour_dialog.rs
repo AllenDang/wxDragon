@@ -93,13 +93,9 @@ impl<'a, W: WxWidget> ColourDialogBuilder<'a, W> {
         };
 
         let parent_ptr = self.parent.handle_ptr();
-        assert!(
-            !parent_ptr.is_null(),
-            "ColourDialog requires a valid parent window pointer."
-        );
+        assert!(!parent_ptr.is_null(), "ColourDialog requires a valid parent window pointer.");
 
-        let ptr =
-            unsafe { ffi::wxd_ColourDialog_Create(parent_ptr, c_title.as_ptr(), colour_data_ptr) };
+        let ptr = unsafe { ffi::wxd_ColourDialog_Create(parent_ptr, c_title.as_ptr(), colour_data_ptr) };
 
         // Clean up the temporary ColourData if we created one
         if !colour_data_ptr.is_null() {

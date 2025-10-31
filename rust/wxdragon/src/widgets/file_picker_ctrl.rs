@@ -66,29 +66,18 @@ impl FilePickerCtrl {
 
     /// Gets the currently selected path.
     pub fn get_path(&self) -> String {
-        unsafe {
-            let c_str = ffi::wxd_FilePickerCtrl_GetPath(
-                self.window.as_ptr() as *mut ffi::wxd_FilePickerCtrl_t
-            );
-            if c_str.is_null() {
-                String::new()
-            } else {
-                CString::from_raw(c_str as *mut _)
-                    .to_string_lossy()
-                    .into_owned()
-            }
+        let c_str = unsafe { ffi::wxd_FilePickerCtrl_GetPath(self.window.as_ptr() as *mut ffi::wxd_FilePickerCtrl_t) };
+        if c_str.is_null() {
+            String::new()
+        } else {
+            unsafe { CString::from_raw(c_str as *mut _).to_string_lossy().into_owned() }
         }
     }
 
     /// Sets the currently selected path.
     pub fn set_path(&self, path: &str) {
         let c_path = CString::new(path).expect("CString::new failed for path");
-        unsafe {
-            ffi::wxd_FilePickerCtrl_SetPath(
-                self.window.as_ptr() as *mut ffi::wxd_FilePickerCtrl_t,
-                c_path.as_ptr(),
-            );
-        }
+        unsafe { ffi::wxd_FilePickerCtrl_SetPath(self.window.as_ptr() as *mut ffi::wxd_FilePickerCtrl_t, c_path.as_ptr()) };
     }
 
     /// Creates a FilePickerCtrl from a raw pointer.

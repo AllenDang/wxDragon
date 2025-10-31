@@ -186,31 +186,21 @@ impl MenuEventData {
         match self.event.get_event_type() {
             Some(EventType::CONTEXT_MENU) => {
                 if let Some(pos) = self.get_context_position() {
-                    format!(
-                        "{} - ID: {}, Position: ({}, {})",
-                        event_name, id, pos.x, pos.y
-                    )
+                    format!("{event_name} - ID: {id}, Position: ({}, {})", pos.x, pos.y)
                 } else {
-                    format!("{} - ID: {}", event_name, id)
+                    format!("{event_name} - ID: {id}")
                 }
             }
             Some(EventType::MENU_OPEN | EventType::MENU_CLOSE | EventType::MENU_HIGHLIGHT) => {
-                let popup_info = if self.is_popup() {
-                    " (Popup)"
-                } else {
-                    " (Menu Bar)"
-                };
+                let popup_info = if self.is_popup() { " (Popup)" } else { " (Menu Bar)" };
                 if let Some(menu_id) = self.get_menu_id() {
-                    format!(
-                        "{} - ID: {}, Menu ID: {}{}",
-                        event_name, id, menu_id, popup_info
-                    )
+                    format!("{event_name} - ID: {id}, Menu ID: {menu_id}{popup_info}")
                 } else {
-                    format!("{} - ID: {}{}", event_name, id, popup_info)
+                    format!("{event_name} - ID: {id}{popup_info}")
                 }
             }
             _ => {
-                format!("{} - ID: {}", event_name, id)
+                format!("{event_name} - ID: {id}")
             }
         }
     }

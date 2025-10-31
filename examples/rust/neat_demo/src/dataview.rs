@@ -127,11 +127,7 @@ pub fn create_data_view_panel(parent: &Window, model: &Rc<DataViewListModel>) ->
     // Columns
     let name_column = DataViewColumn::new(
         "Name",
-        &DataViewTextRenderer::new(
-            VariantType::String,
-            DataViewCellMode::Inert,
-            DataViewAlign::Left,
-        ),
+        &DataViewTextRenderer::new(VariantType::String, DataViewCellMode::Inert, DataViewAlign::Left),
         0,
         100,
         DataViewAlign::Left,
@@ -168,17 +164,9 @@ pub fn create_data_view_panel(parent: &Window, model: &Rc<DataViewListModel>) ->
 
         // Context menu
         let dataview_menu = Menu::builder()
-            .append_item(
-                MenuId::ViewDetails.into(),
-                "View details",
-                "View node details",
-            )
+            .append_item(MenuId::ViewDetails.into(), "View details", "View node details")
             .append_item(MenuId::ExportNode.into(), "Export Node", "Export node")
-            .append_item(
-                MenuId::ShowQrCode.into(),
-                "Show QR Code",
-                "Show QR code for node",
-            )
+            .append_item(MenuId::ShowQrCode.into(), "Show QR Code", "Show QR code for node")
             .append_separator()
             .append_item(MenuId::Delete.into(), "Delete", "Delete node")
             .append_separator()
@@ -190,12 +178,7 @@ pub fn create_data_view_panel(parent: &Window, model: &Rc<DataViewListModel>) ->
 
     // Layout
     let sizer = BoxSizer::builder(Orientation::Vertical).build();
-    sizer.add(
-        &dataview,
-        1,
-        SizerFlag::Expand | SizerFlag::All,
-        WIDGET_MARGIN,
-    );
+    sizer.add(&dataview, 1, SizerFlag::Expand | SizerFlag::All, WIDGET_MARGIN);
     panel.set_sizer(sizer, true);
 
     panel

@@ -65,18 +65,13 @@ impl TreeEventData {
         }
         unsafe {
             let mut buffer: [std::os::raw::c_char; 1024] = [0; 1024];
-            let len_needed =
-                ffi::wxd_TreeEvent_GetLabel(self.event.0, buffer.as_mut_ptr(), buffer.len() as i32);
+            let len_needed = ffi::wxd_TreeEvent_GetLabel(self.event.0, buffer.as_mut_ptr(), buffer.len() as i32);
             if len_needed < 0 {
                 return None;
             }
             let len_needed_usize = len_needed as usize;
             if len_needed_usize < buffer.len() {
-                Some(
-                    std::ffi::CStr::from_ptr(buffer.as_ptr())
-                        .to_string_lossy()
-                        .into_owned(),
-                )
+                Some(std::ffi::CStr::from_ptr(buffer.as_ptr()).to_string_lossy().into_owned())
             } else {
                 let mut vec_buffer: Vec<u8> = vec![0; len_needed_usize + 1];
                 let len_copied = ffi::wxd_TreeEvent_GetLabel(

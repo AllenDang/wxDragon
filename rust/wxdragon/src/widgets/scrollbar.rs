@@ -46,14 +46,7 @@ impl ScrollBar {
     }
 
     /// Sets the scrollbar properties.
-    pub fn set_scrollbar(
-        &self,
-        position: i32,
-        thumb_size: i32,
-        range: i32,
-        page_size: i32,
-        refresh: bool,
-    ) {
+    pub fn set_scrollbar(&self, position: i32, thumb_size: i32, range: i32, page_size: i32, refresh: bool) {
         unsafe {
             ffi::wxd_ScrollBar_SetScrollbar(
                 self.window.as_ptr() as *mut ffi::wxd_ScrollBar_t,
@@ -62,15 +55,13 @@ impl ScrollBar {
                 range as c_int,
                 page_size as c_int,
                 refresh,
-            );
-        }
+            )
+        };
     }
 
     /// Gets the current position of the scrollbar thumb.
     pub fn thumb_position(&self) -> i32 {
-        unsafe {
-            ffi::wxd_ScrollBar_GetThumbPosition(self.window.as_ptr() as *mut ffi::wxd_ScrollBar_t)
-        }
+        unsafe { ffi::wxd_ScrollBar_GetThumbPosition(self.window.as_ptr() as *mut ffi::wxd_ScrollBar_t) }
     }
 
     // TODO: Add GetThumbSize, GetPageSize, GetRange if needed via FFI calls.

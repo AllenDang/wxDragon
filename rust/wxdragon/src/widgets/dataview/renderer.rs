@@ -5,25 +5,16 @@ use std::ffi::CString;
 use wxdragon_sys as ffi;
 
 // Type aliases for custom renderer callbacks to reduce complexity
-type GetSizeCallback =
-    Box<dyn Fn(&super::Variant, crate::geometry::Size) -> crate::geometry::Size + 'static>;
+type GetSizeCallback = Box<dyn Fn(&super::Variant, crate::geometry::Size) -> crate::geometry::Size + 'static>;
 // Simple render callback that receives the variant directly
-type RenderCallback =
-    Box<dyn Fn(crate::geometry::Rect, &RenderContext, i32, &super::Variant) -> bool + 'static>;
+type RenderCallback = Box<dyn Fn(crate::geometry::Rect, &RenderContext, i32, &super::Variant) -> bool + 'static>;
 type SetValueCallback = Box<dyn Fn(&super::Variant) -> bool + 'static>;
 type GetValueCallback = Box<dyn Fn() -> Option<super::Variant> + 'static>;
 type HasEditorCallback = Box<dyn Fn() -> bool + 'static>;
 type ActivateCellCallback = Box<dyn Fn(crate::geometry::Rect, i32) -> bool + 'static>;
-type CreateEditorCallback = Box<
-    dyn Fn(
-            &dyn crate::WxWidget,
-            crate::geometry::Rect,
-            &super::Variant,
-        ) -> Option<Box<dyn crate::WxWidget>>
-        + 'static,
->;
-type GetValueFromEditorCallback =
-    Box<dyn Fn(&dyn crate::WxWidget) -> Option<super::Variant> + 'static>;
+type CreateEditorCallback =
+    Box<dyn Fn(&dyn crate::WxWidget, crate::geometry::Rect, &super::Variant) -> Option<Box<dyn crate::WxWidget>> + 'static>;
+type GetValueFromEditorCallback = Box<dyn Fn(&dyn crate::WxWidget) -> Option<super::Variant> + 'static>;
 
 /// Holds the callbacks for a custom DataView renderer
 #[repr(C)]
@@ -67,13 +58,7 @@ impl DataViewTextRenderer {
     pub fn new(variant_type: VariantType, mode: DataViewCellMode, align: DataViewAlign) -> Self {
         let variant_type_str = variant_type.as_str();
         let variant_type_cstr = CString::new(variant_type_str).unwrap();
-        let handle = unsafe {
-            ffi::wxd_DataViewTextRenderer_Create(
-                variant_type_cstr.as_ptr(),
-                mode.bits(),
-                align.bits(),
-            )
-        };
+        let handle = unsafe { ffi::wxd_DataViewTextRenderer_Create(variant_type_cstr.as_ptr(), mode.bits(), align.bits()) };
         Self { handle }
     }
 }
@@ -102,13 +87,7 @@ impl DataViewToggleRenderer {
     pub fn new(variant_type: VariantType, mode: DataViewCellMode, align: DataViewAlign) -> Self {
         let variant_type_str = variant_type.as_str();
         let variant_type_cstr = CString::new(variant_type_str).unwrap();
-        let handle = unsafe {
-            ffi::wxd_DataViewToggleRenderer_Create(
-                variant_type_cstr.as_ptr(),
-                mode.bits(),
-                align.bits(),
-            )
-        };
+        let handle = unsafe { ffi::wxd_DataViewToggleRenderer_Create(variant_type_cstr.as_ptr(), mode.bits(), align.bits()) };
         Self { handle }
     }
 }
@@ -170,15 +149,8 @@ impl DataViewIconTextRenderer {
     /// * `align` - The alignment
     pub fn new(variant_type: VariantType, mode: DataViewCellMode, align: DataViewAlign) -> Self {
         let variant_type_str = variant_type.as_str();
-        let variant_type_cstr =
-            CString::new(variant_type_str).unwrap_or_else(|_| CString::new("string").unwrap());
-        let handle = unsafe {
-            ffi::wxd_DataViewIconTextRenderer_Create(
-                variant_type_cstr.as_ptr(),
-                mode.bits(),
-                align.bits(),
-            )
-        };
+        let variant_type_cstr = CString::new(variant_type_str).unwrap_or_else(|_| CString::new("string").unwrap());
+        let handle = unsafe { ffi::wxd_DataViewIconTextRenderer_Create(variant_type_cstr.as_ptr(), mode.bits(), align.bits()) };
         Self { handle }
     }
 }
@@ -206,13 +178,7 @@ impl DataViewBitmapRenderer {
     pub fn new(mode: DataViewCellMode, align: DataViewAlign) -> Self {
         // Bitmap renderer uses the standard wxVariant type name for bitmaps
         let variant_type_cstr = CString::new("wxBitmap").unwrap();
-        let handle = unsafe {
-            ffi::wxd_DataViewBitmapRenderer_Create(
-                variant_type_cstr.as_ptr(),
-                mode.bits(),
-                align.bits(),
-            )
-        };
+        let handle = unsafe { ffi::wxd_DataViewBitmapRenderer_Create(variant_type_cstr.as_ptr(), mode.bits(), align.bits()) };
         Self { handle }
     }
 }
@@ -241,13 +207,7 @@ impl DataViewDateRenderer {
     pub fn new(variant_type: VariantType, mode: DataViewCellMode, align: DataViewAlign) -> Self {
         let variant_type_str = variant_type.as_str();
         let variant_type_cstr = CString::new(variant_type_str).unwrap();
-        let handle = unsafe {
-            ffi::wxd_DataViewDateRenderer_Create(
-                variant_type_cstr.as_ptr(),
-                mode.bits(),
-                align.bits(),
-            )
-        };
+        let handle = unsafe { ffi::wxd_DataViewDateRenderer_Create(variant_type_cstr.as_ptr(), mode.bits(), align.bits()) };
         Self { handle }
     }
 }
@@ -276,26 +236,11 @@ impl DataViewSpinRenderer {
     /// * `min` - Minimum value
     /// * `max` - Maximum value
     /// * `inc` - Increment value
-    pub fn new(
-        variant_type: VariantType,
-        mode: DataViewCellMode,
-        align: DataViewAlign,
-        min: i32,
-        max: i32,
-        inc: i32,
-    ) -> Self {
+    pub fn new(variant_type: VariantType, mode: DataViewCellMode, align: DataViewAlign, min: i32, max: i32, inc: i32) -> Self {
         let variant_type_str = variant_type.as_str();
         let variant_type_cstr = CString::new(variant_type_str).unwrap();
-        let handle = unsafe {
-            ffi::wxd_DataViewSpinRenderer_Create(
-                variant_type_cstr.as_ptr(),
-                mode.bits(),
-                align.bits(),
-                min,
-                max,
-                inc,
-            )
-        };
+        let handle =
+            unsafe { ffi::wxd_DataViewSpinRenderer_Create(variant_type_cstr.as_ptr(), mode.bits(), align.bits(), min, max, inc) };
         Self { handle }
     }
 }
@@ -322,12 +267,7 @@ impl DataViewChoiceRenderer {
     /// * `choices` - A list of choices to display in the dropdown
     /// * `mode` - The cell mode
     /// * `align` - The alignment
-    pub fn new(
-        variant_type: VariantType,
-        choices: &[&str],
-        mode: DataViewCellMode,
-        align: DataViewAlign,
-    ) -> Self {
+    pub fn new(variant_type: VariantType, choices: &[&str], mode: DataViewCellMode, align: DataViewAlign) -> Self {
         // Convert choices to a comma-separated string
         let choices_str = choices.join(",");
         let choices_cstr = CString::new(choices_str).unwrap();
@@ -336,12 +276,7 @@ impl DataViewChoiceRenderer {
         let variant_type_cstr = CString::new(variant_type_str).unwrap();
 
         let handle = unsafe {
-            ffi::wxd_DataViewChoiceRenderer_Create(
-                variant_type_cstr.as_ptr(),
-                choices_cstr.as_ptr(),
-                mode.bits(),
-                align.bits(),
-            )
+            ffi::wxd_DataViewChoiceRenderer_Create(variant_type_cstr.as_ptr(), choices_cstr.as_ptr(), mode.bits(), align.bits())
         };
 
         Self { handle }
@@ -371,13 +306,8 @@ impl DataViewCheckIconTextRenderer {
     pub fn new(mode: DataViewCellMode, align: DataViewAlign) -> Self {
         // This renderer uses a special variant type
         let variant_type_cstr = CString::new("wxDataViewCheckIconText").unwrap();
-        let handle = unsafe {
-            ffi::wxd_DataViewCheckIconTextRenderer_Create(
-                variant_type_cstr.as_ptr(),
-                mode.bits(),
-                align.bits(),
-            )
-        };
+        let handle =
+            unsafe { ffi::wxd_DataViewCheckIconTextRenderer_Create(variant_type_cstr.as_ptr(), mode.bits(), align.bits()) };
         Self { handle }
     }
 }
@@ -678,12 +608,7 @@ impl DataViewCustomRendererBuilder {
     /// ```
     pub fn with_create_editor<F>(mut self, callback: F) -> Self
     where
-        F: Fn(
-                &dyn crate::WxWidget,
-                crate::geometry::Rect,
-                &super::Variant,
-            ) -> Option<Box<dyn crate::WxWidget>>
-            + 'static,
+        F: Fn(&dyn crate::WxWidget, crate::geometry::Rect, &super::Variant) -> Option<Box<dyn crate::WxWidget>> + 'static,
     {
         self.create_editor = Some(Box::new(callback));
         self
@@ -801,10 +726,7 @@ impl crate::dc::DeviceContext for RenderContext {
 // Trampoline functions that bridge from C++ to Rust
 extern "C" fn get_size_trampoline(user_data: *mut std::ffi::c_void) -> ffi::wxd_Size_t {
     if user_data.is_null() {
-        return ffi::wxd_Size_t {
-            width: 50,
-            height: 20,
-        };
+        return ffi::wxd_Size_t { width: 50, height: 20 };
     }
 
     let callbacks = unsafe { &*(user_data as *const CustomRendererCallbacks) };
@@ -816,25 +738,17 @@ extern "C" fn get_size_trampoline(user_data: *mut std::ffi::c_void) -> ffi::wxd_
         // derived from the widget's font metrics in a future enhancement
         let default_size = crate::geometry::Size::new(80, 20);
 
-        let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-            callback(&current_value, default_size)
-        }));
+        let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| callback(&current_value, default_size)));
 
         match result {
             Ok(size) => ffi::wxd_Size_t {
                 width: size.width,
                 height: size.height,
             },
-            Err(_) => ffi::wxd_Size_t {
-                width: 50,
-                height: 20,
-            },
+            Err(_) => ffi::wxd_Size_t { width: 50, height: 20 },
         }
     } else {
-        ffi::wxd_Size_t {
-            width: 50,
-            height: 20,
-        }
+        ffi::wxd_Size_t { width: 50, height: 20 }
     }
 }
 
@@ -866,10 +780,7 @@ extern "C" fn render_trampoline(
     }
 }
 
-extern "C" fn set_value_trampoline(
-    user_data: *mut std::ffi::c_void,
-    value: *const ffi::wxd_Variant_t,
-) -> bool {
+extern "C" fn set_value_trampoline(user_data: *mut std::ffi::c_void, value: *const ffi::wxd_Variant_t) -> bool {
     if user_data.is_null() || value.is_null() {
         return false;
     }
@@ -934,8 +845,7 @@ extern "C" fn activate_cell_trampoline(
     if let Some(ref callback) = callbacks.activate_cell {
         // Convert parameters properly
         let rect = crate::geometry::Rect::new(cell.x, cell.y, cell.width, cell.height);
-        let result =
-            std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| callback(rect, col as i32)));
+        let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| callback(rect, col as i32)));
         result.unwrap_or(false)
     } else {
         false
@@ -954,12 +864,7 @@ extern "C" fn create_editor_trampoline(
 
     let callbacks = unsafe { &*(user_data as *const CustomRendererCallbacks) };
     if let Some(ref callback) = callbacks.create_editor {
-        let rect = crate::geometry::Rect::new(
-            label_rect.x,
-            label_rect.y,
-            label_rect.width,
-            label_rect.height,
-        );
+        let rect = crate::geometry::Rect::new(label_rect.x, label_rect.y, label_rect.width, label_rect.height);
 
         // Just convert the variant, no holding the ownership here
         let variant = Variant::from(value);
@@ -979,9 +884,7 @@ extern "C" fn create_editor_trampoline(
 
         let parent_wrapper = ParentWrapper { ptr: parent };
 
-        let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-            callback(&parent_wrapper, rect, &variant)
-        }));
+        let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| callback(&parent_wrapper, rect, &variant)));
 
         match result {
             Ok(Some(editor)) => editor.handle_ptr() as *mut std::ffi::c_void,
@@ -1014,8 +917,7 @@ extern "C" fn get_value_from_editor_trampoline(
 
         let editor_wrapper = EditorWrapper { ptr: editor };
 
-        let result =
-            std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| callback(&editor_wrapper)));
+        let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| callback(&editor_wrapper)));
 
         match result {
             Ok(Some(variant)) => variant.try_into().unwrap_or(std::ptr::null_mut()),

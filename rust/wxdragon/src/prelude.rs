@@ -1,21 +1,16 @@
 // --- Core Types & Traits ---
 pub use crate::app::{App, call_after, get_app, main, set_appearance, set_top_window};
 pub use crate::appearance::{
-    AppAppearance, Appearance, AppearanceResult, SystemAppearance,
-    get_app as get_app_for_appearance, get_system_appearance, is_system_dark_mode,
+    AppAppearance, Appearance, AppearanceResult, SystemAppearance, get_app as get_app_for_appearance, get_system_appearance,
+    is_system_dark_mode,
 };
 pub use crate::clipboard::{Clipboard, ClipboardLocker};
 pub use crate::color::{Colour, colours};
-pub use crate::cursor::{
-    BitmapType, BusyCursor, Cursor, StockCursor, begin_busy_cursor, end_busy_cursor, is_busy,
-    set_cursor,
-};
+pub use crate::cursor::{BitmapType, BusyCursor, Cursor, StockCursor, begin_busy_cursor, end_busy_cursor, is_busy, set_cursor};
 pub use crate::datetime::DateTime;
 pub use crate::event::{Event, EventType, IdleEvent, IdleMode, WindowEventData, WxEvtHandler};
 // ADDED: Event category traits
-pub use crate::event::{
-    AppEvents, ButtonEvents, MenuEvents, ScrollEvents, TextEvents, TreeEvents, WindowEvents,
-};
+pub use crate::event::{AppEvents, ButtonEvents, MenuEvents, ScrollEvents, TextEvents, TreeEvents, WindowEvents};
 // ADDED: Event Data Structs
 pub use crate::event::event_data::{CommandEventData, KeyEventData, MouseEventData};
 pub use crate::event::{IdleEventData, MenuEventData};
@@ -25,9 +20,7 @@ pub use crate::sizers::WxSizer;
 pub use crate::sysopt::SystemOptions;
 pub use crate::types::Style;
 pub use crate::utils::WxdArrayString;
-pub use crate::window::{
-    BackgroundStyle, ExtraWindowStyle, Window, WindowStyle, WxWidget, WxWidgetDowncast,
-};
+pub use crate::window::{BackgroundStyle, ExtraWindowStyle, Window, WindowStyle, WxWidget, WxWidgetDowncast};
 
 // --- Sizers ---
 pub use crate::sizers::box_sizer::{BoxSizer, BoxSizerBuilder};
@@ -42,9 +35,7 @@ pub use crate::sizers::wrap_sizer::{WrapSizer, WrapSizerBuilder, WrapSizerFlag};
 pub use crate::sizers::base::{Orientation, SizerFlag};
 
 // --- Widgets & Builders ---
-pub use crate::widgets::activity_indicator::{
-    ActivityIndicator, ActivityIndicatorBuilder, ActivityIndicatorStyle,
-}; // Added Style
+pub use crate::widgets::activity_indicator::{ActivityIndicator, ActivityIndicatorBuilder, ActivityIndicatorStyle}; // Added Style
 pub use crate::widgets::animation_ctrl::{AnimationCtrl, AnimationCtrlBuilder, AnimationCtrlStyle}; // Added Style
 #[cfg(feature = "aui")]
 pub use crate::widgets::aui_manager::{AuiManager, AuiPaneInfo, DockDirection};
@@ -63,16 +54,10 @@ pub use crate::widgets::calendar_ctrl::{CalendarCtrl, CalendarCtrlBuilder, Calen
 pub use crate::widgets::checkbox::{CheckBox, CheckBoxBuilder, CheckBoxStyle};
 pub use crate::widgets::checklistbox::{CheckListBox, CheckListBoxBuilder, CheckListBoxStyle}; // Added Style
 pub use crate::widgets::choice::{Choice, ChoiceBuilder, ChoiceStyle};
-pub use crate::widgets::collapsible_pane::{
-    CollapsiblePane, CollapsiblePaneBuilder, CollapsiblePaneStyle,
-};
-pub use crate::widgets::colour_picker_ctrl::{
-    ColourPickerCtrl, ColourPickerCtrlBuilder, ColourPickerCtrlStyle,
-};
+pub use crate::widgets::collapsible_pane::{CollapsiblePane, CollapsiblePaneBuilder, CollapsiblePaneStyle};
+pub use crate::widgets::colour_picker_ctrl::{ColourPickerCtrl, ColourPickerCtrlBuilder, ColourPickerCtrlStyle};
 pub use crate::widgets::combobox::{ComboBox, ComboBoxBuilder, ComboBoxStyle};
-pub use crate::widgets::command_link_button::{
-    CommandLinkButton, CommandLinkButtonBuilder, CommandLinkButtonStyle,
-}; // Added Style
+pub use crate::widgets::command_link_button::{CommandLinkButton, CommandLinkButtonBuilder, CommandLinkButtonStyle}; // Added Style
 
 pub use crate::widgets::dataview::{
     CustomDataViewTreeModel,
@@ -102,22 +87,12 @@ pub use crate::widgets::dataview::{
 };
 // Added DataView enums
 pub use crate::widgets::dataview::enums::DataViewColumnFlags;
-pub use crate::widgets::date_picker_ctrl::{
-    DatePickerCtrl, DatePickerCtrlBuilder, DatePickerCtrlStyle,
-};
-pub use crate::widgets::dir_picker_ctrl::{
-    DirPickerCtrl, DirPickerCtrlBuilder, DirPickerCtrlStyle,
-};
-pub use crate::widgets::editable_listbox::{
-    EditableListBox, EditableListBoxBuilder, EditableListBoxStyle,
-};
+pub use crate::widgets::date_picker_ctrl::{DatePickerCtrl, DatePickerCtrlBuilder, DatePickerCtrlStyle};
+pub use crate::widgets::dir_picker_ctrl::{DirPickerCtrl, DirPickerCtrlBuilder, DirPickerCtrlStyle};
+pub use crate::widgets::editable_listbox::{EditableListBox, EditableListBoxBuilder, EditableListBoxStyle};
 pub use crate::widgets::file_ctrl::{FileCtrl, FileCtrlBuilder, FileCtrlStyle};
-pub use crate::widgets::file_picker_ctrl::{
-    FilePickerCtrl, FilePickerCtrlBuilder, FilePickerCtrlStyle,
-};
-pub use crate::widgets::font_picker_ctrl::{
-    FontPickerCtrl, FontPickerCtrlBuilder, FontPickerCtrlStyle,
-};
+pub use crate::widgets::file_picker_ctrl::{FilePickerCtrl, FilePickerCtrlBuilder, FilePickerCtrlStyle};
+pub use crate::widgets::font_picker_ctrl::{FontPickerCtrl, FontPickerCtrlBuilder, FontPickerCtrlStyle};
 pub use crate::widgets::frame::{Frame, FrameBuilder, FrameStyle};
 pub use crate::widgets::gauge::{Gauge, GaugeBuilder, GaugeStyle};
 pub use crate::widgets::hyperlink_ctrl::{HyperlinkCtrl, HyperlinkCtrlBuilder, HyperlinkCtrlStyle};
@@ -138,9 +113,7 @@ pub use crate::widgets::list_ctrl::{
 pub use crate::widgets::list_ctrl::image_list_type;
 pub use crate::widgets::listbox::{ListBox, ListBoxBuilder, ListBoxStyle};
 #[cfg(feature = "media-ctrl")]
-pub use crate::widgets::media_ctrl::{
-    MediaCtrl, MediaCtrlBuilder, MediaCtrlPlayerControls, MediaState,
-};
+pub use crate::widgets::media_ctrl::{MediaCtrl, MediaCtrlBuilder, MediaCtrlPlayerControls, MediaState};
 pub use crate::widgets::notebook::{Notebook, NotebookBuilder, NotebookStyle};
 pub use crate::widgets::notification_message::{
     NotificationMessage,
@@ -157,52 +130,38 @@ pub use crate::widgets::radiobox::{RadioBox, RadioBoxBuilder, RadioBoxStyle};
 pub use crate::widgets::rearrangelist::{RearrangeList, RearrangeListBuilder, RearrangeListStyle};
 #[cfg(feature = "richtext")]
 pub use crate::widgets::richtextctrl::{
-    RichTextCtrl, RichTextCtrlBuilder, RichTextCtrlEvent, RichTextCtrlEventData, RichTextCtrlStyle,
-    RichTextFileType,
+    RichTextCtrl, RichTextCtrlBuilder, RichTextCtrlEvent, RichTextCtrlEventData, RichTextCtrlStyle, RichTextFileType,
 };
 pub use crate::widgets::scrollbar::{ScrollBar, ScrollBarBuilder, ScrollBarStyle};
-pub use crate::widgets::scrolled_window::{
-    ScrolledWindow, ScrolledWindowBuilder, ScrolledWindowStyle,
-}; // Added Style
+pub use crate::widgets::scrolled_window::{ScrolledWindow, ScrolledWindowBuilder, ScrolledWindowStyle}; // Added Style
 pub use crate::widgets::search_ctrl::{SearchCtrl, SearchCtrlBuilder, SearchCtrlStyle};
 pub use crate::widgets::slider::{Slider, SliderBuilder, SliderStyle};
 pub use crate::widgets::spinbutton::{SpinButton, SpinButtonBuilder, SpinButtonStyle};
 pub use crate::widgets::spinctrl::{SpinCtrl, SpinCtrlBuilder, SpinCtrlStyle};
-pub use crate::widgets::spinctrl_double::{
-    SpinCtrlDouble, SpinCtrlDoubleBuilder, SpinCtrlDoubleStyle,
-};
+pub use crate::widgets::spinctrl_double::{SpinCtrlDouble, SpinCtrlDoubleBuilder, SpinCtrlDoubleStyle};
 pub use crate::widgets::splitter_window::{
     SplitterWindow,
     SplitterWindowBuilder,
     SplitterWindowStyle,
     // Events for SplitterWindow are now in splitterwindow/event.rs, re-exported from splitterwindow/mod.rs
 }; // Added Style & Events
-pub use crate::widgets::static_bitmap::{
-    ScaleMode, StaticBitmap, StaticBitmapBuilder, StaticBitmapStyle,
-}; // Added Style & ScaleMode
+pub use crate::widgets::static_bitmap::{ScaleMode, StaticBitmap, StaticBitmapBuilder, StaticBitmapStyle}; // Added Style & ScaleMode
 pub use crate::widgets::static_line::{StaticLine, StaticLineBuilder, StaticLineStyle};
 pub use crate::widgets::static_text::{StaticText, StaticTextBuilder, StaticTextStyle};
 pub use crate::widgets::staticbox::{StaticBox, StaticBoxBuilder, StaticBoxStyle}; // Added Style
 pub use crate::widgets::statusbar::{StatusBar, StatusBarBuilder};
 #[cfg(feature = "stc")]
 pub use crate::widgets::styledtextctrl::{
-    EolMode, FindFlags, Lexer, MarginType, MarkerSymbol, SelectionMode, StyledTextCtrl,
-    StyledTextCtrlBuilder, StyledTextCtrlEvent, StyledTextCtrlEventData, StyledTextCtrlStyle,
-    WhiteSpaceView, WrapMode,
+    EolMode, FindFlags, Lexer, MarginType, MarkerSymbol, SelectionMode, StyledTextCtrl, StyledTextCtrlBuilder,
+    StyledTextCtrlEvent, StyledTextCtrlEventData, StyledTextCtrlStyle, WhiteSpaceView, WrapMode,
 };
-pub use crate::widgets::taskbar_icon::{
-    TaskBarIcon, TaskBarIconBuilder, TaskBarIconStyle, TaskBarIconType,
-};
+pub use crate::widgets::taskbar_icon::{TaskBarIcon, TaskBarIconBuilder, TaskBarIconStyle, TaskBarIconType};
 pub use crate::widgets::textctrl::{TextCtrl, TextCtrlBuilder, TextCtrlStyle};
-pub use crate::widgets::time_picker_ctrl::{
-    TimePickerCtrl, TimePickerCtrlBuilder, TimePickerCtrlStyle,
-};
+pub use crate::widgets::time_picker_ctrl::{TimePickerCtrl, TimePickerCtrlBuilder, TimePickerCtrlStyle};
 pub use crate::widgets::togglebutton::{ToggleButton, ToggleButtonBuilder, ToggleButtonStyle};
 pub use crate::widgets::toolbar::{ToolBar, ToolBarStyle}; // Added Style
 pub use crate::widgets::treebook::{Treebook, TreebookBuilder, TreebookStyle}; // Added Style
-pub use crate::widgets::treectrl::{
-    TreeCtrl, TreeCtrlBuilder, TreeCtrlStyle, TreeItemIcon, TreeItemId,
-};
+pub use crate::widgets::treectrl::{TreeCtrl, TreeCtrlBuilder, TreeCtrlStyle, TreeItemIcon, TreeItemId};
 
 // --- Menus ---
 pub use crate::menus::menuitem::{ID_ABOUT, ID_EXIT, ID_SEPARATOR};
@@ -224,13 +183,9 @@ pub use crate::dialogs::file_dialog::{FileDialog, FileDialogBuilder, FileDialogS
 pub use crate::dialogs::font_dialog::{FontDialog, FontDialogBuilder}; // Added Builder
 pub use crate::dialogs::message_dialog::{MessageDialog, MessageDialogBuilder, MessageDialogStyle};
 pub use crate::dialogs::multi_choice_dialog::{MultiChoiceDialog, MultiChoiceDialogBuilder}; // Added MultiChoiceDialog
-pub use crate::dialogs::progress_dialog::{
-    ProgressDialog, ProgressDialogBuilder, ProgressDialogStyle,
-}; // Added Builder
+pub use crate::dialogs::progress_dialog::{ProgressDialog, ProgressDialogBuilder, ProgressDialogStyle}; // Added Builder
 pub use crate::dialogs::single_choice_dialog::{SingleChoiceDialog, SingleChoiceDialogBuilder}; // Added SingleChoiceDialog
-pub use crate::dialogs::text_entry_dialog::{
-    TextEntryDialog, TextEntryDialogBuilder, TextEntryDialogStyle,
-};
+pub use crate::dialogs::text_entry_dialog::{TextEntryDialog, TextEntryDialogBuilder, TextEntryDialogStyle};
 pub use crate::dialogs::{Dialog, DialogBuilder, DialogStyle}; // Base Dialog struct and builder
 
 // --- Fonts ---
@@ -239,15 +194,11 @@ pub use crate::font_data::FontData;
 
 // --- Drag and Drop ---
 pub use crate::data_object::{BitmapDataObject, DataFormat};
-pub use crate::dnd::{
-    DataObject, DragResult, DropSource, FileDataObject, FileDropTarget, TextDataObject,
-    TextDropTarget,
-};
+pub use crate::dnd::{DataObject, DragResult, DropSource, FileDataObject, FileDropTarget, TextDataObject, TextDropTarget};
 
 // --- Painting & DeviceContexts ---
 pub use crate::dc::{
-    AutoBufferedPaintDC, BackgroundMode, BrushStyle, ClientDC, DeviceContext, MemoryDC, PaintDC,
-    PenStyle, ScreenDC, WindowDC,
+    AutoBufferedPaintDC, BackgroundMode, BrushStyle, ClientDC, DeviceContext, MemoryDC, PaintDC, PenStyle, ScreenDC, WindowDC,
 };
 
 // --- Application & Misc ---

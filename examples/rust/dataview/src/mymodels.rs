@@ -54,10 +54,7 @@ pub fn create_music_tree_model(data: Rc<RefCell<MusicTree>>) -> CustomDataViewTr
             },
         },
         Some(
-            move |data: &Rc<RefCell<MusicTree>>,
-                  item: Option<&MusicNode>,
-                  col: u32,
-                  var: &Variant| {
+            move |data: &Rc<RefCell<MusicTree>>, item: Option<&MusicNode>, col: u32, var: &Variant| {
                 let target_rc = match item {
                     None => data.borrow().root.clone(),
                     Some(n) => {
@@ -144,10 +141,7 @@ pub fn create_music_tree_model(data: Rc<RefCell<MusicTree>>) -> CustomDataViewTr
 }
 
 // Resolve target Rc<RefCell<MusicNode>> from item pointer (or root when None)
-fn find_rc(
-    tree: &Rc<RefCell<MusicTree>>,
-    needle: *const MusicNode,
-) -> Option<Rc<RefCell<MusicNode>>> {
+fn find_rc(tree: &Rc<RefCell<MusicTree>>, needle: *const MusicNode) -> Option<Rc<RefCell<MusicNode>>> {
     let tree = tree.borrow();
     let root_ptr: *const MusicNode = &*tree.root.borrow();
     if root_ptr == needle {

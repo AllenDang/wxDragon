@@ -19,9 +19,7 @@ fn main() {
             .build();
 
         // Create a panel
-        let panel = Panel::builder(&frame)
-            .with_style(PanelStyle::TabTraversal)
-            .build();
+        let panel = Panel::builder(&frame).with_style(PanelStyle::TabTraversal).build();
 
         // Create a vertical box sizer
         let sizer = BoxSizer::builder(Orientation::Vertical).build();
@@ -45,9 +43,7 @@ fn main() {
             .build();
 
         // Status label to show what's happening
-        let status_label = StaticText::builder(&panel)
-            .with_label("Status: Ready")
-            .build();
+        let status_label = StaticText::builder(&panel).with_label("Status: Ready").build();
 
         // Test key events on the ComboBox
         let status_clone = status_label.clone();
@@ -65,10 +61,7 @@ fn main() {
                         should_handle = true;
                     }
                     // Log other modifier combinations for testing
-                    else if key_event.control_down()
-                        || key_event.shift_down()
-                        || key_event.alt_down()
-                        || key_event.meta_down()
+                    else if key_event.control_down() || key_event.shift_down() || key_event.alt_down() || key_event.meta_down()
                     {
                         let mut modifiers = Vec::new();
                         if key_event.control_down() {
@@ -87,11 +80,7 @@ fn main() {
                             modifiers.push("CMD");
                         }
 
-                        status_text = format!(
-                            "Key: {} with modifiers: {}",
-                            key_code_to_name(key_code),
-                            modifiers.join("+")
-                        );
+                        status_text = format!("Key: {} with modifiers: {}", key_code_to_name(key_code), modifiers.join("+"));
                     }
                 }
 
@@ -193,10 +182,7 @@ fn delete_word_back(combo_box: &ComboBox) {
         combo_box.set_value(&new_text);
         combo_box.set_insertion_point(word_start as i64);
 
-        println!(
-            "Deleted word: cursor moved from {} to {}",
-            cursor_pos, word_start
-        );
+        println!("Deleted word: cursor moved from {} to {}", cursor_pos, word_start);
     }
 }
 

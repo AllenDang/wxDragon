@@ -1,8 +1,6 @@
 use wxdragon::prelude::*;
 use wxdragon::widgets::list_ctrl::ListColumnFormat;
-use wxdragon::widgets::treelistctrl::{
-    CheckboxState, TreeListCtrl, TreeListCtrlEventData, TreeListCtrlStyle,
-};
+use wxdragon::widgets::treelistctrl::{CheckboxState, TreeListCtrl, TreeListCtrlEventData, TreeListCtrlStyle};
 
 pub struct TreeListCtrlTabControls {
     pub panel: Panel,
@@ -18,94 +16,80 @@ impl TreeListCtrlTabControls {
         let status_text_clone = self.status_text.clone();
 
         // Bind selection changed event
-        self.tree_list_ctrl
-            .on_selection_changed(move |event: TreeListCtrlEventData| {
-                if let Some(item) = event.get_item() {
-                    let name = tree_list_ctrl_clone.get_item_text(&item, 0);
-                    let size = tree_list_ctrl_clone.get_item_text(&item, 1);
-                    let type_str = tree_list_ctrl_clone.get_item_text(&item, 2);
-                    let modified = tree_list_ctrl_clone.get_item_text(&item, 3);
+        self.tree_list_ctrl.on_selection_changed(move |event: TreeListCtrlEventData| {
+            if let Some(item) = event.get_item() {
+                let name = tree_list_ctrl_clone.get_item_text(&item, 0);
+                let size = tree_list_ctrl_clone.get_item_text(&item, 1);
+                let type_str = tree_list_ctrl_clone.get_item_text(&item, 2);
+                let modified = tree_list_ctrl_clone.get_item_text(&item, 3);
 
-                    let info = format!(
-                        "Selected Item:\nName: {}\nSize: {}\nType: {}\nModified: {}",
-                        name, size, type_str, modified
-                    );
-                    info_text_clone.set_label(&info);
-                    // Only update status if it's not already showing a checkbox state update
-                    let current_status = status_text_clone.get_label();
-                    if !current_status.contains("is now checked")
-                        && !current_status.contains("is now unchecked")
-                    {
-                        status_text_clone.set_label(&format!("Selected: {}", name));
-                    }
+                let info = format!(
+                    "Selected Item:\nName: {}\nSize: {}\nType: {}\nModified: {}",
+                    name, size, type_str, modified
+                );
+                info_text_clone.set_label(&info);
+                // Only update status if it's not already showing a checkbox state update
+                let current_status = status_text_clone.get_label();
+                if !current_status.contains("is now checked") && !current_status.contains("is now unchecked") {
+                    status_text_clone.set_label(&format!("Selected: {}", name));
                 }
-            });
+            }
+        });
 
         // Bind checkbox events
         let tree_list_ctrl_clone2 = self.tree_list_ctrl.clone();
         let status_text_clone2 = self.status_text.clone();
 
-        self.tree_list_ctrl
-            .on_item_checked(move |event: TreeListCtrlEventData| {
-                if let Some(item) = event.get_item() {
-                    let name = tree_list_ctrl_clone2.get_item_text(&item, 0);
+        self.tree_list_ctrl.on_item_checked(move |event: TreeListCtrlEventData| {
+            if let Some(item) = event.get_item() {
+                let name = tree_list_ctrl_clone2.get_item_text(&item, 0);
 
-                    // Always use the actual current state from the widget, not the event
-                    // because the event's is_checked() method can be unreliable
-                    let current_state = tree_list_ctrl_clone2.get_checked_state(&item);
-                    let state_text = match current_state {
-                        CheckboxState::Checked => "checked",
-                        CheckboxState::Unchecked => "unchecked",
-                        CheckboxState::Undetermined => "undetermined",
-                    };
-                    status_text_clone2.set_label(&format!("Item '{}' is now {}", name, state_text));
-                }
-            });
+                // Always use the actual current state from the widget, not the event
+                // because the event's is_checked() method can be unreliable
+                let current_state = tree_list_ctrl_clone2.get_checked_state(&item);
+                let state_text = match current_state {
+                    CheckboxState::Checked => "checked",
+                    CheckboxState::Unchecked => "unchecked",
+                    CheckboxState::Undetermined => "undetermined",
+                };
+                status_text_clone2.set_label(&format!("Item '{}' is now {}", name, state_text));
+            }
+        });
 
         // Bind column sorted event
         let tree_list_ctrl_clone3 = self.tree_list_ctrl.clone();
         let status_text_clone3 = self.status_text.clone();
-        self.tree_list_ctrl
-            .on_column_sorted(move |event: TreeListCtrlEventData| {
-                if let Some(column) = event.get_column() {
-                    let column_names = ["Name", "Size", "Type", "Modified"];
-                    let column_name = column_names.get(column as usize).unwrap_or(&"Unknown");
+        self.tree_list_ctrl.on_column_sorted(move |event: TreeListCtrlEventData| {
+            if let Some(column) = event.get_column() {
+                let column_names = ["Name", "Size", "Type", "Modified"];
+                let column_name = column_names.get(column as usize).unwrap_or(&"Unknown");
 
-                    // Get current sort state
-                    if let Some((_sort_col, ascending)) = tree_list_ctrl_clone3.get_sort_column() {
-                        let direction = if ascending { "ascending" } else { "descending" };
-                        status_text_clone3.set_label(&format!(
-                            "Sorting by {} ({}) - direction: {}",
-                            column_name, column, direction
-                        ));
-                    } else {
-                        status_text_clone3.set_label(&format!(
-                            "Column {} ({}) clicked for sorting",
-                            column_name, column
-                        ));
-                    }
+                // Get current sort state
+                if let Some((_sort_col, ascending)) = tree_list_ctrl_clone3.get_sort_column() {
+                    let direction = if ascending { "ascending" } else { "descending" };
+                    status_text_clone3.set_label(&format!("Sorting by {} ({}) - direction: {}", column_name, column, direction));
+                } else {
+                    status_text_clone3.set_label(&format!("Column {} ({}) clicked for sorting", column_name, column));
                 }
-            });
+            }
+        });
 
         // Bind item activated (double-click) event
         let tree_list_ctrl_clone4 = self.tree_list_ctrl.clone();
         let info_text_clone2 = self.info_text.clone();
 
-        self.tree_list_ctrl
-            .on_item_activated(move |event: TreeListCtrlEventData| {
-                if let Some(item) = event.get_item() {
-                    let name = tree_list_ctrl_clone4.get_item_text(&item, 0);
-                    info_text_clone2.set_label(&format!("Double-clicked on: {}", name));
-                }
-            });
+        self.tree_list_ctrl.on_item_activated(move |event: TreeListCtrlEventData| {
+            if let Some(item) = event.get_item() {
+                let name = tree_list_ctrl_clone4.get_item_text(&item, 0);
+                info_text_clone2.set_label(&format!("Double-clicked on: {}", name));
+            }
+        });
     }
 }
 
 pub fn create_treelistctrl_tab(parent: &Notebook) -> TreeListCtrlTabControls {
     // Create the main panel
-    let panel = Panel::builder(parent)
-        .with_style(PanelStyle::TabTraversal)
-        .build();
+    let panel = Panel::builder(parent).with_style(PanelStyle::TabTraversal).build();
 
     // Create the tree list control with checkboxes
     let tree_list_ctrl = TreeListCtrl::builder(&panel)
@@ -135,24 +119,18 @@ pub fn create_treelistctrl_tab(parent: &Notebook) -> TreeListCtrlTabControls {
     tree_list_ctrl.set_item_text(&documents, 3, "2024-01-15");
 
     // Add files to Documents
-    let report = tree_list_ctrl
-        .append_item(&documents, "Annual Report.pdf")
-        .unwrap();
+    let report = tree_list_ctrl.append_item(&documents, "Annual Report.pdf").unwrap();
     tree_list_ctrl.set_item_text(&report, 1, "2.5 MB");
     tree_list_ctrl.set_item_text(&report, 2, "PDF Document");
     tree_list_ctrl.set_item_text(&report, 3, "2024-01-10");
     tree_list_ctrl.check_item(&report, CheckboxState::Checked);
 
-    let presentation = tree_list_ctrl
-        .append_item(&documents, "Presentation.pptx")
-        .unwrap();
+    let presentation = tree_list_ctrl.append_item(&documents, "Presentation.pptx").unwrap();
     tree_list_ctrl.set_item_text(&presentation, 1, "5.2 MB");
     tree_list_ctrl.set_item_text(&presentation, 2, "PowerPoint");
     tree_list_ctrl.set_item_text(&presentation, 3, "2024-01-12");
 
-    let notes = tree_list_ctrl
-        .append_item(&documents, "Meeting Notes.txt")
-        .unwrap();
+    let notes = tree_list_ctrl.append_item(&documents, "Meeting Notes.txt").unwrap();
     tree_list_ctrl.set_item_text(&notes, 1, "1.2 KB");
     tree_list_ctrl.set_item_text(&notes, 2, "Text File");
     tree_list_ctrl.set_item_text(&notes, 3, "2024-01-14");
@@ -192,9 +170,7 @@ pub fn create_treelistctrl_tab(parent: &Notebook) -> TreeListCtrlTabControls {
     tree_list_ctrl.set_item_text(&downloads, 2, "Folder");
     tree_list_ctrl.set_item_text(&downloads, 3, "2024-01-16");
 
-    let installer = tree_list_ctrl
-        .append_item(&downloads, "software-installer.exe")
-        .unwrap();
+    let installer = tree_list_ctrl.append_item(&downloads, "software-installer.exe").unwrap();
     tree_list_ctrl.set_item_text(&installer, 1, "15.3 MB");
     tree_list_ctrl.set_item_text(&installer, 2, "Application");
     tree_list_ctrl.set_item_text(&installer, 3, "2024-01-16");
@@ -230,9 +206,7 @@ pub fn create_treelistctrl_tab(parent: &Notebook) -> TreeListCtrlTabControls {
     // Right side: Info panel
     let info_sizer = BoxSizer::builder(Orientation::Vertical).build();
 
-    let info_title = StaticText::builder(&panel)
-        .with_label("Item Information:")
-        .build();
+    let info_title = StaticText::builder(&panel).with_label("Item Information:").build();
     info_sizer.add(&info_title, 0, SizerFlag::All, 5);
     info_sizer.add(&info_text, 1, SizerFlag::Expand | SizerFlag::All, 5);
 

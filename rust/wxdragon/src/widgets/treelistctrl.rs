@@ -180,11 +180,7 @@ impl TreeListCtrlEventData {
             return None;
         }
         let id = unsafe { ffi::wxd_TreeListEvent_GetItem(self.event._as_ptr()) };
-        if id != 0 {
-            Some(TreeListItem::new(id))
-        } else {
-            None
-        }
+        if id != 0 { Some(TreeListItem::new(id)) } else { None }
     }
 
     /// Get the column index for column-related events
@@ -207,11 +203,7 @@ impl TreeListCtrlEventData {
             return None;
         }
         let state = unsafe { ffi::wxd_TreeListEvent_GetOldCheckedState(self.event._as_ptr()) };
-        if state >= 0 {
-            Some(CheckboxState::from(state))
-        } else {
-            None
-        }
+        if state >= 0 { Some(CheckboxState::from(state)) } else { None }
     }
 
     /// Get the checkbox state for ItemChecked events
@@ -251,22 +243,8 @@ impl TreeListCtrl {
     }
 
     /// Internal implementation used by the builder.
-    fn new_impl(
-        parent_ptr: *mut ffi::wxd_Window_t,
-        id: Id,
-        pos: Point,
-        size: Size,
-        style: i64,
-    ) -> Self {
-        let ptr = unsafe {
-            ffi::wxd_TreeListCtrl_Create(
-                parent_ptr,
-                id,
-                pos.into(),
-                size.into(),
-                style as ffi::wxd_Style_t,
-            )
-        };
+    fn new_impl(parent_ptr: *mut ffi::wxd_Window_t, id: Id, pos: Point, size: Size, style: i64) -> Self {
+        let ptr = unsafe { ffi::wxd_TreeListCtrl_Create(parent_ptr, id, pos.into(), size.into(), style as ffi::wxd_Style_t) };
 
         if ptr.is_null() {
             panic!("Failed to create TreeListCtrl widget");
@@ -299,69 +277,40 @@ impl TreeListCtrl {
 
     /// Gets the number of columns in the control.
     pub fn get_column_count(&self) -> i32 {
-        unsafe {
-            ffi::wxd_TreeListCtrl_GetColumnCount(
-                self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t
-            )
-        }
+        unsafe { ffi::wxd_TreeListCtrl_GetColumnCount(self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t) }
     }
 
     /// Sets the width of the specified column.
     pub fn set_column_width(&self, col: i32, width: i32) {
-        unsafe {
-            ffi::wxd_TreeListCtrl_SetColumnWidth(
-                self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t,
-                col,
-                width,
-            );
-        }
+        unsafe { ffi::wxd_TreeListCtrl_SetColumnWidth(self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t, col, width) };
     }
 
     /// Gets the width of the specified column.
     pub fn get_column_width(&self, col: i32) -> i32 {
-        unsafe {
-            ffi::wxd_TreeListCtrl_GetColumnWidth(
-                self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t,
-                col,
-            )
-        }
+        unsafe { ffi::wxd_TreeListCtrl_GetColumnWidth(self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t, col) }
     }
 
     /// Deletes the column with the given index.
     pub fn delete_column(&self, col: u32) -> bool {
-        unsafe {
-            ffi::wxd_TreeListCtrl_DeleteColumn(
-                self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t,
-                col,
-            )
-        }
+        unsafe { ffi::wxd_TreeListCtrl_DeleteColumn(self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t, col) }
     }
 
     /// Deletes all columns.
     pub fn clear_columns(&self) {
-        unsafe {
-            ffi::wxd_TreeListCtrl_ClearColumns(self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t);
-        }
+        unsafe { ffi::wxd_TreeListCtrl_ClearColumns(self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t) };
     }
 
     /// Gets the width appropriate for showing the given text.
     pub fn width_for(&self, text: &str) -> i32 {
         let c_text = CString::new(text).unwrap_or_default();
-        unsafe {
-            ffi::wxd_TreeListCtrl_WidthFor(
-                self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t,
-                c_text.as_ptr(),
-            )
-        }
+        unsafe { ffi::wxd_TreeListCtrl_WidthFor(self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t, c_text.as_ptr()) }
     }
 
     // --- Item Management ---
 
     /// Gets the root item of the tree.
     pub fn get_root_item(&self) -> TreeListItem {
-        let id = unsafe {
-            ffi::wxd_TreeListCtrl_GetRootItem(self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t)
-        };
+        let id = unsafe { ffi::wxd_TreeListCtrl_GetRootItem(self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t) };
         TreeListItem::new(id)
     }
 
@@ -381,11 +330,7 @@ impl TreeListCtrl {
                 c_text.as_ptr(),
             )
         };
-        if id != 0 {
-            Some(TreeListItem::new(id))
-        } else {
-            None
-        }
+        if id != 0 { Some(TreeListItem::new(id)) } else { None }
     }
 
     /// Inserts a new item into the tree.
@@ -396,12 +341,7 @@ impl TreeListCtrl {
     /// * `text` - The item text
     ///
     /// Returns the new item, or None if the operation failed.
-    pub fn insert_item(
-        &self,
-        parent: &TreeListItem,
-        previous: &TreeListItem,
-        text: &str,
-    ) -> Option<TreeListItem> {
+    pub fn insert_item(&self, parent: &TreeListItem, previous: &TreeListItem, text: &str) -> Option<TreeListItem> {
         let c_text = CString::new(text).unwrap_or_default();
         let id = unsafe {
             ffi::wxd_TreeListCtrl_InsertItem(
@@ -411,11 +351,7 @@ impl TreeListCtrl {
                 c_text.as_ptr(),
             )
         };
-        if id != 0 {
-            Some(TreeListItem::new(id))
-        } else {
-            None
-        }
+        if id != 0 { Some(TreeListItem::new(id)) } else { None }
     }
 
     /// Prepends a new item to the tree (inserts at the beginning).
@@ -434,148 +370,83 @@ impl TreeListCtrl {
                 c_text.as_ptr(),
             )
         };
-        if id != 0 {
-            Some(TreeListItem::new(id))
-        } else {
-            None
-        }
+        if id != 0 { Some(TreeListItem::new(id)) } else { None }
     }
 
     /// Deletes the specified item.
     pub fn delete_item(&self, item: &TreeListItem) {
-        unsafe {
-            ffi::wxd_TreeListCtrl_DeleteItem(
-                self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t,
-                item.id(),
-            );
-        }
+        unsafe { ffi::wxd_TreeListCtrl_DeleteItem(self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t, item.id()) };
     }
 
     /// Deletes all items in the tree.
     pub fn delete_all_items(&self) {
-        unsafe {
-            ffi::wxd_TreeListCtrl_DeleteAllItems(
-                self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t
-            );
-        }
+        unsafe { ffi::wxd_TreeListCtrl_DeleteAllItems(self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t) };
     }
 
     /// Sets the text for the specified item and column.
     pub fn set_item_text(&self, item: &TreeListItem, col: i32, text: &str) {
         let c_text = CString::new(text).unwrap_or_default();
-        unsafe {
-            ffi::wxd_TreeListCtrl_SetItemText(
-                self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t,
-                item.id(),
-                col,
-                c_text.as_ptr(),
-            );
-        }
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t;
+        unsafe { ffi::wxd_TreeListCtrl_SetItemText(ptr, item.id(), col, c_text.as_ptr()) };
     }
 
     /// Gets the text for the specified item and column.
     pub fn get_item_text(&self, item: &TreeListItem, col: i32) -> String {
-        unsafe {
-            let mut buffer: Vec<c_char> = vec![0; 1024];
-            let len = ffi::wxd_TreeListCtrl_GetItemText(
-                self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t,
-                item.id(),
-                col,
-                buffer.as_mut_ptr(),
-                buffer.len() as i32,
-            );
-            if len >= 0 {
-                let byte_slice =
-                    std::slice::from_raw_parts(buffer.as_ptr() as *const u8, len as usize);
-                String::from_utf8_lossy(byte_slice).to_string()
-            } else {
-                String::new()
-            }
+        let mut buffer: Vec<c_char> = vec![0; 1024];
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t;
+        let len = unsafe { ffi::wxd_TreeListCtrl_GetItemText(ptr, item.id(), col, buffer.as_mut_ptr(), buffer.len() as i32) };
+        if len >= 0 {
+            let byte_slice = unsafe { std::slice::from_raw_parts(buffer.as_ptr() as *const u8, len as usize) };
+            String::from_utf8_lossy(byte_slice).to_string()
+        } else {
+            String::new()
         }
     }
 
     /// Expands the specified item.
     pub fn expand(&self, item: &TreeListItem) {
-        unsafe {
-            ffi::wxd_TreeListCtrl_Expand(
-                self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t,
-                item.id(),
-            );
-        }
+        unsafe { ffi::wxd_TreeListCtrl_Expand(self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t, item.id()) };
     }
 
     /// Collapses the specified item.
     pub fn collapse(&self, item: &TreeListItem) {
-        unsafe {
-            ffi::wxd_TreeListCtrl_Collapse(
-                self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t,
-                item.id(),
-            );
-        }
+        unsafe { ffi::wxd_TreeListCtrl_Collapse(self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t, item.id()) };
     }
 
     /// Checks if the specified item is expanded.
     pub fn is_expanded(&self, item: &TreeListItem) -> bool {
-        unsafe {
-            ffi::wxd_TreeListCtrl_IsExpanded(
-                self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t,
-                item.id(),
-            )
-        }
+        unsafe { ffi::wxd_TreeListCtrl_IsExpanded(self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t, item.id()) }
     }
 
     // --- Selection Management ---
 
     /// Gets the currently selected item.
     pub fn get_selection(&self) -> Option<TreeListItem> {
-        let id = unsafe {
-            ffi::wxd_TreeListCtrl_GetSelection(self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t)
-        };
-        if id != 0 {
-            Some(TreeListItem::new(id))
-        } else {
-            None
-        }
+        let id = unsafe { ffi::wxd_TreeListCtrl_GetSelection(self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t) };
+        if id != 0 { Some(TreeListItem::new(id)) } else { None }
     }
 
     /// Selects the specified item.
     pub fn select_item(&self, item: &TreeListItem) {
-        unsafe {
-            ffi::wxd_TreeListCtrl_SelectItem(
-                self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t,
-                item.id(),
-            );
-        }
+        unsafe { ffi::wxd_TreeListCtrl_SelectItem(self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t, item.id()) };
     }
 
     /// Unselects all items.
     pub fn unselect_all(&self) {
-        unsafe {
-            ffi::wxd_TreeListCtrl_UnselectAll(self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t);
-        }
+        unsafe { ffi::wxd_TreeListCtrl_UnselectAll(self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t) };
     }
 
     // --- Checkbox Management ---
 
     /// Checks or unchecks the specified item.
     pub fn check_item(&self, item: &TreeListItem, state: CheckboxState) {
-        unsafe {
-            ffi::wxd_TreeListCtrl_CheckItem(
-                self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t,
-                item.id(),
-                state.into(),
-            );
-        }
+        unsafe { ffi::wxd_TreeListCtrl_CheckItem(self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t, item.id(), state.into()) };
     }
 
     /// Gets the checkbox state of the specified item.
     pub fn get_checked_state(&self, item: &TreeListItem) -> CheckboxState {
-        let state = unsafe {
-            ffi::wxd_TreeListCtrl_GetCheckedState(
-                self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t,
-                item.id(),
-            )
-        };
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t;
+        let state = unsafe { ffi::wxd_TreeListCtrl_GetCheckedState(ptr, item.id()) };
         CheckboxState::from(state)
     }
 
@@ -586,111 +457,53 @@ impl TreeListCtrl {
 
     /// Checks all items recursively starting from the specified item.
     pub fn check_item_recursively(&self, item: &TreeListItem, state: CheckboxState) {
-        unsafe {
-            ffi::wxd_TreeListCtrl_CheckItemRecursively(
-                self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t,
-                item.id(),
-                state.into(),
-            );
-        }
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t;
+        unsafe { ffi::wxd_TreeListCtrl_CheckItemRecursively(ptr, item.id(), state.into()) };
     }
 
     /// Updates the parent's checkbox state based on children (for 3-state checkboxes).
     pub fn update_item_parent_state(&self, item: &TreeListItem) {
-        unsafe {
-            ffi::wxd_TreeListCtrl_UpdateItemParentState(
-                self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t,
-                item.id(),
-            );
-        }
+        unsafe { ffi::wxd_TreeListCtrl_UpdateItemParentState(self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t, item.id()) };
     }
 
     // --- Tree Navigation ---
 
     /// Gets the parent of the specified item.
     pub fn get_item_parent(&self, item: &TreeListItem) -> Option<TreeListItem> {
-        let id = unsafe {
-            ffi::wxd_TreeListCtrl_GetItemParent(
-                self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t,
-                item.id(),
-            )
-        };
-        if id != 0 {
-            Some(TreeListItem::new(id))
-        } else {
-            None
-        }
+        let id = unsafe { ffi::wxd_TreeListCtrl_GetItemParent(self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t, item.id()) };
+        if id != 0 { Some(TreeListItem::new(id)) } else { None }
     }
 
     /// Gets the first child of the specified item.
     pub fn get_first_child(&self, item: &TreeListItem) -> Option<TreeListItem> {
-        let id = unsafe {
-            ffi::wxd_TreeListCtrl_GetFirstChild(
-                self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t,
-                item.id(),
-            )
-        };
-        if id != 0 {
-            Some(TreeListItem::new(id))
-        } else {
-            None
-        }
+        let id = unsafe { ffi::wxd_TreeListCtrl_GetFirstChild(self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t, item.id()) };
+        if id != 0 { Some(TreeListItem::new(id)) } else { None }
     }
 
     /// Gets the next sibling of the specified item.
     pub fn get_next_sibling(&self, item: &TreeListItem) -> Option<TreeListItem> {
-        let id = unsafe {
-            ffi::wxd_TreeListCtrl_GetNextSibling(
-                self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t,
-                item.id(),
-            )
-        };
-        if id != 0 {
-            Some(TreeListItem::new(id))
-        } else {
-            None
-        }
+        let id = unsafe { ffi::wxd_TreeListCtrl_GetNextSibling(self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t, item.id()) };
+        if id != 0 { Some(TreeListItem::new(id)) } else { None }
     }
 
     /// Gets the next item in depth-first tree traversal order.
     pub fn get_next_item(&self, item: &TreeListItem) -> Option<TreeListItem> {
-        let id = unsafe {
-            ffi::wxd_TreeListCtrl_GetNextItem(
-                self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t,
-                item.id(),
-            )
-        };
-        if id != 0 {
-            Some(TreeListItem::new(id))
-        } else {
-            None
-        }
+        let id = unsafe { ffi::wxd_TreeListCtrl_GetNextItem(self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t, item.id()) };
+        if id != 0 { Some(TreeListItem::new(id)) } else { None }
     }
 
     /// Gets the first item in the tree (first child of root).
     pub fn get_first_item(&self) -> Option<TreeListItem> {
-        let id = unsafe {
-            ffi::wxd_TreeListCtrl_GetFirstItem(self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t)
-        };
-        if id != 0 {
-            Some(TreeListItem::new(id))
-        } else {
-            None
-        }
+        let id = unsafe { ffi::wxd_TreeListCtrl_GetFirstItem(self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t) };
+        if id != 0 { Some(TreeListItem::new(id)) } else { None }
     }
 
     // --- Item Attributes ---
 
     /// Sets the image for the specified item.
     pub fn set_item_image(&self, item: &TreeListItem, closed: i32, opened: i32) {
-        unsafe {
-            ffi::wxd_TreeListCtrl_SetItemImage(
-                self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t,
-                item.id(),
-                closed,
-                opened,
-            );
-        }
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t;
+        unsafe { ffi::wxd_TreeListCtrl_SetItemImage(ptr, item.id(), closed, opened) };
     }
 
     // --- Multi-Selection Support ---
@@ -699,13 +512,8 @@ impl TreeListCtrl {
     pub fn get_selections(&self) -> Vec<TreeListItem> {
         const MAX_SELECTIONS: usize = 1000;
         let mut selections: Vec<i64> = vec![0; MAX_SELECTIONS];
-        let count = unsafe {
-            ffi::wxd_TreeListCtrl_GetSelections(
-                self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t,
-                selections.as_mut_ptr(),
-                MAX_SELECTIONS as u32,
-            )
-        };
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t;
+        let count = unsafe { ffi::wxd_TreeListCtrl_GetSelections(ptr, selections.as_mut_ptr(), MAX_SELECTIONS as u32) };
 
         selections.truncate(count as usize);
         selections.into_iter().map(TreeListItem::new).collect()
@@ -713,103 +521,56 @@ impl TreeListCtrl {
 
     /// Selects the specified item.
     pub fn select(&self, item: &TreeListItem) {
-        unsafe {
-            ffi::wxd_TreeListCtrl_Select(
-                self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t,
-                item.id(),
-            );
-        }
+        unsafe { ffi::wxd_TreeListCtrl_Select(self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t, item.id()) };
     }
 
     /// Unselects the specified item.
     pub fn unselect(&self, item: &TreeListItem) {
-        unsafe {
-            ffi::wxd_TreeListCtrl_Unselect(
-                self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t,
-                item.id(),
-            );
-        }
+        unsafe { ffi::wxd_TreeListCtrl_Unselect(self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t, item.id()) };
     }
 
     /// Checks if the specified item is selected.
     pub fn is_selected(&self, item: &TreeListItem) -> bool {
-        unsafe {
-            ffi::wxd_TreeListCtrl_IsSelected(
-                self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t,
-                item.id(),
-            )
-        }
+        unsafe { ffi::wxd_TreeListCtrl_IsSelected(self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t, item.id()) }
     }
 
     /// Selects all items (only valid in multiple selection mode).
     pub fn select_all(&self) {
-        unsafe {
-            ffi::wxd_TreeListCtrl_SelectAll(self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t);
-        }
+        unsafe { ffi::wxd_TreeListCtrl_SelectAll(self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t) };
     }
 
     /// Ensures the specified item is visible.
     pub fn ensure_visible(&self, item: &TreeListItem) {
-        unsafe {
-            ffi::wxd_TreeListCtrl_EnsureVisible(
-                self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t,
-                item.id(),
-            );
-        }
+        unsafe { ffi::wxd_TreeListCtrl_EnsureVisible(self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t, item.id()) };
     }
 
     // --- Additional Checkbox Methods ---
 
     /// Unchecks the specified item.
     pub fn uncheck_item(&self, item: &TreeListItem) {
-        unsafe {
-            ffi::wxd_TreeListCtrl_UncheckItem(
-                self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t,
-                item.id(),
-            );
-        }
+        unsafe { ffi::wxd_TreeListCtrl_UncheckItem(self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t, item.id()) };
     }
 
     /// Checks if all children of the specified item are in the given state.
     pub fn are_all_children_in_state(&self, item: &TreeListItem, state: CheckboxState) -> bool {
-        unsafe {
-            ffi::wxd_TreeListCtrl_AreAllChildrenInState(
-                self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t,
-                item.id(),
-                state as i32,
-            )
-        }
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t;
+        unsafe { ffi::wxd_TreeListCtrl_AreAllChildrenInState(ptr, item.id(), state as i32) }
     }
 
     // --- Sorting ---
 
     /// Sets the column to sort by.
     pub fn set_sort_column(&self, col: u32, ascending: bool) {
-        unsafe {
-            ffi::wxd_TreeListCtrl_SetSortColumn(
-                self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t,
-                col,
-                ascending,
-            );
-        }
+        unsafe { ffi::wxd_TreeListCtrl_SetSortColumn(self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t, col, ascending) };
     }
 
     /// Gets the current sort column and order.
     pub fn get_sort_column(&self) -> Option<(u32, bool)> {
         let mut col: u32 = 0;
         let mut ascending: bool = true;
-        let has_sort = unsafe {
-            ffi::wxd_TreeListCtrl_GetSortColumn(
-                self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t,
-                &mut col,
-                &mut ascending,
-            )
-        };
-        if has_sort {
-            Some((col, ascending))
-        } else {
-            None
-        }
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_TreeListCtrl_t;
+        let has_sort = unsafe { ffi::wxd_TreeListCtrl_GetSortColumn(ptr, &mut col, &mut ascending) };
+        if has_sort { Some((col, ascending)) } else { None }
     }
 }
 

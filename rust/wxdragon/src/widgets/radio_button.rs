@@ -44,20 +44,13 @@ impl RadioButton {
 
     /// Gets the state of the radio button.
     pub fn get_value(&self) -> bool {
-        unsafe {
-            ffi::wxd_RadioButton_GetValue(self.window.handle_ptr() as *mut ffi::wxd_RadioButton_t)
-        }
+        unsafe { ffi::wxd_RadioButton_GetValue(self.window.handle_ptr() as *mut ffi::wxd_RadioButton_t) }
     }
 
     /// Sets the state of the radio button.
     /// Note: Setting a radio button to `true` will implicitly set others in the same group to `false`.
     pub fn set_value(&self, value: bool) {
-        unsafe {
-            ffi::wxd_RadioButton_SetValue(
-                self.window.handle_ptr() as *mut ffi::wxd_RadioButton_t,
-                value,
-            );
-        }
+        unsafe { ffi::wxd_RadioButton_SetValue(self.window.handle_ptr() as *mut ffi::wxd_RadioButton_t, value) };
     }
 }
 

@@ -31,9 +31,7 @@ impl TaskBarIconType {
         match self {
             TaskBarIconType::Dock => ffi::WXD_TBI_DOCK as ffi::wxd_TaskBarIconType_t,
             TaskBarIconType::Default => ffi::WXD_TBI_DEFAULT_TYPE as ffi::wxd_TaskBarIconType_t,
-            TaskBarIconType::CustomStatusItem => {
-                ffi::WXD_TBI_CUSTOM_STATUSITEM as ffi::wxd_TaskBarIconType_t
-            }
+            TaskBarIconType::CustomStatusItem => ffi::WXD_TBI_CUSTOM_STATUSITEM as ffi::wxd_TaskBarIconType_t,
         }
     }
 }
@@ -127,9 +125,7 @@ impl TaskBarIcon {
     /// `true` if the icon was set successfully, `false` otherwise.
     pub fn set_icon_bundle(&self, icon_bundle: &BitmapBundle, tooltip: &str) -> bool {
         let c_tooltip = CString::new(tooltip).expect("CString::new failed");
-        unsafe {
-            ffi::wxd_TaskBarIcon_SetIconBundle(self.ptr, icon_bundle.as_ptr(), c_tooltip.as_ptr())
-        }
+        unsafe { ffi::wxd_TaskBarIcon_SetIconBundle(self.ptr, icon_bundle.as_ptr(), c_tooltip.as_ptr()) }
     }
 
     /// Removes the taskbar icon.
@@ -163,28 +159,12 @@ impl TaskBarIcon {
     /// # Platform Notes
     /// This feature is only available on Windows. On other platforms, this method
     /// will return `false`.
-    pub fn show_balloon(
-        &self,
-        title: &str,
-        text: &str,
-        timeout: u32,
-        flags: i32,
-        icon: Option<&BitmapBundle>,
-    ) -> bool {
+    pub fn show_balloon(&self, title: &str, text: &str, timeout: u32, flags: i32, icon: Option<&BitmapBundle>) -> bool {
         let c_title = CString::new(title).expect("CString::new failed");
         let c_text = CString::new(text).expect("CString::new failed");
         let icon_ptr = icon.map(|i| i.as_ptr()).unwrap_or(ptr::null_mut());
 
-        unsafe {
-            ffi::wxd_TaskBarIcon_ShowBalloon(
-                self.ptr,
-                c_title.as_ptr(),
-                c_text.as_ptr(),
-                timeout,
-                flags,
-                icon_ptr,
-            )
-        }
+        unsafe { ffi::wxd_TaskBarIcon_ShowBalloon(self.ptr, c_title.as_ptr(), c_text.as_ptr(), timeout, flags, icon_ptr) }
     }
 
     /// Shows a popup menu at the current mouse position.
@@ -332,11 +312,7 @@ impl TaskBarIcon {
     where
         F: FnMut(crate::event::Event) + 'static,
     {
-        <Self as crate::event::WxEvtHandler>::bind_internal(
-            self,
-            crate::event::EventType::MENU,
-            handler,
-        );
+        <Self as crate::event::WxEvtHandler>::bind_internal(self, crate::event::EventType::MENU, handler);
     }
 }
 

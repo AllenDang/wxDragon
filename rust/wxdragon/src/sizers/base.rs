@@ -63,11 +63,7 @@ pub struct Sizer {
 
 impl Sizer {
     pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_Sizer_t) -> Option<Self> {
-        if ptr.is_null() {
-            None
-        } else {
-            Some(Sizer { ptr })
-        }
+        if ptr.is_null() { None } else { Some(Sizer { ptr }) }
     }
 
     pub fn is_null(&self) -> bool {
@@ -118,15 +114,7 @@ impl Sizer {
         border: i32,
     ) -> &Self {
         let child_ptr = child_sizer.as_sizer_ptr();
-        unsafe {
-            ffi::wxd_Sizer_AddSizer(
-                self.as_sizer_ptr(),
-                child_ptr,
-                proportion,
-                flag.bits() as i32,
-                border,
-            );
-        }
+        unsafe { ffi::wxd_Sizer_AddSizer(self.as_sizer_ptr(), child_ptr, proportion, flag.bits() as i32, border) };
         self
     }
 }

@@ -15,10 +15,7 @@ impl WxdArrayString {
     pub fn new() -> Self {
         let ptr = unsafe { ffi::wxd_ArrayString_Create() };
         assert!(!ptr.is_null(), "Failed to create wxd_ArrayString");
-        WxdArrayString {
-            ptr,
-            owns_ptr: true,
-        }
+        WxdArrayString { ptr, owns_ptr: true }
     }
 
     /// Creates a WxdArrayString from an existing wxd_ArrayString_t pointer.
@@ -53,8 +50,7 @@ impl WxdArrayString {
 
         let index = index as i32;
         // First, try with a reasonable stack buffer
-        let len =
-            unsafe { ffi::wxd_ArrayString_GetString(self.ptr, index, std::ptr::null_mut(), 0) };
+        let len = unsafe { ffi::wxd_ArrayString_GetString(self.ptr, index, std::ptr::null_mut(), 0) };
 
         if len < 0 {
             return None; // Error

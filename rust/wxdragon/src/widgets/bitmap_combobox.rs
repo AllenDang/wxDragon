@@ -35,14 +35,7 @@ impl BitmapComboBox {
     }
 
     /// Low-level constructor used by the builder.
-    fn new_impl(
-        parent_ptr: *mut ffi::wxd_Window_t,
-        id: Id,
-        value: &str,
-        pos: Point,
-        size: Size,
-        style: i64,
-    ) -> Self {
+    fn new_impl(parent_ptr: *mut ffi::wxd_Window_t, id: Id, value: &str, pos: Point, size: Size, style: i64) -> Self {
         assert!(!parent_ptr.is_null(), "BitmapComboBox requires a parent");
         let c_value = CString::new(value).expect("CString::new failed for value");
 
@@ -89,8 +82,7 @@ impl BitmapComboBox {
     /// Gets the string at the specified index.
     pub fn get_string(&self, index: u32) -> String {
         unsafe {
-            let required_len_p1 =
-                ffi::wxd_BitmapComboBox_GetString(self.as_ptr(), index as i32, ptr::null_mut(), 0);
+            let required_len_p1 = ffi::wxd_BitmapComboBox_GetString(self.as_ptr(), index as i32, ptr::null_mut(), 0);
             if required_len_p1 <= 0 {
                 return String::new();
             }
@@ -125,18 +117,14 @@ impl BitmapComboBox {
     /// Gets the text from the text entry part of the control.
     pub fn get_value(&self) -> String {
         unsafe {
-            let required_len_p1 =
-                ffi::wxd_BitmapComboBox_GetValue(self.as_ptr(), ptr::null_mut(), 0);
+            let required_len_p1 = ffi::wxd_BitmapComboBox_GetValue(self.as_ptr(), ptr::null_mut(), 0);
             if required_len_p1 <= 0 {
                 return String::new();
             }
             let capacity = required_len_p1 as usize;
             let mut buffer: Vec<u8> = Vec::with_capacity(capacity);
-            let success_code = ffi::wxd_BitmapComboBox_GetValue(
-                self.as_ptr(),
-                buffer.as_mut_ptr() as *mut c_char,
-                capacity as i32,
-            );
+            let success_code =
+                ffi::wxd_BitmapComboBox_GetValue(self.as_ptr(), buffer.as_mut_ptr() as *mut c_char, capacity as i32);
             if success_code == 0 {
                 let c_str = CStr::from_ptr(buffer.as_ptr() as *const c_char);
                 String::from_utf8_lossy(c_str.to_bytes()).into_owned()

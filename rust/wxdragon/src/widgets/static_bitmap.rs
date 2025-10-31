@@ -73,12 +73,9 @@ impl StaticBitmap {
                 parent.handle_ptr(),
                 id as c_int,
                 **bitmap,
-                ffi::wxd_Point { x: -1, y: -1 }, // DEFAULT_POSITION
-                ffi::wxd_Size {
-                    width: -1,
-                    height: -1,
-                }, // DEFAULT_SIZE
-                0,                               // Default style
+                ffi::wxd_Point { x: -1, y: -1 },         // DEFAULT_POSITION
+                ffi::wxd_Size { width: -1, height: -1 }, // DEFAULT_SIZE
+                0,                                       // Default style
                 name_cstr.as_ptr(),
             );
 
@@ -91,18 +88,12 @@ impl StaticBitmap {
 
     /// Creates a new StaticBitmap with a bitmap bundle.
     pub fn new_with_bitmap_bundle(parent: &dyn WxWidget, id: Id, bundle: &BitmapBundle) -> Self {
-        unsafe {
-            let ptr = ffi::wxd_StaticBitmap_CreateWithBitmapBundle(
-                parent.handle_ptr(),
-                id as c_int,
-                bundle.as_ptr(),
-            );
+        let ptr = unsafe { ffi::wxd_StaticBitmap_CreateWithBitmapBundle(parent.handle_ptr(), id as c_int, bundle.as_ptr()) };
 
-            if ptr.is_null() {
-                panic!("Failed to create StaticBitmap widget with BitmapBundle");
-            }
-            Self::from_ptr(ptr)
+        if ptr.is_null() {
+            panic!("Failed to create StaticBitmap widget with BitmapBundle");
         }
+        unsafe { Self::from_ptr(ptr) }
     }
 
     /// Creates a StaticBitmap from a raw wxStaticBitmap pointer.
@@ -130,12 +121,7 @@ impl StaticBitmap {
     /// # }
     /// ```
     pub fn set_bitmap(&self, bitmap: &Bitmap) {
-        unsafe {
-            ffi::wxd_StaticBitmap_SetBitmap(
-                self.window.handle_ptr() as *mut ffi::wxd_StaticBitmap_t,
-                **bitmap,
-            );
-        }
+        unsafe { ffi::wxd_StaticBitmap_SetBitmap(self.window.handle_ptr() as *mut ffi::wxd_StaticBitmap_t, **bitmap) };
 
         // Trigger refresh on parent to update the display
         if let Some(parent) = self.window.get_parent() {
@@ -148,12 +134,8 @@ impl StaticBitmap {
     ///
     /// Using a bitmap bundle allows for better DPI scaling on high-resolution displays.
     pub fn set_bitmap_bundle(&self, bundle: &BitmapBundle) {
-        unsafe {
-            ffi::wxd_StaticBitmap_SetBitmapBundle(
-                self.window.handle_ptr() as *mut ffi::wxd_StaticBitmap_t,
-                bundle.as_ptr(),
-            );
-        }
+        let ptr = self.window.handle_ptr() as *mut ffi::wxd_StaticBitmap_t;
+        unsafe { ffi::wxd_StaticBitmap_SetBitmapBundle(ptr, bundle.as_ptr()) };
 
         // Trigger refresh on parent to update the display
         if let Some(parent) = self.window.get_parent() {
@@ -165,17 +147,13 @@ impl StaticBitmap {
     /// Gets the current bitmap from the control.
     /// Returns a new bitmap instance that the caller owns.
     pub fn get_bitmap(&self) -> Option<Bitmap> {
-        unsafe {
-            let ptr = ffi::wxd_StaticBitmap_GetBitmap(
-                self.window.handle_ptr() as *mut ffi::wxd_StaticBitmap_t
-            );
+        let ptr = unsafe { ffi::wxd_StaticBitmap_GetBitmap(self.window.handle_ptr() as *mut ffi::wxd_StaticBitmap_t) };
 
-            if ptr.is_null() {
-                None
-            } else {
-                // We get ownership of the bitmap from C++
-                Some(Bitmap::from(ptr))
-            }
+        if ptr.is_null() {
+            None
+        } else {
+            // We get ownership of the bitmap from C++
+            Some(Bitmap::from(ptr))
         }
     }
 
@@ -186,12 +164,7 @@ impl StaticBitmap {
     /// # Arguments
     /// * `mode` - The scale mode to use
     pub fn set_scale_mode(&self, mode: ScaleMode) {
-        unsafe {
-            ffi::wxd_StaticBitmap_SetScaleMode(
-                self.window.handle_ptr() as *mut ffi::wxd_StaticBitmap_t,
-                mode.to_raw(),
-            );
-        }
+        unsafe { ffi::wxd_StaticBitmap_SetScaleMode(self.window.handle_ptr() as *mut ffi::wxd_StaticBitmap_t, mode.to_raw()) };
 
         // Trigger refresh on parent to apply the new scale mode
         if let Some(parent) = self.window.get_parent() {
@@ -204,12 +177,8 @@ impl StaticBitmap {
     ///
     /// Returns the scale mode that determines how the bitmap is scaled within the control.
     pub fn get_scale_mode(&self) -> ScaleMode {
-        unsafe {
-            let raw_mode = ffi::wxd_StaticBitmap_GetScaleMode(
-                self.window.handle_ptr() as *mut ffi::wxd_StaticBitmap_t
-            );
-            ScaleMode::from_raw(raw_mode)
-        }
+        let raw_mode = unsafe { ffi::wxd_StaticBitmap_GetScaleMode(self.window.handle_ptr() as *mut ffi::wxd_StaticBitmap_t) };
+        ScaleMode::from_raw(raw_mode)
     }
 }
 

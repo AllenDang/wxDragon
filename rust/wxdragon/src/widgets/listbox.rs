@@ -66,8 +66,7 @@ impl ListBox {
     /// Returns `None` if no item is selected (matches `NOT_FOUND`).
     /// Note: For multi-selection list boxes, this returns the *first* selected item.
     pub fn get_selection(&self) -> Option<u32> {
-        let selection =
-            unsafe { ffi::wxd_ListBox_GetSelection(self.window.as_ptr() as *mut RawListBox) };
+        let selection = unsafe { ffi::wxd_ListBox_GetSelection(self.window.as_ptr() as *mut RawListBox) };
         if selection == NOT_FOUND {
             None
         } else {
@@ -118,13 +117,7 @@ impl ListBox {
     /// For single-selection list boxes, `select = true` selects the item.
     /// For multi-selection list boxes, `select = true` toggles the selection.
     pub fn set_selection(&self, index: u32, select: bool) {
-        unsafe {
-            ffi::wxd_ListBox_SetSelection(
-                self.window.as_ptr() as *mut RawListBox,
-                index as i32,
-                select,
-            );
-        }
+        unsafe { ffi::wxd_ListBox_SetSelection(self.window.as_ptr() as *mut RawListBox, index as i32, select) };
     }
 
     /// Selects an item by its string value.
@@ -139,13 +132,7 @@ impl ListBox {
                 CString::new(filtered).unwrap_or_else(|_| CString::new("").unwrap())
             }
         };
-        unsafe {
-            ffi::wxd_ListBox_SetStringSelection(
-                self.window.as_ptr() as *mut RawListBox,
-                c_item.as_ptr(),
-                select,
-            );
-        }
+        unsafe { ffi::wxd_ListBox_SetStringSelection(self.window.as_ptr() as *mut RawListBox, c_item.as_ptr(), select) };
     }
 
     /// Gets the string at the specified index.
@@ -215,9 +202,7 @@ impl ListBox {
     /// `true` if the menu was popped up successfully, `false` otherwise.
     pub fn popup_menu(&self, menu: &Menu, pos: Option<Point>) -> bool {
         let pos = pos.unwrap_or_else(|| Point::new(-1, -1));
-        unsafe {
-            ffi::wxd_ListBox_PopupMenu(self.window.as_ptr() as *mut RawListBox, **menu, pos.into())
-        }
+        unsafe { ffi::wxd_ListBox_PopupMenu(self.window.as_ptr() as *mut RawListBox, **menu, pos.into()) }
     }
 }
 

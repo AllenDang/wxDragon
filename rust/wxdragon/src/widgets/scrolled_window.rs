@@ -102,19 +102,14 @@ impl ScrolledWindow {
         let mut w: i32 = 0;
         let mut h: i32 = 0;
         unsafe { ffi::wxd_ScrolledWindow_GetVirtualSize(self.as_ptr(), &mut w, &mut h) };
-        Size {
-            width: w,
-            height: h,
-        }
+        Size { width: w, height: h }
     }
 
     /// Gets the number of pixels per scroll unit.
     pub fn get_scroll_pixels_per_unit(&self) -> (i32, i32) {
         let mut x_unit: i32 = 0;
         let mut y_unit: i32 = 0;
-        unsafe {
-            ffi::wxd_ScrolledWindow_GetScrollPixelsPerUnit(self.as_ptr(), &mut x_unit, &mut y_unit)
-        };
+        unsafe { ffi::wxd_ScrolledWindow_GetScrollPixelsPerUnit(self.as_ptr(), &mut x_unit, &mut y_unit) };
         (x_unit, y_unit)
     }
 }

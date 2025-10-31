@@ -100,27 +100,17 @@ impl StaticBoxSizerBuilder {
     /// # Panics
     /// Panics if the underlying FFI call fails to create the sizer.
     pub fn build(self) -> StaticBoxSizer {
-        let s_ptr = unsafe {
-            match self.source {
-                StaticBoxSource::Box(box_ptr) => {
-                    ffi::wxd_StaticBoxSizer_Create_WithBox(box_ptr, self.orientation.bits() as i32)
-                }
-                StaticBoxSource::Label(label) => {
-                    let parent_ptr = self.parent_window_ptr.expect(
-                        "Parent window pointer must be Some when creating StaticBoxSizer with a label",
-                    );
-                    let label_cstring =
-                        CString::new(label).unwrap_or_else(|_| CString::new("").unwrap());
-                    ffi::wxd_StaticBoxSizer_Create_WithLabel(
-                        self.orientation.bits() as i32,
-                        parent_ptr,
-                        label_cstring.as_ptr(),
-                    )
-                }
+        let orient = self.orientation.bits() as i32;
+        let s_ptr = match self.source {
+            StaticBoxSource::Box(box_ptr) => unsafe { ffi::wxd_StaticBoxSizer_Create_WithBox(box_ptr, orient) },
+            StaticBoxSource::Label(label) => {
+                let parent_ptr = self
+                    .parent_window_ptr
+                    .expect("Parent window pointer must be Some when creating StaticBoxSizer with a label");
+                let label_cstring = CString::new(label).unwrap_or_else(|_| CString::new("").unwrap());
+                unsafe { ffi::wxd_StaticBoxSizer_Create_WithLabel(orient, parent_ptr, label_cstring.as_ptr()) }
             }
         };
-        unsafe {
-            StaticBoxSizer::from_ptr(s_ptr).expect("Failed to create wxStaticBoxSizer from pointer")
-        }
+        unsafe { StaticBoxSizer::from_ptr(s_ptr).expect("Failed to create wxStaticBoxSizer from pointer") }
     }
 }

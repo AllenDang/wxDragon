@@ -36,9 +36,7 @@ pub fn create_advanced_tab(notebook: &Notebook) -> (SplitterWindow, AdvancedTabC
         let _child2 = tree_ctrl.append_item(&root_id, "Child 2", None, None);
     }
 
-    let tree_status_label = StaticText::builder(&tree_panel)
-        .with_label("Tree Selection: None")
-        .build();
+    let tree_status_label = StaticText::builder(&tree_panel).with_label("Tree Selection: None").build();
 
     // Sizer for Tree Panel
     let tree_sizer = BoxSizer::builder(Orientation::Vertical).build();
@@ -55,16 +53,9 @@ pub fn create_advanced_tab(notebook: &Notebook) -> (SplitterWindow, AdvancedTabC
     let gauge_sizer = BoxSizer::builder(Orientation::Vertical).build();
 
     // Add a title
-    let gauge_title = StaticText::builder(&gauge_panel)
-        .with_label("Gauge Demo")
-        .build();
+    let gauge_title = StaticText::builder(&gauge_panel).with_label("Gauge Demo").build();
     gauge_sizer.add_spacer(10);
-    gauge_sizer.add(
-        &gauge_title,
-        0,
-        SizerFlag::AlignCenterHorizontal | SizerFlag::All,
-        5,
-    );
+    gauge_sizer.add(&gauge_title, 0, SizerFlag::AlignCenterHorizontal | SizerFlag::All, 5);
 
     // Create the gauge
     let gauge = Gauge::builder(&gauge_panel)
@@ -79,9 +70,7 @@ pub fn create_advanced_tab(notebook: &Notebook) -> (SplitterWindow, AdvancedTabC
 
     // Create gauge control buttons
     let gauge_button_sizer = BoxSizer::builder(Orientation::Horizontal).build();
-    let gauge_increase_btn = Button::builder(&gauge_panel)
-        .with_label("Increase (+10)")
-        .build();
+    let gauge_increase_btn = Button::builder(&gauge_panel).with_label("Increase (+10)").build();
     let gauge_reset_btn = Button::builder(&gauge_panel).with_label("Reset").build();
 
     gauge_button_sizer.add(&gauge_increase_btn, 0, SizerFlag::All, 5);
@@ -89,15 +78,8 @@ pub fn create_advanced_tab(notebook: &Notebook) -> (SplitterWindow, AdvancedTabC
     gauge_sizer.add_sizer(&gauge_button_sizer, 0, SizerFlag::AlignCenterHorizontal, 0);
 
     // Gauge status label
-    let gauge_status_label = StaticText::builder(&gauge_panel)
-        .with_label("Gauge Value: 25%")
-        .build();
-    gauge_sizer.add(
-        &gauge_status_label,
-        0,
-        SizerFlag::AlignCenterHorizontal | SizerFlag::All,
-        5,
-    );
+    let gauge_status_label = StaticText::builder(&gauge_panel).with_label("Gauge Value: 25%").build();
+    gauge_sizer.add(&gauge_status_label, 0, SizerFlag::AlignCenterHorizontal | SizerFlag::All, 5);
 
     gauge_panel.set_sizer(gauge_sizer, true);
 
@@ -109,12 +91,7 @@ pub fn create_advanced_tab(notebook: &Notebook) -> (SplitterWindow, AdvancedTabC
         .with_label("Slider Demo (Controls Gauge)")
         .build();
     slider_sizer.add_spacer(10);
-    slider_sizer.add(
-        &slider_title,
-        0,
-        SizerFlag::AlignCenterHorizontal | SizerFlag::All,
-        5,
-    );
+    slider_sizer.add(&slider_title, 0, SizerFlag::AlignCenterHorizontal | SizerFlag::All, 5);
 
     // Create the slider
     let slider = Slider::builder(&slider_panel)
@@ -130,16 +107,9 @@ pub fn create_advanced_tab(notebook: &Notebook) -> (SplitterWindow, AdvancedTabC
     let spin_panel = Panel::builder(&controls_panel).build();
     let spin_sizer = BoxSizer::builder(Orientation::Vertical).build();
 
-    let spin_title = StaticText::builder(&spin_panel)
-        .with_label("SpinCtrl Demo")
-        .build();
+    let spin_title = StaticText::builder(&spin_panel).with_label("SpinCtrl Demo").build();
     spin_sizer.add_spacer(10);
-    spin_sizer.add(
-        &spin_title,
-        0,
-        SizerFlag::AlignCenterHorizontal | SizerFlag::All,
-        5,
-    );
+    spin_sizer.add(&spin_title, 0, SizerFlag::AlignCenterHorizontal | SizerFlag::All, 5);
 
     const INITIAL_VALUE: i32 = 42;
     // Create the spin control
@@ -149,23 +119,13 @@ pub fn create_advanced_tab(notebook: &Notebook) -> (SplitterWindow, AdvancedTabC
         .with_min_value(0)
         .with_max_value(1000)
         .build();
-    spin_sizer.add(
-        &spin_ctrl,
-        0,
-        SizerFlag::AlignCenterHorizontal | SizerFlag::All,
-        5,
-    );
+    spin_sizer.add(&spin_ctrl, 0, SizerFlag::AlignCenterHorizontal | SizerFlag::All, 5);
 
     // SpinCtrl status label
     let spin_ctrl_label = StaticText::builder(&spin_panel)
         .with_label(&format!("Spin Value: {INITIAL_VALUE}"))
         .build();
-    spin_sizer.add(
-        &spin_ctrl_label,
-        0,
-        SizerFlag::AlignCenterHorizontal | SizerFlag::All,
-        5,
-    );
+    spin_sizer.add(&spin_ctrl_label, 0, SizerFlag::AlignCenterHorizontal | SizerFlag::All, 5);
 
     spin_panel.set_sizer(spin_sizer, true);
 
@@ -211,11 +171,7 @@ impl AdvancedTabControls {
         self.tree_ctrl.on_selection_changed(move |event_data| {
             if let Some(selected_item) = event_data.get_item() {
                 let mut status = String::new();
-                std::fmt::Write::write_fmt(
-                    &mut status,
-                    format_args!("Tree Selection: Item {selected_item:?}"),
-                )
-                .unwrap();
+                std::fmt::Write::write_fmt(&mut status, format_args!("Tree Selection: Item {selected_item:?}")).unwrap();
                 tree_status_label_clone.set_label(&status);
             } else {
                 tree_status_label_clone.set_label("Tree Selection: None");
@@ -260,27 +216,16 @@ impl AdvancedTabControls {
         self.spin_ctrl.on_value_changed(move |event| {
             let value = event.get_value();
             spin_ctrl_label_clone.set_label(&format!("Spin Value: {value}"));
-            println!(
-                "SPINCTRL Event (Advanced Tab): ID: {}, Value: {}",
-                event.base.get_id(),
-                value
-            );
+            println!("SPINCTRL Event (Advanced Tab): ID: {}, Value: {}", event.base.get_id(), value);
         });
     }
 }
 
 fn add_dnd_demo(panel: &Panel, sizer: &BoxSizer) {
     // Add a title
-    let title = StaticText::builder(panel)
-        .with_label("Drag and Drop Demo")
-        .build();
+    let title = StaticText::builder(panel).with_label("Drag and Drop Demo").build();
     sizer.add_spacer(10);
-    sizer.add(
-        &title,
-        0,
-        SizerFlag::AlignCenterHorizontal | SizerFlag::All,
-        5,
-    );
+    sizer.add(&title, 0, SizerFlag::AlignCenterHorizontal | SizerFlag::All, 5);
     sizer.add_spacer(10);
 
     // Create a horizontal sizer for the text drag source and drop target
@@ -294,9 +239,7 @@ fn add_dnd_demo(panel: &Panel, sizer: &BoxSizer) {
     let source_sizer = BoxSizer::builder(Orientation::Vertical).build();
 
     // Add text to the source panel
-    let source_text = StaticText::builder(&source_panel)
-        .with_label("Drag from here")
-        .build();
+    let source_text = StaticText::builder(&source_panel).with_label("Drag from here").build();
 
     // Center the text in the panel
     source_sizer.add_spacer(60); // Push the text down for vertical centering
@@ -311,9 +254,7 @@ fn add_dnd_demo(panel: &Panel, sizer: &BoxSizer) {
     let target_sizer = BoxSizer::builder(Orientation::Vertical).build();
 
     // Add text to the target panel
-    let target_label = StaticText::builder(&target_panel)
-        .with_label("Drop here")
-        .build();
+    let target_label = StaticText::builder(&target_panel).with_label("Drop here").build();
 
     // Create a text control to display the dropped text
     let dropped_text = TextCtrl::builder(&target_panel)
@@ -325,12 +266,7 @@ fn add_dnd_demo(panel: &Panel, sizer: &BoxSizer) {
     target_sizer.add_spacer(20);
     target_sizer.add(&target_label, 0, SizerFlag::AlignCenterHorizontal, 0);
     target_sizer.add_spacer(10);
-    target_sizer.add(
-        &dropped_text,
-        1,
-        SizerFlag::Expand | SizerFlag::Left | SizerFlag::Right,
-        10,
-    ); // Add expand and margins
+    target_sizer.add(&dropped_text, 1, SizerFlag::Expand | SizerFlag::Left | SizerFlag::Right, 10); // Add expand and margins
     target_panel.set_sizer(target_sizer, true);
 
     // Set up the drag source
@@ -373,24 +309,12 @@ fn add_dnd_demo(panel: &Panel, sizer: &BoxSizer) {
     let instructions = StaticText::builder(panel)
         .with_label("Click and drag from the light blue panel to the light green panel")
         .build();
-    sizer.add(
-        &instructions,
-        0,
-        SizerFlag::AlignCenterHorizontal | SizerFlag::All,
-        5,
-    );
+    sizer.add(&instructions, 0, SizerFlag::AlignCenterHorizontal | SizerFlag::All, 5);
 
     // Add file drop target demo
-    let file_drop_title = StaticText::builder(panel)
-        .with_label("File Drop Demo")
-        .build();
+    let file_drop_title = StaticText::builder(panel).with_label("File Drop Demo").build();
     sizer.add_spacer(10);
-    sizer.add(
-        &file_drop_title,
-        0,
-        SizerFlag::AlignCenterHorizontal | SizerFlag::All,
-        5,
-    );
+    sizer.add(&file_drop_title, 0, SizerFlag::AlignCenterHorizontal | SizerFlag::All, 5);
 
     // Create a file drop target panel
     let file_target_panel = Panel::builder(panel).with_size(Size::new(-1, 150)).build();
@@ -400,9 +324,7 @@ fn add_dnd_demo(panel: &Panel, sizer: &BoxSizer) {
     let file_sizer = BoxSizer::builder(Orientation::Vertical).build();
 
     // Add text to the file drop target panel
-    let file_target_label = StaticText::builder(&file_target_panel)
-        .with_label("Drop files here")
-        .build();
+    let file_target_label = StaticText::builder(&file_target_panel).with_label("Drop files here").build();
 
     // Create a text control to display the dropped files
     let file_list = TextCtrl::builder(&file_target_panel)
@@ -414,12 +336,7 @@ fn add_dnd_demo(panel: &Panel, sizer: &BoxSizer) {
     file_sizer.add_spacer(15);
     file_sizer.add(&file_target_label, 0, SizerFlag::AlignCenterHorizontal, 0);
     file_sizer.add_spacer(10);
-    file_sizer.add(
-        &file_list,
-        1,
-        SizerFlag::Expand | SizerFlag::Left | SizerFlag::Right,
-        20,
-    ); // Add expand and larger margins
+    file_sizer.add(&file_list, 1, SizerFlag::Expand | SizerFlag::Left | SizerFlag::Right, 20); // Add expand and larger margins
     file_target_panel.set_sizer(file_sizer, true);
 
     // Set up the file drop target using the builder pattern
@@ -448,21 +365,11 @@ fn add_dnd_demo(panel: &Panel, sizer: &BoxSizer) {
         .build();
 
     // Add the file drop target panel to the main sizer
-    sizer.add(
-        &file_target_panel,
-        0,
-        SizerFlag::Expand | SizerFlag::All,
-        10,
-    );
+    sizer.add(&file_target_panel, 0, SizerFlag::Expand | SizerFlag::All, 10);
 
     // Add instructions for file drag and drop
     let file_instructions = StaticText::builder(panel)
         .with_label("Drag and drop files from your file explorer onto the lavender panel")
         .build();
-    sizer.add(
-        &file_instructions,
-        0,
-        SizerFlag::AlignCenterHorizontal | SizerFlag::All,
-        5,
-    );
+    sizer.add(&file_instructions, 0, SizerFlag::AlignCenterHorizontal | SizerFlag::All, 5);
 }

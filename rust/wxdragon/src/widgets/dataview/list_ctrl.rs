@@ -6,8 +6,8 @@ use wxdragon_sys as ffi;
 
 use super::enums::DataViewColumnFlags;
 use super::{
-    DataViewAlign, DataViewCellMode, DataViewColumn, DataViewProgressRenderer, DataViewStyle,
-    DataViewTextRenderer, DataViewToggleRenderer, VariantType,
+    DataViewAlign, DataViewCellMode, DataViewColumn, DataViewProgressRenderer, DataViewStyle, DataViewTextRenderer,
+    DataViewToggleRenderer, VariantType,
 };
 
 /// A simplified DataViewCtrl that displays data in a list format.
@@ -24,13 +24,7 @@ impl DataViewListCtrl {
         DataViewListCtrlBuilder::new(parent)
     }
 
-    fn new_impl(
-        parent_ptr: *mut ffi::wxd_Window_t,
-        id: i32,
-        pos: Point,
-        size: Size,
-        style: i64,
-    ) -> Self {
+    fn new_impl(parent_ptr: *mut ffi::wxd_Window_t, id: i32, pos: Point, size: Size, style: i64) -> Self {
         let handle = unsafe {
             ffi::wxd_DataViewListCtrl_Create(
                 parent_ptr,
@@ -66,8 +60,7 @@ impl DataViewListCtrl {
         width: i32,
         flags: DataViewColumnFlags,
     ) -> bool {
-        let renderer =
-            DataViewTextRenderer::new(VariantType::String, DataViewCellMode::Inert, align);
+        let renderer = DataViewTextRenderer::new(VariantType::String, DataViewCellMode::Inert, align);
         let column = DataViewColumn::new(label, &renderer, model_column, width, align, flags);
 
         let ctrl_ptr = self.window.handle_ptr();
@@ -95,8 +88,7 @@ impl DataViewListCtrl {
         width: i32,
         flags: DataViewColumnFlags,
     ) -> bool {
-        let renderer =
-            DataViewToggleRenderer::new(VariantType::Bool, DataViewCellMode::Activatable, align);
+        let renderer = DataViewToggleRenderer::new(VariantType::Bool, DataViewCellMode::Activatable, align);
         let column = DataViewColumn::new(label, &renderer, model_column, width, align, flags);
 
         let ctrl_ptr = self.window.handle_ptr();
@@ -115,22 +107,9 @@ impl DataViewListCtrl {
     /// # Returns
     ///
     /// `true` if the column was successfully appended, `false` otherwise.
-    pub fn append_progress_column(
-        &self,
-        label: &str,
-        model_column: usize,
-        width: i32,
-        flags: DataViewColumnFlags,
-    ) -> bool {
+    pub fn append_progress_column(&self, label: &str, model_column: usize, width: i32, flags: DataViewColumnFlags) -> bool {
         let renderer = DataViewProgressRenderer::new(VariantType::Int32, DataViewCellMode::Inert);
-        let column = DataViewColumn::new(
-            label,
-            &renderer,
-            model_column,
-            width,
-            DataViewAlign::Center,
-            flags,
-        );
+        let column = DataViewColumn::new(label, &renderer, model_column, width, DataViewAlign::Center, flags);
 
         let ctrl_ptr = self.window.handle_ptr();
         unsafe { ffi::wxd_DataViewCtrl_AppendColumn(ctrl_ptr, column.as_raw()) }

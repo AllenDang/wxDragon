@@ -80,8 +80,7 @@ impl XmlResource {
         let c_name = CString::new(name).ok()?;
         let parent_ptr = parent.map_or(ptr::null_mut(), |p| p.handle_ptr());
 
-        let dialog_ptr =
-            unsafe { ffi::wxd_XmlResource_LoadDialog(self.ptr, parent_ptr, c_name.as_ptr()) };
+        let dialog_ptr = unsafe { ffi::wxd_XmlResource_LoadDialog(self.ptr, parent_ptr, c_name.as_ptr()) };
 
         if dialog_ptr.is_null() {
             None
@@ -95,15 +94,12 @@ impl XmlResource {
         let c_name = CString::new(name).ok()?;
         let parent_ptr = parent.map_or(ptr::null_mut(), |p| p.handle_ptr());
 
-        let frame_ptr =
-            unsafe { ffi::wxd_XmlResource_LoadFrame(self.ptr, parent_ptr, c_name.as_ptr()) };
+        let frame_ptr = unsafe { ffi::wxd_XmlResource_LoadFrame(self.ptr, parent_ptr, c_name.as_ptr()) };
 
         if frame_ptr.is_null() {
             None
         } else {
-            Some(unsafe {
-                <Frame as FromXrcPtr>::from_xrc_ptr(frame_ptr as *mut ffi::wxd_Window_t)
-            })
+            Some(unsafe { <Frame as FromXrcPtr>::from_xrc_ptr(frame_ptr as *mut ffi::wxd_Window_t) })
         }
     }
 
@@ -112,15 +108,12 @@ impl XmlResource {
         let c_name = CString::new(name).ok()?;
         let parent_ptr = parent.map_or(ptr::null_mut(), |p| p.handle_ptr());
 
-        let panel_ptr =
-            unsafe { ffi::wxd_XmlResource_LoadPanel(self.ptr, parent_ptr, c_name.as_ptr()) };
+        let panel_ptr = unsafe { ffi::wxd_XmlResource_LoadPanel(self.ptr, parent_ptr, c_name.as_ptr()) };
 
         if panel_ptr.is_null() {
             None
         } else {
-            Some(unsafe {
-                <Panel as FromXrcPtr>::from_xrc_ptr(panel_ptr as *mut ffi::wxd_Window_t)
-            })
+            Some(unsafe { <Panel as FromXrcPtr>::from_xrc_ptr(panel_ptr as *mut ffi::wxd_Window_t) })
         }
     }
 
@@ -174,13 +167,9 @@ impl<T: XrcSupport> FromXrcPtr for T {
 /// Trait for XRC-specific window methods
 pub trait WindowXrcMethods: WxWidget + Sized {
     /// Find a child window by XRC name
-    fn find_child_by_xrc_name<T: FromXrcPtr<RawFfiType = *mut ffi::wxd_Window_t> + WxWidget>(
-        &self,
-        name: &str,
-    ) -> Option<T> {
+    fn find_child_by_xrc_name<T: FromXrcPtr<RawFfiType = *mut ffi::wxd_Window_t> + WxWidget>(&self, name: &str) -> Option<T> {
         let c_name = CString::new(name).ok()?;
-        let child_ptr =
-            unsafe { ffi::wxd_Window_FindWindowByXRCName(self.handle_ptr(), c_name.as_ptr()) };
+        let child_ptr = unsafe { ffi::wxd_Window_FindWindowByXRCName(self.handle_ptr(), c_name.as_ptr()) };
 
         if child_ptr.is_null() {
             None

@@ -126,185 +126,104 @@ impl AuiToolBar {
     /// Adds a label to the toolbar
     pub fn add_label(&self, tool_id: i32, label: &str, width: i32) {
         let c_label = CString::new(label).unwrap_or_default();
-        unsafe {
-            ffi::wxd_AuiToolBar_AddLabel(
-                self.window.handle_ptr() as *mut ffi::wxd_AuiToolBar_t,
-                tool_id as c_int,
-                c_label.as_ptr(),
-                width as c_int,
-            );
-        }
+        let ptr = self.window.handle_ptr() as *mut ffi::wxd_AuiToolBar_t;
+        unsafe { ffi::wxd_AuiToolBar_AddLabel(ptr, tool_id as c_int, c_label.as_ptr(), width as c_int) };
     }
 
     /// Adds a control to the toolbar
     pub fn add_control<C: WxWidget>(&self, control: &C, label: &str) {
         let c_label = CString::new(label).unwrap_or_default();
-        unsafe {
-            ffi::wxd_AuiToolBar_AddControl(
-                self.window.handle_ptr() as *mut ffi::wxd_AuiToolBar_t,
-                control.handle_ptr() as *mut ffi::wxd_Control_t,
-                c_label.as_ptr(),
-            );
-        }
+        let ptr = self.window.handle_ptr() as *mut ffi::wxd_AuiToolBar_t;
+        unsafe { ffi::wxd_AuiToolBar_AddControl(ptr, control.handle_ptr() as *mut ffi::wxd_Control_t, c_label.as_ptr()) };
     }
 
     /// Adds a separator to the toolbar
     pub fn add_separator(&self) {
-        unsafe {
-            ffi::wxd_AuiToolBar_AddSeparator(self.window.handle_ptr() as *mut ffi::wxd_AuiToolBar_t);
-        }
+        unsafe { ffi::wxd_AuiToolBar_AddSeparator(self.window.handle_ptr() as *mut ffi::wxd_AuiToolBar_t) };
     }
 
     /// Adds a spacer to the toolbar
     pub fn add_spacer(&self, pixels: i32) {
-        unsafe {
-            ffi::wxd_AuiToolBar_AddSpacer(
-                self.window.handle_ptr() as *mut ffi::wxd_AuiToolBar_t,
-                pixels as c_int,
-            );
-        }
+        unsafe { ffi::wxd_AuiToolBar_AddSpacer(self.window.handle_ptr() as *mut ffi::wxd_AuiToolBar_t, pixels as c_int) };
     }
 
     /// Adds a stretch spacer to the toolbar
     pub fn add_stretch_spacer(&self, proportion: i32) {
-        unsafe {
-            ffi::wxd_AuiToolBar_AddStretchSpacer(
-                self.window.handle_ptr() as *mut ffi::wxd_AuiToolBar_t,
-                proportion as c_int,
-            );
-        }
+        let ptr = self.window.handle_ptr() as *mut ffi::wxd_AuiToolBar_t;
+        unsafe { ffi::wxd_AuiToolBar_AddStretchSpacer(ptr, proportion as c_int) };
     }
 
     /// Realizes the toolbar (finalizes the layout after adding tools)
     pub fn realize(&self) {
-        unsafe {
-            ffi::wxd_AuiToolBar_Realize(self.window.handle_ptr() as *mut ffi::wxd_AuiToolBar_t);
-        }
+        unsafe { ffi::wxd_AuiToolBar_Realize(self.window.handle_ptr() as *mut ffi::wxd_AuiToolBar_t) };
     }
 
     /// Sets the size of tool bitmaps
     pub fn set_tool_bitmap_size(&self, size: Size) {
-        unsafe {
-            ffi::wxd_AuiToolBar_SetToolBitmapSize(
-                self.window.handle_ptr() as *mut ffi::wxd_AuiToolBar_t,
-                size.into(),
-            );
-        }
+        unsafe { ffi::wxd_AuiToolBar_SetToolBitmapSize(self.window.handle_ptr() as *mut ffi::wxd_AuiToolBar_t, size.into()) };
     }
 
     /// Gets the size of tool bitmaps
     pub fn get_tool_bitmap_size(&self) -> Size {
-        let ffi_size = unsafe {
-            ffi::wxd_AuiToolBar_GetToolBitmapSize(
-                self.window.handle_ptr() as *mut ffi::wxd_AuiToolBar_t
-            )
-        };
+        let ffi_size = unsafe { ffi::wxd_AuiToolBar_GetToolBitmapSize(self.window.handle_ptr() as *mut ffi::wxd_AuiToolBar_t) };
         Size::from(ffi_size)
     }
 
     /// Sets whether the overflow button is visible
     pub fn set_overflow_visible(&self, visible: bool) {
-        unsafe {
-            ffi::wxd_AuiToolBar_SetOverflowVisible(
-                self.window.handle_ptr() as *mut ffi::wxd_AuiToolBar_t,
-                visible,
-            );
-        }
+        unsafe { ffi::wxd_AuiToolBar_SetOverflowVisible(self.window.handle_ptr() as *mut ffi::wxd_AuiToolBar_t, visible) };
     }
 
     /// Gets whether the overflow button is visible
     pub fn get_overflow_visible(&self) -> bool {
-        unsafe {
-            ffi::wxd_AuiToolBar_GetOverflowVisible(
-                self.window.handle_ptr() as *mut ffi::wxd_AuiToolBar_t
-            )
-        }
+        unsafe { ffi::wxd_AuiToolBar_GetOverflowVisible(self.window.handle_ptr() as *mut ffi::wxd_AuiToolBar_t) }
     }
 
     /// Sets whether the gripper is visible
     pub fn set_gripper_visible(&self, visible: bool) {
-        unsafe {
-            ffi::wxd_AuiToolBar_SetGripperVisible(
-                self.window.handle_ptr() as *mut ffi::wxd_AuiToolBar_t,
-                visible,
-            );
-        }
+        unsafe { ffi::wxd_AuiToolBar_SetGripperVisible(self.window.handle_ptr() as *mut ffi::wxd_AuiToolBar_t, visible) };
     }
 
     /// Gets whether the gripper is visible
     pub fn get_gripper_visible(&self) -> bool {
-        unsafe {
-            ffi::wxd_AuiToolBar_GetGripperVisible(
-                self.window.handle_ptr() as *mut ffi::wxd_AuiToolBar_t
-            )
-        }
+        unsafe { ffi::wxd_AuiToolBar_GetGripperVisible(self.window.handle_ptr() as *mut ffi::wxd_AuiToolBar_t) }
     }
 
     /// Sets whether a tool has a dropdown
     pub fn set_tool_drop_down(&self, tool_id: i32, dropdown: bool) {
-        unsafe {
-            ffi::wxd_AuiToolBar_SetToolDropDown(
-                self.window.handle_ptr() as *mut ffi::wxd_AuiToolBar_t,
-                tool_id as c_int,
-                dropdown,
-            );
-        }
+        let ptr = self.window.handle_ptr() as *mut ffi::wxd_AuiToolBar_t;
+        unsafe { ffi::wxd_AuiToolBar_SetToolDropDown(ptr, tool_id as c_int, dropdown) };
     }
 
     /// Gets whether a tool has a dropdown
     pub fn get_tool_drop_down(&self, tool_id: i32) -> bool {
-        unsafe {
-            ffi::wxd_AuiToolBar_GetToolDropDown(
-                self.window.handle_ptr() as *mut ffi::wxd_AuiToolBar_t,
-                tool_id as c_int,
-            )
-        }
+        unsafe { ffi::wxd_AuiToolBar_GetToolDropDown(self.window.handle_ptr() as *mut ffi::wxd_AuiToolBar_t, tool_id as c_int) }
     }
 
     /// Enables or disables a tool
     pub fn enable_tool(&self, tool_id: i32, enable: bool) {
-        unsafe {
-            ffi::wxd_AuiToolBar_EnableTool(
-                self.window.handle_ptr() as *mut ffi::wxd_AuiToolBar_t,
-                tool_id as c_int,
-                enable,
-            );
-        }
+        let ptr = self.window.handle_ptr() as *mut ffi::wxd_AuiToolBar_t;
+        unsafe { ffi::wxd_AuiToolBar_EnableTool(ptr, tool_id as c_int, enable) };
     }
 
     /// Gets whether a tool is enabled
     pub fn get_tool_enabled(&self, tool_id: i32) -> bool {
-        unsafe {
-            ffi::wxd_AuiToolBar_GetToolEnabled(
-                self.window.handle_ptr() as *mut ffi::wxd_AuiToolBar_t,
-                tool_id as c_int,
-            )
-        }
+        unsafe { ffi::wxd_AuiToolBar_GetToolEnabled(self.window.handle_ptr() as *mut ffi::wxd_AuiToolBar_t, tool_id as c_int) }
     }
 
     /// Gets the number of tools
     pub fn get_tool_count(&self) -> i32 {
-        unsafe {
-            ffi::wxd_AuiToolBar_GetToolCount(self.window.handle_ptr() as *mut ffi::wxd_AuiToolBar_t)
-                as i32
-        }
+        unsafe { ffi::wxd_AuiToolBar_GetToolCount(self.window.handle_ptr() as *mut ffi::wxd_AuiToolBar_t) as i32 }
     }
 
     /// Clears all tools
     pub fn clear_tools(&self) {
-        unsafe {
-            ffi::wxd_AuiToolBar_ClearTools(self.window.handle_ptr() as *mut ffi::wxd_AuiToolBar_t);
-        }
+        unsafe { ffi::wxd_AuiToolBar_ClearTools(self.window.handle_ptr() as *mut ffi::wxd_AuiToolBar_t) };
     }
 
     /// Deletes a tool
     pub fn delete_tool(&self, tool_id: i32) -> bool {
-        unsafe {
-            ffi::wxd_AuiToolBar_DeleteTool(
-                self.window.handle_ptr() as *mut ffi::wxd_AuiToolBar_t,
-                tool_id as c_int,
-            )
-        }
+        unsafe { ffi::wxd_AuiToolBar_DeleteTool(self.window.handle_ptr() as *mut ffi::wxd_AuiToolBar_t, tool_id as c_int) }
     }
 }
 

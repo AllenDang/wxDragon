@@ -65,20 +65,13 @@ impl TimePickerCtrl {
 
     /// Gets the currently selected time.
     pub fn get_value(&self) -> DateTime {
-        let ffi_dt = unsafe {
-            ffi::wxd_TimePickerCtrl_GetValue(self.window.as_ptr() as *mut ffi::wxd_TimePickerCtrl_t)
-        };
+        let ffi_dt = unsafe { ffi::wxd_TimePickerCtrl_GetValue(self.window.as_ptr() as *mut ffi::wxd_TimePickerCtrl_t) };
         DateTime::from(ffi_dt)
     }
 
     /// Sets the currently selected time.
     pub fn set_value(&self, dt: &DateTime) {
-        unsafe {
-            ffi::wxd_TimePickerCtrl_SetValue(
-                self.window.as_ptr() as *mut ffi::wxd_TimePickerCtrl_t,
-                **dt,
-            );
-        }
+        unsafe { ffi::wxd_TimePickerCtrl_SetValue(self.window.as_ptr() as *mut ffi::wxd_TimePickerCtrl_t, **dt) };
     }
 
     /// Creates a TimePickerCtrl from a raw pointer.

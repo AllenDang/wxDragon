@@ -18,9 +18,7 @@ include!("generated_constants/wx_gtk_constants.rs");
 // Alternatively, you could have a `wx_common_constants.rs` if some constants are universal
 // and only OS-specific parts are in the files above.
 #[cfg(not(any(target_os = "macos", target_os = "windows", target_os = "linux")))]
-compile_error!(
-    "Target OS not supported by pre-generated constants. Please add a constants file for this OS."
-);
+compile_error!("Target OS not supported by pre-generated constants. Please add a constants file for this OS.");
 
 mod logging4c;
 

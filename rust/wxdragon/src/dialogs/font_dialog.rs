@@ -93,13 +93,9 @@ impl<'a, W: WxWidget> FontDialogBuilder<'a, W> {
         let c_title = CString::new(self.title).expect("CString::new failed for title");
         let font_data_ptr = self.font_data.map_or(std::ptr::null_mut(), |d| d.as_ptr());
         let parent_ptr = self.parent.handle_ptr();
-        assert!(
-            !parent_ptr.is_null(),
-            "FontDialog requires a valid parent window pointer."
-        );
+        assert!(!parent_ptr.is_null(), "FontDialog requires a valid parent window pointer.");
 
-        let ptr =
-            unsafe { ffi::wxd_FontDialog_Create(parent_ptr, c_title.as_ptr(), font_data_ptr) };
+        let ptr = unsafe { ffi::wxd_FontDialog_Create(parent_ptr, c_title.as_ptr(), font_data_ptr) };
 
         if ptr.is_null() {
             panic!("Failed to create wxFontDialog");

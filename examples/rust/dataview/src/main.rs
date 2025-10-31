@@ -49,11 +49,7 @@ fn main() {
         // Create columns and text renderers
         let title_col = DataViewColumn::new(
             "Title",
-            &DataViewTextRenderer::new(
-                VariantType::String,
-                DataViewCellMode::Inert,
-                DataViewAlign::Left,
-            ),
+            &DataViewTextRenderer::new(VariantType::String, DataViewCellMode::Inert, DataViewAlign::Left),
             0,
             250,
             DataViewAlign::Left,
@@ -62,11 +58,7 @@ fn main() {
 
         let artist_col = DataViewColumn::new(
             "Artist",
-            &DataViewTextRenderer::new(
-                VariantType::String,
-                DataViewCellMode::Inert,
-                DataViewAlign::Left,
-            ),
+            &DataViewTextRenderer::new(VariantType::String, DataViewCellMode::Inert, DataViewAlign::Left),
             1,
             200,
             DataViewAlign::Left,
@@ -75,11 +67,7 @@ fn main() {
 
         let year_col = DataViewColumn::new(
             "Year",
-            &DataViewTextRenderer::new(
-                VariantType::String,
-                DataViewCellMode::Inert,
-                DataViewAlign::Center,
-            ),
+            &DataViewTextRenderer::new(VariantType::String, DataViewCellMode::Inert, DataViewAlign::Center),
             2,
             100,
             DataViewAlign::Center,
@@ -88,11 +76,7 @@ fn main() {
 
         let judg_col = DataViewColumn::new(
             "Judgement",
-            &DataViewTextRenderer::new(
-                VariantType::String,
-                DataViewCellMode::Inert,
-                DataViewAlign::Left,
-            ),
+            &DataViewTextRenderer::new(VariantType::String, DataViewCellMode::Inert, DataViewAlign::Left),
             3,
             120,
             DataViewAlign::Left,
@@ -148,9 +132,7 @@ fn main() {
 
                 // Build a simple context menu
                 let edit_id = ID_HIGHEST + 1;
-                let mut menu = Menu::builder()
-                    .append_item(edit_id, "Edit", "Edit this item")
-                    .build();
+                let mut menu = Menu::builder().append_item(edit_id, "Edit", "Edit this item").build();
 
                 // Handle menu selection
                 let dataview_for_selected = dataview_for_menu.clone();
@@ -168,13 +150,9 @@ fn main() {
                                 let current_title = node.title.clone();
 
                                 // Show a simple text entry dialog to edit the title
-                                let dlg = TextEntryDialog::builder(
-                                    &frame_for_selected,
-                                    "Edit title",
-                                    "Edit",
-                                )
-                                .with_default_value(&current_title)
-                                .build();
+                                let dlg = TextEntryDialog::builder(&frame_for_selected, "Edit title", "Edit")
+                                    .with_default_value(&current_title)
+                                    .build();
                                 let ret = dlg.show_modal();
                                 if ret == ID_OK
                                     && let Some(new_val) = dlg.get_value()

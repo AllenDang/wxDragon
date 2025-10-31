@@ -16,12 +16,7 @@ fn main() {
         let title = StaticText::builder(&panel)
             .with_label("GridBagSizer Demo - Layout with Positions and Spans")
             .build();
-        main_sizer.add(
-            &title,
-            0,
-            SizerFlag::All | SizerFlag::AlignCenterHorizontal,
-            10,
-        );
+        main_sizer.add(&title, 0, SizerFlag::All | SizerFlag::AlignCenterHorizontal, 10);
 
         // Create the GridBagSizer with gaps
         let gb_sizer = GridBagSizer::builder().with_vgap(8).with_hgap(8).build();
@@ -36,9 +31,7 @@ fn main() {
             5,
         );
 
-        let name_input = TextCtrl::builder(&panel)
-            .with_value("Enter your name")
-            .build();
+        let name_input = TextCtrl::builder(&panel).with_value("Enter your name").build();
         gb_sizer.add_at(
             &name_input,
             GBPosition::new(0, 1),
@@ -57,9 +50,7 @@ fn main() {
             5,
         );
 
-        let email_input = TextCtrl::builder(&panel)
-            .with_value("your.email@example.com")
-            .build();
+        let email_input = TextCtrl::builder(&panel).with_value("your.email@example.com").build();
         gb_sizer.add_at(
             &email_input,
             GBPosition::new(1, 1),
@@ -93,9 +84,7 @@ fn main() {
         // Row 3: Skip this row for address continuation
 
         // Row 4: Preferences section
-        let preferences_label = StaticText::builder(&panel)
-            .with_label("Preferences:")
-            .build();
+        let preferences_label = StaticText::builder(&panel).with_label("Preferences:").build();
         gb_sizer.add_at(
             &preferences_label,
             GBPosition::new(4, 0),
@@ -104,9 +93,7 @@ fn main() {
             5,
         );
 
-        let checkbox1 = CheckBox::builder(&panel)
-            .with_label("Subscribe to newsletter")
-            .build();
+        let checkbox1 = CheckBox::builder(&panel).with_label("Subscribe to newsletter").build();
         gb_sizer.add_at(
             &checkbox1,
             GBPosition::new(4, 1),
@@ -115,9 +102,7 @@ fn main() {
             5,
         );
 
-        let checkbox2 = CheckBox::builder(&panel)
-            .with_label("Enable notifications")
-            .build();
+        let checkbox2 = CheckBox::builder(&panel).with_label("Enable notifications").build();
         gb_sizer.add_at(
             &checkbox2,
             GBPosition::new(4, 2),
@@ -137,31 +122,13 @@ fn main() {
 
         // Row 5: Buttons spanning across columns
         let button_cancel = Button::builder(&panel).with_label("Cancel").build();
-        gb_sizer.add_at(
-            &button_cancel,
-            GBPosition::new(5, 1),
-            DEFAULT_GB_SPAN,
-            SizerFlag::Expand,
-            5,
-        );
+        gb_sizer.add_at(&button_cancel, GBPosition::new(5, 1), DEFAULT_GB_SPAN, SizerFlag::Expand, 5);
 
         let button_save = Button::builder(&panel).with_label("Save").build();
-        gb_sizer.add_at(
-            &button_save,
-            GBPosition::new(5, 2),
-            DEFAULT_GB_SPAN,
-            SizerFlag::Expand,
-            5,
-        );
+        gb_sizer.add_at(&button_save, GBPosition::new(5, 2), DEFAULT_GB_SPAN, SizerFlag::Expand, 5);
 
         let button_submit = Button::builder(&panel).with_label("Submit").build();
-        gb_sizer.add_at(
-            &button_submit,
-            GBPosition::new(5, 3),
-            DEFAULT_GB_SPAN,
-            SizerFlag::Expand,
-            5,
-        );
+        gb_sizer.add_at(&button_submit, GBPosition::new(5, 3), DEFAULT_GB_SPAN, SizerFlag::Expand, 5);
 
         // Add the GridBagSizer to the main sizer
         main_sizer.add_sizer(&gb_sizer, 1, SizerFlag::Expand | SizerFlag::All, 20);
@@ -170,19 +137,12 @@ fn main() {
         let info_sizer = BoxSizer::builder(Orientation::Horizontal).build();
 
         let info_text = StaticText::builder(&panel)
-            .with_label(
-                "GridBagSizer allows precise positioning and spanning of widgets in a grid.",
-            )
+            .with_label("GridBagSizer allows precise positioning and spanning of widgets in a grid.")
             .build();
         info_sizer.add(&info_text, 1, SizerFlag::AlignCenterVertical, 0);
 
         let demo_button = Button::builder(&panel).with_label("Move Items").build();
-        info_sizer.add(
-            &demo_button,
-            0,
-            SizerFlag::AlignCenterVertical | SizerFlag::Left,
-            10,
-        );
+        info_sizer.add(&demo_button, 0, SizerFlag::AlignCenterVertical | SizerFlag::Left, 10);
 
         main_sizer.add_sizer(&info_sizer, 0, SizerFlag::Expand | SizerFlag::All, 10);
 

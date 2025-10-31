@@ -67,11 +67,8 @@ impl Choice {
     pub fn get_string_selection(&self) -> Option<String> {
         unsafe {
             let mut buffer: [c_char; 1024] = [0; 1024];
-            let len_needed = ffi::wxd_Choice_GetStringSelection(
-                self.window.as_ptr() as *mut _,
-                buffer.as_mut_ptr(),
-                buffer.len() as i32,
-            );
+            let ptr = self.window.as_ptr() as *mut _;
+            let len_needed = ffi::wxd_Choice_GetStringSelection(ptr, buffer.as_mut_ptr(), buffer.len() as i32);
 
             if len_needed < 0 {
                 return None; // Error or no selection
@@ -83,11 +80,8 @@ impl Choice {
                 Some(c_str.to_string_lossy().into_owned())
             } else {
                 let mut vec_buffer: Vec<u8> = vec![0; len_needed_usize + 1];
-                let len_copied = ffi::wxd_Choice_GetStringSelection(
-                    self.window.as_ptr() as *mut _,
-                    vec_buffer.as_mut_ptr() as *mut c_char,
-                    vec_buffer.len() as i32,
-                );
+                let len_copied =
+                    ffi::wxd_Choice_GetStringSelection(ptr, vec_buffer.as_mut_ptr() as *mut c_char, vec_buffer.len() as i32);
                 if len_copied == len_needed {
                     vec_buffer.pop();
                     String::from_utf8(vec_buffer).ok()
@@ -100,9 +94,7 @@ impl Choice {
 
     /// Selects the item at the given index.
     pub fn set_selection(&self, index: u32) {
-        unsafe {
-            ffi::wxd_Choice_SetSelection(self.window.as_ptr() as *mut _, index as i32);
-        }
+        unsafe { ffi::wxd_Choice_SetSelection(self.window.as_ptr() as *mut _, index as i32) };
     }
 
     /// Gets the string at the specified index.

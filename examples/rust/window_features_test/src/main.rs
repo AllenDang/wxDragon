@@ -80,10 +80,7 @@ fn test_cursor_functionality(window: &Frame) {
     // Test cursor copy
     if let Some(hand_cursor) = Cursor::from_stock(StockCursor::Hand) {
         if let Some(copied_cursor) = hand_cursor.copy() {
-            println!(
-                "✓ Successfully copied hand cursor (valid: {})",
-                copied_cursor.is_ok()
-            );
+            println!("✓ Successfully copied hand cursor (valid: {})", copied_cursor.is_ok());
         } else {
             println!("✗ Failed to copy hand cursor");
         }

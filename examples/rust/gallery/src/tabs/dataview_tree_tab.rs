@@ -2,14 +2,11 @@ use wxdragon::prelude::*;
 
 // Helper function to create a valid bitmap for this tab
 fn create_icon(art_id: ArtId) -> Bitmap {
-    ArtProvider::get_bitmap(art_id, ArtClient::MessageBox, Some(Size::new(16, 16))).unwrap_or_else(
-        || {
-            // Fallback if ArtProvider fails for some reason
-            let fallback_rgba = [0, 0, 0, 255]; // Black square
-            Bitmap::from_rgba(&fallback_rgba, 1, 1)
-                .expect("Failed to create ultimate fallback bitmap")
-        },
-    )
+    ArtProvider::get_bitmap(art_id, ArtClient::MessageBox, Some(Size::new(16, 16))).unwrap_or_else(|| {
+        // Fallback if ArtProvider fails for some reason
+        let fallback_rgba = [0, 0, 0, 255]; // Black square
+        Bitmap::from_rgba(&fallback_rgba, 1, 1).expect("Failed to create ultimate fallback bitmap")
+    })
 }
 
 pub struct DataViewTreeTabControls {
@@ -38,11 +35,7 @@ pub fn create_dataview_tree_tab(parent: &impl WxWidget) -> DataViewTreeTabContro
     let dvc_tree = DataViewTreeCtrl::builder(&panel).build();
 
     // Create all column objects first
-    let expander_renderer = DataViewIconTextRenderer::new(
-        VariantType::IconText,
-        DataViewCellMode::Inert,
-        DataViewAlign::Left,
-    );
+    let expander_renderer = DataViewIconTextRenderer::new(VariantType::IconText, DataViewCellMode::Inert, DataViewAlign::Left);
     let expander_col = DataViewColumn::new(
         "Hierarchy",                    // Header text for the tree column
         &expander_renderer,             // Renderer
@@ -52,11 +45,7 @@ pub fn create_dataview_tree_tab(parent: &impl WxWidget) -> DataViewTreeTabContro
         DataViewColumnFlags::Resizable, // Flags (make it resizable)
     );
 
-    let aux_renderer = DataViewIconTextRenderer::new(
-        VariantType::IconText,
-        DataViewCellMode::Inert,
-        DataViewAlign::Left,
-    );
+    let aux_renderer = DataViewIconTextRenderer::new(VariantType::IconText, DataViewCellMode::Inert, DataViewAlign::Left);
     let aux_col = DataViewColumn::new(
         "Auxiliary Info (IconText)",    // Initial title, will be overridden
         &aux_renderer,                  // renderer
@@ -93,8 +82,7 @@ pub fn create_dataview_tree_tab(parent: &impl WxWidget) -> DataViewTreeTabContro
     dvc_tree.append_item(&sub_cat_b1, "Item B.1.1 (File)", idx_file);
     dvc_tree.append_item(&cat_b, "Item B.2 (File)", idx_file);
 
-    let _cat_c =
-        dvc_tree.append_container(&root_item, "Category C (Empty)", idx_folder, idx_folder);
+    let _cat_c = dvc_tree.append_container(&root_item, "Category C (Empty)", idx_folder, idx_folder);
 
     dvc_tree.expand(&cat_a);
     dvc_tree.expand(&cat_b);

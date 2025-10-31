@@ -58,13 +58,7 @@ impl SimpleBook {
     /// * `image_id` - Optional image index (ignored for SimpleBook as it has no tabs).
     ///
     /// Returns `true` if the page was added successfully.
-    pub fn add_page<W: WxWidget>(
-        &self,
-        page: &W,
-        text: &str,
-        select: bool,
-        image_id: Option<i32>,
-    ) -> bool {
+    pub fn add_page<W: WxWidget>(&self, page: &W, text: &str, select: bool, image_id: Option<i32>) -> bool {
         let c_text = CString::new(text).expect("CString::new failed");
         unsafe {
             if let Some(id) = image_id {
@@ -96,14 +90,7 @@ impl SimpleBook {
     /// * `image_id` - Optional image index (ignored for SimpleBook as it has no tabs).
     ///
     /// Returns `true` if the page was inserted successfully.
-    pub fn insert_page<W: WxWidget>(
-        &self,
-        index: usize,
-        page: &W,
-        text: &str,
-        select: bool,
-        image_id: Option<i32>,
-    ) -> bool {
+    pub fn insert_page<W: WxWidget>(&self, index: usize, page: &W, text: &str, select: bool, image_id: Option<i32>) -> bool {
         let c_text = CString::new(text).expect("CString::new failed");
         unsafe {
             if let Some(id) = image_id {
@@ -130,65 +117,39 @@ impl SimpleBook {
     /// Gets the index of the currently selected page.
     /// Returns `wxNOT_FOUND` (-1) if no page is selected.
     pub fn selection(&self) -> i32 {
-        unsafe {
-            ffi::wxd_SimpleBook_GetSelection(self.window.as_ptr() as *mut ffi::wxd_SimpleBook_t)
-        }
+        unsafe { ffi::wxd_SimpleBook_GetSelection(self.window.as_ptr() as *mut ffi::wxd_SimpleBook_t) }
     }
 
     /// Sets the selection to the given page index.
     /// Returns the index of the previously selected page.
     pub fn set_selection(&self, page: usize) -> i32 {
-        unsafe {
-            ffi::wxd_SimpleBook_SetSelection(
-                self.window.as_ptr() as *mut ffi::wxd_SimpleBook_t,
-                page as c_int,
-            )
-        }
+        unsafe { ffi::wxd_SimpleBook_SetSelection(self.window.as_ptr() as *mut ffi::wxd_SimpleBook_t, page as c_int) }
     }
 
     /// Changes the selection to the given page, returning the old selection.
     /// This function does not generate a `EVT_BOOKCTRL_PAGE_CHANGING` event.
     pub fn change_selection(&self, page: usize) -> i32 {
-        unsafe {
-            ffi::wxd_SimpleBook_ChangeSelection(
-                self.window.as_ptr() as *mut ffi::wxd_SimpleBook_t,
-                page,
-            )
-        }
+        unsafe { ffi::wxd_SimpleBook_ChangeSelection(self.window.as_ptr() as *mut ffi::wxd_SimpleBook_t, page) }
     }
 
     /// Gets the number of pages in the simplebook.
     pub fn get_page_count(&self) -> usize {
-        unsafe {
-            ffi::wxd_SimpleBook_GetPageCount(self.window.as_ptr() as *mut ffi::wxd_SimpleBook_t)
-        }
+        unsafe { ffi::wxd_SimpleBook_GetPageCount(self.window.as_ptr() as *mut ffi::wxd_SimpleBook_t) }
     }
 
     /// Returns the window at the given page position.
     /// Returns `None` if the page index is out of bounds.
     pub fn get_page(&self, index: usize) -> Option<Window> {
         unsafe {
-            let ptr = ffi::wxd_SimpleBook_GetPage(
-                self.window.as_ptr() as *mut ffi::wxd_SimpleBook_t,
-                index,
-            );
-            if ptr.is_null() {
-                None
-            } else {
-                Some(Window::from_ptr(ptr))
-            }
+            let ptr = ffi::wxd_SimpleBook_GetPage(self.window.as_ptr() as *mut ffi::wxd_SimpleBook_t, index);
+            if ptr.is_null() { None } else { Some(Window::from_ptr(ptr)) }
         }
     }
 
     /// Removes the page at the given index.
     /// Returns `true` if the page was removed successfully.
     pub fn remove_page(&self, index: usize) -> bool {
-        unsafe {
-            ffi::wxd_SimpleBook_RemovePage(
-                self.window.as_ptr() as *mut ffi::wxd_SimpleBook_t,
-                index,
-            )
-        }
+        unsafe { ffi::wxd_SimpleBook_RemovePage(self.window.as_ptr() as *mut ffi::wxd_SimpleBook_t, index) }
     }
 }
 
@@ -246,11 +207,7 @@ impl SimpleBookPageChangedEvent {
         }
         // SimpleBook uses the same event infrastructure as Notebook
         let val = unsafe { ffi::wxd_NotebookEvent_GetSelection(self.base.0) };
-        if val == ffi::WXD_NOT_FOUND as i32 {
-            None
-        } else {
-            Some(val)
-        }
+        if val == ffi::WXD_NOT_FOUND as i32 { None } else { Some(val) }
     }
 
     /// Gets the page that was selected before the change.
@@ -261,11 +218,7 @@ impl SimpleBookPageChangedEvent {
         }
         // SimpleBook uses the same event infrastructure as Notebook
         let val = unsafe { ffi::wxd_NotebookEvent_GetOldSelection(self.base.0) };
-        if val == ffi::WXD_NOT_FOUND as i32 {
-            None
-        } else {
-            Some(val)
-        }
+        if val == ffi::WXD_NOT_FOUND as i32 { None } else { Some(val) }
     }
 }
 

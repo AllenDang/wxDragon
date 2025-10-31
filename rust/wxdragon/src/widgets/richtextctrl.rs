@@ -145,14 +145,7 @@ impl RichTextCtrl {
     }
 
     /// Internal implementation used by the builder.
-    fn new_impl(
-        parent_ptr: *mut ffi::wxd_Window_t,
-        id: Id,
-        value: &str,
-        pos: Point,
-        size: Size,
-        style: i64,
-    ) -> Self {
+    fn new_impl(parent_ptr: *mut ffi::wxd_Window_t, id: Id, value: &str, pos: Point, size: Size, style: i64) -> Self {
         let c_value = CString::new(value).unwrap_or_default();
 
         let ptr = unsafe {
@@ -178,12 +171,7 @@ impl RichTextCtrl {
     /// Sets the text value of the control.
     pub fn set_value(&self, value: &str) {
         let c_value = CString::new(value).unwrap_or_default();
-        unsafe {
-            ffi::wxd_RichTextCtrl_SetValue(
-                self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t,
-                c_value.as_ptr(),
-            );
-        }
+        unsafe { ffi::wxd_RichTextCtrl_SetValue(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t, c_value.as_ptr()) };
     }
 
     /// Gets the current text value of the control.
@@ -196,8 +184,7 @@ impl RichTextCtrl {
                 buffer.len() as i32,
             );
             if len >= 0 {
-                let byte_slice =
-                    std::slice::from_raw_parts(buffer.as_ptr() as *const u8, len as usize);
+                let byte_slice = std::slice::from_raw_parts(buffer.as_ptr() as *const u8, len as usize);
                 String::from_utf8_lossy(byte_slice).to_string()
             } else {
                 String::new()
@@ -208,37 +195,23 @@ impl RichTextCtrl {
     /// Writes text at the current insertion point.
     pub fn write_text(&self, text: &str) {
         let c_text = CString::new(text).unwrap_or_default();
-        unsafe {
-            ffi::wxd_RichTextCtrl_WriteText(
-                self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t,
-                c_text.as_ptr(),
-            );
-        }
+        unsafe { ffi::wxd_RichTextCtrl_WriteText(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t, c_text.as_ptr()) };
     }
 
     /// Appends text to the end of the control.
     pub fn append_text(&self, text: &str) {
         let c_text = CString::new(text).unwrap_or_default();
-        unsafe {
-            ffi::wxd_RichTextCtrl_AppendText(
-                self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t,
-                c_text.as_ptr(),
-            );
-        }
+        unsafe { ffi::wxd_RichTextCtrl_AppendText(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t, c_text.as_ptr()) };
     }
 
     /// Clears all text in the control.
     pub fn clear(&self) {
-        unsafe {
-            ffi::wxd_RichTextCtrl_Clear(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t);
-        }
+        unsafe { ffi::wxd_RichTextCtrl_Clear(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t) };
     }
 
     /// Returns the length of the text.
     pub fn get_length(&self) -> i32 {
-        unsafe {
-            ffi::wxd_RichTextCtrl_GetLength(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t)
-        }
+        unsafe { ffi::wxd_RichTextCtrl_GetLength(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t) }
     }
 
     // --- Text Range Operations ---
@@ -255,8 +228,7 @@ impl RichTextCtrl {
                 buffer.len() as i32,
             );
             if len >= 0 {
-                let byte_slice =
-                    std::slice::from_raw_parts(buffer.as_ptr() as *const u8, len as usize);
+                let byte_slice = std::slice::from_raw_parts(buffer.as_ptr() as *const u8, len as usize);
                 String::from_utf8_lossy(byte_slice).to_string()
             } else {
                 String::new()
@@ -266,26 +238,14 @@ impl RichTextCtrl {
 
     /// Sets the selection range.
     pub fn set_selection(&self, from: i64, to: i64) {
-        unsafe {
-            ffi::wxd_RichTextCtrl_SetSelection(
-                self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t,
-                from,
-                to,
-            );
-        }
+        unsafe { ffi::wxd_RichTextCtrl_SetSelection(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t, from, to) };
     }
 
     /// Gets the current selection range.
     pub fn get_selection(&self) -> (i64, i64) {
         let mut from = 0i64;
         let mut to = 0i64;
-        unsafe {
-            ffi::wxd_RichTextCtrl_GetSelection(
-                self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t,
-                &mut from,
-                &mut to,
-            );
-        }
+        unsafe { ffi::wxd_RichTextCtrl_GetSelection(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t, &mut from, &mut to) };
         (from, to)
     }
 
@@ -299,8 +259,7 @@ impl RichTextCtrl {
                 buffer.len() as i32,
             );
             if len >= 0 {
-                let byte_slice =
-                    std::slice::from_raw_parts(buffer.as_ptr() as *const u8, len as usize);
+                let byte_slice = std::slice::from_raw_parts(buffer.as_ptr() as *const u8, len as usize);
                 String::from_utf8_lossy(byte_slice).to_string()
             } else {
                 String::new()
@@ -312,130 +271,86 @@ impl RichTextCtrl {
 
     /// Cuts the selected text to the clipboard.
     pub fn cut(&self) {
-        unsafe {
-            ffi::wxd_RichTextCtrl_Cut(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t);
-        }
+        unsafe { ffi::wxd_RichTextCtrl_Cut(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t) };
     }
 
     /// Copies the selected text to the clipboard.
     pub fn copy(&self) {
-        unsafe {
-            ffi::wxd_RichTextCtrl_Copy(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t);
-        }
+        unsafe { ffi::wxd_RichTextCtrl_Copy(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t) };
     }
 
     /// Pastes text from the clipboard.
     pub fn paste(&self) {
-        unsafe {
-            ffi::wxd_RichTextCtrl_Paste(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t);
-        }
+        unsafe { ffi::wxd_RichTextCtrl_Paste(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t) };
     }
 
     /// Undoes the last operation.
     pub fn undo(&self) {
-        unsafe {
-            ffi::wxd_RichTextCtrl_Undo(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t);
-        }
+        unsafe { ffi::wxd_RichTextCtrl_Undo(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t) };
     }
 
     /// Redoes the last undone operation.
     pub fn redo(&self) {
-        unsafe {
-            ffi::wxd_RichTextCtrl_Redo(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t);
-        }
+        unsafe { ffi::wxd_RichTextCtrl_Redo(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t) };
     }
 
     /// Returns true if undo is available.
     pub fn can_undo(&self) -> bool {
-        unsafe {
-            ffi::wxd_RichTextCtrl_CanUndo(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t)
-        }
+        unsafe { ffi::wxd_RichTextCtrl_CanUndo(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t) }
     }
 
     /// Returns true if redo is available.
     pub fn can_redo(&self) -> bool {
-        unsafe {
-            ffi::wxd_RichTextCtrl_CanRedo(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t)
-        }
+        unsafe { ffi::wxd_RichTextCtrl_CanRedo(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t) }
     }
 
     // --- State Operations ---
 
     /// Makes the text control editable or read-only.
     pub fn set_editable(&self, editable: bool) {
-        unsafe {
-            ffi::wxd_RichTextCtrl_SetEditable(
-                self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t,
-                editable,
-            );
-        }
+        unsafe { ffi::wxd_RichTextCtrl_SetEditable(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t, editable) };
     }
 
     /// Returns true if the control is editable.
     pub fn is_editable(&self) -> bool {
-        unsafe {
-            ffi::wxd_RichTextCtrl_IsEditable(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t)
-        }
+        unsafe { ffi::wxd_RichTextCtrl_IsEditable(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t) }
     }
 
     /// Returns true if the control has been modified.
     pub fn is_modified(&self) -> bool {
-        unsafe {
-            ffi::wxd_RichTextCtrl_IsModified(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t)
-        }
+        unsafe { ffi::wxd_RichTextCtrl_IsModified(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t) }
     }
 
     /// Marks the control as dirty (modified).
     pub fn mark_dirty(&self) {
-        unsafe {
-            ffi::wxd_RichTextCtrl_MarkDirty(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t);
-        }
+        unsafe { ffi::wxd_RichTextCtrl_MarkDirty(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t) };
     }
 
     /// Discards any edits and marks the control as unmodified.
     pub fn discard_edits(&self) {
-        unsafe {
-            ffi::wxd_RichTextCtrl_DiscardEdits(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t);
-        }
+        unsafe { ffi::wxd_RichTextCtrl_DiscardEdits(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t) };
     }
 
     // --- Position Operations ---
 
     /// Gets the insertion point of the control.
     pub fn get_insertion_point(&self) -> i64 {
-        unsafe {
-            ffi::wxd_RichTextCtrl_GetInsertionPoint(
-                self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t
-            )
-        }
+        unsafe { ffi::wxd_RichTextCtrl_GetInsertionPoint(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t) }
     }
 
     /// Sets the insertion point of the control.
     pub fn set_insertion_point(&self, pos: i64) {
-        unsafe {
-            ffi::wxd_RichTextCtrl_SetInsertionPoint(
-                self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t,
-                pos,
-            );
-        }
+        unsafe { ffi::wxd_RichTextCtrl_SetInsertionPoint(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t, pos) };
     }
 
     /// Sets the insertion point to the end of the text.
     pub fn set_insertion_point_end(&self) {
-        unsafe {
-            ffi::wxd_RichTextCtrl_SetInsertionPointEnd(
-                self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t
-            );
-        }
+        unsafe { ffi::wxd_RichTextCtrl_SetInsertionPointEnd(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t) };
     }
 
     /// Returns the last position in the control.
     pub fn get_last_position(&self) -> i64 {
-        unsafe {
-            ffi::wxd_RichTextCtrl_GetLastPosition(
-                self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t
-            )
-        }
+        unsafe { ffi::wxd_RichTextCtrl_GetLastPosition(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t) }
     }
 
     // --- File Operations ---
@@ -443,172 +358,90 @@ impl RichTextCtrl {
     /// Loads a file into the control.
     pub fn load_file(&self, filename: &str, file_type: RichTextFileType) -> bool {
         let c_filename = CString::new(filename).unwrap_or_default();
-        unsafe {
-            ffi::wxd_RichTextCtrl_LoadFile(
-                self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t,
-                c_filename.as_ptr(),
-                file_type.into(),
-            )
-        }
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t;
+        unsafe { ffi::wxd_RichTextCtrl_LoadFile(ptr, c_filename.as_ptr(), file_type.into()) }
     }
 
     /// Saves the content to a file.
     pub fn save_file(&self, filename: &str, file_type: RichTextFileType) -> bool {
         let c_filename = CString::new(filename).unwrap_or_default();
-        unsafe {
-            ffi::wxd_RichTextCtrl_SaveFile(
-                self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t,
-                c_filename.as_ptr(),
-                file_type.into(),
-            )
-        }
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t;
+        unsafe { ffi::wxd_RichTextCtrl_SaveFile(ptr, c_filename.as_ptr(), file_type.into()) }
     }
 
     // --- Style Operations ---
 
     /// Sets style for a range of text.
-    pub fn set_style_range(
-        &self,
-        start: i64,
-        end: i64,
-        bold: bool,
-        italic: bool,
-        underline: bool,
-    ) -> bool {
-        unsafe {
-            ffi::wxd_RichTextCtrl_SetStyleRange(
-                self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t,
-                start,
-                end,
-                bold,
-                italic,
-                underline,
-            )
-        }
+    pub fn set_style_range(&self, start: i64, end: i64, bold: bool, italic: bool, underline: bool) -> bool {
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t;
+        unsafe { ffi::wxd_RichTextCtrl_SetStyleRange(ptr, start, end, bold, italic, underline) }
     }
 
     /// Applies bold formatting to the selection.
     pub fn apply_bold_to_selection(&self) -> bool {
-        unsafe {
-            ffi::wxd_RichTextCtrl_ApplyBoldToSelection(
-                self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t
-            )
-        }
+        unsafe { ffi::wxd_RichTextCtrl_ApplyBoldToSelection(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t) }
     }
 
     /// Applies italic formatting to the selection.
     pub fn apply_italic_to_selection(&self) -> bool {
-        unsafe {
-            ffi::wxd_RichTextCtrl_ApplyItalicToSelection(
-                self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t
-            )
-        }
+        unsafe { ffi::wxd_RichTextCtrl_ApplyItalicToSelection(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t) }
     }
 
     /// Applies underline formatting to the selection.
     pub fn apply_underline_to_selection(&self) -> bool {
-        unsafe {
-            ffi::wxd_RichTextCtrl_ApplyUnderlineToSelection(
-                self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t
-            )
-        }
+        unsafe { ffi::wxd_RichTextCtrl_ApplyUnderlineToSelection(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t) }
     }
 
     /// Returns true if the selection is bold.
     pub fn is_selection_bold(&self) -> bool {
-        unsafe {
-            ffi::wxd_RichTextCtrl_IsSelectionBold(
-                self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t
-            )
-        }
+        unsafe { ffi::wxd_RichTextCtrl_IsSelectionBold(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t) }
     }
 
     /// Returns true if the selection is italic.
     pub fn is_selection_italic(&self) -> bool {
-        unsafe {
-            ffi::wxd_RichTextCtrl_IsSelectionItalics(
-                self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t
-            )
-        }
+        unsafe { ffi::wxd_RichTextCtrl_IsSelectionItalics(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t) }
     }
 
     /// Returns true if the selection is underlined.
     pub fn is_selection_underlined(&self) -> bool {
-        unsafe {
-            ffi::wxd_RichTextCtrl_IsSelectionUnderlined(
-                self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t
-            )
-        }
+        unsafe { ffi::wxd_RichTextCtrl_IsSelectionUnderlined(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t) }
     }
 
     // --- Font Operations ---
 
     /// Sets the font size for a range of text.
     pub fn set_font_size(&self, start: i64, end: i64, size: i32) -> bool {
-        unsafe {
-            ffi::wxd_RichTextCtrl_SetFontSize(
-                self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t,
-                start,
-                end,
-                size,
-            )
-        }
+        unsafe { ffi::wxd_RichTextCtrl_SetFontSize(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t, start, end, size) }
     }
 
     /// Sets the font size for the current selection.
     pub fn set_font_size_selection(&self, size: i32) -> bool {
-        unsafe {
-            ffi::wxd_RichTextCtrl_SetFontSizeSelection(
-                self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t,
-                size,
-            )
-        }
+        unsafe { ffi::wxd_RichTextCtrl_SetFontSizeSelection(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t, size) }
     }
 
     // --- Color Operations ---
 
     /// Sets text color for a range of text.
     pub fn set_text_color(&self, start: i64, end: i64, color: crate::Colour) -> bool {
-        unsafe {
-            ffi::wxd_RichTextCtrl_SetTextColor(
-                self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t,
-                start,
-                end,
-                color.into(),
-            )
-        }
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t;
+        unsafe { ffi::wxd_RichTextCtrl_SetTextColor(ptr, start, end, color.into()) }
     }
 
     /// Sets text color for the selection.
     pub fn set_text_color_selection(&self, color: crate::Colour) -> bool {
-        unsafe {
-            ffi::wxd_RichTextCtrl_SetTextColorSelection(
-                self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t,
-                color.into(),
-            )
-        }
+        unsafe { ffi::wxd_RichTextCtrl_SetTextColorSelection(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t, color.into()) }
     }
 
     /// Sets background color for a range of text.
     pub fn set_background_color(&self, start: i64, end: i64, color: crate::Colour) -> bool {
-        unsafe {
-            ffi::wxd_RichTextCtrl_SetBackgroundColor(
-                self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t,
-                start,
-                end,
-                color.into(),
-            )
-        }
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t;
+        unsafe { ffi::wxd_RichTextCtrl_SetBackgroundColor(ptr, start, end, color.into()) }
     }
 
     /// Sets background color for the selection.
     pub fn set_background_color_selection(&self, color: crate::Colour) -> bool {
-        unsafe {
-            ffi::wxd_RichTextCtrl_SetBackgroundColorSelection(
-                self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t,
-                color.into(),
-            )
-        }
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t;
+        unsafe { ffi::wxd_RichTextCtrl_SetBackgroundColorSelection(ptr, color.into()) }
     }
 }
 

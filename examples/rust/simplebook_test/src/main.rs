@@ -28,9 +28,7 @@ fn run_programmatic_test() {
         let panel = Panel::builder(&frame).build();
 
         // Create SimpleBook
-        let simplebook = SimpleBook::builder(&panel)
-            .with_id(ID_HIGHEST + 100)
-            .build();
+        let simplebook = SimpleBook::builder(&panel).with_id(ID_HIGHEST + 100).build();
 
         // Create pages
         create_pages(&simplebook);
@@ -64,13 +62,7 @@ fn run_programmatic_test() {
         panel.set_sizer(main_sizer, true);
 
         // Set up event handlers using correct patterns
-        setup_event_handlers(
-            &frame,
-            &simplebook,
-            &prev_button,
-            &next_button,
-            &info_button,
-        );
+        setup_event_handlers(&frame, &simplebook, &prev_button, &next_button, &info_button);
 
         // Show the frame
         frame.create_status_bar(1, 0, ID_ANY as i32, "status");
@@ -103,12 +95,8 @@ fn create_pages(simplebook: &SimpleBook) {
 
     // Page 3: Controls
     let page3 = Panel::builder(simplebook).build();
-    let label3 = StaticText::builder(&page3)
-        .with_label("Interactive Controls:")
-        .build();
-    let checkbox = CheckBox::builder(&page3)
-        .with_label("Sample checkbox")
-        .build();
+    let label3 = StaticText::builder(&page3).with_label("Interactive Controls:").build();
+    let checkbox = CheckBox::builder(&page3).with_label("Sample checkbox").build();
     let button = Button::builder(&page3).with_label("Sample button").build();
     let sizer3 = BoxSizer::builder(Orientation::Vertical).build();
     sizer3.add(&label3, 0, SizerFlag::All, 10);
@@ -161,12 +149,7 @@ fn setup_event_handlers(
     info_button.on_click(move |_| {
         let current = simplebook_clone3.selection();
         let page_count = simplebook_clone3.get_page_count();
-        let message = format!(
-            "Current page: {} of {}\nTotal pages: {}",
-            current + 1,
-            page_count,
-            page_count
-        );
+        let message = format!("Current page: {} of {}\nTotal pages: {}", current + 1, page_count, page_count);
 
         let dialog = MessageDialog::builder(&frame_clone, &message, "Page Info")
             .with_style(MessageDialogStyle::OK | MessageDialogStyle::IconInformation)
@@ -177,16 +160,8 @@ fn setup_event_handlers(
     // Listen for page change events using the generated method
     let frame_clone2 = frame.clone();
     simplebook.on_page_changed(move |event| {
-        if let (Some(old_page), Some(new_page)) = (event.get_old_selection(), event.get_selection())
-        {
-            frame_clone2.set_status_text(
-                &format!(
-                    "Changed from page {} to page {}",
-                    old_page + 1,
-                    new_page + 1
-                ),
-                0,
-            );
+        if let (Some(old_page), Some(new_page)) = (event.get_old_selection(), event.get_selection()) {
+            frame_clone2.set_status_text(&format!("Changed from page {} to page {}", old_page + 1, new_page + 1), 0);
         }
     });
 }

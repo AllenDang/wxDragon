@@ -174,16 +174,9 @@ impl ArtProvider {
             Err(_) => return None, // Should not happen with enum
         };
 
-        let ffi_size = size.map_or_else(
-            || ffi::wxd_Size {
-                width: -1,
-                height: -1,
-            },
-            |s| s.into(),
-        );
+        let ffi_size = size.map_or_else(|| ffi::wxd_Size { width: -1, height: -1 }, |s| s.into());
 
-        let bitmap_ptr =
-            unsafe { ffi::wxd_ArtProvider_GetBitmap(c_id.as_ptr(), c_client.as_ptr(), ffi_size) };
+        let bitmap_ptr = unsafe { ffi::wxd_ArtProvider_GetBitmap(c_id.as_ptr(), c_client.as_ptr(), ffi_size) };
 
         if bitmap_ptr.is_null() {
             None
@@ -204,11 +197,7 @@ impl ArtProvider {
     ///
     /// Returns `Option<BitmapBundle>` which can render the icon/bitmap at various DPI scales.
     /// Returns `None` if no matching art is found or an error occurs.
-    pub fn get_bitmap_bundle(
-        id: ArtId,
-        client: ArtClient,
-        size: Option<Size>,
-    ) -> Option<BitmapBundle> {
+    pub fn get_bitmap_bundle(id: ArtId, client: ArtClient, size: Option<Size>) -> Option<BitmapBundle> {
         let c_id = match CString::new(id.as_str()) {
             Ok(s) => s,
             Err(_) => return None,
@@ -218,17 +207,9 @@ impl ArtProvider {
             Err(_) => return None,
         };
 
-        let ffi_size = size.map_or_else(
-            || ffi::wxd_Size {
-                width: -1,
-                height: -1,
-            },
-            |s| s.into(),
-        );
+        let ffi_size = size.map_or_else(|| ffi::wxd_Size { width: -1, height: -1 }, |s| s.into());
 
-        let bundle_ptr = unsafe {
-            ffi::wxd_ArtProvider_GetBitmapBundle(c_id.as_ptr(), c_client.as_ptr(), ffi_size)
-        };
+        let bundle_ptr = unsafe { ffi::wxd_ArtProvider_GetBitmapBundle(c_id.as_ptr(), c_client.as_ptr(), ffi_size) };
 
         if bundle_ptr.is_null() {
             None

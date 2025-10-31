@@ -58,13 +58,7 @@ impl Notebook {
     /// * `image_id` - Optional image index for the page's tab.
     ///
     /// Returns `true` if the page was added successfully.
-    pub fn add_page<W: WxWidget>(
-        &self,
-        page: &W,
-        text: &str,
-        select: bool,
-        image_id: Option<i32>,
-    ) -> bool {
+    pub fn add_page<W: WxWidget>(&self, page: &W, text: &str, select: bool, image_id: Option<i32>) -> bool {
         let c_text = CString::new(text).expect("CString::new failed");
         unsafe {
             if let Some(id) = image_id {
@@ -96,14 +90,7 @@ impl Notebook {
     /// * `image_id` - Optional image index for the page's tab.
     ///
     /// Returns `true` if the page was inserted successfully.
-    pub fn insert_page<W: WxWidget>(
-        &self,
-        index: usize,
-        page: &W,
-        text: &str,
-        select: bool,
-        image_id: Option<i32>,
-    ) -> bool {
+    pub fn insert_page<W: WxWidget>(&self, index: usize, page: &W, text: &str, select: bool, image_id: Option<i32>) -> bool {
         let c_text = CString::new(text).expect("CString::new failed");
         unsafe {
             if let Some(id) = image_id {
@@ -136,54 +123,29 @@ impl Notebook {
     /// Sets the selection to the given page index.
     /// Returns the index of the previously selected page.
     pub fn set_selection(&self, page: usize) -> i32 {
-        unsafe {
-            ffi::wxd_Notebook_SetSelection(
-                self.window.as_ptr() as *mut ffi::wxd_Notebook_t,
-                page as c_int,
-            )
-        }
+        unsafe { ffi::wxd_Notebook_SetSelection(self.window.as_ptr() as *mut ffi::wxd_Notebook_t, page as c_int) }
     }
 
     /// Changes the selection to the given page, returning the old selection.
     /// This function does not generate a `EVT_NOTEBOOK_PAGE_CHANGING` event.
     pub fn change_selection(&self, page: usize) -> i32 {
-        unsafe {
-            ffi::wxd_Notebook_ChangeSelection(
-                self.window.as_ptr() as *mut ffi::wxd_Notebook_t,
-                page,
-            )
-        }
+        unsafe { ffi::wxd_Notebook_ChangeSelection(self.window.as_ptr() as *mut ffi::wxd_Notebook_t, page) }
     }
 
     /// Advances the selection, optionally wrapping to the beginning/end.
     pub fn advance_selection(&self, forward: bool) {
-        unsafe {
-            ffi::wxd_Notebook_AdvanceSelection(
-                self.window.as_ptr() as *mut ffi::wxd_Notebook_t,
-                forward,
-            )
-        }
+        unsafe { ffi::wxd_Notebook_AdvanceSelection(self.window.as_ptr() as *mut ffi::wxd_Notebook_t, forward) }
     }
 
     /// Sets the amount of space around the icon and label in a tab.
     pub fn set_padding(&self, padding: Size) {
-        unsafe {
-            ffi::wxd_Notebook_SetPadding(
-                self.window.as_ptr() as *mut ffi::wxd_Notebook_t,
-                padding.into(),
-            )
-        }
+        unsafe { ffi::wxd_Notebook_SetPadding(self.window.as_ptr() as *mut ffi::wxd_Notebook_t, padding.into()) }
     }
 
     /// Sets the image list for the notebook.
     /// The notebook takes ownership of the image list.
     pub fn set_image_list(&self, image_list: ImageList) {
-        unsafe {
-            ffi::wxd_Notebook_SetImageList(
-                self.window.as_ptr() as *mut ffi::wxd_Notebook_t,
-                image_list.as_ptr(),
-            );
-        }
+        unsafe { ffi::wxd_Notebook_SetImageList(self.window.as_ptr() as *mut ffi::wxd_Notebook_t, image_list.as_ptr()) };
         // wxNotebook takes ownership of the ImageList, so we forget it in Rust
         // to prevent a double free.
         std::mem::forget(image_list);
@@ -192,9 +154,7 @@ impl Notebook {
     /// Gets the image list associated with the notebook.
     /// The notebook owns the image list, so the caller should not delete it.
     pub fn get_image_list(&self) -> Option<ImageList> {
-        let ptr = unsafe {
-            ffi::wxd_Notebook_GetImageList(self.window.as_ptr() as *mut ffi::wxd_Notebook_t)
-        };
+        let ptr = unsafe { ffi::wxd_Notebook_GetImageList(self.window.as_ptr() as *mut ffi::wxd_Notebook_t) };
         if ptr.is_null() {
             None
         } else {
@@ -211,22 +171,15 @@ impl Notebook {
     /// Returns `None` if the page index is out of bounds.
     pub fn get_page(&self, index: usize) -> Option<Window> {
         unsafe {
-            let ptr =
-                ffi::wxd_Notebook_GetPage(self.window.as_ptr() as *mut ffi::wxd_Notebook_t, index);
-            if ptr.is_null() {
-                None
-            } else {
-                Some(Window::from_ptr(ptr))
-            }
+            let ptr = ffi::wxd_Notebook_GetPage(self.window.as_ptr() as *mut ffi::wxd_Notebook_t, index);
+            if ptr.is_null() { None } else { Some(Window::from_ptr(ptr)) }
         }
     }
 
     /// Removes the page at the given index.
     /// Returns `true` if the page was removed successfully.
     pub fn remove_page(&self, index: usize) -> bool {
-        unsafe {
-            ffi::wxd_Notebook_RemovePage(self.window.as_ptr() as *mut ffi::wxd_Notebook_t, index)
-        }
+        unsafe { ffi::wxd_Notebook_RemovePage(self.window.as_ptr() as *mut ffi::wxd_Notebook_t, index) }
     }
 }
 
@@ -283,11 +236,7 @@ impl NotebookPageChangedEvent {
             return None;
         }
         let val = unsafe { ffi::wxd_NotebookEvent_GetSelection(self.base.0) };
-        if val == ffi::WXD_NOT_FOUND as i32 {
-            None
-        } else {
-            Some(val)
-        }
+        if val == ffi::WXD_NOT_FOUND as i32 { None } else { Some(val) }
     }
 
     /// Gets the page that was selected before the change.
@@ -297,11 +246,7 @@ impl NotebookPageChangedEvent {
             return None;
         }
         let val = unsafe { ffi::wxd_NotebookEvent_GetOldSelection(self.base.0) };
-        if val == ffi::WXD_NOT_FOUND as i32 {
-            None
-        } else {
-            Some(val)
-        }
+        if val == ffi::WXD_NOT_FOUND as i32 { None } else { Some(val) }
     }
 }
 

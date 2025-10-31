@@ -19,7 +19,7 @@ widget_style_enum!(
 #[derive(Clone)]
 pub struct FlexGridSizer {
     raw_specific_ptr: *mut ffi::wxd_FlexGridSizer_t, // Specific pointer for FlexGridSizer FFI calls
-    sizer_base: Sizer, // Base Sizer for common functionality and Deref
+    sizer_base: Sizer,                               // Base Sizer for common functionality and Deref
 }
 
 impl FlexGridSizer {
@@ -46,30 +46,19 @@ impl FlexGridSizer {
 
     // FFI calls now use raw_specific_ptr
     pub fn add_growable_col(&self, idx: usize, proportion: i32) {
-        unsafe {
-            ffi::wxd_FlexGridSizer_AddGrowableCol(self.raw_specific_ptr, idx, proportion);
-        }
+        unsafe { ffi::wxd_FlexGridSizer_AddGrowableCol(self.raw_specific_ptr, idx, proportion) };
     }
 
     pub fn add_growable_row(&self, idx: usize, proportion: i32) {
-        unsafe {
-            ffi::wxd_FlexGridSizer_AddGrowableRow(self.raw_specific_ptr, idx, proportion);
-        }
+        unsafe { ffi::wxd_FlexGridSizer_AddGrowableRow(self.raw_specific_ptr, idx, proportion) };
     }
 
     pub fn set_flexible_direction(&self, direction: i32) {
-        unsafe {
-            ffi::wxd_FlexGridSizer_SetFlexibleDirection(self.raw_specific_ptr, direction);
-        }
+        unsafe { ffi::wxd_FlexGridSizer_SetFlexibleDirection(self.raw_specific_ptr, direction) };
     }
 
     pub fn set_non_flexible_grow_mode(&self, mode: FlexGrowMode) {
-        unsafe {
-            ffi::wxd_FlexGridSizer_SetNonFlexibleGrowMode(
-                self.raw_specific_ptr,
-                mode.bits() as i32,
-            );
-        }
+        unsafe { ffi::wxd_FlexGridSizer_SetNonFlexibleGrowMode(self.raw_specific_ptr, mode.bits() as i32) };
     }
 
     // REMOVED sizer_ptr method, use as_sizer_ptr() from trait or Deref
@@ -130,12 +119,10 @@ impl FlexGridSizerBuilder {
     }
 
     pub fn build(self) -> FlexGridSizer {
-        let ptr = unsafe {
-            if let Some(g) = self.gap {
-                ffi::wxd_FlexGridSizer_CreateWithGap(self.rows, self.cols, g.width, g.height)
-            } else {
-                ffi::wxd_FlexGridSizer_Create(self.rows, self.cols, self.vgap, self.hgap)
-            }
+        let ptr = if let Some(g) = self.gap {
+            unsafe { ffi::wxd_FlexGridSizer_CreateWithGap(self.rows, self.cols, g.width, g.height) }
+        } else {
+            unsafe { ffi::wxd_FlexGridSizer_Create(self.rows, self.cols, self.vgap, self.hgap) }
         };
         // Use the unsafe from_ptr constructor
         unsafe { FlexGridSizer::from_ptr(ptr).expect("Failed to create wxFlexGridSizer") }

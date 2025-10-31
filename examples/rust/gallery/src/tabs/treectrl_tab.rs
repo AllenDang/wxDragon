@@ -12,10 +12,7 @@ struct PersonData {
 impl PersonData {
     /// Creates a display string for the data
     fn to_display_string(&self) -> String {
-        format!(
-            "Person: {}\nAge: {}\nRole: {}",
-            self.name, self.age, self.role
-        )
+        format!("Person: {}\nAge: {}\nRole: {}", self.name, self.age, self.role)
     }
 }
 
@@ -98,9 +95,7 @@ impl TreeCtrlTabControls {
 
 pub fn create_treectrl_tab(parent: &Notebook) -> TreeCtrlTabControls {
     // Create the main panel
-    let panel = Panel::builder(parent)
-        .with_style(PanelStyle::TabTraversal)
-        .build();
+    let panel = Panel::builder(parent).with_style(PanelStyle::TabTraversal).build();
 
     // Create the tree control with some styles
     let tree_ctrl = TreeCtrl::builder(&panel)
@@ -120,9 +115,7 @@ pub fn create_treectrl_tab(parent: &Notebook) -> TreeCtrlTabControls {
         ArtId::Error,
     ];
     for art_id in art_ids.iter() {
-        if let Some(bmp) =
-            ArtProvider::get_bitmap(*art_id, ArtClient::FrameIcon, Some(Size::new(16, 16)))
-        {
+        if let Some(bmp) = ArtProvider::get_bitmap(*art_id, ArtClient::FrameIcon, Some(Size::new(16, 16))) {
             icons.push(image_list.add_bitmap(&bmp));
         } else {
             println!("Failed to load icon {art_id:?} for TreeCtrl ImageList");
@@ -147,12 +140,7 @@ pub fn create_treectrl_tab(parent: &Notebook) -> TreeCtrlTabControls {
         role: "CEO".to_string(),
     };
     let root_id = tree_ctrl
-        .add_root_with_data(
-            "Company Hierarchy",
-            ceo_data,
-            Some(icons[0]),
-            Some(icons[1]),
-        ) // Folder icons
+        .add_root_with_data("Company Hierarchy", ceo_data, Some(icons[0]), Some(icons[1])) // Folder icons
         .unwrap();
 
     // 2. Add departments with different data types
@@ -164,13 +152,7 @@ pub fn create_treectrl_tab(parent: &Notebook) -> TreeCtrlTabControls {
         deadline: "2024-12-31".to_string(),
     };
     let eng_id = tree_ctrl
-        .append_item_with_data(
-            &root_id,
-            "Engineering",
-            eng_project,
-            Some(icons[0]),
-            Some(icons[1]),
-        ) // Folder icons
+        .append_item_with_data(&root_id, "Engineering", eng_project, Some(icons[0]), Some(icons[1])) // Folder icons
         .unwrap();
 
     // Add engineers with PersonData
@@ -180,13 +162,7 @@ pub fn create_treectrl_tab(parent: &Notebook) -> TreeCtrlTabControls {
         role: "Lead Engineer".to_string(),
     };
     tree_ctrl
-        .append_item_with_data(
-            &eng_id,
-            "Alice Johnson",
-            eng_lead,
-            Some(icons[2]),
-            Some(icons[2]),
-        ) // File icon
+        .append_item_with_data(&eng_id, "Alice Johnson", eng_lead, Some(icons[2]), Some(icons[2])) // File icon
         .unwrap();
 
     let dev1 = PersonData {
@@ -195,13 +171,7 @@ pub fn create_treectrl_tab(parent: &Notebook) -> TreeCtrlTabControls {
         role: "Software Developer".to_string(),
     };
     tree_ctrl
-        .append_item_with_data(
-            &eng_id,
-            "Bob Williams",
-            dev1,
-            Some(icons[2]),
-            Some(icons[2]),
-        ) // File icon
+        .append_item_with_data(&eng_id, "Bob Williams", dev1, Some(icons[2]), Some(icons[2])) // File icon
         .unwrap();
 
     let dev2 = PersonData {
@@ -265,13 +235,7 @@ pub fn create_treectrl_tab(parent: &Notebook) -> TreeCtrlTabControls {
         role: "CFO".to_string(),
     };
     tree_ctrl
-        .append_item_with_data(
-            &finance_id,
-            "Eve Brown",
-            finance_lead,
-            Some(icons[2]),
-            Some(icons[2]),
-        ) // File icon
+        .append_item_with_data(&finance_id, "Eve Brown", finance_lead, Some(icons[2]), Some(icons[2])) // File icon
         .unwrap();
 
     // Expand the root item to show the structure
@@ -286,9 +250,7 @@ pub fn create_treectrl_tab(parent: &Notebook) -> TreeCtrlTabControls {
 
     // Right side: Info panel
     let info_sizer = BoxSizer::builder(Orientation::Vertical).build();
-    let info_title = StaticText::builder(&panel)
-        .with_label("Item Information:")
-        .build();
+    let info_title = StaticText::builder(&panel).with_label("Item Information:").build();
 
     info_sizer.add(&info_title, 0, SizerFlag::All, 5);
     info_sizer.add(&info_text, 1, SizerFlag::Expand | SizerFlag::All, 10);

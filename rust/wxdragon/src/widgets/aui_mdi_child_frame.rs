@@ -25,10 +25,7 @@ pub struct AuiMdiChildFrame {
 }
 
 impl AuiMdiChildFrame {
-    fn from_ptr(
-        ptr: *mut ffi::wxd_AuiMDIChildFrame_t,
-        parent_ptr: *mut ffi::wxd_AuiMDIParentFrame_t,
-    ) -> Self {
+    fn from_ptr(ptr: *mut ffi::wxd_AuiMDIChildFrame_t, parent_ptr: *mut ffi::wxd_AuiMDIParentFrame_t) -> Self {
         AuiMdiChildFrame {
             window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
             parent_ptr,

@@ -117,11 +117,7 @@ fn main() {
         // Create columns with different renderers
         let name_column = DataViewColumn::new(
             "Name",
-            &DataViewTextRenderer::new(
-                VariantType::String,
-                DataViewCellMode::Inert,
-                DataViewAlign::Left,
-            ),
+            &DataViewTextRenderer::new(VariantType::String, DataViewCellMode::Inert, DataViewAlign::Left),
             0,
             100,
             DataViewAlign::Left,

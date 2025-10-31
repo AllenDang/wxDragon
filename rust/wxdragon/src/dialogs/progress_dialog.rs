@@ -39,12 +39,7 @@ pub struct ProgressDialogBuilder<'a, W: WxWidget> {
 
 impl ProgressDialog {
     /// Creates a builder for a progress dialog.
-    pub fn builder<'a, W: WxWidget>(
-        parent: &'a W,
-        title: &str,
-        message: &str,
-        maximum: i32,
-    ) -> ProgressDialogBuilder<'a, W> {
+    pub fn builder<'a, W: WxWidget>(parent: &'a W, title: &str, message: &str, maximum: i32) -> ProgressDialogBuilder<'a, W> {
         ProgressDialogBuilder {
             parent,
             title: title.to_string(),
@@ -95,8 +90,7 @@ impl ProgressDialog {
         let newmsg_ptr = c_newmsg.as_ref().map_or(ptr::null(), |cs| cs.as_ptr());
 
         let mut skip = false;
-        let result =
-            unsafe { ffi::wxd_ProgressDialog_Update(self.as_ptr(), value, newmsg_ptr, &mut skip) };
+        let result = unsafe { ffi::wxd_ProgressDialog_Update(self.as_ptr(), value, newmsg_ptr, &mut skip) };
 
         (result, skip)
     }

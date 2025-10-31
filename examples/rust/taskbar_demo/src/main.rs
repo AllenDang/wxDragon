@@ -15,17 +15,13 @@ fn main() {
         let panel = Panel::builder(&frame).build();
         let sizer = BoxSizer::builder(Orientation::Vertical).build();
 
-        let title = StaticText::builder(&panel)
-            .with_label("TaskBar Demo - wxDragon")
-            .build();
+        let title = StaticText::builder(&panel).with_label("TaskBar Demo - wxDragon").build();
 
         let info = StaticText::builder(&panel)
             .with_label("This application demonstrates TaskBarIcon functionality.")
             .build();
 
-        let status = StaticText::builder(&panel)
-            .with_label("Creating TaskBarIcon...")
-            .build();
+        let status = StaticText::builder(&panel).with_label("Creating TaskBarIcon...").build();
 
         sizer.add(&title, 0, SizerFlag::All | SizerFlag::Expand, 10);
         sizer.add(&info, 0, SizerFlag::All | SizerFlag::Expand, 10);

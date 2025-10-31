@@ -46,19 +46,9 @@ pub fn create_aui_tab(parent: &Notebook) -> AuiTabControls {
         .build();
 
     // Add tools with IDs so we can identify them in the event handler
-    toolbar.add_tool(
-        1001,
-        "Save Perspective",
-        "Save the current layout",
-        WidgetItemKind::Normal,
-    );
+    toolbar.add_tool(1001, "Save Perspective", "Save the current layout", WidgetItemKind::Normal);
     toolbar.add_separator();
-    toolbar.add_tool(
-        1002,
-        "Load Perspective",
-        "Restore a saved layout",
-        WidgetItemKind::Normal,
-    );
+    toolbar.add_tool(1002, "Load Perspective", "Restore a saved layout", WidgetItemKind::Normal);
     toolbar.add_stretch_spacer(1); // Add stretch space to push tools to the left
 
     // Realize the toolbar to finalize its layout
@@ -80,7 +70,9 @@ pub fn create_aui_tab(parent: &Notebook) -> AuiTabControls {
     let text3 = TextCtrl::builder(&panel)
         .with_id(ID_ANY as i32)
         .with_size(Size::new(200, 200))
-        .with_value("Text Control 3 - Center Pane\nThis is the main content area.\nOther panes will dock around this central pane.")
+        .with_value(
+            "Text Control 3 - Center Pane\nThis is the main content area.\nOther panes will dock around this central pane.",
+        )
         .build();
 
     // Create the AuiManager using the builder pattern to ensure proper lifecycle management

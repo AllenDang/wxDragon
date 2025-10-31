@@ -35,16 +35,12 @@ impl Gauge {
 
     /// Sets the range (maximum value) of the gauge.
     pub fn set_range(&self, range: i32) {
-        unsafe {
-            ffi::wxd_Gauge_SetRange(self.window.handle_ptr() as *mut RawGauge, range as c_int)
-        }
+        unsafe { ffi::wxd_Gauge_SetRange(self.window.handle_ptr() as *mut RawGauge, range as c_int) }
     }
 
     /// Sets the current value of the gauge.
     pub fn set_value(&self, value: i32) {
-        unsafe {
-            ffi::wxd_Gauge_SetValue(self.window.handle_ptr() as *mut RawGauge, value as c_int)
-        }
+        unsafe { ffi::wxd_Gauge_SetValue(self.window.handle_ptr() as *mut RawGauge, value as c_int) }
     }
 
     /// Gets the current value of the gauge.

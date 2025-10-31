@@ -164,18 +164,12 @@ fn get_class_mapping() -> HashMap<&'static str, &'static str> {
     map.insert("wxHyperlinkCtrl", "wxdragon::widgets::HyperlinkCtrl");
     map.insert("wxSearchCtrl", "wxdragon::widgets::SearchCtrl");
     map.insert("wxStyledTextCtrl", "wxdragon::widgets::StyledTextCtrl");
-    map.insert(
-        "wxActivityIndicator",
-        "wxdragon::widgets::ActivityIndicator",
-    );
+    map.insert("wxActivityIndicator", "wxdragon::widgets::ActivityIndicator");
     map.insert("wxAnimationCtrl", "wxdragon::widgets::AnimationCtrl");
     map.insert("wxBitmapComboBox", "wxdragon::widgets::BitmapComboBox");
     map.insert("wxCalendarCtrl", "wxdragon::widgets::CalendarCtrl");
     map.insert("wxColourPickerCtrl", "wxdragon::widgets::ColourPickerCtrl");
-    map.insert(
-        "wxCommandLinkButton",
-        "wxdragon::widgets::CommandLinkButton",
-    );
+    map.insert("wxCommandLinkButton", "wxdragon::widgets::CommandLinkButton");
     map.insert("wxDatePickerCtrl", "wxdragon::widgets::DatePickerCtrl");
     map.insert("wxDirPickerCtrl", "wxdragon::widgets::DirPickerCtrl");
     map.insert("wxEditableListBox", "wxdragon::widgets::EditableListBox");
@@ -190,10 +184,7 @@ fn get_class_mapping() -> HashMap<&'static str, &'static str> {
     map.insert("wxAuiManager", "wxdragon::widgets::AuiManager");
     map.insert("wxAuiNotebook", "wxdragon::widgets::AuiNotebook");
     map.insert("wxAuiToolBar", "wxdragon::widgets::AuiToolBar");
-    map.insert(
-        "wxAuiMDIParentFrame",
-        "wxdragon::widgets::AuiMDIParentFrame",
-    );
+    map.insert("wxAuiMDIParentFrame", "wxdragon::widgets::AuiMDIParentFrame");
     map.insert("wxAuiMDIChildFrame", "wxdragon::widgets::AuiMDIChildFrame");
 
     // Frame-related widgets
@@ -231,24 +222,20 @@ fn generate_xrc_struct(input: XrcMacroInput) -> syn::Result<proc_macro2::TokenSt
     let widget_objects: Vec<_> = all_objects
         .into_iter()
         .filter(|obj| {
-            !obj.class.contains("Sizer")
-                && !obj.class.contains("sizeritem")
-                && !obj.class.contains("spacer")
-                && obj.class != "wxMenu" // Skip Menu objects - they're part of MenuBar
+            !obj.class.contains("Sizer") && !obj.class.contains("sizeritem") && !obj.class.contains("spacer")
+            // Skip Menu objects - they're part of MenuBar
+             && obj.class != "wxMenu"
         })
         .collect();
 
     // Separate tools and menu items from other widgets for special handling
-    let (tool_objects, remaining_objects): (Vec<_>, Vec<_>) =
-        widget_objects.iter().partition(|obj| obj.class == "tool");
+    let (tool_objects, remaining_objects): (Vec<_>, Vec<_>) = widget_objects.iter().partition(|obj| obj.class == "tool");
 
-    let (menu_item_objects, remaining_objects2): (Vec<_>, Vec<_>) = remaining_objects
-        .into_iter()
-        .partition(|obj| obj.class == "wxMenuItem");
+    let (menu_item_objects, remaining_objects2): (Vec<_>, Vec<_>) =
+        remaining_objects.into_iter().partition(|obj| obj.class == "wxMenuItem");
 
-    let (menubar_objects, non_special_objects): (Vec<_>, Vec<_>) = remaining_objects2
-        .into_iter()
-        .partition(|obj| obj.class == "wxMenuBar");
+    let (menubar_objects, non_special_objects): (Vec<_>, Vec<_>) =
+        remaining_objects2.into_iter().partition(|obj| obj.class == "wxMenuBar");
 
     // Generate the struct and implementation
     let struct_name = &input.struct_name;
@@ -257,9 +244,7 @@ fn generate_xrc_struct(input: XrcMacroInput) -> syn::Result<proc_macro2::TokenSt
     // Generate struct fields for all named objects
     let struct_fields = widget_objects.iter().map(|obj| {
         let field_name = Ident::new(&obj.name, proc_macro2::Span::call_site());
-        let type_str = class_mapping
-            .get(obj.class.as_str())
-            .unwrap_or(&"wxdragon::window::Window");
+        let type_str = class_mapping.get(obj.class.as_str()).unwrap_or(&"wxdragon::window::Window");
 
         let field_type: syn::Type = syn::parse_str(type_str).unwrap();
         quote! { pub #field_name: #field_type }
@@ -289,9 +274,7 @@ fn generate_xrc_struct(input: XrcMacroInput) -> syn::Result<proc_macro2::TokenSt
             }
         } else {
             // Regular widgets are found within the root - explicitly specify the widget type
-            let type_str = class_mapping
-                .get(obj.class.as_str())
-                .unwrap_or(&"wxdragon::window::Window");
+            let type_str = class_mapping.get(obj.class.as_str()).unwrap_or(&"wxdragon::window::Window");
             let widget_type: syn::Type = syn::parse_str(type_str).unwrap();
 
             quote! {
@@ -444,9 +427,7 @@ fn read_xrc_file(path: &str) -> syn::Result<String> {
                 if path.starts_with("../") {
                     std::path::PathBuf::from(manifest_dir).join(path.trim_start_matches("../"))
                 } else {
-                    std::path::PathBuf::from(manifest_dir)
-                        .join("src")
-                        .join(path)
+                    std::path::PathBuf::from(manifest_dir).join("src").join(path)
                 }
             })
             .unwrap_or_else(|_| std::path::PathBuf::from(path)),
@@ -468,10 +449,7 @@ fn read_xrc_file(path: &str) -> syn::Result<String> {
              \nTried paths: {:?} \
              \n\nNote: Use paths relative to your crate root or source file, just like include_str!",
             path,
-            possible_paths
-                .iter()
-                .map(|p| p.display().to_string())
-                .collect::<Vec<_>>()
+            possible_paths.iter().map(|p| p.display().to_string()).collect::<Vec<_>>()
         ),
     ))
 }
@@ -498,12 +476,7 @@ fn parse_xrc_content(content: &str) -> syn::Result<Vec<XrcObject>> {
 
                 // Parse attributes
                 for attr in e.attributes() {
-                    let attr = attr.map_err(|e| {
-                        Error::new(
-                            proc_macro2::Span::call_site(),
-                            format!("XML parsing error: {e}"),
-                        )
-                    })?;
+                    let attr = attr.map_err(|e| Error::new(proc_macro2::Span::call_site(), format!("XML parsing error: {e}")))?;
 
                     match attr.key.as_ref() {
                         b"name" => obj.name = String::from_utf8_lossy(&attr.value).into_owned(),
@@ -530,10 +503,7 @@ fn parse_xrc_content(content: &str) -> syn::Result<Vec<XrcObject>> {
             }
             Ok(Event::Eof) => break,
             Err(e) => {
-                return Err(Error::new(
-                    proc_macro2::Span::call_site(),
-                    format!("XML parsing error: {e}"),
-                ));
+                return Err(Error::new(proc_macro2::Span::call_site(), format!("XML parsing error: {e}")));
             }
             _ => {}
         }

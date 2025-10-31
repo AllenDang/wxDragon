@@ -110,9 +110,7 @@ impl<'a, W: WxWidget> TextDropTargetBuilder<'a, W> {
     /// Create the TextDropTarget with the configured callbacks.
     pub fn build(self) -> TextDropTarget {
         // Ensure we have a text drop callback
-        let on_drop_text = self
-            .on_drop_text
-            .expect("on_drop_text callback is required");
+        let on_drop_text = self.on_drop_text.expect("on_drop_text callback is required");
 
         // Create a struct to hold all our callbacks
         let callbacks = TextDropTargetCallbacks {
@@ -251,9 +249,7 @@ impl<'a, W: WxWidget> FileDropTargetBuilder<'a, W> {
     /// Create the FileDropTarget with the configured callbacks.
     pub fn build(self) -> FileDropTarget {
         // Ensure we have a files drop callback
-        let on_drop_files = self
-            .on_drop_files
-            .expect("on_drop_files callback is required");
+        let on_drop_files = self.on_drop_files.expect("on_drop_files callback is required");
 
         // Create a struct to hold all our callbacks
         let callbacks = FileDropTargetCallbacks {
@@ -381,12 +377,7 @@ extern "C" fn text_on_data_trampoline(
     }
 }
 
-extern "C" fn text_on_drop_text_trampoline(
-    text: *const c_char,
-    x: i32,
-    y: i32,
-    data_ptr: *mut c_void,
-) -> bool {
+extern "C" fn text_on_drop_text_trampoline(text: *const c_char, x: i32, y: i32, data_ptr: *mut c_void) -> bool {
     if text.is_null() || data_ptr.is_null() {
         return false;
     }

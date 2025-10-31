@@ -148,11 +148,7 @@ impl MenuEventsApp {
 
             status_bar_highlight.set_status_text(help_text, 0);
 
-            log::trace!(
-                "✨ Menu Highlighted - ID: {}, Help: {}",
-                event.get_id(),
-                help_text
-            );
+            log::trace!("✨ Menu Highlighted - ID: {}, Help: {}", event.get_id(), help_text);
         });
 
         // Traditional menu selection events
@@ -226,11 +222,7 @@ impl MenuEventsApp {
 
         // Track menu lifecycle for debugging
         self.frame.track_menu_lifecycle(|event_type, is_opening| {
-            let action = if is_opening {
-                "🔄 Opening"
-            } else {
-                "🔄 Closing"
-            };
+            let action = if is_opening { "🔄 Opening" } else { "🔄 Closing" };
             log::trace!("{} menu lifecycle event: {}", action, event_type);
         });
     }
@@ -266,11 +258,7 @@ impl MenuEventsApp {
         // Create columns
         let name_col = DataViewColumn::new(
             "Name",
-            &DataViewTextRenderer::new(
-                VariantType::String,
-                DataViewCellMode::Inert,
-                DataViewAlign::Left,
-            ),
+            &DataViewTextRenderer::new(VariantType::String, DataViewCellMode::Inert, DataViewAlign::Left),
             0,
             100,
             DataViewAlign::Left,
@@ -278,11 +266,7 @@ impl MenuEventsApp {
         );
         let age_col = DataViewColumn::new(
             "Age",
-            &DataViewTextRenderer::new(
-                VariantType::Int32,
-                DataViewCellMode::Inert,
-                DataViewAlign::Center,
-            ),
+            &DataViewTextRenderer::new(VariantType::Int32, DataViewCellMode::Inert, DataViewAlign::Center),
             1,
             60,
             DataViewAlign::Center,
@@ -290,11 +274,7 @@ impl MenuEventsApp {
         );
         let city_col = DataViewColumn::new(
             "City",
-            &DataViewTextRenderer::new(
-                VariantType::String,
-                DataViewCellMode::Inert,
-                DataViewAlign::Left,
-            ),
+            &DataViewTextRenderer::new(VariantType::String, DataViewCellMode::Inert, DataViewAlign::Left),
             2,
             100,
             DataViewAlign::Left,
@@ -302,11 +282,7 @@ impl MenuEventsApp {
         );
         let status_col = DataViewColumn::new(
             "Status",
-            &DataViewTextRenderer::new(
-                VariantType::String,
-                DataViewCellMode::Inert,
-                DataViewAlign::Center,
-            ),
+            &DataViewTextRenderer::new(VariantType::String, DataViewCellMode::Inert, DataViewAlign::Center),
             3,
             80,
             DataViewAlign::Center,

@@ -165,9 +165,7 @@ impl NotificationMessage {
     /// Returns `true` if the action was added successfully, `false` otherwise (e.g., too many actions).
     pub fn add_action(&self, action_id: i32, label: &str) -> WxResult<bool> {
         if self.ptr.is_null() {
-            return Err(Error::FfiCreation(
-                "NotificationMessage pointer is null".to_string(),
-            ));
+            return Err(Error::FfiCreation("NotificationMessage pointer is null".to_string()));
         }
         if action_id <= 0 {
             // wxWidgets requires action IDs to be > 0
@@ -176,9 +174,7 @@ impl NotificationMessage {
             return Ok(false);
         }
         let c_label = CString::new(label)?; // This can return NulError, which converts to Error::NulError
-        let result = unsafe {
-            ffi::wxd_NotificationMessage_AddAction(self.ptr, action_id, c_label.as_ptr())
-        };
+        let result = unsafe { ffi::wxd_NotificationMessage_AddAction(self.ptr, action_id, c_label.as_ptr()) };
         Ok(result)
     }
 
@@ -271,22 +267,13 @@ impl NotificationMessageBuilder {
     /// Returns `Some(NotificationMessage)` on success, or `None` if creation failed.
     pub fn build(self) -> WxResult<NotificationMessage> {
         let c_title = CString::new(self.title)?;
-        let c_message = CString::new(self.message)?;
-        let parent_ptr = self.parent.unwrap_or(std::ptr::null_mut());
+        let msg = CString::new(self.message)?;
+        let prt = self.parent.unwrap_or(std::ptr::null_mut());
 
-        let ptr = unsafe {
-            ffi::wxd_NotificationMessage_Create(
-                c_title.as_ptr(),
-                c_message.as_ptr(),
-                parent_ptr,
-                self.style.bits() as c_int,
-            )
-        };
+        let ptr = unsafe { ffi::wxd_NotificationMessage_Create(c_title.as_ptr(), msg.as_ptr(), prt, self.style.bits() as c_int) };
 
         if ptr.is_null() {
-            return Err(Error::FfiCreation(
-                "Failed to create notification message".to_string(),
-            ));
+            return Err(Error::FfiCreation("Failed to create notification message".to_string()));
         }
 
         Ok(NotificationMessage { ptr })

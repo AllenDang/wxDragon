@@ -62,7 +62,7 @@ impl Default for VirtualListInternalParams {
 
             // Interaction
             keyboard_scroll_amount: 300,
-            safety_padding: 20, // Pixels of padding to ensure last item visibility
+            safety_padding: 20,       // Pixels of padding to ensure last item visibility
             measurement_tolerance: 5, // Pixel tolerance for measurement stability
         }
     }
@@ -77,12 +77,7 @@ impl VirtualListInternalParams {
         mouse_wheel_multiplier: f32,
     ) -> Self {
         let mut params = Self::default();
-        params.auto_configure(
-            viewport_size,
-            scrollbar_size,
-            keyboard_scroll_amount,
-            mouse_wheel_multiplier,
-        );
+        params.auto_configure(viewport_size, scrollbar_size, keyboard_scroll_amount, mouse_wheel_multiplier);
         params
     }
 
@@ -111,8 +106,7 @@ impl VirtualListInternalParams {
         };
 
         // Pool size: enough for visible items + buffer + some extra for smooth scrolling
-        self.pool_target_size =
-            ((visible_items_estimate as usize) + self.buffer_size * 2 + 5).min(50);
+        self.pool_target_size = ((visible_items_estimate as usize) + self.buffer_size * 2 + 5).min(50);
 
         // Cache size: scale with expected usage, larger viewports need more cache
         self.max_measurement_cache_size = ((visible_items_estimate as usize) * 10).clamp(100, 2000);

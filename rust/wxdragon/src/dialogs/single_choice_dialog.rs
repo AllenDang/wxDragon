@@ -73,36 +73,33 @@ impl SingleChoiceDialog {
     /// Gets the string of the selection made by the user.
     /// Returns `None` if no selection was made, the dialog was cancelled, or an error occurred.
     pub fn get_string_selection(&self) -> Option<String> {
-        unsafe {
-            let mut buffer: [c_char; 1024] = [0; 1024]; // Reasonable buffer size
-            let len_needed = ffi::wxd_SingleChoiceDialog_GetStringSelection(
-                self.as_ptr(),
-                buffer.as_mut_ptr(),
-                buffer.len() as i32,
-            );
+        let mut buffer: [c_char; 1024] = [0; 1024]; // Reasonable buffer size
+        let len_needed =
+            unsafe { ffi::wxd_SingleChoiceDialog_GetStringSelection(self.as_ptr(), buffer.as_mut_ptr(), buffer.len() as i32) };
 
-            if len_needed < 0 {
-                return None; // Error or dialog cancelled
-            }
+        if len_needed < 0 {
+            return None; // Error or dialog cancelled
+        }
 
-            let len_needed_usize = len_needed as usize;
-            if len_needed_usize < buffer.len() {
-                let c_str = CStr::from_ptr(buffer.as_ptr());
-                Some(c_str.to_string_lossy().into_owned())
-            } else {
-                // Allocate exact size if needed
-                let mut vec_buffer: Vec<u8> = vec![0; len_needed_usize + 1];
-                let len_copied = ffi::wxd_SingleChoiceDialog_GetStringSelection(
+        let len_needed_usize = len_needed as usize;
+        if len_needed_usize < buffer.len() {
+            let c_str = unsafe { CStr::from_ptr(buffer.as_ptr()) };
+            Some(c_str.to_string_lossy().into_owned())
+        } else {
+            // Allocate exact size if needed
+            let mut vec_buffer: Vec<u8> = vec![0; len_needed_usize + 1];
+            let len_copied = unsafe {
+                ffi::wxd_SingleChoiceDialog_GetStringSelection(
                     self.as_ptr(),
                     vec_buffer.as_mut_ptr() as *mut c_char,
                     vec_buffer.len() as i32,
-                );
-                if len_copied == len_needed {
-                    vec_buffer.pop();
-                    String::from_utf8(vec_buffer).ok()
-                } else {
-                    None // Error on second call
-                }
+                )
+            };
+            if len_copied == len_needed {
+                vec_buffer.pop();
+                String::from_utf8(vec_buffer).ok()
+            } else {
+                None // Error on second call
             }
         }
     }
@@ -134,12 +131,7 @@ pub struct SingleChoiceDialogBuilder<'a> {
 }
 
 impl<'a> SingleChoiceDialogBuilder<'a> {
-    pub fn new(
-        parent: &'a dyn WxWidget,
-        message: &str,
-        caption: &str,
-        choices: &[&'a str],
-    ) -> Self {
+    pub fn new(parent: &'a dyn WxWidget, message: &str, caption: &str, choices: &[&'a str]) -> Self {
         SingleChoiceDialogBuilder {
             parent,
             message: message.to_string(),

@@ -85,12 +85,9 @@ impl FileCtrl {
     // This is intended for internal use
     fn new_impl(config: FileCtrlConfig) -> Self {
         assert!(!config.parent_ptr.is_null(), "FileCtrl requires a parent");
-        let c_default_dir = CString::new(config.default_directory)
-            .expect("CString::new failed for default_directory");
-        let c_default_filename = CString::new(config.default_filename)
-            .expect("CString::new failed for default_filename");
-        let c_wild_card =
-            CString::new(config.wild_card).expect("CString::new failed for wild_card");
+        let c_default_dir = CString::new(config.default_directory).expect("CString::new failed for default_directory");
+        let c_default_filename = CString::new(config.default_filename).expect("CString::new failed for default_filename");
+        let c_wild_card = CString::new(config.wild_card).expect("CString::new failed for wild_card");
         let c_name = CString::new(config.name).expect("CString::new failed for name");
 
         let raw_ptr = unsafe {

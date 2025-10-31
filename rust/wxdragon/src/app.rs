@@ -13,8 +13,7 @@ use wxdragon_sys as ffi; // Import Window and WxWidget trait
 type CallbackQueue = Arc<Mutex<VecDeque<Box<dyn FnOnce() + Send + 'static>>>>;
 
 // Queue for storing callbacks to be executed on the main thread
-static MAIN_THREAD_QUEUE: LazyLock<CallbackQueue> =
-    LazyLock::new(|| Arc::new(Mutex::new(VecDeque::new())));
+static MAIN_THREAD_QUEUE: LazyLock<CallbackQueue> = LazyLock::new(|| Arc::new(Mutex::new(VecDeque::new())));
 
 /// Schedules a callback to be executed on the main thread.
 ///
@@ -130,11 +129,7 @@ impl App {
         #[cfg(target_os = "macos")]
         {
             let handle = unsafe { ffi::wxd_GetApp() };
-            if handle.is_null() {
-                None
-            } else {
-                Some(App { handle })
-            }
+            if handle.is_null() { None } else { Some(App { handle }) }
         }
         #[cfg(not(target_os = "macos"))]
         {
@@ -224,9 +219,7 @@ pub fn get_app() -> Option<crate::appearance::App> {
 /// })
 /// .unwrap();
 /// ```
-pub fn set_appearance(
-    appearance: crate::appearance::Appearance,
-) -> crate::appearance::AppearanceResult {
+pub fn set_appearance(appearance: crate::appearance::Appearance) -> crate::appearance::AppearanceResult {
     use crate::appearance::AppAppearance;
 
     if let Some(app) = get_app() {
@@ -247,13 +240,7 @@ impl crate::event::AppEvents for App {
             let callback = Box::new(callback);
             let user_data = Box::into_raw(callback) as *mut c_void;
 
-            unsafe {
-                ffi::wxd_App_AddMacOpenFilesHandler(
-                    self.handle,
-                    Some(mac_open_files_trampoline::<F>),
-                    user_data,
-                );
-            }
+            unsafe { ffi::wxd_App_AddMacOpenFilesHandler(self.handle, Some(mac_open_files_trampoline::<F>), user_data) };
         }
         #[cfg(not(target_os = "macos"))]
         {
@@ -270,13 +257,7 @@ impl crate::event::AppEvents for App {
             let callback = Box::new(callback);
             let user_data = Box::into_raw(callback) as *mut c_void;
 
-            unsafe {
-                ffi::wxd_App_AddMacOpenURLHandler(
-                    self.handle,
-                    Some(mac_open_url_trampoline::<F>),
-                    user_data,
-                );
-            }
+            unsafe { ffi::wxd_App_AddMacOpenURLHandler(self.handle, Some(mac_open_url_trampoline::<F>), user_data) };
         }
         #[cfg(not(target_os = "macos"))]
         {
@@ -293,13 +274,7 @@ impl crate::event::AppEvents for App {
             let callback = Box::new(callback);
             let user_data = Box::into_raw(callback) as *mut c_void;
 
-            unsafe {
-                ffi::wxd_App_AddMacNewFileHandler(
-                    self.handle,
-                    Some(mac_new_file_trampoline::<F>),
-                    user_data,
-                );
-            }
+            unsafe { ffi::wxd_App_AddMacNewFileHandler(self.handle, Some(mac_new_file_trampoline::<F>), user_data) };
         }
         #[cfg(not(target_os = "macos"))]
         {
@@ -316,13 +291,7 @@ impl crate::event::AppEvents for App {
             let callback = Box::new(callback);
             let user_data = Box::into_raw(callback) as *mut c_void;
 
-            unsafe {
-                ffi::wxd_App_AddMacReopenAppHandler(
-                    self.handle,
-                    Some(mac_reopen_app_trampoline::<F>),
-                    user_data,
-                );
-            }
+            unsafe { ffi::wxd_App_AddMacReopenAppHandler(self.handle, Some(mac_reopen_app_trampoline::<F>), user_data) };
         }
         #[cfg(not(target_os = "macos"))]
         {
@@ -339,13 +308,7 @@ impl crate::event::AppEvents for App {
             let callback = Box::new(callback);
             let user_data = Box::into_raw(callback) as *mut c_void;
 
-            unsafe {
-                ffi::wxd_App_AddMacPrintFilesHandler(
-                    self.handle,
-                    Some(mac_print_files_trampoline::<F>),
-                    user_data,
-                );
-            }
+            unsafe { ffi::wxd_App_AddMacPrintFilesHandler(self.handle, Some(mac_print_files_trampoline::<F>), user_data) };
         }
         #[cfg(not(target_os = "macos"))]
         {
@@ -356,11 +319,8 @@ impl crate::event::AppEvents for App {
 
 // Trampoline functions for macOS
 #[cfg(target_os = "macos")]
-unsafe extern "C" fn mac_open_files_trampoline<F>(
-    user_data: *mut c_void,
-    files: *mut *const c_char,
-    count: c_int,
-) where
+unsafe extern "C" fn mac_open_files_trampoline<F>(user_data: *mut c_void, files: *mut *const c_char, count: c_int)
+where
     F: Fn(Vec<String>) + Send + 'static,
 {
     if user_data.is_null() || files.is_null() {
@@ -424,11 +384,8 @@ where
 }
 
 #[cfg(target_os = "macos")]
-unsafe extern "C" fn mac_print_files_trampoline<F>(
-    user_data: *mut c_void,
-    files: *mut *const c_char,
-    count: c_int,
-) where
+unsafe extern "C" fn mac_print_files_trampoline<F>(user_data: *mut c_void, files: *mut *const c_char, count: c_int)
+where
     F: Fn(Vec<String>) + Send + 'static,
 {
     if user_data.is_null() || files.is_null() {

@@ -61,35 +61,27 @@ impl FileDialog {
     /// Gets the full path of the selected file.
     /// Returns `None` if the dialog was cancelled or an error occurred.
     pub fn get_path(&self) -> Option<String> {
-        unsafe {
-            let mut buffer: [c_char; 2048] = [0; 2048]; // Larger buffer for paths
-            let len_needed = ffi::wxd_FileDialog_GetPath(
-                self.as_ptr(),
-                buffer.as_mut_ptr(),
-                buffer.len() as i32,
-            );
+        let mut buffer = [0; 2048]; // Larger buffer for paths
+        let len_needed = unsafe { ffi::wxd_FileDialog_GetPath(self.as_ptr(), buffer.as_mut_ptr(), buffer.len() as i32) };
 
-            if len_needed < 0 {
-                return None;
-            }
+        if len_needed < 0 {
+            return None;
+        }
 
-            let len_needed_usize = len_needed as usize;
-            if len_needed_usize < buffer.len() {
-                let c_str = CStr::from_ptr(buffer.as_ptr());
-                Some(c_str.to_string_lossy().into_owned())
+        let len_needed_usize = len_needed as usize;
+        if len_needed_usize < buffer.len() {
+            let c_str = unsafe { CStr::from_ptr(buffer.as_ptr()) };
+            Some(c_str.to_string_lossy().into_owned())
+        } else {
+            let mut vec_buffer: Vec<u8> = vec![0; len_needed_usize + 1];
+            let len_copied = unsafe {
+                ffi::wxd_FileDialog_GetPath(self.as_ptr(), vec_buffer.as_mut_ptr() as *mut c_char, vec_buffer.len() as i32)
+            };
+            if len_copied == len_needed {
+                vec_buffer.pop();
+                String::from_utf8(vec_buffer).ok()
             } else {
-                let mut vec_buffer: Vec<u8> = vec![0; len_needed_usize + 1];
-                let len_copied = ffi::wxd_FileDialog_GetPath(
-                    self.as_ptr(),
-                    vec_buffer.as_mut_ptr() as *mut c_char,
-                    vec_buffer.len() as i32,
-                );
-                if len_copied == len_needed {
-                    vec_buffer.pop();
-                    String::from_utf8(vec_buffer).ok()
-                } else {
-                    None
-                }
+                None
             }
         }
     }
@@ -97,44 +89,34 @@ impl FileDialog {
     /// Gets the full paths of the selected files (for multi-select dialogs).
     pub fn get_paths(&self) -> Vec<String> {
         let arr_str = WxdArrayString::new();
-        unsafe {
-            ffi::wxd_FileDialog_GetPaths(self.as_ptr(), arr_str.as_ptr());
-        }
+        unsafe { ffi::wxd_FileDialog_GetPaths(self.as_ptr(), arr_str.as_ptr()) };
         arr_str.into_vec()
     }
 
     /// Gets the filename part of the selected file.
     /// Returns `None` if the dialog was cancelled or an error occurred.
     pub fn get_filename(&self) -> Option<String> {
-        unsafe {
-            let mut buffer: [c_char; 1024] = [0; 1024];
-            let len_needed = ffi::wxd_FileDialog_GetFilename(
-                self.as_ptr(),
-                buffer.as_mut_ptr(),
-                buffer.len() as i32,
-            );
+        let mut buffer: [c_char; 1024] = [0; 1024];
+        let len_needed = unsafe { ffi::wxd_FileDialog_GetFilename(self.as_ptr(), buffer.as_mut_ptr(), buffer.len() as i32) };
 
-            if len_needed < 0 {
-                return None;
-            }
+        if len_needed < 0 {
+            return None;
+        }
 
-            let len_needed_usize = len_needed as usize;
-            if len_needed_usize < buffer.len() {
-                let c_str = CStr::from_ptr(buffer.as_ptr());
-                Some(c_str.to_string_lossy().into_owned())
+        let len_needed_usize = len_needed as usize;
+        if len_needed_usize < buffer.len() {
+            let c_str = unsafe { CStr::from_ptr(buffer.as_ptr()) };
+            Some(c_str.to_string_lossy().into_owned())
+        } else {
+            let mut vec_buffer: Vec<u8> = vec![0; len_needed_usize + 1];
+            let len_copied = unsafe {
+                ffi::wxd_FileDialog_GetFilename(self.as_ptr(), vec_buffer.as_mut_ptr() as *mut c_char, vec_buffer.len() as i32)
+            };
+            if len_copied == len_needed {
+                vec_buffer.pop();
+                String::from_utf8(vec_buffer).ok()
             } else {
-                let mut vec_buffer: Vec<u8> = vec![0; len_needed_usize + 1];
-                let len_copied = ffi::wxd_FileDialog_GetFilename(
-                    self.as_ptr(),
-                    vec_buffer.as_mut_ptr() as *mut c_char,
-                    vec_buffer.len() as i32,
-                );
-                if len_copied == len_needed {
-                    vec_buffer.pop();
-                    String::from_utf8(vec_buffer).ok()
-                } else {
-                    None
-                }
+                None
             }
         }
     }
@@ -153,11 +135,7 @@ impl FileDialog {
     pub fn get_directory(&self) -> Option<String> {
         unsafe {
             let mut buffer: [c_char; 2048] = [0; 2048];
-            let len_needed = ffi::wxd_FileDialog_GetDirectory(
-                self.as_ptr(),
-                buffer.as_mut_ptr(),
-                buffer.len() as i32,
-            );
+            let len_needed = ffi::wxd_FileDialog_GetDirectory(self.as_ptr(), buffer.as_mut_ptr(), buffer.len() as i32);
 
             if len_needed < 0 {
                 return None;
@@ -193,11 +171,7 @@ impl FileDialog {
     pub fn get_message(&self) -> Option<String> {
         unsafe {
             let mut buffer: [c_char; 1024] = [0; 1024];
-            let len_needed = ffi::wxd_FileDialog_GetMessage(
-                self.as_ptr(),
-                buffer.as_mut_ptr(),
-                buffer.len() as i32,
-            );
+            let len_needed = ffi::wxd_FileDialog_GetMessage(self.as_ptr(), buffer.as_mut_ptr(), buffer.len() as i32);
 
             if len_needed < 0 {
                 return None;
@@ -228,11 +202,7 @@ impl FileDialog {
     pub fn get_wildcard(&self) -> Option<String> {
         unsafe {
             let mut buffer: [c_char; 1024] = [0; 1024];
-            let len_needed = ffi::wxd_FileDialog_GetWildcard(
-                self.as_ptr(),
-                buffer.as_mut_ptr(),
-                buffer.len() as i32,
-            );
+            let len_needed = ffi::wxd_FileDialog_GetWildcard(self.as_ptr(), buffer.as_mut_ptr(), buffer.len() as i32);
 
             if len_needed < 0 {
                 return None;
@@ -395,16 +365,11 @@ impl<'a> FileDialogBuilder<'a> {
 
     pub fn build(self) -> FileDialog {
         let c_message = CString::new(self.message).expect("CString::new failed for message");
-        let c_default_dir =
-            CString::new(self.default_dir).expect("CString::new failed for default_dir");
-        let c_default_file =
-            CString::new(self.default_file).expect("CString::new failed for default_file");
+        let c_default_dir = CString::new(self.default_dir).expect("CString::new failed for default_dir");
+        let c_default_file = CString::new(self.default_file).expect("CString::new failed for default_file");
         let c_wildcard = CString::new(self.wildcard).expect("CString::new failed for wildcard");
         let parent_ptr = self.parent.handle_ptr();
-        assert!(
-            !parent_ptr.is_null(),
-            "FileDialog requires a valid parent window pointer."
-        );
+        assert!(!parent_ptr.is_null(), "FileDialog requires a valid parent window pointer.");
 
         let ptr = unsafe {
             ffi::wxd_FileDialog_Create(

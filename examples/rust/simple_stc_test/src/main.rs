@@ -12,9 +12,7 @@ impl MainFrame {
             .with_size(Size::new(800, 600))
             .build();
 
-        let stc = StyledTextCtrl::builder(&frame)
-            .with_size(Size::new(780, 580))
-            .build();
+        let stc = StyledTextCtrl::builder(&frame).with_size(Size::new(780, 580)).build();
 
         // Set some sample text
         stc.set_text("// Welcome to wxDragon StyledTextCtrl!\n\n");

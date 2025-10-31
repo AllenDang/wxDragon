@@ -15,19 +15,13 @@ fn main() {
         let sizer = BoxSizer::builder(Orientation::Vertical).build();
 
         // Button 1: Initially has no event bindings
-        let button1 = Button::builder(&panel)
-            .with_label("Button 1 (Append Log Entry)")
-            .build();
+        let button1 = Button::builder(&panel).with_label("Button 1 (Append Log Entry)").build();
 
         // Button 2: Remove event binding
-        let button2 = Button::builder(&panel)
-            .with_label("Button 2 (Remove Event Binding)")
-            .build();
+        let button2 = Button::builder(&panel).with_label("Button 2 (Remove Event Binding)").build();
 
         // Button 3: Add event binding
-        let button3 = Button::builder(&panel)
-            .with_label("Button 3 (Add Event Binding)")
-            .build();
+        let button3 = Button::builder(&panel).with_label("Button 3 (Add Event Binding)").build();
 
         sizer.add(&button1, 0, SizerFlag::Expand, 8);
         sizer.add(&button2, 0, SizerFlag::Expand, 8);
@@ -36,9 +30,7 @@ fn main() {
         // Simple multiline log area using a StaticText (supports '\n').
         // If you need scrolling, consider adding a TextCtrl wrapper later.
         let log_buffer = Rc::new(RefCell::new(String::from("Log:\n")));
-        let log_view = StaticText::builder(&panel)
-            .with_label(&log_buffer.borrow())
-            .build();
+        let log_view = StaticText::builder(&panel).with_label(&log_buffer.borrow()).build();
         sizer.add(&log_view, 1, SizerFlag::Expand, 8);
 
         panel.set_sizer(sizer, true);
@@ -65,26 +57,15 @@ fn main() {
             button2.on_click(move |_| {
                 let mut tokens_vec = tokens_clone.borrow_mut();
                 if tokens_vec.is_empty() {
-                    append_line(
-                        &log_buffer_clone,
-                        &log_view_clone,
-                        "No event bindings to remove!",
-                    );
+                    append_line(&log_buffer_clone, &log_view_clone, "No event bindings to remove!");
                 } else {
                     // Remove the first token
                     let token = tokens_vec.remove(0);
                     if button1_clone.unbind(token) {
-                        let line = format!(
-                            "Removed event binding! {} binding(s) remaining.",
-                            tokens_vec.len()
-                        );
+                        let line = format!("Removed event binding! {} binding(s) remaining.", tokens_vec.len());
                         append_line(&log_buffer_clone, &log_view_clone, &line);
                     } else {
-                        append_line(
-                            &log_buffer_clone,
-                            &log_view_clone,
-                            "Failed to unbind event!",
-                        );
+                        append_line(&log_buffer_clone, &log_view_clone, "Failed to unbind event!");
                     }
                 }
             });

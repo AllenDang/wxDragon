@@ -11,9 +11,7 @@ impl MediaControls {
     pub fn bind_events(&self) {
         // Bind events for media controls if any
         self.animation_ctrl.on_mouse_left_down(|_event| {
-            log::debug!(
-                "AnimationCtrl clicked - this event might not be standard for it, just for testing."
-            );
+            log::debug!("AnimationCtrl clicked - this event might not be standard for it, just for testing.");
         });
     }
 }
@@ -21,9 +19,7 @@ impl MediaControls {
 pub fn create_media_tab(notebook: &Notebook) -> MediaControls {
     let panel = Panel::builder(notebook).build();
     // Use a 2-column FlexGridSizer so each row is: [image | text]
-    let grid = FlexGridSizer::builder(0, 2)
-        .with_gap(Size::new(10, 10))
-        .build();
+    let grid = FlexGridSizer::builder(0, 2).with_gap(Size::new(10, 10)).build();
     // Make right column grow to give more space to text
     grid.add_growable_col(1, 1);
 
@@ -36,9 +32,7 @@ pub fn create_media_tab(notebook: &Notebook) -> MediaControls {
             Size::new(w as i32, h as i32)
         }
         Err(e) => {
-            log::warn!(
-                "Failed to load animation metadata to get size: {e}. Falling back to default."
-            );
+            log::warn!("Failed to load animation metadata to get size: {e}. Falling back to default.");
             Size::new(100, 100) // Fallback size
         }
     };
@@ -60,17 +54,10 @@ pub fn create_media_tab(notebook: &Notebook) -> MediaControls {
     }
 
     // Row 1: Animation (left) and description (right)
-    grid.add(
-        &animation_ctrl,
-        0,
-        SizerFlag::AlignCenterHorizontal | SizerFlag::All,
-        10,
-    );
+    grid.add(&animation_ctrl, 0, SizerFlag::AlignCenterHorizontal | SizerFlag::All, 10);
 
     let info_text = StaticText::builder(&panel)
-        .with_label(
-            "Animation loaded from embedded bytes. Dancing Ferris should appear to the left",
-        )
+        .with_label("Animation loaded from embedded bytes. Dancing Ferris should appear to the left")
         .build();
     grid.add(
         &info_text,
@@ -92,12 +79,7 @@ pub fn create_media_tab(notebook: &Notebook) -> MediaControls {
                     .build();
 
                 // Row 2: PNG image (left) and label (right)
-                grid.add(
-                    &static_bitmap_ctrl,
-                    0,
-                    SizerFlag::AlignCenterHorizontal | SizerFlag::All,
-                    5,
-                );
+                grid.add(&static_bitmap_ctrl, 0, SizerFlag::AlignCenterHorizontal | SizerFlag::All, 5);
 
                 let bmp_label = StaticText::builder(&panel)
                     .with_label("StaticBitmap (simple.png from bytes)")
@@ -150,12 +132,7 @@ pub fn create_media_tab(notebook: &Notebook) -> MediaControls {
         .with_size(Size::new(24, 24))
         .build();
 
-    grid.add(
-        &static_bitmap_ctrl,
-        0,
-        SizerFlag::AlignCenterHorizontal | SizerFlag::All,
-        5,
-    );
+    grid.add(&static_bitmap_ctrl, 0, SizerFlag::AlignCenterHorizontal | SizerFlag::All, 5);
     grid.add(
         &svg_info_text,
         0,
@@ -166,8 +143,5 @@ pub fn create_media_tab(notebook: &Notebook) -> MediaControls {
     // Finalize layout
     panel.set_sizer(grid, true);
 
-    MediaControls {
-        panel,
-        animation_ctrl,
-    }
+    MediaControls { panel, animation_ctrl }
 }

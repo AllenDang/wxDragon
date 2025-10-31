@@ -73,10 +73,7 @@ impl From<ffi::wxd_Size> for Size {
 }
 
 /// Default size (-1, -1) that lets the system choose the size.
-pub const DEFAULT_SIZE: Size = Size {
-    width: -1,
-    height: -1,
-};
+pub const DEFAULT_SIZE: Size = Size { width: -1, height: -1 };
 
 /// Represents a rectangle with position (x, y) and dimensions (width, height).
 ///
@@ -93,12 +90,7 @@ pub struct Rect {
 impl Rect {
     /// Creates a new rectangle.
     pub fn new(x: i32, y: i32, width: i32, height: i32) -> Self {
-        Self {
-            x,
-            y,
-            width,
-            height,
-        }
+        Self { x, y, width, height }
     }
 
     /// Creates a rectangle from a position and size.

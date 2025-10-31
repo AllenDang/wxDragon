@@ -20,11 +20,7 @@ impl SystemOptions {
             if !crate::ffi::wxd_SystemOptions_HasOption(name.as_ptr()) {
                 return None;
             }
-            let len = crate::ffi::wxd_SystemOptions_GetOption_String(
-                name.as_ptr(),
-                std::ptr::null_mut(),
-                0,
-            );
+            let len = crate::ffi::wxd_SystemOptions_GetOption_String(name.as_ptr(), std::ptr::null_mut(), 0);
             if len <= 0 {
                 return Some(String::new());
             }

@@ -45,12 +45,9 @@ impl GenericStaticBitmap {
                 parent.handle_ptr(),
                 id as c_int,
                 **bitmap,
-                ffi::wxd_Point { x: -1, y: -1 }, // DEFAULT_POSITION
-                ffi::wxd_Size {
-                    width: -1,
-                    height: -1,
-                }, // DEFAULT_SIZE
-                0,                               // Default style
+                ffi::wxd_Point { x: -1, y: -1 },         // DEFAULT_POSITION
+                ffi::wxd_Size { width: -1, height: -1 }, // DEFAULT_SIZE
+                0,                                       // Default style
                 name_cstr.as_ptr(),
             );
 
@@ -64,11 +61,7 @@ impl GenericStaticBitmap {
     /// Creates a new GenericStaticBitmap with a bitmap bundle.
     pub fn new_with_bitmap_bundle(parent: &dyn WxWidget, id: Id, bundle: &BitmapBundle) -> Self {
         unsafe {
-            let ptr = ffi::wxd_GenericStaticBitmap_CreateWithBitmapBundle(
-                parent.handle_ptr(),
-                id as c_int,
-                bundle.as_ptr(),
-            );
+            let ptr = ffi::wxd_GenericStaticBitmap_CreateWithBitmapBundle(parent.handle_ptr(), id as c_int, bundle.as_ptr());
 
             if ptr.is_null() {
                 panic!("Failed to create GenericStaticBitmap widget with BitmapBundle");
@@ -88,12 +81,8 @@ impl GenericStaticBitmap {
 
     /// Sets or replaces the bitmap shown in the control.
     pub fn set_bitmap(&self, bitmap: &Bitmap) {
-        unsafe {
-            ffi::wxd_GenericStaticBitmap_SetBitmap(
-                self.window.handle_ptr() as *mut ffi::wxd_GenericStaticBitmap_t,
-                **bitmap,
-            );
-        }
+        let ptr = self.window.handle_ptr() as *mut ffi::wxd_GenericStaticBitmap_t;
+        unsafe { ffi::wxd_GenericStaticBitmap_SetBitmap(ptr, **bitmap) };
 
         // Trigger refresh on parent to update the display
         if let Some(parent) = self.window.get_parent() {
@@ -106,12 +95,8 @@ impl GenericStaticBitmap {
     ///
     /// Using a bitmap bundle allows for better DPI scaling on high-resolution displays.
     pub fn set_bitmap_bundle(&self, bundle: &BitmapBundle) {
-        unsafe {
-            ffi::wxd_GenericStaticBitmap_SetBitmapBundle(
-                self.window.handle_ptr() as *mut ffi::wxd_GenericStaticBitmap_t,
-                bundle.as_ptr(),
-            );
-        }
+        let ptr = self.window.handle_ptr() as *mut ffi::wxd_GenericStaticBitmap_t;
+        unsafe { ffi::wxd_GenericStaticBitmap_SetBitmapBundle(ptr, bundle.as_ptr()) };
 
         // Trigger refresh on parent to update the display
         if let Some(parent) = self.window.get_parent() {
@@ -124,16 +109,9 @@ impl GenericStaticBitmap {
     /// Returns a new bitmap instance that the caller owns.
     pub fn get_bitmap(&self) -> Option<Bitmap> {
         unsafe {
-            let ptr = ffi::wxd_GenericStaticBitmap_GetBitmap(
-                self.window.handle_ptr() as *mut ffi::wxd_GenericStaticBitmap_t
-            );
+            let ptr = ffi::wxd_GenericStaticBitmap_GetBitmap(self.window.handle_ptr() as *mut ffi::wxd_GenericStaticBitmap_t);
 
-            if ptr.is_null() {
-                None
-            } else {
-                // We get ownership of the bitmap from C++
-                Some(Bitmap::from(ptr))
-            }
+            if ptr.is_null() { None } else { Some(Bitmap::from(ptr)) }
         }
     }
 
@@ -162,12 +140,10 @@ impl GenericStaticBitmap {
     ///
     /// Returns the scale mode that determines how the bitmap is scaled within the control.
     pub fn get_scale_mode(&self) -> ScaleMode {
-        unsafe {
-            let raw_mode = ffi::wxd_GenericStaticBitmap_GetScaleMode(
-                self.window.handle_ptr() as *mut ffi::wxd_GenericStaticBitmap_t
-            );
-            ScaleMode::from_raw(raw_mode)
-        }
+        let ptr = self.window.handle_ptr() as *mut ffi::wxd_GenericStaticBitmap_t;
+
+        let raw_mode = unsafe { ffi::wxd_GenericStaticBitmap_GetScaleMode(ptr) };
+        ScaleMode::from_raw(raw_mode)
     }
 }
 

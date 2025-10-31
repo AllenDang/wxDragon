@@ -143,9 +143,7 @@ impl TreeItemId {
                 if unsafe { ffi::wxd_TreeItemId_IsOk(ptr) } {
                     Some(TreeItemId { ptr })
                 } else {
-                    log::warn!(
-                        "Warning: C++ returned invalid TreeItemId pointer {ptr:p}, rejecting"
-                    );
+                    log::warn!("Warning: C++ returned invalid TreeItemId pointer {ptr:p}, rejecting");
                     // Free the invalid pointer since we were supposed to take ownership
                     unsafe { ffi::wxd_TreeItemId_Free(ptr) };
                     None
@@ -172,9 +170,7 @@ impl Clone for TreeItemId {
     fn clone(&self) -> Self {
         if self.ptr.is_null() {
             // If the original is null, return a null TreeItemId
-            TreeItemId {
-                ptr: ptr::null_mut(),
-            }
+            TreeItemId { ptr: ptr::null_mut() }
         } else {
             // Use the C++ Clone function to create a proper copy
             let clone_ptr = unsafe { ffi::wxd_TreeItemId_Clone(self.ptr) };
@@ -290,24 +286,10 @@ impl TreeCtrl {
     }
 
     /// Internal implementation used by the builder.
-    fn new_impl(
-        parent_ptr: *mut ffi::wxd_Window_t,
-        id: Id,
-        pos: Point,
-        size: Size,
-        style: i64,
-    ) -> Self {
+    fn new_impl(parent_ptr: *mut ffi::wxd_Window_t, id: Id, pos: Point, size: Size, style: i64) -> Self {
         assert!(!parent_ptr.is_null(), "TreeCtrl parent cannot be null");
 
-        let ctrl_ptr = unsafe {
-            ffi::wxd_TreeCtrl_Create(
-                parent_ptr,
-                id,
-                pos.into(),
-                size.into(),
-                style as ffi::wxd_Style_t,
-            )
-        };
+        let ctrl_ptr = unsafe { ffi::wxd_TreeCtrl_Create(parent_ptr, id, pos.into(), size.into(), style as ffi::wxd_Style_t) };
 
         if ctrl_ptr.is_null() {
             panic!("Failed to create wxTreeCtrl");
@@ -334,24 +316,11 @@ impl TreeCtrl {
     /// * `selected_image` - Optional index of the image for the item when selected.
     ///
     /// Returns the new item ID, or None if creation failed.
-    pub fn add_root(
-        &self,
-        text: &str,
-        image: Option<i32>,
-        selected_image: Option<i32>,
-    ) -> Option<TreeItemId> {
+    pub fn add_root(&self, text: &str, image: Option<i32>, selected_image: Option<i32>) -> Option<TreeItemId> {
         let c_text = CString::new(text).unwrap_or_default();
         let img = image.unwrap_or(-1);
         let sel_img = selected_image.unwrap_or(-1);
-        let item_ptr = unsafe {
-            ffi::wxd_TreeCtrl_AddRoot(
-                self.as_ptr(),
-                c_text.as_ptr(),
-                img,
-                sel_img,
-                ptr::null_mut(),
-            )
-        };
+        let item_ptr = unsafe { ffi::wxd_TreeCtrl_AddRoot(self.as_ptr(), c_text.as_ptr(), img, sel_img, ptr::null_mut()) };
         unsafe { TreeItemId::from_ptr(item_ptr) }
     }
 
@@ -392,19 +361,11 @@ impl TreeCtrl {
         image: Option<i32>,
         selected_image: Option<i32>,
     ) -> Option<TreeItemId> {
-        let c_text = CString::new(text).unwrap_or_default();
+        let t = CString::new(text).unwrap_or_default();
         let img = image.unwrap_or(-1);
         let sel_img = selected_image.unwrap_or(-1);
-        let item_ptr = unsafe {
-            ffi::wxd_TreeCtrl_AppendItem(
-                self.as_ptr(),
-                parent.as_ptr(),
-                c_text.as_ptr(),
-                img,
-                sel_img,
-                ptr::null_mut(),
-            )
-        };
+        let ptr = self.as_ptr();
+        let item_ptr = unsafe { ffi::wxd_TreeCtrl_AppendItem(ptr, parent.as_ptr(), t.as_ptr(), img, sel_img, ptr::null_mut()) };
         unsafe { TreeItemId::from_ptr(item_ptr) }
     }
 
@@ -493,11 +454,7 @@ impl TreeCtrl {
     pub fn get_first_child(&self, item: &TreeItemId) -> Option<(TreeItemId, TreeIterationCookie)> {
         let mut cookie_ptr = ptr::null_mut();
         let child_ptr = unsafe {
-            ffi::wxd_TreeCtrl_GetFirstChild(
-                self.as_ptr(),
-                item.as_ptr(),
-                &mut cookie_ptr as *mut *mut std::ffi::c_void,
-            )
+            ffi::wxd_TreeCtrl_GetFirstChild(self.as_ptr(), item.as_ptr(), &mut cookie_ptr as *mut *mut std::ffi::c_void)
         };
 
         let child = unsafe { TreeItemId::from_ptr(child_ptr) }?;
@@ -510,14 +467,8 @@ impl TreeCtrl {
     /// or get_next_child.
     ///
     /// Returns None when there are no more children.
-    pub fn get_next_child(
-        &self,
-        item: &TreeItemId,
-        cookie: &mut TreeIterationCookie,
-    ) -> Option<TreeItemId> {
-        let child_ptr = unsafe {
-            ffi::wxd_TreeCtrl_GetNextChild(self.as_ptr(), item.as_ptr(), cookie.as_ptr_mut())
-        };
+    pub fn get_next_child(&self, item: &TreeItemId, cookie: &mut TreeIterationCookie) -> Option<TreeItemId> {
+        let child_ptr = unsafe { ffi::wxd_TreeCtrl_GetNextChild(self.as_ptr(), item.as_ptr(), cookie.as_ptr_mut()) };
 
         unsafe { TreeItemId::from_ptr(child_ptr) }
     }
@@ -541,9 +492,7 @@ impl TreeCtrl {
     ///
     /// The number of children (or descendants if recursively is true)
     pub fn get_children_count(&self, item: &TreeItemId, recursively: bool) -> usize {
-        unsafe {
-            ffi::wxd_TreeCtrl_GetChildrenCount(self.as_ptr(), item.as_ptr(), recursively) as usize
-        }
+        unsafe { ffi::wxd_TreeCtrl_GetChildrenCount(self.as_ptr(), item.as_ptr(), recursively) as usize }
     }
 
     // --- ImageList and Item Image Methods ---
@@ -571,14 +520,7 @@ impl TreeCtrl {
 
     /// Sets the image for the given item.
     pub fn set_item_image(&self, item: &TreeItemId, image_index: i32, icon_type: TreeItemIcon) {
-        unsafe {
-            ffi::wxd_TreeCtrl_SetItemImage(
-                self.as_ptr(),
-                item.as_ptr(),
-                image_index,
-                icon_type.into(),
-            );
-        }
+        unsafe { ffi::wxd_TreeCtrl_SetItemImage(self.as_ptr(), item.as_ptr(), image_index, icon_type.into()) };
     }
 
     /// Gets the image for the given item.
@@ -590,11 +532,7 @@ impl TreeCtrl {
 
 // Implement HasItemData trait for TreeCtrl
 impl HasItemData for TreeCtrl {
-    fn set_custom_data<T: Any + Send + Sync + 'static>(
-        &self,
-        item_id: impl Into<u64>,
-        data: T,
-    ) -> u64 {
+    fn set_custom_data<T: Any + Send + Sync + 'static>(&self, item_id: impl Into<u64>, data: T) -> u64 {
         // Convert from the generic item_id
         let item_id = item_id.into();
 
@@ -602,8 +540,7 @@ impl HasItemData for TreeCtrl {
         // Get the concrete TreeItemId if that's what was passed
         if let Some(tree_item) = self.get_concrete_tree_item_id(item_id) {
             // First check if there's already data associated with this item
-            let existing_data_id =
-                unsafe { ffi::wxd_TreeCtrl_GetItemData(self.as_ptr(), tree_item.as_ptr()) as u64 };
+            let existing_data_id = unsafe { ffi::wxd_TreeCtrl_GetItemData(self.as_ptr(), tree_item.as_ptr()) as u64 };
 
             // If we have existing data, remove it from the registry
             if existing_data_id != 0 {
@@ -633,8 +570,7 @@ impl HasItemData for TreeCtrl {
         let tree_item = self.get_concrete_tree_item_id(item_id)?;
 
         // Get the data ID from wxWidgets
-        let data_id =
-            unsafe { ffi::wxd_TreeCtrl_GetItemData(self.as_ptr(), tree_item.as_ptr()) as u64 };
+        let data_id = unsafe { ffi::wxd_TreeCtrl_GetItemData(self.as_ptr(), tree_item.as_ptr()) as u64 };
 
         if data_id == 0 {
             return None;
@@ -651,8 +587,7 @@ impl HasItemData for TreeCtrl {
         // Get the concrete TreeItemId if that's what was passed
         if let Some(tree_item) = self.get_concrete_tree_item_id(item_id) {
             // Check if this item has data via wxWidgets
-            let data_id =
-                unsafe { ffi::wxd_TreeCtrl_GetItemData(self.as_ptr(), tree_item.as_ptr()) as u64 };
+            let data_id = unsafe { ffi::wxd_TreeCtrl_GetItemData(self.as_ptr(), tree_item.as_ptr()) as u64 };
 
             return data_id != 0 && get_item_data(data_id).is_some();
         }
@@ -667,8 +602,7 @@ impl HasItemData for TreeCtrl {
         // Get the concrete TreeItemId if that's what was passed
         if let Some(tree_item) = self.get_concrete_tree_item_id(item_id) {
             // Get the data ID from wxWidgets
-            let data_id =
-                unsafe { ffi::wxd_TreeCtrl_GetItemData(self.as_ptr(), tree_item.as_ptr()) as u64 };
+            let data_id = unsafe { ffi::wxd_TreeCtrl_GetItemData(self.as_ptr(), tree_item.as_ptr()) as u64 };
 
             if data_id != 0 {
                 // Remove the data from the registry
@@ -727,8 +661,7 @@ impl TreeCtrl {
                         // Validate that the TreeItemId's internal pointer looks reasonable
                         let internal_ptr = possible_tree_item.ptr as usize;
                         if !possible_tree_item.ptr.is_null()
-                            && internal_ptr
-                                .is_multiple_of(std::mem::align_of::<*mut std::ffi::c_void>())
+                            && internal_ptr.is_multiple_of(std::mem::align_of::<*mut std::ffi::c_void>())
                             && internal_ptr > 0x1000
                             && internal_ptr < (usize::MAX / 2)
                         {
@@ -778,14 +711,9 @@ impl TreeCtrl {
 
     /// Direct method to set custom data on a TreeItemId without going through u64 conversion.
     /// This is safer than the trait method when you have a direct TreeItemId reference.
-    pub fn set_custom_data_direct<T: Any + Send + Sync + 'static>(
-        &self,
-        item_id: &TreeItemId,
-        data: T,
-    ) -> u64 {
+    pub fn set_custom_data_direct<T: Any + Send + Sync + 'static>(&self, item_id: &TreeItemId, data: T) -> u64 {
         // First check if there's already data associated with this item
-        let existing_data_id =
-            unsafe { ffi::wxd_TreeCtrl_GetItemData(self.as_ptr(), item_id.as_ptr()) as u64 };
+        let existing_data_id = unsafe { ffi::wxd_TreeCtrl_GetItemData(self.as_ptr(), item_id.as_ptr()) as u64 };
 
         // If we have existing data, remove it from the registry
         if existing_data_id != 0 {

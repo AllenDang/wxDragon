@@ -24,10 +24,7 @@ pub struct AdaptiveItemPool {
 impl std::fmt::Debug for AdaptiveItemPool {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("AdaptiveItemPool")
-            .field(
-                "available_panels",
-                &format!("{} panels", self.available_panels.len()),
-            )
+            .field("available_panels", &format!("{} panels", self.available_panels.len()))
             .field("target_pool_size", &self.target_pool_size)
             .field("max_pool_size", &self.max_pool_size)
             .field("total_created", &self.total_created)
@@ -40,10 +37,7 @@ impl std::fmt::Debug for AdaptiveItemPool {
 
 impl AdaptiveItemPool {
     /// Create a new adaptive item pool with intelligent optimization
-    pub fn new(
-        _layout_mode: VirtualListLayoutMode,
-        internal_params: &VirtualListInternalParams,
-    ) -> Self {
+    pub fn new(_layout_mode: VirtualListLayoutMode, internal_params: &VirtualListInternalParams) -> Self {
         let target_size = internal_params.pool_target_size;
         Self {
             available_panels: Vec::with_capacity(target_size),
@@ -130,8 +124,7 @@ impl AdaptiveItemPool {
         }
 
         // Adjust target pool size based on performance
-        let avg_hit_rate = self.pool_hit_rate_history.iter().sum::<f64>()
-            / self.pool_hit_rate_history.len() as f64;
+        let avg_hit_rate = self.pool_hit_rate_history.iter().sum::<f64>() / self.pool_hit_rate_history.len() as f64;
 
         if avg_hit_rate < self.efficiency_target - 0.1 {
             // Hit rate too low - increase target size

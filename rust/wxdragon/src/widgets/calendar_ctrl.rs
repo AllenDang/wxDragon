@@ -39,28 +39,14 @@ impl CalendarCtrl {
     }
 
     /// Low-level constructor used by the builder.
-    fn new_impl(
-        parent_ptr: *mut ffi::wxd_Window_t,
-        id: Id,
-        date: Option<&DateTime>,
-        pos: Point,
-        size: Size,
-        style: i64,
-    ) -> Self {
+    fn new_impl(parent_ptr: *mut ffi::wxd_Window_t, id: Id, date: Option<&DateTime>, pos: Point, size: Size, style: i64) -> Self {
         assert!(!parent_ptr.is_null(), "CalendarCtrl requires a parent");
 
         // Convert Option<&DateTime> to *const ffi::wxd_DateTime_t
         let c_date_ptr = date.map_or(ptr::null(), |d| **d);
 
         let ptr = unsafe {
-            ffi::wxd_CalendarCtrl_Create(
-                parent_ptr,
-                id,
-                c_date_ptr,
-                pos.into(),
-                size.into(),
-                style as ffi::wxd_Style_t,
-            )
+            ffi::wxd_CalendarCtrl_Create(parent_ptr, id, c_date_ptr, pos.into(), size.into(), style as ffi::wxd_Style_t)
         };
 
         if ptr.is_null() {

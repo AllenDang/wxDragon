@@ -46,14 +46,7 @@ impl Button {
     }
 
     /// Creates a new Button (low-level constructor used by the builder)
-    fn new_impl(
-        parent_ptr: *mut ffi::wxd_Window_t,
-        id: Id,
-        label: &str,
-        pos: Point,
-        size: Size,
-        style: i64,
-    ) -> Self {
+    fn new_impl(parent_ptr: *mut ffi::wxd_Window_t, id: Id, label: &str, pos: Point, size: Size, style: i64) -> Self {
         assert!(!parent_ptr.is_null(), "Button requires a parent");
         let c_label = CString::new(label).expect("CString::new failed");
 
@@ -81,10 +74,7 @@ impl Button {
     pub fn set_label(&self, label: &str) {
         let c_label = CString::new(label).expect("CString::new failed");
         unsafe {
-            ffi::wxd_Button_SetLabel(
-                self.window.as_ptr() as *mut ffi::wxd_Button_t,
-                c_label.as_ptr(),
-            );
+            ffi::wxd_Button_SetLabel(self.window.as_ptr() as *mut ffi::wxd_Button_t, c_label.as_ptr());
         }
     }
 
@@ -100,11 +90,7 @@ impl Button {
         };
 
         if len_needed > 0 && (len_needed as usize) <= buffer.len() {
-            unsafe {
-                CStr::from_ptr(buffer.as_ptr())
-                    .to_string_lossy()
-                    .into_owned()
-            }
+            unsafe { CStr::from_ptr(buffer.as_ptr()).to_string_lossy().into_owned() }
         } else if len_needed > (buffer.len() as i32) {
             // Buffer too small, try again with required size
             let mut vec_buffer: Vec<c_char> = vec![0; len_needed as usize];
@@ -116,11 +102,7 @@ impl Button {
                 )
             };
             if len_needed_2 == len_needed {
-                unsafe {
-                    CStr::from_ptr(vec_buffer.as_ptr())
-                        .to_string_lossy()
-                        .into_owned()
-                }
+                unsafe { CStr::from_ptr(vec_buffer.as_ptr()).to_string_lossy().into_owned() }
             } else {
                 // Something went wrong
                 String::new()
@@ -152,40 +134,28 @@ impl Button {
     /// Sets the bitmap for the disabled state.
     pub fn set_bitmap_disabled(&self, bitmap: &Bitmap) {
         unsafe {
-            ffi::wxd_Button_SetBitmapDisabled(
-                self.window.as_ptr() as *mut ffi::wxd_Button_t,
-                **bitmap,
-            );
+            ffi::wxd_Button_SetBitmapDisabled(self.window.as_ptr() as *mut ffi::wxd_Button_t, **bitmap);
         }
     }
 
     /// Sets the bitmap for the focused state.
     pub fn set_bitmap_focus(&self, bitmap: &Bitmap) {
         unsafe {
-            ffi::wxd_Button_SetBitmapFocus(
-                self.window.as_ptr() as *mut ffi::wxd_Button_t,
-                **bitmap,
-            );
+            ffi::wxd_Button_SetBitmapFocus(self.window.as_ptr() as *mut ffi::wxd_Button_t, **bitmap);
         }
     }
 
     /// Sets the bitmap for the current (hover) state.
     pub fn set_bitmap_current(&self, bitmap: &Bitmap) {
         unsafe {
-            ffi::wxd_Button_SetBitmapCurrent(
-                self.window.as_ptr() as *mut ffi::wxd_Button_t,
-                **bitmap,
-            );
+            ffi::wxd_Button_SetBitmapCurrent(self.window.as_ptr() as *mut ffi::wxd_Button_t, **bitmap);
         }
     }
 
     /// Sets the bitmap for the pressed state.
     pub fn set_bitmap_pressed(&self, bitmap: &Bitmap) {
         unsafe {
-            ffi::wxd_Button_SetBitmapPressed(
-                self.window.as_ptr() as *mut ffi::wxd_Button_t,
-                **bitmap,
-            );
+            ffi::wxd_Button_SetBitmapPressed(self.window.as_ptr() as *mut ffi::wxd_Button_t, **bitmap);
         }
     }
 
@@ -194,11 +164,7 @@ impl Button {
     /// Sets the bitmap bundle to be displayed by the button.
     pub fn set_bitmap_bundle(&self, bundle: &BitmapBundle, dir: ButtonBitmapPosition) {
         unsafe {
-            ffi::wxd_Button_SetBitmapBundle(
-                self.window.as_ptr() as *mut ffi::wxd_Button_t,
-                bundle.as_ptr(),
-                dir as i32,
-            );
+            ffi::wxd_Button_SetBitmapBundle(self.window.as_ptr() as *mut ffi::wxd_Button_t, bundle.as_ptr(), dir as i32);
         }
     }
 
@@ -210,40 +176,28 @@ impl Button {
     /// Sets the bitmap bundle for the disabled state.
     pub fn set_bitmap_bundle_disabled(&self, bundle: &BitmapBundle) {
         unsafe {
-            ffi::wxd_Button_SetBitmapBundleDisabled(
-                self.window.as_ptr() as *mut ffi::wxd_Button_t,
-                bundle.as_ptr(),
-            );
+            ffi::wxd_Button_SetBitmapBundleDisabled(self.window.as_ptr() as *mut ffi::wxd_Button_t, bundle.as_ptr());
         }
     }
 
     /// Sets the bitmap bundle for the focused state.
     pub fn set_bitmap_bundle_focus(&self, bundle: &BitmapBundle) {
         unsafe {
-            ffi::wxd_Button_SetBitmapBundleFocus(
-                self.window.as_ptr() as *mut ffi::wxd_Button_t,
-                bundle.as_ptr(),
-            );
+            ffi::wxd_Button_SetBitmapBundleFocus(self.window.as_ptr() as *mut ffi::wxd_Button_t, bundle.as_ptr());
         }
     }
 
     /// Sets the bitmap bundle for the hover state.
     pub fn set_bitmap_bundle_hover(&self, bundle: &BitmapBundle) {
         unsafe {
-            ffi::wxd_Button_SetBitmapBundleHover(
-                self.window.as_ptr() as *mut ffi::wxd_Button_t,
-                bundle.as_ptr(),
-            );
+            ffi::wxd_Button_SetBitmapBundleHover(self.window.as_ptr() as *mut ffi::wxd_Button_t, bundle.as_ptr());
         }
     }
 
     /// Sets the bitmap bundle for the pressed state.
     pub fn set_bitmap_bundle_pressed(&self, bundle: &BitmapBundle) {
         unsafe {
-            ffi::wxd_Button_SetBitmapBundlePressed(
-                self.window.as_ptr() as *mut ffi::wxd_Button_t,
-                bundle.as_ptr(),
-            );
+            ffi::wxd_Button_SetBitmapBundlePressed(self.window.as_ptr() as *mut ffi::wxd_Button_t, bundle.as_ptr());
         }
     }
 
@@ -252,53 +206,24 @@ impl Button {
     // When implemented, they might return unowned pointers, requiring Bitmap::from_ptr_unowned.
 
     pub fn get_bitmap(&self) -> Option<Bitmap> {
-        let ptr =
-            unsafe { ffi::wxd_Button_GetBitmap(self.window.as_ptr() as *mut ffi::wxd_Button_t) };
-        if ptr.is_null() {
-            None
-        } else {
-            Some(Bitmap::from(ptr))
-        }
+        let ptr = unsafe { ffi::wxd_Button_GetBitmap(self.window.as_ptr() as *mut ffi::wxd_Button_t) };
+        if ptr.is_null() { None } else { Some(Bitmap::from(ptr)) }
     }
     pub fn get_bitmap_disabled(&self) -> Option<Bitmap> {
-        let ptr = unsafe {
-            ffi::wxd_Button_GetBitmapDisabled(self.window.as_ptr() as *mut ffi::wxd_Button_t)
-        };
-        if ptr.is_null() {
-            None
-        } else {
-            Some(Bitmap::from(ptr))
-        }
+        let ptr = unsafe { ffi::wxd_Button_GetBitmapDisabled(self.window.as_ptr() as *mut ffi::wxd_Button_t) };
+        if ptr.is_null() { None } else { Some(Bitmap::from(ptr)) }
     }
     pub fn get_bitmap_focus(&self) -> Option<Bitmap> {
-        let ptr = unsafe {
-            ffi::wxd_Button_GetBitmapFocus(self.window.as_ptr() as *mut ffi::wxd_Button_t)
-        };
-        if ptr.is_null() {
-            None
-        } else {
-            Some(Bitmap::from(ptr))
-        }
+        let ptr = unsafe { ffi::wxd_Button_GetBitmapFocus(self.window.as_ptr() as *mut ffi::wxd_Button_t) };
+        if ptr.is_null() { None } else { Some(Bitmap::from(ptr)) }
     }
     pub fn get_bitmap_current(&self) -> Option<Bitmap> {
-        let ptr = unsafe {
-            ffi::wxd_Button_GetBitmapCurrent(self.window.as_ptr() as *mut ffi::wxd_Button_t)
-        };
-        if ptr.is_null() {
-            None
-        } else {
-            Some(Bitmap::from(ptr))
-        }
+        let ptr = unsafe { ffi::wxd_Button_GetBitmapCurrent(self.window.as_ptr() as *mut ffi::wxd_Button_t) };
+        if ptr.is_null() { None } else { Some(Bitmap::from(ptr)) }
     }
     pub fn get_bitmap_pressed(&self) -> Option<Bitmap> {
-        let ptr = unsafe {
-            ffi::wxd_Button_GetBitmapPressed(self.window.as_ptr() as *mut ffi::wxd_Button_t)
-        };
-        if ptr.is_null() {
-            None
-        } else {
-            Some(Bitmap::from(ptr))
-        }
+        let ptr = unsafe { ffi::wxd_Button_GetBitmapPressed(self.window.as_ptr() as *mut ffi::wxd_Button_t) };
+        if ptr.is_null() { None } else { Some(Bitmap::from(ptr)) }
     }
 }
 

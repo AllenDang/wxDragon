@@ -113,9 +113,8 @@ pub use colour_picker_ctrl::{ColourPickerCtrl, ColourPickerCtrlBuilder};
 pub use combobox::{ComboBox, ComboBoxBuilder};
 pub use command_link_button::{CommandLinkButton, CommandLinkButtonBuilder};
 pub use dataview::{
-    DataViewAlign, DataViewCellMode, DataViewColumn, DataViewCtrl, DataViewCtrlBuilder,
-    DataViewListCtrl, DataViewListCtrlBuilder, DataViewListModel, DataViewModel, DataViewStyle,
-    DataViewTreeCtrl, DataViewTreeCtrlBuilder, Variant,
+    DataViewAlign, DataViewCellMode, DataViewColumn, DataViewCtrl, DataViewCtrlBuilder, DataViewListCtrl,
+    DataViewListCtrlBuilder, DataViewListModel, DataViewModel, DataViewStyle, DataViewTreeCtrl, DataViewTreeCtrlBuilder, Variant,
 };
 pub use font_picker_ctrl::{FontPickerCtrl, FontPickerCtrlBuilder, FontPickerCtrlStyle};
 pub use frame::{Frame, FrameBuilder};
@@ -131,13 +130,10 @@ pub use notebook::{Notebook, NotebookBuilder};
 pub use panel::{Panel, PanelBuilder};
 pub use radio_button::{RadioButton, RadioButtonBuilder, RadioButtonStyle};
 pub use radiobox::RadioBox;
-pub use rearrangelist::{
-    RearrangeList, RearrangeListEvent, RearrangeListEventData, RearrangeListStyle,
-};
+pub use rearrangelist::{RearrangeList, RearrangeListEvent, RearrangeListEventData, RearrangeListStyle};
 #[cfg(feature = "richtext")]
 pub use richtextctrl::{
-    RichTextCtrl, RichTextCtrlBuilder, RichTextCtrlEvent, RichTextCtrlEventData, RichTextCtrlStyle,
-    RichTextFileType,
+    RichTextCtrl, RichTextCtrlBuilder, RichTextCtrlEvent, RichTextCtrlEventData, RichTextCtrlStyle, RichTextFileType,
 };
 pub use scrollbar::{ScrollBar, ScrollBarBuilder, ScrollBarStyle};
 pub use scrolled_window::{ScrolledWindow, ScrolledWindowBuilder};
@@ -155,9 +151,8 @@ pub use staticbox::{StaticBox, StaticBoxBuilder};
 pub use statusbar::{StatusBar, StatusBarBuilder};
 #[cfg(feature = "stc")]
 pub use styledtextctrl::{
-    EolMode, FindFlags, Lexer, MarginType, MarkerSymbol, SelectionMode, StyledTextCtrl,
-    StyledTextCtrlBuilder, StyledTextCtrlEvent, StyledTextCtrlEventData, StyledTextCtrlStyle,
-    WhiteSpaceView, WrapMode,
+    EolMode, FindFlags, Lexer, MarginType, MarkerSymbol, SelectionMode, StyledTextCtrl, StyledTextCtrlBuilder,
+    StyledTextCtrlEvent, StyledTextCtrlEventData, StyledTextCtrlStyle, WhiteSpaceView, WrapMode,
 };
 pub use taskbar_icon::{TaskBarIcon, TaskBarIconBuilder, TaskBarIconStyle, TaskBarIconType};
 pub use textctrl::{TextCtrl, TextCtrlBuilder};
@@ -167,12 +162,9 @@ pub use treebook::Treebook;
 pub use treebook::TreebookBuilder;
 pub use treectrl::{TreeCtrl, TreeCtrlBuilder};
 pub use treelistctrl::{
-    CheckboxState, TreeListCtrl, TreeListCtrlBuilder, TreeListCtrlEvent, TreeListCtrlEventData,
-    TreeListCtrlStyle, TreeListItem,
+    CheckboxState, TreeListCtrl, TreeListCtrlBuilder, TreeListCtrlEvent, TreeListCtrlEventData, TreeListCtrlStyle, TreeListItem,
 };
-pub use virtual_list::{
-    VirtualList, VirtualListDataSource, VirtualListItemRenderer, VirtualListLayoutMode,
-};
+pub use virtual_list::{VirtualList, VirtualListDataSource, VirtualListItemRenderer, VirtualListLayoutMode};
 
 // Re-export ImageList
 pub use imagelist::ImageList;

@@ -10,9 +10,7 @@ fn main() {
             .build();
 
         // Create a button to show the generic dialog
-        let button = Button::builder(&frame)
-            .with_label("Show Generic Dialog")
-            .build();
+        let button = Button::builder(&frame).with_label("Show Generic Dialog").build();
 
         // Clone frame for the event handler
         let frame_clone = frame.clone();
