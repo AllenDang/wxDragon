@@ -57,10 +57,8 @@ impl BitmapComboBox {
     /// Appends an item with an optional bitmap.
     pub fn append(&self, item: &str, bitmap: Option<&Bitmap>) {
         let c_item = CString::new(item).expect("CString::new failed for item");
-        let bmp_ptr = bitmap.map_or(ptr::null(), |b| **b);
-        unsafe {
-            ffi::wxd_BitmapComboBox_Append(self.as_ptr(), c_item.as_ptr(), bmp_ptr);
-        }
+        let bmp_ptr = bitmap.map_or(ptr::null(), |b| b.as_const_ptr());
+        unsafe { ffi::wxd_BitmapComboBox_Append(self.as_ptr(), c_item.as_ptr(), bmp_ptr) };
     }
 
     /// Removes all items from the control.
@@ -125,7 +123,7 @@ impl BitmapComboBox {
 
     /// Sets the bitmap for the item at the specified index.
     pub fn set_item_bitmap(&self, n: u32, bitmap: &Bitmap) {
-        unsafe { ffi::wxd_BitmapComboBox_SetItemBitmap(self.as_ptr(), n, **bitmap) };
+        unsafe { ffi::wxd_BitmapComboBox_SetItemBitmap(self.as_ptr(), n, bitmap.as_const_ptr()) };
     }
 
     /// Returns the raw wxBitmapComboBox pointer.

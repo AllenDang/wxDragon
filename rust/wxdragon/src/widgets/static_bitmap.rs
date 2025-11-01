@@ -72,7 +72,7 @@ impl StaticBitmap {
             let ptr = ffi::wxd_StaticBitmap_CreateWithBitmap(
                 parent.handle_ptr(),
                 id as c_int,
-                **bitmap,
+                bitmap.as_const_ptr(),
                 ffi::wxd_Point { x: -1, y: -1 },         // DEFAULT_POSITION
                 ffi::wxd_Size { width: -1, height: -1 }, // DEFAULT_SIZE
                 0,                                       // Default style
@@ -121,7 +121,8 @@ impl StaticBitmap {
     /// # }
     /// ```
     pub fn set_bitmap(&self, bitmap: &Bitmap) {
-        unsafe { ffi::wxd_StaticBitmap_SetBitmap(self.window.handle_ptr() as *mut ffi::wxd_StaticBitmap_t, **bitmap) };
+        let ptr = self.window.handle_ptr() as *mut ffi::wxd_StaticBitmap_t;
+        unsafe { ffi::wxd_StaticBitmap_SetBitmap(ptr, bitmap.as_const_ptr()) };
 
         // Trigger refresh on parent to update the display
         if let Some(parent) = self.window.get_parent() {
@@ -214,7 +215,7 @@ widget_builder!(
                 let ptr = ffi::wxd_StaticBitmap_CreateWithBitmap(
                     slf.parent.handle_ptr(),
                     slf.id as c_int,
-                    **bmp,
+                    bmp.as_const_ptr(),
                     slf.pos.into(),
                     slf.size.into(),
                     slf.style.bits() as ffi::wxd_Style_t,

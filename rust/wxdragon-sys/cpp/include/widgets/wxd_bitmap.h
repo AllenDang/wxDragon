@@ -8,7 +8,7 @@ WXD_EXPORTED wxd_Bitmap_t*
 wxd_Bitmap_CreateFromRGBA(const unsigned char* data, int width, int height);
 
 WXD_EXPORTED void
-wxd_Bitmap_Destroy(const wxd_Bitmap_t* bitmap);
+wxd_Bitmap_Destroy(wxd_Bitmap_t* bitmap);
 
 WXD_EXPORTED int
 wxd_Bitmap_GetWidth(const wxd_Bitmap_t* bitmap);

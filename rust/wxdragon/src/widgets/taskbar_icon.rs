@@ -112,7 +112,7 @@ impl TaskBarIcon {
     /// `true` if the icon was set successfully, `false` otherwise.
     pub fn set_icon(&self, icon: &Bitmap, tooltip: &str) -> bool {
         let c_tooltip = CString::new(tooltip).expect("CString::new failed");
-        unsafe { ffi::wxd_TaskBarIcon_SetIcon(self.ptr, **icon, c_tooltip.as_ptr()) }
+        unsafe { ffi::wxd_TaskBarIcon_SetIcon(self.ptr, icon.as_const_ptr(), c_tooltip.as_ptr()) }
     }
 
     /// Sets the taskbar icon using a bitmap bundle and tooltip.

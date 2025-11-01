@@ -223,7 +223,7 @@ impl Cursor {
     /// # Returns
     /// A new `Cursor` instance, or `None` if creation failed
     pub fn from_bitmap(bitmap: &Bitmap) -> Option<Self> {
-        let ptr = unsafe { ffi::wxd_Cursor_CreateFromImage(**bitmap) };
+        let ptr = unsafe { ffi::wxd_Cursor_CreateFromImage(bitmap.as_const_ptr()) };
         if ptr.is_null() { None } else { Some(Self(ptr)) }
     }
 

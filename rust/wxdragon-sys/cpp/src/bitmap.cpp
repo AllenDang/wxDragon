@@ -68,9 +68,9 @@ wxd_Bitmap_CreateFromRGBA(const unsigned char* data, int width, int height)
 
 // Implementation for wxd_Bitmap_Destroy
 WXD_EXPORTED void
-wxd_Bitmap_Destroy(const wxd_Bitmap_t* bitmap)
+wxd_Bitmap_Destroy(wxd_Bitmap_t* bitmap)
 {
-    const wxBitmap* bmp = reinterpret_cast<const wxBitmap*>(bitmap);
+    wxBitmap* bmp = reinterpret_cast<wxBitmap*>(bitmap);
     if (!bmp)
         return;
     // Never delete the global wxNullBitmap.

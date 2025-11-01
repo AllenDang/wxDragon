@@ -92,13 +92,8 @@ impl Button {
 
     /// Sets the bitmap to be displayed by the button.
     pub fn set_bitmap(&self, bitmap: &Bitmap, dir: ButtonBitmapPosition) {
-        unsafe {
-            ffi::wxd_Button_SetBitmap(
-                self.window.as_ptr() as *mut ffi::wxd_Button_t,
-                **bitmap,
-                dir as ffi::wxd_ButtonBitmapPosition_t,
-            );
-        }
+        let ptr = self.window.as_ptr() as *mut ffi::wxd_Button_t;
+        unsafe { ffi::wxd_Button_SetBitmap(ptr, bitmap.as_const_ptr(), dir as ffi::wxd_ButtonBitmapPosition_t) };
     }
 
     /// Sets the bitmap for the label (main bitmap, default position Left).
@@ -108,39 +103,29 @@ impl Button {
 
     /// Sets the bitmap for the disabled state.
     pub fn set_bitmap_disabled(&self, bitmap: &Bitmap) {
-        unsafe {
-            ffi::wxd_Button_SetBitmapDisabled(self.window.as_ptr() as *mut ffi::wxd_Button_t, **bitmap);
-        }
+        unsafe { ffi::wxd_Button_SetBitmapDisabled(self.window.as_ptr() as *mut ffi::wxd_Button_t, bitmap.as_const_ptr()) };
     }
 
     /// Sets the bitmap for the focused state.
     pub fn set_bitmap_focus(&self, bitmap: &Bitmap) {
-        unsafe {
-            ffi::wxd_Button_SetBitmapFocus(self.window.as_ptr() as *mut ffi::wxd_Button_t, **bitmap);
-        }
+        unsafe { ffi::wxd_Button_SetBitmapFocus(self.window.as_ptr() as *mut ffi::wxd_Button_t, bitmap.as_const_ptr()) };
     }
 
     /// Sets the bitmap for the current (hover) state.
     pub fn set_bitmap_current(&self, bitmap: &Bitmap) {
-        unsafe {
-            ffi::wxd_Button_SetBitmapCurrent(self.window.as_ptr() as *mut ffi::wxd_Button_t, **bitmap);
-        }
+        unsafe { ffi::wxd_Button_SetBitmapCurrent(self.window.as_ptr() as *mut ffi::wxd_Button_t, bitmap.as_const_ptr()) };
     }
 
     /// Sets the bitmap for the pressed state.
     pub fn set_bitmap_pressed(&self, bitmap: &Bitmap) {
-        unsafe {
-            ffi::wxd_Button_SetBitmapPressed(self.window.as_ptr() as *mut ffi::wxd_Button_t, **bitmap);
-        }
+        unsafe { ffi::wxd_Button_SetBitmapPressed(self.window.as_ptr() as *mut ffi::wxd_Button_t, bitmap.as_const_ptr()) };
     }
 
     // --- BitmapBundle Methods ---
 
     /// Sets the bitmap bundle to be displayed by the button.
     pub fn set_bitmap_bundle(&self, bundle: &BitmapBundle, dir: ButtonBitmapPosition) {
-        unsafe {
-            ffi::wxd_Button_SetBitmapBundle(self.window.as_ptr() as *mut ffi::wxd_Button_t, bundle.as_ptr(), dir as i32);
-        }
+        unsafe { ffi::wxd_Button_SetBitmapBundle(self.window.as_ptr() as *mut ffi::wxd_Button_t, bundle.as_ptr(), dir as i32) };
     }
 
     /// Sets the bitmap bundle for the label (main bitmap, default position Left).

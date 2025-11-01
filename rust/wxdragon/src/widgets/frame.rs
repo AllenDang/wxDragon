@@ -309,7 +309,7 @@ impl Frame {
     /// Sets the frame's icon from a bitmap.
     /// The bitmap will be converted to an icon internally.
     pub fn set_icon(&self, bitmap: &Bitmap) {
-        unsafe { ffi::wxd_Frame_SetIconFromBitmap(self.window.as_ptr() as *mut ffi::wxd_Frame_t, **bitmap) };
+        unsafe { ffi::wxd_Frame_SetIconFromBitmap(self.window.as_ptr() as *mut ffi::wxd_Frame_t, bitmap.as_const_ptr()) };
     }
 }
 

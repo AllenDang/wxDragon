@@ -66,10 +66,10 @@ impl ImageList {
     ///
     /// Returns the index of the added image, or -1 if an error occurred.
     pub fn add_bitmap(&self, bitmap: &Bitmap) -> i32 {
-        if self.ptr.is_null() || (**bitmap).is_null() {
+        if self.ptr.is_null() || bitmap.as_const_ptr().is_null() {
             return -1;
         }
-        unsafe { ffi::wxd_ImageList_Add(self.ptr, **bitmap) }
+        unsafe { ffi::wxd_ImageList_Add(self.ptr, bitmap.as_const_ptr()) }
     }
 
     /// Adds a bitmap and its mask to the image list.
@@ -81,10 +81,10 @@ impl ImageList {
     ///
     /// Returns the index of the added image, or -1 if an error occurred.
     pub fn add_bitmap_with_mask(&self, bitmap: &Bitmap, mask: &Bitmap) -> i32 {
-        if self.ptr.is_null() || (**bitmap).is_null() || (**mask).is_null() {
+        if self.ptr.is_null() || bitmap.as_const_ptr().is_null() || mask.as_const_ptr().is_null() {
             return -1;
         }
-        unsafe { ffi::wxd_ImageList_AddWithMask(self.ptr, **bitmap, **mask) }
+        unsafe { ffi::wxd_ImageList_AddWithMask(self.ptr, bitmap.as_const_ptr(), mask.as_const_ptr()) }
     }
 
     /// Returns the number of images in the list.

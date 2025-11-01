@@ -21,7 +21,7 @@ impl MemoryDC {
     /// # Arguments
     /// * `bitmap` - The bitmap to select into this DC
     pub fn select_object(&mut self, bitmap: &mut Bitmap) {
-        unsafe { wxdragon_sys::wxd_MemoryDC_SelectObject(self.dc_ptr, **bitmap) };
+        unsafe { wxdragon_sys::wxd_MemoryDC_SelectObject(self.dc_ptr, bitmap.as_const_ptr()) };
     }
 
     /// Select a bitmap as a source for drawing operations
@@ -29,7 +29,7 @@ impl MemoryDC {
     /// # Arguments
     /// * `bitmap` - The bitmap to use as source
     pub fn select_object_as_source(&mut self, bitmap: &Bitmap) {
-        unsafe { wxdragon_sys::wxd_MemoryDC_SelectObjectAsSource(self.dc_ptr, **bitmap) };
+        unsafe { wxdragon_sys::wxd_MemoryDC_SelectObjectAsSource(self.dc_ptr, bitmap.as_const_ptr()) };
     }
 }
 

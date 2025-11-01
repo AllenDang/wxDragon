@@ -44,7 +44,7 @@ impl GenericStaticBitmap {
             let ptr = ffi::wxd_GenericStaticBitmap_CreateWithBitmap(
                 parent.handle_ptr(),
                 id as c_int,
-                **bitmap,
+                bitmap.as_const_ptr(),
                 ffi::wxd_Point { x: -1, y: -1 },         // DEFAULT_POSITION
                 ffi::wxd_Size { width: -1, height: -1 }, // DEFAULT_SIZE
                 0,                                       // Default style
@@ -82,7 +82,7 @@ impl GenericStaticBitmap {
     /// Sets or replaces the bitmap shown in the control.
     pub fn set_bitmap(&self, bitmap: &Bitmap) {
         let ptr = self.window.handle_ptr() as *mut ffi::wxd_GenericStaticBitmap_t;
-        unsafe { ffi::wxd_GenericStaticBitmap_SetBitmap(ptr, **bitmap) };
+        unsafe { ffi::wxd_GenericStaticBitmap_SetBitmap(ptr, bitmap.as_const_ptr()) };
 
         // Trigger refresh on parent to update the display
         if let Some(parent) = self.window.get_parent() {
@@ -179,7 +179,7 @@ widget_builder!(
                 let ptr = ffi::wxd_GenericStaticBitmap_CreateWithBitmap(
                     slf.parent.handle_ptr(),
                     slf.id as c_int,
-                    **bmp,
+                    bmp.as_const_ptr(),
                     slf.pos.into(),
                     slf.size.into(),
                     slf.style.bits() as ffi::wxd_Style_t,

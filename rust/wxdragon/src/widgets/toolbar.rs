@@ -104,14 +104,14 @@ impl ToolBar {
         let c_label = CString::new(config.label).unwrap_or_default();
         let c_short_help = CString::new(config.short_help).unwrap_or_default();
         let c_longlong_help = CString::new(config.long_help).unwrap_or_default();
-        let bmp_disabled_ptr = config.bitmap_disabled.map_or(std::ptr::null(), |bmp| **bmp);
+        let bmp_disabled_ptr = config.bitmap_disabled.map_or(std::ptr::null(), |bmp| bmp.as_const_ptr());
 
         unsafe {
             let tool_ptr = ffi::wxd_ToolBar_AddTool(
                 self.window.as_ptr() as *mut _,
                 config.tool_id,
                 c_label.as_ptr(),
-                **config.bitmap,
+                config.bitmap.as_const_ptr(),
                 bmp_disabled_ptr,
                 config.kind as c_int,
                 c_short_help.as_ptr(),

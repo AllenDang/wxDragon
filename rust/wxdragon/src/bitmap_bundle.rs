@@ -52,7 +52,7 @@ impl BitmapBundle {
     ///
     /// This is primarily for backward compatibility with APIs that used to take a wxBitmap.
     pub fn from_bitmap(bitmap: &Bitmap) -> Self {
-        let ptr = unsafe { ffi::wxd_BitmapBundle_CreateFromBitmap(**bitmap) };
+        let ptr = unsafe { ffi::wxd_BitmapBundle_CreateFromBitmap(bitmap.as_const_ptr()) };
         BitmapBundle { ptr, is_owned: true }
     }
 
@@ -75,7 +75,7 @@ impl BitmapBundle {
         }
 
         // Create an array of pointers to the bitmaps
-        let bitmap_ptrs: Vec<*const ffi::wxd_Bitmap_t> = bitmaps.iter().map(|bmp| **bmp).collect();
+        let bitmap_ptrs: Vec<*const ffi::wxd_Bitmap_t> = bitmaps.iter().map(|bmp| bmp.as_const_ptr()).collect();
 
         let ptr = unsafe { ffi::wxd_BitmapBundle_FromBitmaps(bitmap_ptrs.as_ptr(), bitmaps.len()) };
 
