@@ -191,38 +191,67 @@ impl From<*mut ffi::wxd_ArrayString_t> for WxdArrayString {
     }
 }
 
-use std::io::Error;
+/// Error type for WxdArrayString conversion operations.
+#[derive(Debug, Clone)]
+pub enum ArrayStringConversionError {
+    /// The array has a null pointer
+    NullPointer,
+    /// Cannot convert an owned WxdArrayString to a const pointer
+    OwnedToConst,
+    /// Cannot convert a non-owned WxdArrayString to a mutable pointer
+    NonOwnedToMut,
+}
+
+impl std::fmt::Display for ArrayStringConversionError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ArrayStringConversionError::NullPointer => {
+                write!(f, "Cannot convert WxdArrayString with null pointer")
+            }
+            ArrayStringConversionError::OwnedToConst => {
+                write!(f, "Cannot convert owned WxdArrayString to const raw pointer")
+            }
+            ArrayStringConversionError::NonOwnedToMut => {
+                write!(f, "Cannot convert non-owned WxdArrayString to mutable raw pointer")
+            }
+        }
+    }
+}
+
+impl std::error::Error for ArrayStringConversionError {}
 
 impl TryFrom<WxdArrayString> for *const ffi::wxd_ArrayString_t {
-    type Error = std::io::Error;
+    type Error = ArrayStringConversionError;
     fn try_from(array: WxdArrayString) -> Result<Self, Self::Error> {
         if !array.owns_ptr {
             if array.ptr.is_null() {
-                Err(Error::other(
-                    "Cannot convert WxdArrayString with null pointer to const raw pointer",
-                ))
+                Err(ArrayStringConversionError::NullPointer)
             } else {
-                Ok(array.ptr)
+                let ptr = array.ptr;
+                // Prevent Drop from running since we're transferring ownership of the pointer
+                std::mem::forget(array);
+                Ok(ptr)
             }
         } else {
-            Err(Error::other("Cannot convert owned WxdArrayString to const raw pointer"))
+            Err(ArrayStringConversionError::OwnedToConst)
         }
     }
 }
 
 impl TryFrom<WxdArrayString> for *mut ffi::wxd_ArrayString_t {
-    type Error = std::io::Error;
+    type Error = ArrayStringConversionError;
     fn try_from(array: WxdArrayString) -> Result<Self, Self::Error> {
         if array.owns_ptr {
             if array.ptr.is_null() {
-                Err(Error::other(
-                    "Cannot convert WxdArrayString with null pointer to mutable raw pointer",
-                ))
+                Err(ArrayStringConversionError::NullPointer)
             } else {
-                Ok(array.ptr as *mut ffi::wxd_ArrayString_t)
+                let ptr = array.ptr as *mut ffi::wxd_ArrayString_t;
+                // Prevent Drop from running since we're transferring ownership of the pointer
+                std::mem::forget(array);
+                Ok(ptr)
             }
         } else {
-            Err(Error::other("Cannot convert non-owned WxdArrayString to mutable raw pointer"))
+            Err(ArrayStringConversionError::NonOwnedToMut)
         }
     }
 }
