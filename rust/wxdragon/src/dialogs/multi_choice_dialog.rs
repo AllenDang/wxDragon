@@ -88,13 +88,11 @@ impl MultiChoiceDialog {
     /// Gets the strings of the selections made by the user.
     /// Returns an empty vector if no selections were made or the dialog was cancelled.
     pub fn get_string_selections(&self) -> Vec<String> {
-        let selections = WxdArrayString::new();
+        let mut selections = WxdArrayString::new();
 
-        unsafe {
-            ffi::wxd_MultiChoiceDialog_GetStringSelections(self.as_ptr(), selections.as_ptr());
-        }
+        unsafe { ffi::wxd_MultiChoiceDialog_GetStringSelections(self.as_ptr(), selections.as_mut_ptr()) };
 
-        selections.into_vec()
+        selections.into()
     }
 }
 
@@ -168,7 +166,7 @@ impl<'a> MultiChoiceDialogBuilder<'a> {
                 parent_ptr,
                 c_message.as_ptr(),
                 c_caption.as_ptr(),
-                choices_array.as_ptr(),
+                choices_array.as_const_ptr(),
                 self.style.bits() as ffi::wxd_Style_t,
                 self.pos.x,
                 self.pos.y,

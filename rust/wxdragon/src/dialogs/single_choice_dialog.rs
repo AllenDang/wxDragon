@@ -163,7 +163,7 @@ impl<'a> SingleChoiceDialogBuilder<'a> {
                 parent_ptr,
                 c_message.as_ptr(),
                 c_caption.as_ptr(),
-                choices_array.as_ptr(),
+                choices_array.as_const_ptr(),
                 self.style.bits() as ffi::wxd_Style_t,
                 self.pos.x,
                 self.pos.y,

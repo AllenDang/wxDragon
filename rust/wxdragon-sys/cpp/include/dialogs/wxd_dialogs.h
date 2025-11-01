@@ -33,13 +33,13 @@ WXD_EXPORTED int
 wxd_FileDialog_GetPath(wxd_FileDialog_t* self, char* buffer, size_t bufLen);
 
 WXD_EXPORTED void
-wxd_FileDialog_GetPaths(wxd_FileDialog_t* self, wxd_ArrayString_t* paths);
+wxd_FileDialog_GetPaths(const wxd_FileDialog_t* self, wxd_ArrayString_t* paths);
 
 WXD_EXPORTED int
 wxd_FileDialog_GetFilename(const wxd_FileDialog_t* self, char* buffer, size_t bufLen);
 
 WXD_EXPORTED void
-wxd_FileDialog_GetFilenames(wxd_FileDialog_t* self, wxd_ArrayString_t* filenames);
+wxd_FileDialog_GetFilenames(const wxd_FileDialog_t* self, wxd_ArrayString_t* filenames);
 
 WXD_EXPORTED int
 wxd_FileDialog_GetDirectory(wxd_FileDialog_t* self, char* buffer, size_t bufLen);
@@ -242,8 +242,8 @@ wxd_DateTime_GetSecond(const wxd_DateTime_t* dt);
 
 // --- SingleChoiceDialog ---
 WXD_EXPORTED wxd_SingleChoiceDialog_t*
-wxd_SingleChoiceDialog_Create(wxd_Window_t* parent, const char* message, const char* caption,
-                              wxd_ArrayString_t* choices, wxd_Style_t style, int x, int y,
+wxd_SingleChoiceDialog_Create(const wxd_Window_t* parent, const char* message, const char* caption,
+                              const wxd_ArrayString_t* choices, wxd_Style_t style, int x, int y,
                               int width, int height);
 
 WXD_EXPORTED int
@@ -258,9 +258,9 @@ wxd_SingleChoiceDialog_GetStringSelection(wxd_SingleChoiceDialog_t* self, char* 
 
 // --- MultiChoiceDialog ---
 WXD_EXPORTED wxd_MultiChoiceDialog_t*
-wxd_MultiChoiceDialog_Create(wxd_Window_t* parent, const char* message, const char* caption,
-                             wxd_ArrayString_t* choices, wxd_Style_t style, int x, int y, int width,
-                             int height);
+wxd_MultiChoiceDialog_Create(const wxd_Window_t* parent, const char* message, const char* caption,
+                             const wxd_ArrayString_t* choices, wxd_Style_t style, int x, int y,
+                             int width, int height);
 
 WXD_EXPORTED void
 wxd_MultiChoiceDialog_GetSelections(wxd_MultiChoiceDialog_t* self, int* selections, int* count);
@@ -270,7 +270,7 @@ wxd_MultiChoiceDialog_SetSelections(wxd_MultiChoiceDialog_t* self, const int* se
                                     int count);
 
 WXD_EXPORTED void
-wxd_MultiChoiceDialog_GetStringSelections(wxd_MultiChoiceDialog_t* self,
+wxd_MultiChoiceDialog_GetStringSelections(const wxd_MultiChoiceDialog_t* self,
                                           wxd_ArrayString_t* selections);
 
 // --- DirDialog ---

@@ -47,7 +47,7 @@ wxd_FileDialog_GetPath(wxd_FileDialog_t* self, char* buffer, size_t bufLen)
 }
 
 WXD_EXPORTED void
-wxd_FileDialog_GetPaths(wxd_FileDialog_t* self, wxd_ArrayString_t* paths_out)
+wxd_FileDialog_GetPaths(const wxd_FileDialog_t* self, wxd_ArrayString_t* paths_out)
 {
     if (!self || !paths_out)
         return;
@@ -68,7 +68,7 @@ wxd_FileDialog_GetFilename(const wxd_FileDialog_t* self, char* buffer, size_t bu
 }
 
 WXD_EXPORTED void
-wxd_FileDialog_GetFilenames(wxd_FileDialog_t* self, wxd_ArrayString_t* filenames_out)
+wxd_FileDialog_GetFilenames(const wxd_FileDialog_t* self, wxd_ArrayString_t* filenames_out)
 {
     if (!self || !filenames_out)
         return;

@@ -18,6 +18,9 @@ wxd_ArrayString_Create();
 WXD_EXPORTED void
 wxd_ArrayString_Free(wxd_ArrayString_t* self);
 
+WXD_EXPORTED wxd_ArrayString_t*
+wxd_ArrayString_Clone(const wxd_ArrayString_t* array);
+
 WXD_EXPORTED int
 wxd_ArrayString_GetCount(const wxd_ArrayString_t* array);
 

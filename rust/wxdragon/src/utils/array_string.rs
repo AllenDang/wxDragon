@@ -1,4 +1,6 @@
 use std::ffi::{CStr, CString};
+use std::marker::PhantomData;
+use std::rc::Rc;
 use wxdragon_sys as ffi;
 
 /// A wrapper around wxArrayString that provides safe Rust APIs for interacting with wxWidgets string arrays.
@@ -8,27 +10,37 @@ use wxdragon_sys as ffi;
 pub struct WxdArrayString {
     ptr: *mut ffi::wxd_ArrayString_t,
     owns_ptr: bool,
+    // Prevent Send/Sync: wxWidgets objects are not thread-safe and must stay on UI thread.
+    _nosend_nosync: PhantomData<Rc<()>>,
+}
+
+impl Clone for WxdArrayString {
+    fn clone(&self) -> Self {
+        assert!(!self.ptr.is_null(), "Cannot clone WxdArrayString with null pointer");
+        let new_ptr = unsafe { ffi::wxd_ArrayString_Clone(self.ptr) };
+        assert!(!new_ptr.is_null(), "Failed to clone wxArrayString");
+        WxdArrayString {
+            ptr: new_ptr,
+            owns_ptr: true,
+            _nosend_nosync: PhantomData,
+        }
+    }
 }
 
 impl WxdArrayString {
     /// Creates a new empty WxdArrayString.
     pub fn new() -> Self {
         let ptr = unsafe { ffi::wxd_ArrayString_Create() };
-        assert!(!ptr.is_null(), "Failed to create wxd_ArrayString");
-        WxdArrayString { ptr, owns_ptr: true }
-    }
-
-    /// Creates a WxdArrayString from an existing wxd_ArrayString_t pointer.
-    ///
-    /// # Safety
-    /// The pointer must be a valid pointer to a wxd_ArrayString_t. If `take_ownership` is true,
-    /// this struct will free the pointer when dropped. If false, the caller is responsible
-    /// for freeing the pointer.
-    pub unsafe fn from_ptr(ptr: *mut ffi::wxd_ArrayString_t, take_ownership: bool) -> Self {
+        assert!(!ptr.is_null(), "Failed to create wxArrayString");
         WxdArrayString {
             ptr,
-            owns_ptr: take_ownership,
+            owns_ptr: true,
+            _nosend_nosync: PhantomData,
         }
+    }
+
+    pub fn len(&self) -> usize {
+        self.get_count()
     }
 
     /// Returns the number of strings in the array.
@@ -49,7 +61,6 @@ impl WxdArrayString {
         }
 
         let index = index as i32;
-        // First, try with a reasonable stack buffer
         let len = unsafe { ffi::wxd_ArrayString_GetString(self.ptr, index, std::ptr::null_mut(), 0) };
 
         if len < 0 {
@@ -64,8 +75,8 @@ impl WxdArrayString {
 
     /// Adds a string to the array.
     /// Returns true if the operation was successful.
-    pub fn add(&mut self, s: &str) -> bool {
-        let c_str = match CString::new(s) {
+    pub fn add<T: AsRef<str>>(&mut self, s: T) -> bool {
+        let c_str = match CString::new(s.as_ref()) {
             Ok(cs) => cs,
             Err(_) => return false,
         };
@@ -75,7 +86,7 @@ impl WxdArrayString {
 
     /// Adds multiple strings to the array.
     /// Returns the number of successfully added strings.
-    pub fn add_many(&mut self, strings: &[&str]) -> usize {
+    pub fn add_many<T: AsRef<str>>(&mut self, strings: &[T]) -> usize {
         let mut count = 0;
         for s in strings {
             if self.add(s) {
@@ -88,28 +99,6 @@ impl WxdArrayString {
     /// Clears all strings from the array.
     pub fn clear(&mut self) {
         unsafe { ffi::wxd_ArrayString_Clear(self.ptr) };
-    }
-
-    /// Converts this WxdArrayString into a `Vec<String>`.
-    /// This consumes the WxdArrayString if it owns the pointer.
-    pub fn into_vec(self) -> Vec<String> {
-        let count = self.get_count();
-        let mut vec = Vec::with_capacity(count);
-
-        for i in 0..count {
-            if let Some(s) = self.get_string(i) {
-                vec.push(s);
-            } else {
-                // Handle error getting string by pushing an empty string
-                // to maintain index correspondence
-                vec.push(String::new());
-            }
-        }
-
-        // Only leak the pointer if we're not taking ownership
-        let _ = std::mem::ManuallyDrop::new(self);
-
-        vec
     }
 
     /// Gets all strings from the array as a `Vec<String>` without consuming the WxdArrayString.
@@ -128,24 +117,37 @@ impl WxdArrayString {
         vec
     }
 
-    /// Gets the raw pointer to the wxd_ArrayString_t.
-    /// This is useful when passing the array to wxWidgets functions.
-    ///
-    /// # Safety
-    /// The caller must ensure that the pointer is not used after this WxdArrayString is dropped
-    /// if `owns_ptr` is true.
-    pub fn as_ptr(&self) -> *mut ffi::wxd_ArrayString_t {
+    /// Returns a const raw pointer to the underlying wxd_ArrayString_t.
+    pub fn as_const_ptr(&self) -> *const ffi::wxd_ArrayString_t {
+        self.ptr as *const _
+    }
+
+    /// Returns a mutable raw pointer to the underlying wxd_ArrayString_t.
+    /// Use with extreme care; prefer safe methods when possible.
+    pub fn as_mut_ptr(&mut self) -> *mut ffi::wxd_ArrayString_t {
         self.ptr
     }
 
-    /// Detaches the pointer from this WxdArrayString, causing it to no longer own the pointer.
-    /// This is useful when you need to pass ownership of the array to a wxWidgets function.
-    ///
-    /// # Safety
-    /// The caller is responsible for freeing the pointer after calling this function.
-    pub unsafe fn detach(&mut self) -> *mut ffi::wxd_ArrayString_t {
-        self.owns_ptr = false;
-        self.ptr
+    /// Consumes self and returns a raw mutable pointer, transferring ownership to the caller.
+    /// The caller is responsible for freeing the pointer with wxd_ArrayString_Free.
+    pub fn into_raw_mut(mut self) -> *mut ffi::wxd_ArrayString_t {
+        assert!(
+            self.owns_ptr,
+            "into_raw_mut can only be called on owning WxdArrayString instances"
+        );
+        let ptr = self.ptr;
+        self.ptr = std::ptr::null_mut();
+        ptr
+    }
+
+    /// Consumes a borrowed (non-owning) wrapper and returns a raw const pointer without taking ownership.
+    /// Panics if called on an owning wrapper to avoid leaking the owned resource.
+    pub fn into_raw_const(self) -> *const ffi::wxd_ArrayString_t {
+        assert!(
+            !self.owns_ptr,
+            "into_raw_const must only be used on non-owning (borrowed) wrappers"
+        );
+        self.ptr as *const _
     }
 }
 
@@ -164,31 +166,82 @@ impl Default for WxdArrayString {
     }
 }
 
-// Implement From<Vec<String>> and From<&[String]> for convenient creation
-impl From<Vec<String>> for WxdArrayString {
-    fn from(strings: Vec<String>) -> Self {
-        let mut array = Self::new();
-        for s in strings {
-            array.add(&s);
+// Consolidated conversions: support any collection of items that can be viewed as str
+impl<T: AsRef<str>> From<Vec<T>> for WxdArrayString {
+    fn from(strings: Vec<T>) -> Self {
+        strings.into_iter().collect()
+    }
+}
+
+impl<T: AsRef<str>> From<&[T]> for WxdArrayString {
+    fn from(strings: &[T]) -> Self {
+        strings.iter().map(|s| s.as_ref()).collect()
+    }
+}
+
+impl<S: AsRef<str>> std::iter::FromIterator<S> for WxdArrayString {
+    fn from_iter<I: IntoIterator<Item = S>>(iter: I) -> Self {
+        let mut array = WxdArrayString::new();
+        for s in iter {
+            array.add(s.as_ref());
         }
         array
     }
 }
 
-impl From<&[String]> for WxdArrayString {
-    fn from(strings: &[String]) -> Self {
-        let mut array = Self::new();
-        for s in strings {
-            array.add(s);
-        }
-        array
+impl From<WxdArrayString> for Vec<String> {
+    fn from(array: WxdArrayString) -> Self {
+        array.get_strings()
     }
 }
 
-impl From<&[&str]> for WxdArrayString {
-    fn from(strings: &[&str]) -> Self {
-        let mut array = Self::new();
-        array.add_many(strings);
-        array
+/// Creates a `WxdArrayString` from a const pointer to `wxd_ArrayString_t`.
+///
+/// # Safety
+///
+/// The caller must ensure that:
+/// - `ptr` is a valid, properly aligned pointer to a `wxd_ArrayString_t` object
+/// - The pointed-to `wxd_ArrayString_t` object remains valid for the lifetime of the returned `WxdArrayString`
+/// - The pointer is not null (panics will occur on operations if null)
+///
+/// # Ownership Semantics
+///
+/// This implementation creates a **borrowed** reference (non-owning). The returned `WxdArrayString`
+/// will NOT free the underlying wxWidgets object when dropped. The caller retains ownership and
+/// must ensure the object is properly freed.
+impl From<*const ffi::wxd_ArrayString_t> for WxdArrayString {
+    fn from(ptr: *const ffi::wxd_ArrayString_t) -> Self {
+        assert!(!ptr.is_null(), "invalid null pointer passed to WxdArrayString::from");
+        WxdArrayString {
+            ptr: ptr as *mut _,
+            owns_ptr: false,
+            _nosend_nosync: PhantomData,
+        }
+    }
+}
+
+/// Creates a `WxdArrayString` from a mutable pointer to `wxd_ArrayString_t`.
+///
+/// # Safety
+///
+/// The caller must ensure that:
+/// - `ptr` is a valid, properly aligned pointer to a `wxd_ArrayString_t` object
+/// - The caller transfers full ownership of the object to the returned `WxdArrayString`
+/// - No other code will free or access the object after this call
+/// - The pointer is not null (panics will occur on operations if null)
+///
+/// # Ownership Semantics
+///
+/// This implementation creates an **owning** reference. The returned `WxdArrayString` takes
+/// ownership of the underlying wxWidgets object and WILL free it when dropped via
+/// `wxd_ArrayString_Free`. The caller must not free the object manually after this call.
+impl From<*mut ffi::wxd_ArrayString_t> for WxdArrayString {
+    fn from(ptr: *mut ffi::wxd_ArrayString_t) -> Self {
+        assert!(!ptr.is_null(), "invalid null pointer passed to WxdArrayString::from");
+        WxdArrayString {
+            ptr,
+            owns_ptr: true,
+            _nosend_nosync: PhantomData,
+        }
     }
 }

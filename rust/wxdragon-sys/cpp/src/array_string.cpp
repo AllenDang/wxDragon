@@ -18,6 +18,18 @@ wxd_ArrayString_Free(wxd_ArrayString_t* self)
     }
 }
 
+WXD_EXPORTED wxd_ArrayString_t*
+wxd_ArrayString_Clone(const wxd_ArrayString_t* array)
+{
+    if (!array)
+        return nullptr;
+    const wxArrayString* wx_array = reinterpret_cast<const wxArrayString*>(array);
+    wxArrayString* cloned = new (std::nothrow) wxArrayString(*wx_array);
+    if (!cloned)
+        return nullptr;
+    return reinterpret_cast<wxd_ArrayString_t*>(cloned);
+}
+
 WXD_EXPORTED int
 wxd_ArrayString_GetCount(const wxd_ArrayString_t* array)
 {
