@@ -5,6 +5,7 @@
 #include <wx/longlong.h>
 #include <wx/string.h>
 #include <wx/variant.h>
+#include <wx/arrstr.h>
 #if wxUSE_DATETIME
 #include <wx/datetime.h>
 #endif
@@ -114,11 +115,11 @@ wxd_GetBitmapFromVariant(const wxVariant& v)
 }
 } // namespace
 
-extern "C" WXD_EXPORTED const wxd_Variant_t*
+extern "C" WXD_EXPORTED wxd_Variant_t*
 wxd_Variant_CreateEmpty(void)
 {
     wxVariant* v = new (std::nothrow) wxVariant();
-    return reinterpret_cast<const wxd_Variant_t*>(v);
+    return reinterpret_cast<wxd_Variant_t*>(v);
 }
 
 // Clone the variant. Returns nullptr if input is nullptr.
@@ -135,7 +136,7 @@ wxd_Variant_Clone(const wxd_Variant_t* variant)
 }
 
 extern "C" WXD_EXPORTED void
-wxd_Variant_Destroy(const wxd_Variant_t* variant)
+wxd_Variant_Destroy(wxd_Variant_t* variant)
 {
     wxVariant* v = as_wx_mut(variant);
     delete v;
@@ -151,7 +152,7 @@ wxd_Variant_IsNull(const wxd_Variant_t* variant)
 }
 
 extern "C" WXD_EXPORTED void
-wxd_Variant_MakeNull(const wxd_Variant_t* variant)
+wxd_Variant_MakeNull(wxd_Variant_t* variant)
 {
     wxVariant* v = as_wx_mut(variant);
     if (!v)
@@ -162,30 +163,19 @@ wxd_Variant_MakeNull(const wxd_Variant_t* variant)
 // Returned buffer contains a string representing the type of the variant, e.g. "string", "bool", "list", "double", "long".
 // The returned value is required UTF-8 byte length (excluding NUL). If out==NULL or out_len==0, just return length.
 // Otherwise, copies up to out_len-1 bytes and NUL-terminates. Always returns required length.
-extern "C" WXD_EXPORTED size_t
+extern "C" WXD_EXPORTED int
 wxd_Variant_GetTypeName_Utf8(const wxd_Variant_t* variant, char* out, size_t out_len)
 {
     if (!variant)
-        return 0;
+        return -1;
     const wxVariant* v = as_wx_const(variant);
     wxString t = v->GetType();
-    wxCharBuffer buf = t.ToUTF8();
-    const char* s = buf.data();
-    size_t need = s ? std::strlen(s) : 0;
-    if (!out || out_len <= 0) {
-        return need;
-    }
-    size_t to_copy = need < (out_len - 1) ? need : (out_len - 1);
-    if (to_copy > 0 && s) {
-        std::memcpy(out, s, to_copy);
-    }
-    out[to_copy] = '\0';
-    return need;
+    return (int)wxd_cpp_utils::copy_wxstring_to_buffer(t, out, out_len);
 }
 
 // Setters
 extern "C" WXD_EXPORTED void
-wxd_Variant_SetBool(const wxd_Variant_t* variant, bool value)
+wxd_Variant_SetBool(wxd_Variant_t* variant, bool value)
 {
     wxVariant* v = as_wx_mut(variant);
     if (!v)
@@ -194,7 +184,7 @@ wxd_Variant_SetBool(const wxd_Variant_t* variant, bool value)
 }
 
 extern "C" WXD_EXPORTED void
-wxd_Variant_SetInt32(const wxd_Variant_t* variant, int32_t value)
+wxd_Variant_SetInt32(wxd_Variant_t* variant, int32_t value)
 {
     wxVariant* v = as_wx_mut(variant);
     if (!v)
@@ -205,7 +195,7 @@ wxd_Variant_SetInt32(const wxd_Variant_t* variant, int32_t value)
 }
 
 extern "C" WXD_EXPORTED void
-wxd_Variant_SetInt64(const wxd_Variant_t* variant, int64_t value)
+wxd_Variant_SetInt64(wxd_Variant_t* variant, int64_t value)
 {
     wxVariant* v = as_wx_mut(variant);
     if (!v)
@@ -214,7 +204,7 @@ wxd_Variant_SetInt64(const wxd_Variant_t* variant, int64_t value)
 }
 
 extern "C" WXD_EXPORTED void
-wxd_Variant_SetDouble(const wxd_Variant_t* variant, double value)
+wxd_Variant_SetDouble(wxd_Variant_t* variant, double value)
 {
     wxVariant* v = as_wx_mut(variant);
     if (!v)
@@ -224,7 +214,7 @@ wxd_Variant_SetDouble(const wxd_Variant_t* variant, double value)
 
 // Set a UTF-8 string, s may be null-terminated (if len < 0) or length-specified (if len >= 0).
 extern "C" WXD_EXPORTED void
-wxd_Variant_SetString_Utf8(const wxd_Variant_t* variant, const char* s, int len)
+wxd_Variant_SetString_Utf8(wxd_Variant_t* variant, const char* s, int len)
 {
     wxVariant* v = as_wx_mut(variant);
     if (!v)
@@ -244,7 +234,7 @@ wxd_Variant_SetString_Utf8(const wxd_Variant_t* variant, const char* s, int len)
 }
 
 extern "C" WXD_EXPORTED void
-wxd_Variant_SetDateTime(const wxd_Variant_t* variant, const wxd_DateTime_t* value)
+wxd_Variant_SetDateTime(wxd_Variant_t* variant, const wxd_DateTime_t* value)
 {
     wxVariant* v = as_wx_mut(variant);
     if (!v)
@@ -264,7 +254,7 @@ wxd_Variant_SetDateTime(const wxd_Variant_t* variant, const wxd_DateTime_t* valu
 }
 
 extern "C" WXD_EXPORTED void
-wxd_Variant_SetBitmap(const wxd_Variant_t* variant, const wxd_Bitmap_t* bmp)
+wxd_Variant_SetBitmap(wxd_Variant_t* variant, const wxd_Bitmap_t* bmp)
 {
     wxVariant* v = as_wx_mut(variant);
     if (!v) {
@@ -336,30 +326,20 @@ wxd_Variant_GetDouble(const wxd_Variant_t* variant, double* out_value)
     return true;
 }
 
-extern "C" WXD_EXPORTED size_t
+extern "C" WXD_EXPORTED int
 wxd_Variant_GetString_Utf8(const wxd_Variant_t* variant, char* out, size_t out_len)
 {
     if (!variant)
-        return 0;
+        return -1;
     const wxVariant* v = as_wx_const(variant);
     wxString s;
     if (!v->Convert(&s)) {
         // Not convertible to string
         if (out && out_len > 0)
             out[0] = '\0';
-        return 0;
+        return -1;
     }
-    wxCharBuffer buf = s.ToUTF8();
-    const char* bytes = buf.data();
-    size_t need = bytes ? std::strlen(bytes) : 0;
-    if (!out || out_len <= 0)
-        return need;
-    size_t to_copy = need < (out_len - 1) ? need : (out_len - 1);
-    if (to_copy > 0 && bytes) {
-        std::memcpy(out, bytes, to_copy);
-    }
-    out[to_copy] = '\0';
-    return need;
+    return (int)wxd_cpp_utils::copy_wxstring_to_buffer(s, out, out_len);
 }
 
 extern "C" WXD_EXPORTED wxd_DateTime_t*
@@ -397,4 +377,36 @@ wxd_Variant_GetBitmapClone(const wxd_Variant_t* variant)
         return nullptr;
     }
     return reinterpret_cast<wxd_Bitmap_t*>(cloned);
+}
+
+extern "C" WXD_EXPORTED void
+wxd_Variant_SetArrayString(wxd_Variant_t* variant, const wxd_ArrayString_t* arr)
+{
+    wxVariant* v = as_wx_mut(variant);
+    if (!v) {
+        return;
+    }
+    if (!arr) {
+        v->MakeNull();
+        return;
+    }
+    const wxArrayString* wa = reinterpret_cast<const wxArrayString*>(arr);
+    *v = *wa;
+}
+
+extern "C" WXD_EXPORTED wxd_ArrayString_t*
+wxd_Variant_GetArrayStringClone(const wxd_Variant_t* variant)
+{
+    if (!variant)
+        return nullptr;
+    const wxVariant* v = as_wx_const(variant);
+    // Prefer robust type checks; wxVariant commonly uses "arrstring" as the type name.
+    if (!(v->IsType("arrstring") || v->IsType("stringlist") || v->IsType("wxArrayString"))) {
+        return nullptr;
+    }
+    wxArrayString arr = v->GetArrayString();
+    wxArrayString* cloned = new (std::nothrow) wxArrayString(arr);
+    if (!cloned)
+        return nullptr;
+    return reinterpret_cast<wxd_ArrayString_t*>(cloned);
 }

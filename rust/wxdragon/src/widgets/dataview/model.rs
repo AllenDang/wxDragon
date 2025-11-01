@@ -185,7 +185,7 @@ impl DataViewListModel {
     /// Set a value in the model
     pub fn set_value<T: Into<Variant>>(&self, row: usize, col: usize, value: T) -> bool {
         let v: Variant = value.into();
-        unsafe { ffi::wxd_DataViewListModel_SetValue(self.ptr, row, col, *v.as_ref()) }
+        unsafe { ffi::wxd_DataViewListModel_SetValue(self.ptr, row, col, v.as_const_ptr()) }
     }
 }
 
@@ -530,7 +530,7 @@ impl CustomDataViewTreeModel {
             return false;
         }
         let item = item as *mut std::ffi::c_void;
-        unsafe { ffi::wxd_DataViewTreeModel_SetValue(self.model, item, col, **value) }
+        unsafe { ffi::wxd_DataViewTreeModel_SetValue(self.model, item, col, value.as_const_ptr()) }
     }
 }
 

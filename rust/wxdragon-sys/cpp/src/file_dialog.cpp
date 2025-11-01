@@ -37,7 +37,7 @@ wxd_FileDialog_Create(
 // ShowModal is inherited from wxd_Dialog_ShowModal
 
 WXD_EXPORTED int
-wxd_FileDialog_GetPath(wxd_FileDialog_t* self, char* buffer, size_t bufLen)
+wxd_FileDialog_GetPath(const wxd_FileDialog_t* self, char* buffer, size_t bufLen)
 {
     if (!self)
         return -1;
@@ -79,7 +79,7 @@ wxd_FileDialog_GetFilenames(const wxd_FileDialog_t* self, wxd_ArrayString_t* fil
 }
 
 WXD_EXPORTED int
-wxd_FileDialog_GetDirectory(wxd_FileDialog_t* self, char* buffer, size_t bufLen)
+wxd_FileDialog_GetDirectory(const wxd_FileDialog_t* self, char* buffer, size_t bufLen)
 {
     if (!self)
         return -1;
@@ -89,7 +89,7 @@ wxd_FileDialog_GetDirectory(wxd_FileDialog_t* self, char* buffer, size_t bufLen)
 }
 
 WXD_EXPORTED int
-wxd_FileDialog_GetFilterIndex(wxd_FileDialog_t* self)
+wxd_FileDialog_GetFilterIndex(const wxd_FileDialog_t* self)
 {
     if (!self)
         return -1; // Or some other error indicator, wxNOT_FOUND maybe?
@@ -99,7 +99,7 @@ wxd_FileDialog_GetFilterIndex(wxd_FileDialog_t* self)
 
 // --- Optional Setters ---
 WXD_EXPORTED void
-wxd_FileDialog_SetMessage(wxd_FileDialog_t* self, const char* message)
+wxd_FileDialog_SetMessage(const wxd_FileDialog_t* self, const char* message)
 {
     if (!self)
         return;
@@ -107,7 +107,7 @@ wxd_FileDialog_SetMessage(wxd_FileDialog_t* self, const char* message)
 }
 
 WXD_EXPORTED void
-wxd_FileDialog_SetPath(wxd_FileDialog_t* self, const char* path)
+wxd_FileDialog_SetPath(const wxd_FileDialog_t* self, const char* path)
 {
     if (!self)
         return;
@@ -115,7 +115,7 @@ wxd_FileDialog_SetPath(wxd_FileDialog_t* self, const char* path)
 }
 
 WXD_EXPORTED void
-wxd_FileDialog_SetDirectory(wxd_FileDialog_t* self, const char* directory)
+wxd_FileDialog_SetDirectory(const wxd_FileDialog_t* self, const char* directory)
 {
     if (!self)
         return;
@@ -123,7 +123,7 @@ wxd_FileDialog_SetDirectory(wxd_FileDialog_t* self, const char* directory)
 }
 
 WXD_EXPORTED void
-wxd_FileDialog_SetFilename(wxd_FileDialog_t* self, const char* name)
+wxd_FileDialog_SetFilename(const wxd_FileDialog_t* self, const char* name)
 {
     if (!self)
         return;
@@ -131,7 +131,7 @@ wxd_FileDialog_SetFilename(wxd_FileDialog_t* self, const char* name)
 }
 
 WXD_EXPORTED void
-wxd_FileDialog_SetWildcard(wxd_FileDialog_t* self, const char* wildCard)
+wxd_FileDialog_SetWildcard(const wxd_FileDialog_t* self, const char* wildCard)
 {
     if (!self)
         return;
@@ -139,7 +139,7 @@ wxd_FileDialog_SetWildcard(wxd_FileDialog_t* self, const char* wildCard)
 }
 
 WXD_EXPORTED void
-wxd_FileDialog_SetFilterIndex(wxd_FileDialog_t* self, int filterIndex)
+wxd_FileDialog_SetFilterIndex(const wxd_FileDialog_t* self, int filterIndex)
 {
     if (!self)
         return;
@@ -147,7 +147,7 @@ wxd_FileDialog_SetFilterIndex(wxd_FileDialog_t* self, int filterIndex)
 }
 
 WXD_EXPORTED int
-wxd_FileDialog_GetMessage(wxd_FileDialog_t* self, char* buffer, size_t bufLen)
+wxd_FileDialog_GetMessage(const wxd_FileDialog_t* self, char* buffer, size_t bufLen)
 {
     if (!self)
         return -1;
@@ -157,7 +157,7 @@ wxd_FileDialog_GetMessage(wxd_FileDialog_t* self, char* buffer, size_t bufLen)
 }
 
 WXD_EXPORTED int
-wxd_FileDialog_GetWildcard(wxd_FileDialog_t* self, char* buffer, size_t bufLen)
+wxd_FileDialog_GetWildcard(const wxd_FileDialog_t* self, char* buffer, size_t bufLen)
 {
     if (!self)
         return -1;
@@ -167,7 +167,7 @@ wxd_FileDialog_GetWildcard(wxd_FileDialog_t* self, char* buffer, size_t bufLen)
 }
 
 WXD_EXPORTED int
-wxd_FileDialog_GetCurrentlySelectedFilterIndex(wxd_FileDialog_t* self)
+wxd_FileDialog_GetCurrentlySelectedFilterIndex(const wxd_FileDialog_t* self)
 {
     if (!self)
         return -1;

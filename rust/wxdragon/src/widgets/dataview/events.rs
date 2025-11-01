@@ -161,7 +161,7 @@ impl DataViewEventData {
             return false;
         }
 
-        unsafe { ffi::wxd_DataViewEvent_SetValue(self.event.0, **value) }
+        unsafe { ffi::wxd_DataViewEvent_SetValue(self.event.0, value.as_const_ptr()) }
     }
 }
 

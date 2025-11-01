@@ -1,6 +1,10 @@
 //! Variant wrapper for typed wxVariant C API.
 
+use crate::utils::WxdArrayString;
 use crate::{Bitmap, DateTime};
+use std::ffi::CStr;
+use std::marker::PhantomData;
+use std::rc::Rc;
 use wxdragon_sys as ffi;
 
 /// Represents the type of data stored in a variant.
@@ -13,6 +17,7 @@ pub enum VariantType {
     String,
     DateTime,
     Bitmap,
+    ArrayString,
     Progress,
     IconText,
 }
@@ -27,6 +32,7 @@ impl VariantType {
             VariantType::String => "string",
             VariantType::DateTime => "datetime",
             VariantType::Bitmap => "wxBitmap",
+            VariantType::ArrayString => "wxArrayString",
             VariantType::Progress => "long",
             VariantType::IconText => "wxDataViewIconText",
         }
@@ -37,32 +43,24 @@ impl VariantType {
 ///
 /// Owns the underlying wxVariant by default and destroys it in Drop.
 pub struct Variant {
-    ptr: *const ffi::wxd_Variant_t,
+    ptr: *mut ffi::wxd_Variant_t,
     /// Indicates whether this Rust wrapper owns the underlying wxVariant and is responsible for destroying it.
     /// Ownership is determined by how the pointer was obtained (e.g., from `From<*mut>` vs `From<*const>`), not by the pointer's type.
     owned: bool,
-}
-
-impl AsRef<*const ffi::wxd_Variant_t> for Variant {
-    fn as_ref(&self) -> &*const ffi::wxd_Variant_t {
-        // unsafe { &*((&self.ptr) as *const *mut ffi::wxd_Variant_t as *const *const ffi::wxd_Variant_t) }
-        &self.ptr
-    }
-}
-
-impl std::ops::Deref for Variant {
-    type Target = *const ffi::wxd_Variant_t;
-
-    fn deref(&self) -> &Self::Target {
-        self.as_ref()
-    }
+    // Prevent Send/Sync: wxWidgets objects are not thread-safe and must stay on UI thread.
+    _nosend_nosync: PhantomData<Rc<()>>,
 }
 
 impl Variant {
     /// Create an empty variant.
     pub fn new() -> Self {
         let ptr = unsafe { ffi::wxd_Variant_CreateEmpty() };
-        Self { ptr, owned: true }
+        assert!(!ptr.is_null(), "Failed to create wxVariant");
+        Self {
+            ptr,
+            owned: true,
+            _nosend_nosync: PhantomData,
+        }
     }
 
     pub fn is_owned(&self) -> bool {
@@ -113,92 +111,134 @@ impl Variant {
         var
     }
 
+    /// Create a new variant from a slice of Rust strings by storing a wxArrayString by value inside wxVariant.
+    pub fn from_array_string(strings: &WxdArrayString) -> Self {
+        let mut var = Self::new();
+        unsafe { ffi::wxd_Variant_SetArrayString(var.as_mut_ptr(), strings.as_const_ptr()) };
+        var
+    }
+
+    /// Returns a const raw pointer to the underlying wxd_Variant_t.
+    pub fn as_const_ptr(&self) -> *const ffi::wxd_Variant_t {
+        self.ptr as *const _
+    }
+
+    /// Returns a mutable raw pointer to the underlying wxd_Variant_t.
+    /// Use with care; prefer safe methods when possible.
+    pub fn as_mut_ptr(&mut self) -> *mut ffi::wxd_Variant_t {
+        self.ptr
+    }
+
+    /// Consumes self and returns a raw mutable pointer, transferring ownership to the caller.
+    /// Caller must destroy it with `wxd_Variant_Destroy`.
+    pub fn into_raw_mut(self) -> *mut ffi::wxd_Variant_t {
+        assert!(self.owned, "into_raw_mut can only be called on owning Variant instances");
+        let ptr = self.ptr;
+        std::mem::forget(self);
+        ptr
+    }
+
+    /// Consumes a borrowed (non-owning) wrapper and returns a raw const pointer without taking ownership.
+    /// Panics if called on an owning wrapper to avoid leaking the owned resource.
+    pub fn into_raw_const(self) -> *const ffi::wxd_Variant_t {
+        assert!(
+            !self.owned,
+            "into_raw_const must only be used on non-owning (borrowed) wrappers"
+        );
+        let ptr = self.ptr as *const _;
+        std::mem::forget(self);
+        ptr
+    }
+
     /// Returns the wxVariant type name (e.g., "string", "bool").
     pub fn type_name(&self) -> String {
         // Query required length first by calling with out_len=0
-        let needed = unsafe { ffi::wxd_Variant_GetTypeName_Utf8(**self, std::ptr::null_mut(), 0) };
-        if needed == 0 {
+        let needed = unsafe { ffi::wxd_Variant_GetTypeName_Utf8(self.as_const_ptr(), std::ptr::null_mut(), 0) };
+        if needed <= 0 {
             return String::new();
         }
         let mut b = vec![
-            0_u8;
+            0;
             match needed.checked_add(1) {
-                Some(len) => len,
+                Some(len) => len as usize,
                 None => return String::new(),
             }
         ];
-        let w = unsafe { ffi::wxd_Variant_GetTypeName_Utf8(**self, b.as_mut_ptr() as _, b.len()) };
-        if w == 0 {
+        let w = unsafe { ffi::wxd_Variant_GetTypeName_Utf8(self.as_const_ptr(), b.as_mut_ptr(), b.len()) };
+        if w <= 0 {
             return String::new();
         }
-        // Ensure we drop trailing NUL, if any
-        if let Some(pos) = b.iter().position(|&b| b == 0) {
-            b.truncate(pos);
-        }
-        String::from_utf8_lossy(&b).into_owned()
+        unsafe { CStr::from_ptr(b.as_ptr()).to_string_lossy().into_owned() }
     }
 
     pub fn get_bool(&self) -> Option<bool> {
         let mut out = false;
-        let ok = unsafe { ffi::wxd_Variant_GetBool(**self, &mut out) };
+        let ok = unsafe { ffi::wxd_Variant_GetBool(self.as_const_ptr(), &mut out) };
         if ok { Some(out) } else { None }
     }
 
     pub fn get_i32(&self) -> Option<i32> {
         let mut out = 0_i32;
-        let ok = unsafe { ffi::wxd_Variant_GetInt32(**self, &mut out) };
+        let ok = unsafe { ffi::wxd_Variant_GetInt32(self.as_const_ptr(), &mut out) };
         if ok { Some(out) } else { None }
     }
 
     pub fn get_i64(&self) -> Option<i64> {
         let mut out = 0_i64;
-        let ok = unsafe { ffi::wxd_Variant_GetInt64(**self, &mut out) };
+        let ok = unsafe { ffi::wxd_Variant_GetInt64(self.as_const_ptr(), &mut out) };
         if ok { Some(out) } else { None }
     }
 
     pub fn get_f64(&self) -> Option<f64> {
         let mut out = 0_f64;
-        let ok = unsafe { ffi::wxd_Variant_GetDouble(**self, &mut out) };
+        let ok = unsafe { ffi::wxd_Variant_GetDouble(self.as_const_ptr(), &mut out) };
         if ok { Some(out) } else { None }
     }
 
     pub fn get_string(&self) -> Option<String> {
-        let needed = unsafe { ffi::wxd_Variant_GetString_Utf8(**self, std::ptr::null_mut(), 0) };
-        if needed == 0 {
+        let needed = unsafe { ffi::wxd_Variant_GetString_Utf8(self.as_const_ptr(), std::ptr::null_mut(), 0) };
+        if needed < 0 {
             return None;
         }
         let mut buf = vec![
-            0_u8;
+            0;
             match needed.checked_add(1) {
-                Some(len) => len,
+                Some(len) => len as usize,
                 None => return Some(String::new()),
             }
         ];
-        let len = buf.len();
-        let w = unsafe { ffi::wxd_Variant_GetString_Utf8(**self, buf.as_mut_ptr() as _, len) };
-        if w == 0 {
-            return Some(String::new());
+        let w = unsafe { ffi::wxd_Variant_GetString_Utf8(self.as_const_ptr(), buf.as_mut_ptr(), buf.len()) };
+        if w < 0 {
+            return None;
         }
-        if let Some(pos) = buf.iter().position(|&b| b == 0) {
-            buf.truncate(pos);
-        }
-        Some(String::from_utf8_lossy(&buf).into_owned())
+        unsafe { Some(CStr::from_ptr(buf.as_ptr()).to_string_lossy().into_owned()) }
     }
 
     pub fn get_datetime(&self) -> Option<DateTime> {
-        let ptr = unsafe { ffi::wxd_Variant_GetDateTime(self.ptr) };
+        let ptr = unsafe { ffi::wxd_Variant_GetDateTime(self.as_const_ptr()) };
         if ptr.is_null() { None } else { Some(DateTime::from(ptr)) }
     }
 
     pub fn get_bitmap(&self) -> Option<Bitmap> {
-        let ptr = unsafe { ffi::wxd_Variant_GetBitmapClone(**self) };
+        let ptr = unsafe { ffi::wxd_Variant_GetBitmapClone(self.as_const_ptr()) };
         if ptr.is_null() { None } else { Some(Bitmap::from(ptr)) }
+    }
+
+    /// If this variant stores a wxArrayString, return it as a WxdArrayString.
+    pub fn get_array_string(&self) -> Option<WxdArrayString> {
+        let ptr = unsafe { ffi::wxd_Variant_GetArrayStringClone(self.as_const_ptr()) };
+        if ptr.is_null() {
+            None
+        } else {
+            Some(WxdArrayString::from(ptr))
+        }
     }
 }
 
 impl Clone for Variant {
     fn clone(&self) -> Self {
-        let cloned = unsafe { ffi::wxd_Variant_Clone(**self) };
+        let cloned = unsafe { ffi::wxd_Variant_Clone(self.as_const_ptr()) };
+        assert!(!cloned.is_null(), "Failed to clone wxVariant");
         Self::from(cloned)
     }
 }
@@ -206,7 +246,7 @@ impl Clone for Variant {
 impl Drop for Variant {
     fn drop(&mut self) {
         if self.is_owned() && !self.ptr.is_null() {
-            unsafe { ffi::wxd_Variant_Destroy(self.ptr) };
+            unsafe { ffi::wxd_Variant_Destroy(self.as_mut_ptr()) };
         }
     }
 }
@@ -226,15 +266,24 @@ impl std::fmt::Debug for Variant {
 impl From<*const ffi::wxd_Variant_t> for Variant {
     /// Does not take ownership of the raw pointer.
     fn from(ptr: *const ffi::wxd_Variant_t) -> Self {
-        Variant { ptr, owned: false }
+        assert!(!ptr.is_null(), "invalid null pointer passed to Variant::from");
+        Variant {
+            ptr: ptr as *mut _,
+            owned: false,
+            _nosend_nosync: PhantomData,
+        }
     }
 }
 
 impl From<*mut ffi::wxd_Variant_t> for Variant {
     /// Takes ownership of the raw pointer.
     fn from(ptr: *mut ffi::wxd_Variant_t) -> Self {
-        let ptr = ptr as *const _;
-        Variant { ptr, owned: true }
+        assert!(!ptr.is_null(), "invalid null pointer passed to Variant::from");
+        Variant {
+            ptr,
+            owned: true,
+            _nosend_nosync: PhantomData,
+        }
     }
 }
 
@@ -333,6 +382,39 @@ impl<'a> From<&'a Bitmap> for Variant {
     }
 }
 
+impl<T: AsRef<str>> From<Vec<T>> for Variant {
+    fn from(value: Vec<T>) -> Self {
+        let arr = WxdArrayString::from(value);
+        Variant::from(&arr)
+    }
+}
+
+impl<T: AsRef<str>> From<&[T]> for Variant {
+    fn from(value: &[T]) -> Self {
+        let arr = WxdArrayString::from(value);
+        Variant::from(&arr)
+    }
+}
+
+impl<T: AsRef<str>> From<&Vec<T>> for Variant {
+    fn from(value: &Vec<T>) -> Self {
+        let arr = WxdArrayString::from(value.as_slice());
+        Variant::from(&arr)
+    }
+}
+
+impl From<WxdArrayString> for Variant {
+    fn from(value: WxdArrayString) -> Self {
+        Variant::from_array_string(&value)
+    }
+}
+
+impl From<&WxdArrayString> for Variant {
+    fn from(value: &WxdArrayString) -> Self {
+        Variant::from_array_string(value)
+    }
+}
+
 use std::io::{Error, ErrorKind::InvalidData, ErrorKind::InvalidInput};
 
 impl TryFrom<Variant> for bool {
@@ -409,5 +491,38 @@ impl TryFrom<Variant> for Bitmap {
         value
             .get_bitmap()
             .ok_or(Error::new(InvalidData, format!("Not a Bitmap, it's a {type_name}")))
+    }
+}
+
+impl TryFrom<Variant> for WxdArrayString {
+    type Error = std::io::Error;
+
+    fn try_from(value: Variant) -> Result<Self, Self::Error> {
+        let type_name = value.type_name();
+        value
+            .get_array_string()
+            .ok_or(Error::new(InvalidData, format!("Not a wxArrayString, it's a {type_name}")))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Variant;
+    use crate::WxdArrayString;
+
+    #[test]
+    fn variant_array_string_roundtrip() {
+        let src = vec!["alpha", "beta", "gamma"];
+        let v = Variant::from(&src);
+        // Type name differs by backend; ensure it's some array string form
+        let tn = v.type_name();
+        println!("Variant type name: {}", tn);
+        assert!(tn.contains("string"), "unexpected type name: {}", tn);
+        let got = v.get_array_string().expect("expected array string");
+        assert_eq!(src, got.get_strings());
+
+        // TryFrom
+        let got2: WxdArrayString = v.clone().try_into().expect("convert to WxdArrayString");
+        assert_eq!(src, got2.get_strings());
     }
 }
