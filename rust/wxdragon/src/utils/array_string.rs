@@ -179,12 +179,41 @@ impl<S: AsRef<str>> std::iter::FromIterator<S> for WxdArrayString {
     }
 }
 
+/// Creates a `WxdArrayString` from a const pointer to `wxd_ArrayString_t`.
+///
+/// # Safety
+///
+/// The caller must ensure that:
+/// - `ptr` is a valid, properly aligned pointer to a `wxd_ArrayString_t` object
+/// - The pointed-to `wxd_ArrayString_t` object remains valid for the lifetime of the returned `WxdArrayString`
+/// - The pointer is not null (panics will occur on operations if null)
+///
+/// # Ownership Semantics
+///
+/// This implementation creates a **borrowed** reference (non-owning). The returned `WxdArrayString`
+/// will NOT free the underlying wxWidgets object when dropped. The caller retains ownership and
+/// must ensure the object is properly freed.
 impl From<*const ffi::wxd_ArrayString_t> for WxdArrayString {
     fn from(ptr: *const ffi::wxd_ArrayString_t) -> Self {
         WxdArrayString { ptr, owns_ptr: false }
     }
 }
 
+/// Creates a `WxdArrayString` from a mutable pointer to `wxd_ArrayString_t`.
+///
+/// # Safety
+///
+/// The caller must ensure that:
+/// - `ptr` is a valid, properly aligned pointer to a `wxd_ArrayString_t` object
+/// - The caller transfers full ownership of the object to the returned `WxdArrayString`
+/// - No other code will free or access the object after this call
+/// - The pointer is not null (panics will occur on operations if null)
+///
+/// # Ownership Semantics
+///
+/// This implementation creates an **owning** reference. The returned `WxdArrayString` takes
+/// ownership of the underlying wxWidgets object and WILL free it when dropped via
+/// `wxd_ArrayString_Free`. The caller must not free the object manually after this call.
 impl From<*mut ffi::wxd_ArrayString_t> for WxdArrayString {
     fn from(ptr: *mut ffi::wxd_ArrayString_t) -> Self {
         WxdArrayString { ptr, owns_ptr: true }
