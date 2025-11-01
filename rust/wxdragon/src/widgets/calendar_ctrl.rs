@@ -43,7 +43,7 @@ impl CalendarCtrl {
         assert!(!parent_ptr.is_null(), "CalendarCtrl requires a parent");
 
         // Convert Option<&DateTime> to *const ffi::wxd_DateTime_t
-        let c_date_ptr = date.map_or(ptr::null(), |d| **d);
+        let c_date_ptr = date.map_or(ptr::null(), |d| d.as_const_ptr());
 
         let ptr = unsafe {
             ffi::wxd_CalendarCtrl_Create(parent_ptr, id, c_date_ptr, pos.into(), size.into(), style as ffi::wxd_Style_t)
@@ -61,7 +61,7 @@ impl CalendarCtrl {
 
     /// Sets the currently displayed date.
     pub fn set_date(&self, date: &DateTime) -> bool {
-        unsafe { ffi::wxd_CalendarCtrl_SetDate(self.window.as_ptr() as *mut _, **date) }
+        unsafe { ffi::wxd_CalendarCtrl_SetDate(self.window.as_ptr() as *mut _, date.as_const_ptr()) }
     }
 
     /// Gets the currently displayed date.

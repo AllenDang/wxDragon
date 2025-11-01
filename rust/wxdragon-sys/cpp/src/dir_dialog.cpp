@@ -44,12 +44,12 @@ wxd_DirDialog_SetPath(wxd_DirDialog_t* self, const char* path)
 }
 
 WXD_EXPORTED int
-wxd_DirDialog_GetMessage(wxd_DirDialog_t* self, char* buffer, size_t bufLen)
+wxd_DirDialog_GetMessage(const wxd_DirDialog_t* self, char* buffer, size_t bufLen)
 {
     if (!self)
         return -1;
 
-    wxDirDialog* dialog = reinterpret_cast<wxDirDialog*>(self);
+    const wxDirDialog* dialog = reinterpret_cast<const wxDirDialog*>(self);
     wxString message = dialog->GetMessage();
 
     return (int)wxd_cpp_utils::copy_wxstring_to_buffer(message, buffer, bufLen);

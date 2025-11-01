@@ -77,7 +77,7 @@ impl DatePickerCtrl {
 
     /// Sets the currently selected date.
     pub fn set_value(&self, dt: &DateTime) {
-        unsafe { ffi::wxd_DatePickerCtrl_SetValue(self.window.as_ptr() as *mut ffi::wxd_DatePickerCtrl_t, **dt) };
+        unsafe { ffi::wxd_DatePickerCtrl_SetValue(self.window.as_ptr() as *mut ffi::wxd_DatePickerCtrl_t, dt.as_const_ptr()) };
     }
 
     /// Gets the valid range for dates on the control.
@@ -99,8 +99,8 @@ impl DatePickerCtrl {
     /// Sets the valid range for dates on the control.
     /// Pass `None` for `dt_start` or `dt_end` to remove the lower or upper bound, respectively.
     pub fn set_range(&self, dt_start: Option<&DateTime>, dt_end: Option<&DateTime>) {
-        let ptr_dt1 = dt_start.map_or(ptr::null(), |dt| **dt);
-        let ptr_dt2 = dt_end.map_or(ptr::null(), |dt| **dt);
+        let ptr_dt1 = dt_start.map_or(ptr::null(), |dt| dt.as_const_ptr());
+        let ptr_dt2 = dt_end.map_or(ptr::null(), |dt| dt.as_const_ptr());
 
         unsafe { ffi::wxd_DatePickerCtrl_SetRange(self.window.as_ptr() as *mut ffi::wxd_DatePickerCtrl_t, ptr_dt1, ptr_dt2) };
     }
@@ -137,7 +137,7 @@ widget_builder!(
     build_impl: |slf| {
         assert!(!slf.parent.handle_ptr().is_null(), "DatePickerCtrl requires a parent");
 
-        let ffi_dt_ptr = slf.value.as_ref().map_or(ptr::null(), |dt_val| **dt_val);
+        let ffi_dt_ptr = slf.value.as_ref().map_or(ptr::null(), |dt_val| dt_val.as_const_ptr());
 
         let ptr = unsafe {
             ffi::wxd_DatePickerCtrl_Create(

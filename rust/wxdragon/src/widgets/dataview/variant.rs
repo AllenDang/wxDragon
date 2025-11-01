@@ -99,9 +99,9 @@ impl Variant {
         var
     }
 
-    pub fn from_datetime(dt: DateTime) -> Self {
-        let var = Self::new();
-        unsafe { ffi::wxd_Variant_SetDateTime(var.ptr, *dt.as_ref()) };
+    pub fn from_datetime(dt: &DateTime) -> Self {
+        let mut var = Self::new();
+        unsafe { ffi::wxd_Variant_SetDateTime(var.as_mut_ptr(), dt.as_const_ptr()) };
         var
     }
 
@@ -358,15 +358,13 @@ impl From<String> for Variant {
 
 impl From<DateTime> for Variant {
     fn from(value: DateTime) -> Self {
-        Self::from_datetime(value)
+        Self::from(&value)
     }
 }
 
 impl<'a> From<&'a DateTime> for Variant {
     fn from(value: &'a DateTime) -> Self {
-        let var = Variant::new();
-        unsafe { ffi::wxd_Variant_SetDateTime(var.ptr, **value) };
-        var
+        Self::from_datetime(value)
     }
 }
 
