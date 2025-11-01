@@ -82,7 +82,7 @@ impl FileDialog {
     /// Gets the full paths of the selected files (for multi-select dialogs).
     pub fn get_paths(&self) -> Vec<String> {
         let arr_str = WxdArrayString::new();
-        unsafe { ffi::wxd_FileDialog_GetPaths(self.as_ptr(), arr_str.as_ptr()) };
+        unsafe { ffi::wxd_FileDialog_GetPaths(self.as_ptr(), *arr_str.as_ref()) };
         arr_str.into_vec()
     }
 
@@ -111,9 +111,7 @@ impl FileDialog {
     /// Gets the filenames of the selected files (for multi-select dialogs).
     pub fn get_filenames(&self) -> Vec<String> {
         let arr_str = WxdArrayString::new();
-        unsafe {
-            ffi::wxd_FileDialog_GetFilenames(self.as_ptr(), arr_str.as_ptr());
-        }
+        unsafe { ffi::wxd_FileDialog_GetFilenames(self.as_ptr(), *arr_str.as_ref()) };
         arr_str.into_vec()
     }
 

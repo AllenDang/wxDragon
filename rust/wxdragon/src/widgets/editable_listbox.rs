@@ -141,7 +141,7 @@ impl EditableListBox {
             return Vec::new();
         }
 
-        let wxd_array_string = unsafe { WxdArrayString::from_ptr(array_str_ptr, true) };
+        let wxd_array_string = WxdArrayString::from(array_str_ptr);
         wxd_array_string.get_strings()
     }
 

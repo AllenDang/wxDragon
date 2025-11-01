@@ -8,12 +8,12 @@
 #include <wx/checklst.h> // For wxCheckListBox
 
 WXD_EXPORTED wxd_MultiChoiceDialog_t*
-wxd_MultiChoiceDialog_Create(wxd_Window_t* parent, const char* message, const char* caption,
-                             wxd_ArrayString_t* choices, wxd_Style_t style, int x, int y, int width,
-                             int height)
+wxd_MultiChoiceDialog_Create(const wxd_Window_t* parent, const char* message, const char* caption,
+                             const wxd_ArrayString_t* choices, wxd_Style_t style, int x, int y,
+                             int width, int height)
 {
     wxWindow* parent_wx = (wxWindow*)parent;
-    wxArrayString* wxChoices = reinterpret_cast<wxArrayString*>(choices);
+    const wxArrayString* wxChoices = reinterpret_cast<const wxArrayString*>(choices);
 
     // Default position/size if not specified
     wxPoint pos = (x == -1 && y == -1) ? wxDefaultPosition : wxPoint(x, y);
@@ -78,7 +78,7 @@ wxd_MultiChoiceDialog_SetSelections(wxd_MultiChoiceDialog_t* self, const int* se
 // and use the selection indices to retrieve the chosen strings
 WXD_EXPORTED void
 wxd_MultiChoiceDialog_GetStringSelections(wxd_MultiChoiceDialog_t* self,
-                                          wxd_ArrayString_t* selections)
+                                          const wxd_ArrayString_t* selections)
 {
     if (!self || !selections)
         return;
@@ -87,7 +87,8 @@ wxd_MultiChoiceDialog_GetStringSelections(wxd_MultiChoiceDialog_t* self,
     wxArrayInt selectedIndices = dialog->GetSelections();
 
     // Get the underlying wxArrayString from the wxd_ArrayString_t
-    wxArrayString* wxSelections = reinterpret_cast<wxArrayString*>(selections);
+    wxArrayString* wxSelections =
+        const_cast<wxArrayString*>(reinterpret_cast<const wxArrayString*>(selections));
 
     // Clear the target array
     wxSelections->Clear();

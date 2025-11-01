@@ -11,11 +11,23 @@ wxd_ArrayString_Create()
 }
 
 WXD_EXPORTED void
-wxd_ArrayString_Free(wxd_ArrayString_t* self)
+wxd_ArrayString_Free(const wxd_ArrayString_t* self)
 {
     if (self) {
-        delete reinterpret_cast<wxArrayString*>(self);
+        delete const_cast<wxArrayString*>(reinterpret_cast<const wxArrayString*>(self));
     }
+}
+
+WXD_EXPORTED wxd_ArrayString_t*
+wxd_ArrayString_Clone(const wxd_ArrayString_t* array)
+{
+    if (!array)
+        return nullptr;
+    const wxArrayString* wx_array = reinterpret_cast<const wxArrayString*>(array);
+    wxArrayString* cloned = new (std::nothrow) wxArrayString(*wx_array);
+    if (!cloned)
+        return nullptr;
+    return reinterpret_cast<wxd_ArrayString_t*>(cloned);
 }
 
 WXD_EXPORTED int
@@ -49,31 +61,32 @@ wxd_ArrayString_GetString(const wxd_ArrayString_t* array, int index, char* buffe
 }
 
 WXD_EXPORTED bool
-wxd_ArrayString_Add(wxd_ArrayString_t* self, const char* str)
+wxd_ArrayString_Add(const wxd_ArrayString_t* self, const char* str)
 {
     if (!self)
         return false;
-    wxArrayString* wx_arr_str = reinterpret_cast<wxArrayString*>(self);
-    wx_arr_str->Add(WXD_STR_TO_WX_STRING_UTF8_NULL_OK(str));
+    wxArrayString* arr = const_cast<wxArrayString*>(reinterpret_cast<const wxArrayString*>(self));
+    arr->Add(WXD_STR_TO_WX_STRING_UTF8_NULL_OK(str));
     return true;
 }
 
 WXD_EXPORTED void
-wxd_ArrayString_Clear(wxd_ArrayString_t* self)
+wxd_ArrayString_Clear(const wxd_ArrayString_t* self)
 {
     if (!self)
         return;
-    wxArrayString* wx_arr_str = reinterpret_cast<wxArrayString*>(self);
-    wx_arr_str->Clear();
+    wxArrayString* arr = const_cast<wxArrayString*>(reinterpret_cast<const wxArrayString*>(self));
+    arr->Clear();
 }
 
 // Helper function to populate a wxd_ArrayString_t from a wxArrayString
 // Exported for use by other components like file_dialog.cpp
 WXD_EXPORTED void
-wxd_ArrayString_AssignFromWxArrayString(wxd_ArrayString_t* target, const wxArrayString& source)
+wxd_ArrayString_AssignFromWxArrayString(const wxd_ArrayString_t* target,
+                                        const wxArrayString& source)
 {
     if (!target)
         return;
-    wxArrayString* dest_wx_arr = reinterpret_cast<wxArrayString*>(target);
-    *dest_wx_arr = source; // wxArrayString has an assignment operator
+    wxArrayString* arr = const_cast<wxArrayString*>(reinterpret_cast<const wxArrayString*>(target));
+    *arr = source; // wxArrayString has an assignment operator
 }

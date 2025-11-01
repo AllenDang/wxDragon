@@ -16,7 +16,10 @@ WXD_EXPORTED wxd_ArrayString_t*
 wxd_ArrayString_Create();
 
 WXD_EXPORTED void
-wxd_ArrayString_Free(wxd_ArrayString_t* self);
+wxd_ArrayString_Free(const wxd_ArrayString_t* self);
+
+WXD_EXPORTED wxd_ArrayString_t*
+wxd_ArrayString_Clone(const wxd_ArrayString_t* array);
 
 WXD_EXPORTED int
 wxd_ArrayString_GetCount(const wxd_ArrayString_t* array);
@@ -34,10 +37,10 @@ wxd_ArrayString_GetString(const wxd_ArrayString_t* array, int index, char* buffe
                           size_t bufferLen);
 
 WXD_EXPORTED bool
-wxd_ArrayString_Add(wxd_ArrayString_t* self, const char* str);
+wxd_ArrayString_Add(const wxd_ArrayString_t* self, const char* str);
 
 WXD_EXPORTED void
-wxd_ArrayString_Clear(wxd_ArrayString_t* self);
+wxd_ArrayString_Clear(const wxd_ArrayString_t* self);
 
 #ifdef __cplusplus
 }

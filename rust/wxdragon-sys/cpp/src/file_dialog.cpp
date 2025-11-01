@@ -6,7 +6,8 @@
 #include "wxd_utils.h" // For WXD_STR_TO_WX_STRING_UTF8_NULL_OK and GET_WX_STRING_RESULT
 
 extern void
-wxd_ArrayString_AssignFromWxArrayString(wxd_ArrayString_t* target, const wxArrayString& source);
+wxd_ArrayString_AssignFromWxArrayString(const wxd_ArrayString_t* target,
+                                        const wxArrayString& source);
 
 // --- wxFileDialog ---
 
@@ -47,7 +48,7 @@ wxd_FileDialog_GetPath(wxd_FileDialog_t* self, char* buffer, size_t bufLen)
 }
 
 WXD_EXPORTED void
-wxd_FileDialog_GetPaths(wxd_FileDialog_t* self, wxd_ArrayString_t* paths_out)
+wxd_FileDialog_GetPaths(const wxd_FileDialog_t* self, const wxd_ArrayString_t* paths_out)
 {
     if (!self || !paths_out)
         return;
@@ -68,7 +69,7 @@ wxd_FileDialog_GetFilename(const wxd_FileDialog_t* self, char* buffer, size_t bu
 }
 
 WXD_EXPORTED void
-wxd_FileDialog_GetFilenames(wxd_FileDialog_t* self, wxd_ArrayString_t* filenames_out)
+wxd_FileDialog_GetFilenames(const wxd_FileDialog_t* self, const wxd_ArrayString_t* filenames_out)
 {
     if (!self || !filenames_out)
         return;

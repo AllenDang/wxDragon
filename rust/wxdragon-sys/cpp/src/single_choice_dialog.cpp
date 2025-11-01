@@ -6,12 +6,12 @@
 #include <wx/choicdlg.h>
 
 WXD_EXPORTED wxd_SingleChoiceDialog_t*
-wxd_SingleChoiceDialog_Create(wxd_Window_t* parent, const char* message, const char* caption,
-                              wxd_ArrayString_t* choices, wxd_Style_t style, int x, int y,
+wxd_SingleChoiceDialog_Create(const wxd_Window_t* parent, const char* message, const char* caption,
+                              const wxd_ArrayString_t* choices, wxd_Style_t style, int x, int y,
                               int width, int height)
 {
     wxWindow* parent_wx = (wxWindow*)parent;
-    wxArrayString* wxChoices = reinterpret_cast<wxArrayString*>(choices);
+    const wxArrayString* wxChoices = reinterpret_cast<const wxArrayString*>(choices);
 
     // Default position/size if not specified
     wxPoint pos = (x == -1 && y == -1) ? wxDefaultPosition : wxPoint(x, y);
