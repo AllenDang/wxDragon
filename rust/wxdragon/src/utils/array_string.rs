@@ -118,18 +118,31 @@ impl WxdArrayString {
     }
 
     /// Returns a const raw pointer to the underlying wxd_ArrayString_t.
+    ///
+    /// Ownership notes:
+    /// - This does not transfer ownership; the pointer is only valid while this wrapper (or another owner) keeps it alive.
+    /// - Do not free this pointer yourself. The owner is responsible for freeing it (see `into_raw_mut`).
     pub fn as_const_ptr(&self) -> *const ffi::wxd_ArrayString_t {
         self.ptr as *const _
     }
 
     /// Returns a mutable raw pointer to the underlying wxd_ArrayString_t.
+    ///
     /// Use with extreme care; prefer safe methods when possible.
+    ///
+    /// Ownership notes:
+    /// - This does not transfer ownership. If you mutate through this pointer, you must ensure exclusive access.
+    /// - Do not free through this pointer; use `into_raw_mut` if you need to assume ownership and manage lifetime manually.
     pub fn as_mut_ptr(&mut self) -> *mut ffi::wxd_ArrayString_t {
         self.ptr
     }
 
     /// Consumes self and returns a raw mutable pointer, transferring ownership to the caller.
-    /// The caller is responsible for freeing the pointer with wxd_ArrayString_Free.
+    ///
+    /// After calling this, you must NOT use the original `WxdArrayString` again.
+    ///
+    /// Caller responsibilities:
+    /// - You now own the pointer and must free it exactly once with `wxd_ArrayString_Free`.
     pub fn into_raw_mut(mut self) -> *mut ffi::wxd_ArrayString_t {
         assert!(
             self.owns_ptr,
@@ -141,7 +154,12 @@ impl WxdArrayString {
     }
 
     /// Consumes a borrowed (non-owning) wrapper and returns a raw const pointer without taking ownership.
+    ///
     /// Panics if called on an owning wrapper to avoid leaking the owned resource.
+    ///
+    /// Caller responsibilities:
+    /// - This does NOT transfer ownership; do not free the returned pointer.
+    /// - The pointer remains valid only while the original owner keeps it alive.
     pub fn into_raw_const(self) -> *const ffi::wxd_ArrayString_t {
         assert!(
             !self.owns_ptr,

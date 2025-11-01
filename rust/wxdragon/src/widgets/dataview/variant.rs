@@ -119,18 +119,32 @@ impl Variant {
     }
 
     /// Returns a const raw pointer to the underlying wxd_Variant_t.
+    ///
+    /// Ownership notes:
+    /// - This does not transfer ownership; the pointer is only valid while this `Variant` is alive (unless moved via `into_raw_*`).
+    /// - Do not destroy this pointer yourself. Destruction is handled by the owning wrapper or by `into_raw_mut` transfer.
     pub fn as_const_ptr(&self) -> *const ffi::wxd_Variant_t {
         self.ptr as *const _
     }
 
     /// Returns a mutable raw pointer to the underlying wxd_Variant_t.
+    ///
     /// Use with care; prefer safe methods when possible.
+    ///
+    /// Ownership notes:
+    /// - This does not transfer ownership. If you mutate through this pointer, you must uphold exclusive access and invariants.
+    /// - Do not destroy the returned pointer here; use `into_raw_mut` to transfer ownership if you need to manage lifetime manually.
     pub fn as_mut_ptr(&mut self) -> *mut ffi::wxd_Variant_t {
         self.ptr
     }
 
     /// Consumes self and returns a raw mutable pointer, transferring ownership to the caller.
-    /// Caller must destroy it with `wxd_Variant_Destroy`.
+    ///
+    /// After calling this, you must NOT use the original `Variant` again.
+    ///
+    /// Caller responsibilities:
+    /// - You now own the pointer and must destroy it exactly once with `wxd_Variant_Destroy`.
+    /// - Ensure no further use-after-free occurs.
     pub fn into_raw_mut(self) -> *mut ffi::wxd_Variant_t {
         assert!(self.owned, "into_raw_mut can only be called on owning Variant instances");
         let ptr = self.ptr;
@@ -139,7 +153,12 @@ impl Variant {
     }
 
     /// Consumes a borrowed (non-owning) wrapper and returns a raw const pointer without taking ownership.
+    ///
     /// Panics if called on an owning wrapper to avoid leaking the owned resource.
+    ///
+    /// Caller responsibilities:
+    /// - This does NOT transfer ownership; do not destroy the returned pointer.
+    /// - The pointer remains valid only while the original owner keeps it alive.
     pub fn into_raw_const(self) -> *const ffi::wxd_Variant_t {
         assert!(
             !self.owned,

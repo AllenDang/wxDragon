@@ -167,25 +167,44 @@ impl Bitmap {
     }
 
     /// Returns a const raw pointer to the underlying wxd_Bitmap_t.
+    ///
+    /// Ownership notes:
+    /// - This does not transfer ownership; the pointer is only valid while this `Bitmap` (or another owner) keeps it alive.
+    /// - Do not destroy this pointer yourself; the owner (or a caller who used `into_raw_mut`) is responsible.
     pub fn as_const_ptr(&self) -> *const ffi::wxd_Bitmap_t {
         self.ptr as *const _
     }
 
     /// Returns a mutable raw pointer to the underlying wxd_Bitmap_t.
+    ///
     /// Use with care; prefer safe methods when possible.
+    ///
+    /// Ownership notes:
+    /// - This does not transfer ownership. If you mutate through this pointer, ensure exclusive access and maintain invariants.
+    /// - Do not destroy the returned pointer here; use `into_raw_mut` if you must assume ownership and destroy manually.
     pub fn as_mut_ptr(&mut self) -> *mut ffi::wxd_Bitmap_t {
         self.ptr
     }
 
     /// Consumes self and returns a raw mutable pointer, transferring ownership to the caller.
-    /// Caller must destroy it with `wxd_Bitmap_Destroy`.
+    ///
+    /// After calling this, you must NOT use the original `Bitmap` again.
+    ///
+    /// Caller responsibilities:
+    /// - You now own the pointer and must destroy it exactly once with `wxd_Bitmap_Destroy`.
+    /// - Ensure the pointer is not used after destruction.
     pub fn into_raw_mut(self) -> *mut ffi::wxd_Bitmap_t {
         self.try_into()
             .expect("into_raw_mut can only be called on owning Bitmap instances")
     }
 
     /// Consumes a borrowed (non-owning) wrapper and returns a raw const pointer without taking ownership.
+    ///
     /// Panics if called on an owning wrapper to avoid leaking the owned resource.
+    ///
+    /// Caller responsibilities:
+    /// - This does NOT transfer ownership; do not destroy the returned pointer.
+    /// - The pointer remains valid only while the original owner keeps it alive.
     pub fn into_raw_const(self) -> *const ffi::wxd_Bitmap_t {
         self.try_into()
             .expect("into_raw_const must only be used on non-owning (borrowed) wrappers")
