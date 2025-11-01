@@ -34,11 +34,11 @@ wxd_SingleChoiceDialog_Create(const wxd_Window_t* parent, const char* message, c
 }
 
 WXD_EXPORTED int
-wxd_SingleChoiceDialog_GetSelection(wxd_SingleChoiceDialog_t* self)
+wxd_SingleChoiceDialog_GetSelection(const wxd_SingleChoiceDialog_t* self)
 {
     if (!self)
         return -1;
-    wxSingleChoiceDialog* dialog = (wxSingleChoiceDialog*)self;
+    const wxSingleChoiceDialog* dialog = reinterpret_cast<const wxSingleChoiceDialog*>(self);
     return dialog->GetSelection();
 }
 
@@ -47,17 +47,17 @@ wxd_SingleChoiceDialog_SetSelection(wxd_SingleChoiceDialog_t* self, int selectio
 {
     if (!self)
         return;
-    wxSingleChoiceDialog* dialog = (wxSingleChoiceDialog*)self;
+    wxSingleChoiceDialog* dialog = reinterpret_cast<wxSingleChoiceDialog*>(self);
     dialog->SetSelection(selection);
 }
 
 WXD_EXPORTED int
-wxd_SingleChoiceDialog_GetStringSelection(wxd_SingleChoiceDialog_t* self, char* buffer,
+wxd_SingleChoiceDialog_GetStringSelection(const wxd_SingleChoiceDialog_t* self, char* buffer,
                                           size_t bufLen)
 {
     if (!self)
         return -1;
-    wxSingleChoiceDialog* dialog = (wxSingleChoiceDialog*)self;
+    const wxSingleChoiceDialog* dialog = reinterpret_cast<const wxSingleChoiceDialog*>(self);
     wxString val = dialog->GetStringSelection();
     return (int)wxd_cpp_utils::copy_wxstring_to_buffer(val, buffer, bufLen);
 }

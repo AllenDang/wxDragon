@@ -72,11 +72,11 @@ wxd_DateTime_IsValid(const wxd_DateTime_t* dt)
 }
 
 WXD_EXPORTED void
-wxd_DateTime_Destroy(const wxd_DateTime_t* dt)
+wxd_DateTime_Destroy(wxd_DateTime_t* dt)
 {
     if (!dt)
         return;
-    wxDateTime* wdt = const_cast<wxDateTime*>(reinterpret_cast<const wxDateTime*>(dt));
+    wxDateTime* wdt = reinterpret_cast<wxDateTime*>(dt);
     delete wdt;
 }
 

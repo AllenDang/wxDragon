@@ -220,7 +220,7 @@ WXD_EXPORTED bool
 wxd_DateTime_IsValid(const wxd_DateTime_t* dt);
 
 WXD_EXPORTED void
-wxd_DateTime_Destroy(const wxd_DateTime_t* dt);
+wxd_DateTime_Destroy(wxd_DateTime_t* dt);
 
 WXD_EXPORTED int
 wxd_DateTime_GetYear(const wxd_DateTime_t* dt);
@@ -247,13 +247,13 @@ wxd_SingleChoiceDialog_Create(const wxd_Window_t* parent, const char* message, c
                               int width, int height);
 
 WXD_EXPORTED int
-wxd_SingleChoiceDialog_GetSelection(wxd_SingleChoiceDialog_t* self);
+wxd_SingleChoiceDialog_GetSelection(const wxd_SingleChoiceDialog_t* self);
 
 WXD_EXPORTED void
 wxd_SingleChoiceDialog_SetSelection(wxd_SingleChoiceDialog_t* self, int selection);
 
 WXD_EXPORTED int
-wxd_SingleChoiceDialog_GetStringSelection(wxd_SingleChoiceDialog_t* self, char* buffer,
+wxd_SingleChoiceDialog_GetStringSelection(const wxd_SingleChoiceDialog_t* self, char* buffer,
                                           size_t bufLen);
 
 // --- MultiChoiceDialog ---
@@ -263,7 +263,8 @@ wxd_MultiChoiceDialog_Create(const wxd_Window_t* parent, const char* message, co
                              int width, int height);
 
 WXD_EXPORTED void
-wxd_MultiChoiceDialog_GetSelections(wxd_MultiChoiceDialog_t* self, int* selections, int* count);
+wxd_MultiChoiceDialog_GetSelections(const wxd_MultiChoiceDialog_t* self, int* selections,
+                                    int* count);
 
 WXD_EXPORTED void
 wxd_MultiChoiceDialog_SetSelections(wxd_MultiChoiceDialog_t* self, const int* selections,
@@ -291,7 +292,7 @@ WXD_EXPORTED void
 wxd_DirDialog_SetPath(wxd_DirDialog_t* self, const char* path);
 
 WXD_EXPORTED int
-wxd_DirDialog_GetMessage(wxd_DirDialog_t* self, char* buffer, size_t bufLen);
+wxd_DirDialog_GetMessage(const wxd_DirDialog_t* self, char* buffer, size_t bufLen);
 
 WXD_EXPORTED void
 wxd_DirDialog_SetMessage(wxd_DirDialog_t* self, const char* message);

@@ -34,12 +34,13 @@ wxd_MultiChoiceDialog_Create(const wxd_Window_t* parent, const char* message, co
 }
 
 WXD_EXPORTED void
-wxd_MultiChoiceDialog_GetSelections(wxd_MultiChoiceDialog_t* self, int* selections, int* count)
+wxd_MultiChoiceDialog_GetSelections(const wxd_MultiChoiceDialog_t* self, int* selections,
+                                    int* count)
 {
     if (!self || !selections || !count)
         return;
 
-    wxMultiChoiceDialog* dialog = (wxMultiChoiceDialog*)self;
+    const wxMultiChoiceDialog* dialog = reinterpret_cast<const wxMultiChoiceDialog*>(self);
     wxArrayInt selectedItems = dialog->GetSelections();
 
     // Handle the case where no selections exist
