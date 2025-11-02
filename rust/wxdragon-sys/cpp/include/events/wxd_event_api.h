@@ -135,6 +135,10 @@ wxd_DataViewEvent_SetValue(wxd_Event_t* event, const wxd_Variant_t* value);
 WXD_EXPORTED bool
 wxd_DataViewEvent_IsEditCancelled(wxd_Event_t* event);
 
+// Position accessor for DataView events (returns {-1,-1} if not available)
+WXD_EXPORTED wxd_Point
+wxd_DataViewEvent_GetPosition(const wxd_Event_t* event);
+
 // TreeListCtrl event accessors
 WXD_EXPORTED wxd_Long_t
 wxd_TreeListEvent_GetItem(wxd_Event_t* event);

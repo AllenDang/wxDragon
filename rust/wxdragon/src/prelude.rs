@@ -82,6 +82,7 @@ pub use crate::widgets::dataview::{
     DataViewTextRenderer, // Added DataViewTextRenderer
     DataViewTreeCtrl,
     DataViewTreeCtrlBuilder,
+    TreeViewEventHandler,
     Variant,
     VariantType, // Added VariantType
 };

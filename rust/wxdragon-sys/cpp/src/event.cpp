@@ -1705,6 +1705,27 @@ wxd_DataViewEvent_IsEditCancelled(wxd_Event_t* event)
     return dve->IsEditCancelled();
 }
 
+// Return the mouse position associated with a DataView event, if provided by wxWidgets.
+// If the event has no position (most do), returns {-1, -1}.
+WXD_EXPORTED wxd_Point
+wxd_DataViewEvent_GetPosition(const wxd_Event_t* event)
+{
+    wxd_Point defaultPos = { -1, -1 };
+    if (!event)
+        return defaultPos;
+
+    const wxEvent* wx_event = reinterpret_cast<const wxEvent*>(event);
+    const wxDataViewEvent* dve = dynamic_cast<const wxDataViewEvent*>(wx_event);
+    if (!dve)
+        return defaultPos;
+
+    // Not all DataView events populate position. GetPosition() returns whatever wxWidgets provides;
+    // for events without position data, this is typically wxDefaultPosition (-1,-1).
+    wxPoint p = dve->GetPosition();
+    wxd_Point out = { p.x, p.y };
+    return out;
+}
+
 WXD_EXPORTED const wxd_DataViewItem_t*
 wxd_DataViewEvent_GetItem(wxd_Event_t* event)
 {

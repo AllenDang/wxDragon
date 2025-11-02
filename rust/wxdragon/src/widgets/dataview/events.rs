@@ -73,7 +73,18 @@ impl DataViewEventData {
 
     /// Get the mouse position in window coordinates
     pub fn get_position(&self) -> Option<crate::Point> {
-        self.event.get_position()
+        if self.event.is_null() {
+            return None;
+        }
+        // Prefer DataViewEvent-specific position, which is provided by wxWidgets for
+        // certain DataView events (e.g., context menu events). For other events,
+        // wxWidgets returns wxDefaultPosition (-1, -1).
+        let p = unsafe { ffi::wxd_DataViewEvent_GetPosition(self.event.0) };
+        if p.x == -1 && p.y == -1 {
+            None
+        } else {
+            Some(crate::Point { x: p.x, y: p.y })
+        }
     }
 
     /// Get the ID of the control that generated the event
