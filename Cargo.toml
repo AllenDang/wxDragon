@@ -9,6 +9,7 @@ members = [
   "examples/rust/dnd_advanced",
   "examples/rust/event_token_test",
   "examples/rust/events_test",
+  "examples/rust/events_triple_demo",
   "examples/rust/gallery",
   "examples/rust/generic_dialog_test",
   "examples/rust/gridbagsizer_test",

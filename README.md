@@ -317,11 +317,16 @@ wxDragon provides comprehensive widget support including:
 - **Dialogs** - File choosers, message boxes, custom dialogs
 - **Media & Graphics** - Image display, animations, media playback, drawing contexts
 
+## Guides
+
+- Event handling: see [docs/events](docs/events.md) for a practical mapping from wxWidgets to wxDragon, safety notes across FFI, skip/veto patterns, and common recipes.
+
 ## Examples
 
 Explore the `examples/` directory for comprehensive demonstrations:
 
 - **Simple** - Basic window and controls
+- **Events Triple Demo** - Veto window close, background thread with call_after, and Idle processing (`events_triple_demo`)
 - **Gallery** - Showcase of all available widgets
 - **Custom Widgets** - Creating your own controls
 - **Media Player** - Audio/video playback application
