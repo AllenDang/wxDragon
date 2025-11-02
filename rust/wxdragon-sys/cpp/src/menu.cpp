@@ -50,39 +50,26 @@ wxd_Menu_GetMenuItemCount(const wxd_Menu_t* menu)
 // @param menu Pointer to wxMenu.
 // @param buffer Buffer to receive the UTF-8 title.
 // @param buffer_size Size of the buffer.
-// @return Number of bytes required to store the UTF-8 title, excluding the terminating NUL.
-WXD_EXPORTED size_t
+// @return Number of bytes required to store the UTF-8 title, excluding the terminating NUL, or -1 on error.
+WXD_EXPORTED int
 wxd_Menu_GetTitle(const wxd_Menu_t* menu, char* buffer, size_t buffer_size)
 {
     if (!menu) {
-        return 0;
+        return -1;
     }
 
     const wxMenu* wx_menu = reinterpret_cast<const wxMenu*>(menu);
     const wxString title = wx_menu->GetTitle();
-    const wxScopedCharBuffer utf8_buf = title.ToUTF8();
-    const char* data = utf8_buf.data();
+    return (int)wxd_cpp_utils::copy_wxstring_to_buffer(title, buffer, buffer_size);
+}
 
-    // If conversion failed, treat as empty string.
-    if (!data) {
-        if (buffer && buffer_size > 0) {
-            buffer[0] = '\0';
-        }
-        return 0;
-    }
-
-    const size_t required = std::strlen(data);
-
-    if (buffer && buffer_size > 0) {
-        const size_t to_copy = (required < (buffer_size - 1)) ? required : (buffer_size - 1);
-        if (to_copy > 0) {
-            std::memcpy(buffer, data, to_copy);
-        }
-        buffer[to_copy] = '\0';
-    }
-
-    // Always return the required size, regardless of truncation.
-    return required;
+WXD_EXPORTED void
+wxd_Menu_SetTitle(wxd_Menu_t* menu, const char* title)
+{
+    if (!menu)
+        return;
+    wxMenu* wx_menu = reinterpret_cast<wxMenu*>(menu);
+    wx_menu->SetTitle(wxString::FromUTF8(title ? title : ""));
 }
 
 // @brief Destroy a wxMenu.

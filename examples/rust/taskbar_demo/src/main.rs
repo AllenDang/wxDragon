@@ -46,7 +46,7 @@ fn main() {
             .build();
 
         // Set the popup menu to show automatically when the taskbar icon is clicked
-        taskbar.set_popup_menu(&popup_menu);
+        taskbar.set_popup_menu(&mut popup_menu);
 
         // Bind menu event handler to the TaskBarIcon itself (not the frame)
         taskbar.on_menu({
@@ -137,7 +137,7 @@ fn main() {
         });
 
         frame.on_destroy(move |_evt| {
-            popup_menu.destroy_meun(); // Clean up the popup menu to release the rust closures of menu items
+            popup_menu.destroy_menu(); // Clean up the popup menu to release the rust closures of menu items
             taskbar.destroy(); // Clean up the TaskBarIcon
             log::info!("Application on_destroy.");
         });

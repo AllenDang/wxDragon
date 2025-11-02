@@ -1494,23 +1494,24 @@ pub trait WxWidget: std::any::Any {
     ///
     /// # Example
     ///
-    /// ```ignore
-    /// let menu = Menu::builder()
+    /// ```no_run
+    /// # use wxdragon::prelude::*;
+    /// # let window: wxdragon::Window = unimplemented!();
+    /// let mut menu = Menu::builder()
     ///     .append_item(1001, "Option 1", "")
     ///     .append_item(1002, "Option 2", "")
     ///     .build();
-    /// window.popup_menu(&menu, None);
+    /// window.popup_menu(&mut menu, None);
     /// ```
-    fn popup_menu(&self, menu: &crate::Menu, pos: Option<crate::geometry::Point>) -> bool {
+    fn popup_menu(&self, menu: &mut crate::Menu, pos: Option<crate::geometry::Point>) -> bool {
         let handle = self.handle_ptr();
-        let menu_ptr = **menu;
-        if handle.is_null() || menu_ptr.is_null() {
+        if handle.is_null() || menu.as_mut_ptr().is_null() {
             return false;
         }
         let pos = pos.map(|p| self.screen_to_client(p)).unwrap_or(crate::DEFAULT_POSITION);
         let pos_ptr = &pos as *const crate::geometry::Point as *const ffi::wxd_Point;
 
-        unsafe { ffi::wxd_Window_PopupMenu(handle, menu_ptr, pos_ptr) }
+        unsafe { ffi::wxd_Window_PopupMenu(handle, menu.as_mut_ptr(), pos_ptr) }
     }
 }
 

@@ -167,10 +167,10 @@ fn main() {
                 });
 
                 // Show popup menu at mouse position
-                dataview_for_menu.popup_menu(&menu, None);
+                dataview_for_menu.popup_menu(&mut menu, None);
 
                 // Explicitly destroy the standalone popup menu to release its wxEvtHandler and closures
-                menu.destroy_meun();
+                menu.destroy_menu();
             }
         });
         frame.show(true);

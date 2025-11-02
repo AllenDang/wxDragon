@@ -384,13 +384,13 @@ pub fn create_dataview_virtual_tab(parent: &impl WxWidget) -> DataViewVirtualTab
         }
 
         // Create context menu once (reused for all right-clicks)
-        let context_menu = Menu::builder()
+        let mut context_menu = Menu::builder()
             .append_item(1001, "Modify", "")
             .append_item(1002, "Delete", "")
             .build();
 
         // Show the popup menu at current mouse position
-        dvc_for_popup.popup_menu(&context_menu, None);
+        dvc_for_popup.popup_menu(&mut context_menu, None);
     });
 
     sizer.add(&dvc, 1, SizerFlag::All | SizerFlag::Expand, 10);

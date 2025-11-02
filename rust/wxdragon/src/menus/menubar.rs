@@ -113,11 +113,10 @@ impl MenuBarBuilder {
         let menubar = MenuBar { ptr };
 
         // Append all collected menus
-        for (mut menu, title) in self.items {
+        for (menu, title) in self.items {
             let title_c = CString::new(title).unwrap_or_default();
             // MenuBar takes ownership of the menu pointer
-            unsafe { ffi::wxd_MenuBar_Append(menubar.ptr, *menu.as_ref(), title_c.as_ptr()) };
-            menu.relinquish_ownership();
+            unsafe { ffi::wxd_MenuBar_Append(menubar.ptr, menu.into_raw_mut(), title_c.as_ptr()) };
         }
 
         menubar

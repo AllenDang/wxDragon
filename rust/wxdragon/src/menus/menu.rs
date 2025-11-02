@@ -7,47 +7,86 @@ use crate::window::Window;
 #[cfg(feature = "xrc")]
 use crate::xrc::XmlResource;
 use crate::{CommandEventData, Event, EventType};
-use std::ffi::CString;
+use std::ffi::{CStr, CString};
 use std::marker::PhantomData;
+use std::rc::Rc;
 use wxdragon_sys as ffi;
 
-/// Represents a wxMenu.
+/// Safe Rust wrapper over a wxMenu pointer (wxd_Menu_t).
+///
+/// By default, instances created via builder or From<*mut> own the underlying native resource
+/// and will destroy it on drop. Instances created from a const pointer are treated as borrowed
+/// and will not destroy the underlying object.
 pub struct Menu {
     ptr: *mut ffi::wxd_Menu_t,
+    /// Whether this wrapper owns the underlying wxMenu and should destroy it on drop.
     owned: bool,
+    /// Prevent Send/Sync: wxWidgets objects are not thread-safe and must stay on UI thread.
+    _nosend_nosync: PhantomData<Rc<()>>,
 }
 
 impl Drop for Menu {
     fn drop(&mut self) {
-        self.destroy_meun();
+        self.destroy_menu();
     }
 }
 
 impl From<*mut ffi::wxd_Menu_t> for Menu {
     fn from(ptr: *mut ffi::wxd_Menu_t) -> Self {
-        Menu { ptr, owned: true }
+        assert!(!ptr.is_null(), "invalid null pointer passed to Menu::from");
+        Menu {
+            ptr,
+            owned: true,
+            _nosend_nosync: PhantomData,
+        }
     }
 }
 
 impl From<*const ffi::wxd_Menu_t> for Menu {
     fn from(ptr: *const ffi::wxd_Menu_t) -> Self {
+        assert!(!ptr.is_null(), "invalid null pointer passed to Menu::from");
+        let ptr = ptr as *mut ffi::wxd_Menu_t;
         Menu {
-            ptr: ptr as *mut ffi::wxd_Menu_t,
+            ptr,
             owned: false,
+            _nosend_nosync: PhantomData,
         }
     }
 }
 
-impl AsRef<*mut ffi::wxd_Menu_t> for Menu {
-    fn as_ref(&self) -> &*mut ffi::wxd_Menu_t {
-        &self.ptr
+// Pointer conversions mirroring Variant
+impl TryFrom<Menu> for *const ffi::wxd_Menu_t {
+    type Error = std::io::Error;
+    fn try_from(value: Menu) -> Result<Self, Self::Error> {
+        use std::io::{Error, ErrorKind::InvalidData, ErrorKind::InvalidInput};
+        if value.ptr.is_null() {
+            return Err(Error::new(InvalidInput, "Menu pointer is null"));
+        }
+        if value.is_owned() {
+            return Err(Error::new(
+                InvalidData,
+                "Menu owns the pointer, use into_raw_mut or mutable version",
+            ));
+        }
+        let ptr = value.ptr as *const _;
+        std::mem::forget(value);
+        Ok(ptr)
     }
 }
 
-impl std::ops::Deref for Menu {
-    type Target = *mut ffi::wxd_Menu_t;
-    fn deref(&self) -> &Self::Target {
-        &self.ptr
+impl TryFrom<Menu> for *mut ffi::wxd_Menu_t {
+    type Error = std::io::Error;
+    fn try_from(value: Menu) -> Result<Self, Self::Error> {
+        use std::io::{Error, ErrorKind::InvalidData, ErrorKind::InvalidInput};
+        if value.ptr.is_null() {
+            return Err(Error::new(InvalidInput, "Menu pointer is null"));
+        }
+        if !value.is_owned() {
+            return Err(Error::new(InvalidData, "Menu does not own the pointer, use const version"));
+        }
+        let ptr = value.ptr;
+        std::mem::forget(value);
+        Ok(ptr)
     }
 }
 
@@ -57,28 +96,32 @@ impl Menu {
         MenuBuilder::new()
     }
 
+    /// Returns whether this wrapper owns the underlying wxMenu.
+    pub fn is_owned(&self) -> bool {
+        self.owned
+    }
+
     /// Gets the number of items in the menu.
     pub fn get_item_count(&self) -> usize {
         unsafe { ffi::wxd_Menu_GetMenuItemCount(self.ptr) }
     }
 
     /// Gets the title of the menu.
-    pub fn get_title(&self) -> String {
+    pub fn get_title(&self) -> Option<String> {
         // First, get the required buffer size
         let size = unsafe { ffi::wxd_Menu_GetTitle(self.ptr, std::ptr::null_mut(), 0) };
-        if size == 0 {
-            return String::new();
+        if size < 0 {
+            return None;
         }
 
-        // Allocate buffer
-        let mut buffer: Vec<u8> = vec![0; size + 1]; // +1 for null terminator
+        let mut buffer = vec![0; size as usize + 1]; // +1 for null terminator
+        unsafe { ffi::wxd_Menu_GetTitle(self.ptr, buffer.as_mut_ptr(), buffer.len()) };
+        Some(unsafe { CStr::from_ptr(buffer.as_ptr()).to_string_lossy().to_string() })
+    }
 
-        // Get the title
-        unsafe { ffi::wxd_Menu_GetTitle(self.ptr, buffer.as_mut_ptr() as *mut i8, buffer.len()) };
-
-        // Convert to String
-        let cstr = unsafe { CString::from_vec_unchecked(buffer) };
-        cstr.to_string_lossy().into_owned()
+    pub fn set_title(&mut self, title: &str) {
+        let title_c = CString::new(title).unwrap_or_default();
+        unsafe { ffi::wxd_Menu_SetTitle(self.as_mut_ptr(), title_c.as_ptr()) };
     }
 
     /// Explicitly destroy this Menu. Use this for standalone/popup menus that are not
@@ -86,12 +129,37 @@ impl Menu {
     ///
     /// Safety: Do NOT call this if the menu was appended to a MenuBar, as the menubar
     /// takes ownership and will delete it, leading to double free.
-    pub fn destroy_meun(&mut self) {
+    pub fn destroy_menu(&mut self) {
         if self.owned && !self.ptr.is_null() {
-            log::debug!("Menu '{}' destroyed", self.get_title());
+            log::debug!("Menu '{:?}' destroyed", self.get_title());
             unsafe { ffi::wxd_Menu_Destroy(self.ptr) };
             self.ptr = std::ptr::null_mut();
         }
+    }
+
+    /// Returns a const raw pointer to the underlying wxMenu.
+    /// This does not transfer ownership and is only valid while self is alive.
+    pub fn as_const_ptr(&self) -> *const ffi::wxd_Menu_t {
+        self.ptr as *const _
+    }
+
+    /// Returns a mutable raw pointer to the underlying wxMenu.
+    /// This does not transfer ownership.
+    pub fn as_mut_ptr(&mut self) -> *mut ffi::wxd_Menu_t {
+        self.ptr
+    }
+
+    /// Consumes self and returns a raw mutable pointer, transferring ownership to the caller.
+    /// After calling this, you must destroy the pointer exactly once using wxd_Menu_Destroy.
+    pub fn into_raw_mut(self) -> *mut ffi::wxd_Menu_t {
+        self.try_into().expect("into_raw_mut must only be used on owning wrappers")
+    }
+
+    /// Consumes a borrowed (non-owning) wrapper and returns a raw const pointer without taking ownership.
+    /// Panics if called on an owning wrapper to avoid leaking the owned resource.
+    pub fn into_raw_const(self) -> *const ffi::wxd_Menu_t {
+        self.try_into()
+            .expect("into_raw_const must only be used on non-owning wrappers")
     }
 
     /// Appends a menu item.
@@ -104,7 +172,7 @@ impl Menu {
     pub fn append_submenu(&self, submenu: &mut Menu, title: &str, help_string: &str) -> Option<MenuItem> {
         let title_c = CString::new(title).unwrap_or_default();
         let help_c = CString::new(help_string).unwrap_or_default();
-        let item_ptr = unsafe { ffi::wxd_Menu_AppendSubMenu(self.ptr, **submenu, title_c.as_ptr(), help_c.as_ptr()) };
+        let item_ptr = unsafe { ffi::wxd_Menu_AppendSubMenu(self.ptr, submenu.as_mut_ptr(), title_c.as_ptr(), help_c.as_ptr()) };
         if item_ptr.is_null() {
             return None;
         }
@@ -190,6 +258,7 @@ enum MenuAction {
 #[derive(Default)]
 pub struct MenuBuilder {
     actions: Vec<MenuAction>,
+    title: String,
     _marker: PhantomData<()>,
 }
 
@@ -197,6 +266,11 @@ impl MenuBuilder {
     /// Creates a new, default builder.
     pub fn new() -> Self {
         Default::default()
+    }
+
+    pub fn with_title(mut self, title: &str) -> Self {
+        self.title = title.to_string();
+        self
     }
 
     /// Adds an item to be appended to the menu.
@@ -243,14 +317,18 @@ impl MenuBuilder {
     /// # Panics
     /// Panics if the menu cannot be created.
     pub fn build(self) -> Menu {
-        // Pass default title (empty string) and default style (0)
-        let title_c = CString::new("").unwrap();
+        // Pass default style (0)
+        let title_c = CString::new(self.title).unwrap();
         let style = 0i64;
         let ptr = unsafe { ffi::wxd_Menu_Create(title_c.as_ptr(), style as ffi::wxd_Style_t) };
         if ptr.is_null() {
             panic!("Failed to create Menu");
         }
-        let menu = Menu { ptr, owned: true };
+        let menu = Menu {
+            ptr,
+            owned: true,
+            _nosend_nosync: PhantomData,
+        };
 
         // Perform actions
         for action in self.actions {
@@ -275,7 +353,11 @@ impl crate::xrc::XrcSupport for Menu {
         let ptr = ptr as *mut wxdragon_sys::wxd_Menu_t;
         // Menus loaded via XRC are owned by their parent (e.g., MenuBar/Frame),
         // so this wrapper must NOT destroy them on drop.
-        Self { ptr, owned: false }
+        Self {
+            ptr,
+            owned: false,
+            _nosend_nosync: PhantomData,
+        }
     }
 }
 
@@ -319,7 +401,7 @@ impl MenuEventData {
 
 impl crate::event::WxEvtHandler for Menu {
     unsafe fn get_event_handler_ptr(&self) -> *mut wxdragon_sys::wxd_EvtHandler_t {
-        **self as *mut ffi::wxd_EvtHandler_t
+        self.ptr as *mut ffi::wxd_EvtHandler_t
     }
 }
 

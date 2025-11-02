@@ -199,13 +199,13 @@ impl MenuEventsApp {
 
             let view_id = 3001;
             let delete_id = 3002;
-            let popup_menu = Menu::builder()
+            let mut popup_menu = Menu::builder()
                 .append_item(view_id, "View", "View item")
                 .append_item(delete_id, "Delete", "Delete item")
                 .build();
 
             let pos = event.get_context_position();
-            panel_clone.popup_menu(&popup_menu, pos);
+            panel_clone.popup_menu(&mut popup_menu, pos);
         });
 
         // Set the panel as the frame's main child
@@ -325,7 +325,7 @@ impl MenuEventsApp {
 
             let view_id = 3001;
             let delete_id = 3002;
-            let popup_menu = Menu::builder()
+            let mut popup_menu = Menu::builder()
                 .append_item(view_id, "View", "View item")
                 .append_item(delete_id, "Delete", "Delete item")
                 .build();
@@ -354,10 +354,10 @@ impl MenuEventsApp {
             });
 
             let pos = event.get_position();
-            dataview_clone.popup_menu(&popup_menu, pos);
+            dataview_clone.popup_menu(&mut popup_menu, pos);
 
             // Clean up the popup menu after use to release rust closures attached to menu items
-            popup_menu.destroy();
+            popup_menu.destroy_menu();
         });
     }
 

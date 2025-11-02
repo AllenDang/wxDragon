@@ -136,14 +136,14 @@ pub fn create_dataview_tree_tab(parent: &impl WxWidget) -> DataViewTreeTabContro
             }
 
             // Create a simple context menu
-            let menu = Menu::builder()
+            let mut menu = Menu::builder()
                 .append_item(5001, "Expand All", "")
                 .append_item(5002, "Collapse All", "")
                 .append_separator()
                 .append_item(5003, "Info", "")
                 .build();
 
-            dvc_tree_for_context.popup_menu(&menu, None);
+            dvc_tree_for_context.popup_menu(&mut menu, None);
         }
     });
 

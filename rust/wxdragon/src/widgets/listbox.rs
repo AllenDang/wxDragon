@@ -163,9 +163,9 @@ impl ListBox {
     /// If `pos` is `None`, the menu is popped up at the current cursor position.
     /// # Returns
     /// `true` if the menu was popped up successfully, `false` otherwise.
-    pub fn popup_menu(&self, menu: &Menu, pos: Option<Point>) -> bool {
+    pub fn popup_menu(&self, menu: &mut Menu, pos: Option<Point>) -> bool {
         let pos = pos.unwrap_or_else(|| Point::new(-1, -1));
-        unsafe { ffi::wxd_ListBox_PopupMenu(self.window.as_ptr() as *mut RawListBox, **menu, pos.into()) }
+        unsafe { ffi::wxd_ListBox_PopupMenu(self.window.as_ptr() as *mut RawListBox, menu.as_mut_ptr(), pos.into()) }
     }
 }
 

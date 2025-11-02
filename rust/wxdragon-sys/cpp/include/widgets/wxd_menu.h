@@ -26,10 +26,16 @@ wxd_Menu_GetMenuItemCount(const wxd_Menu_t* menu);
  * @param menu Pointer to wxMenu.
  * @param buffer Buffer to receive the UTF-8 title.
  * @param buffer_size Size of the buffer.
- * @return Number of bytes required to store the UTF-8 title, excluding the terminating NUL.
+ * @return Number of bytes required to store the UTF-8 title, excluding the terminating NUL, or -1 on error.
  */
-WXD_EXPORTED size_t
+WXD_EXPORTED int
 wxd_Menu_GetTitle(const wxd_Menu_t* menu, char* buffer, size_t buffer_size);
+
+/**
+ * @brief Set the title of the wxMenu.
+ */
+WXD_EXPORTED void
+wxd_Menu_SetTitle(wxd_Menu_t* menu, const char* title);
 
 /**
  * @brief Destroy a wxMenu.

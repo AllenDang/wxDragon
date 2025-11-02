@@ -74,7 +74,7 @@ fn main() {
         let taskbar = TaskBarIcon::builder()
             .with_icon_type(TaskBarIconType::CustomStatusItem)
             .build();
-        taskbar.set_popup_menu(&tray_icon_menu);
+        taskbar.set_popup_menu(&mut tray_icon_menu);
         let frame_taskbar = frame.clone();
         taskbar.on_menu(move |event| {
             let menu_id = event.get_id();
@@ -210,7 +210,7 @@ fn main() {
             taskbar.destroy();
 
             // Clean up the tray icon menu to release rust closures attached to menu items
-            tray_icon_menu.destroy_meun();
+            tray_icon_menu.destroy_menu();
         });
 
         // --- Main Panel Layout ---

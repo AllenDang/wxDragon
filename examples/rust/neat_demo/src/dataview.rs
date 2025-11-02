@@ -163,7 +163,7 @@ pub fn create_data_view_panel(parent: &Window, model: &Rc<DataViewListModel>) ->
         log::debug!("Context menu for row: {row:?}");
 
         // Context menu
-        let dataview_menu = Menu::builder()
+        let mut dataview_menu = Menu::builder()
             .append_item(MenuId::ViewDetails.into(), "View details", "View node details")
             .append_item(MenuId::ExportNode.into(), "Export Node", "Export node")
             .append_item(MenuId::ShowQrCode.into(), "Show QR Code", "Show QR code for node")
@@ -173,7 +173,7 @@ pub fn create_data_view_panel(parent: &Window, model: &Rc<DataViewListModel>) ->
             .append_item(MenuId::New.into(), "New", "Create new node")
             .build();
 
-        dataview_menu_panel.popup_menu(&dataview_menu, point);
+        dataview_menu_panel.popup_menu(&mut dataview_menu, point);
     });
 
     // Layout

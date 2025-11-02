@@ -58,16 +58,17 @@ impl TaskBarIconType {
 /// - Linux: Shows in the system tray (implementation varies by desktop environment)
 ///
 /// # Example
-/// ```ignore
+/// ```no_run
 /// use wxdragon::widgets::TaskBarIcon;
 /// use wxdragon::bitmap::Bitmap;
+/// use wxdragon::TaskBarIconType;
 ///
 /// let taskbar = TaskBarIcon::builder()
 ///     .with_icon_type(TaskBarIconType::Default)
 ///     .build();
 ///
 /// // Set an icon with tooltip
-/// if let Ok(icon) = Bitmap::from_file("app_icon.png") {
+/// if let Some(icon) = Bitmap::new(32, 32) {
 ///     taskbar.set_icon(&icon, "My Application");
 /// }
 ///
@@ -180,19 +181,20 @@ impl TaskBarIcon {
     /// For automatic popup menus when the taskbar icon is clicked, use `set_popup_menu()` instead.
     ///
     /// # Example
-    /// ```ignore
+    /// ```no_run
+    /// # let taskbar: wxdragon::widgets::TaskBarIcon = unimplemented!();
     /// use wxdragon::menus::Menu;
     ///
-    /// let menu = Menu::new("Popup Menu");
-    /// menu.append_item(101, "Option 1", "First option");
-    /// menu.append_item(102, "Option 2", "Second option");
-    /// menu.append_separator();
-    /// menu.append_item(103, "Exit", "Exit application");
-    ///
-    /// taskbar.popup_menu(&menu);
+    /// let mut menu = Menu::builder().with_title("Popup Menu")
+    ///     .append_item(101, "Option 1", "First option")
+    ///     .append_item(102, "Option 2", "Second option")
+    ///     .append_separator()
+    ///     .append_item(103, "Exit", "Exit application")
+    ///     .build();
+    /// taskbar.popup_menu(&mut menu);
     /// ```
-    pub fn popup_menu(&self, menu: &Menu) -> bool {
-        unsafe { ffi::wxd_TaskBarIcon_PopupMenu(self.ptr, **menu) }
+    pub fn popup_menu(&self, menu: &mut Menu) -> bool {
+        unsafe { ffi::wxd_TaskBarIcon_PopupMenu(self.ptr, menu.as_mut_ptr()) }
     }
 
     /// Sets a menu that will be automatically displayed when the taskbar icon is clicked.
@@ -210,26 +212,27 @@ impl TaskBarIcon {
     /// - **Linux**: Menu appears on right-click (behavior varies by desktop environment)
     ///
     /// # Example
-    /// ```ignore
+    /// ```no_run
     /// use wxdragon::menus::Menu;
     /// use wxdragon::widgets::TaskBarIcon;
     ///
-    /// let taskbar = TaskBarIcon::builder().build();
+    /// let taskbar: TaskBarIcon = TaskBarIcon::builder().build();
     ///
     /// // Create popup menu
-    /// let menu = Menu::new("Taskbar Menu");
-    /// menu.append_item(101, "Show Window", "Show the main window");
-    /// menu.append_item(102, "Settings", "Open settings");
-    /// menu.append_separator();
-    /// menu.append_item(103, "Exit", "Exit application");
+    /// let mut menu = Menu::builder().with_title("Taskbar Menu")
+    ///     .append_item(101, "Show Window", "Show the main window")
+    ///     .append_item(102, "Settings", "Open settings")
+    ///     .append_separator()
+    ///     .append_item(103, "Exit", "Exit application")
+    ///     .build();
     ///
     /// // Set as automatic popup menu
-    /// taskbar.set_popup_menu(&menu);
+    /// taskbar.set_popup_menu(&mut menu);
     ///
     /// // Now the menu will appear automatically when the taskbar icon is clicked
     /// ```
-    pub fn set_popup_menu(&self, menu: &Menu) {
-        unsafe { ffi::wxd_TaskBarIcon_SetPopupMenu(self.ptr, **menu) }
+    pub fn set_popup_menu(&self, menu: &mut Menu) {
+        unsafe { ffi::wxd_TaskBarIcon_SetPopupMenu(self.ptr, menu.as_mut_ptr()) }
     }
 
     /// Gets the currently set automatic popup menu.
@@ -258,8 +261,10 @@ impl TaskBarIcon {
     /// After calling this method, the TaskBarIcon should not be used further.
     ///
     /// # Example
-    /// ```ignore
+    /// ```no_run
+    /// use wxdragon::widgets::TaskBarIcon;
     /// let taskbar = TaskBarIcon::builder().build();
+    /// let icon = wxdragon::Bitmap::new(100, 100).unwrap();
     /// taskbar.set_icon(&icon, "My App");
     ///
     /// // Later, when shutting down:
@@ -267,9 +272,7 @@ impl TaskBarIcon {
     /// ```
     pub fn destroy(&self) {
         if !self.ptr.is_null() {
-            unsafe {
-                ffi::wxd_TaskBarIcon_Destroy(self.ptr);
-            }
+            unsafe { ffi::wxd_TaskBarIcon_Destroy(self.ptr) };
         }
     }
 
