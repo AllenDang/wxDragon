@@ -1,6 +1,6 @@
 use crate::dialogs::Dialog;
 use crate::geometry::{DEFAULT_POSITION, DEFAULT_SIZE, Point, Size};
-use crate::utils::WxdArrayString;
+use crate::utils::ArrayString;
 use crate::widget_style_enum;
 use crate::window::WxWidget;
 use std::ffi::{CStr, CString};
@@ -81,7 +81,7 @@ impl FileDialog {
 
     /// Gets the full paths of the selected files (for multi-select dialogs).
     pub fn get_paths(&self) -> Vec<String> {
-        let mut arr_str = WxdArrayString::new();
+        let mut arr_str = ArrayString::new();
         unsafe { ffi::wxd_FileDialog_GetPaths(self.as_ptr(), arr_str.as_mut_ptr()) };
         arr_str.into()
     }
@@ -110,7 +110,7 @@ impl FileDialog {
 
     /// Gets the filenames of the selected files (for multi-select dialogs).
     pub fn get_filenames(&self) -> Vec<String> {
-        let mut arr_str = WxdArrayString::new();
+        let mut arr_str = ArrayString::new();
         unsafe { ffi::wxd_FileDialog_GetFilenames(self.as_ptr(), arr_str.as_mut_ptr()) };
         arr_str.into()
     }

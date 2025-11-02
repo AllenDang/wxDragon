@@ -1,6 +1,6 @@
 use crate::dialogs::Dialog;
 use crate::geometry::{DEFAULT_POSITION, DEFAULT_SIZE, Point, Size};
-use crate::utils::WxdArrayString;
+use crate::utils::ArrayString;
 use crate::window::WxWidget;
 use std::ffi::{CStr, CString};
 use wxdragon_sys as ffi;
@@ -155,8 +155,8 @@ impl<'a> SingleChoiceDialogBuilder<'a> {
             "SingleChoiceDialog requires a valid parent window pointer."
         );
 
-        // Convert the choices to a wxdArrayString
-        let choices_array = WxdArrayString::from(&self.choices[..]);
+        // Convert the choices to a ArrayString
+        let choices_array = ArrayString::from(&self.choices[..]);
 
         let ptr = unsafe {
             ffi::wxd_SingleChoiceDialog_Create(

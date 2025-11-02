@@ -1,6 +1,6 @@
 use crate::dialogs::Dialog;
 use crate::geometry::{DEFAULT_POSITION, DEFAULT_SIZE, Point, Size};
-use crate::utils::WxdArrayString;
+use crate::utils::ArrayString;
 use crate::window::WxWidget;
 use std::ffi::CString;
 use wxdragon_sys as ffi;
@@ -88,7 +88,7 @@ impl MultiChoiceDialog {
     /// Gets the strings of the selections made by the user.
     /// Returns an empty vector if no selections were made or the dialog was cancelled.
     pub fn get_string_selections(&self) -> Vec<String> {
-        let mut selections = WxdArrayString::new();
+        let mut selections = ArrayString::new();
 
         unsafe { ffi::wxd_MultiChoiceDialog_GetStringSelections(self.as_ptr(), selections.as_mut_ptr()) };
 
@@ -158,8 +158,8 @@ impl<'a> MultiChoiceDialogBuilder<'a> {
             "MultiChoiceDialog requires a valid parent window pointer."
         );
 
-        // Convert the choices to a wxdArrayString
-        let choices_array = WxdArrayString::from(&self.choices[..]);
+        // Convert the choices to a ArrayString
+        let choices_array = ArrayString::from(&self.choices[..]);
 
         let ptr = unsafe {
             ffi::wxd_MultiChoiceDialog_Create(

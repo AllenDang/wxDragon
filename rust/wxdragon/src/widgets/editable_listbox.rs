@@ -6,7 +6,7 @@ use crate::Id;
 use crate::event::Event;
 use crate::geometry::{Point, Size};
 use crate::implement_widget_traits_with_target;
-use crate::utils::WxdArrayString;
+use crate::utils::ArrayString;
 use crate::widget_builder;
 use crate::widget_style_enum;
 use crate::window::{Window, WxWidget};
@@ -141,7 +141,7 @@ impl EditableListBox {
             return Vec::new();
         }
 
-        let wxd_array_string = WxdArrayString::from(array_str_ptr);
+        let wxd_array_string = ArrayString::from(array_str_ptr);
         wxd_array_string.get_strings()
     }
 

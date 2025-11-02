@@ -1,6 +1,6 @@
 //! Variant wrapper for typed wxVariant C API.
 
-use crate::utils::WxdArrayString;
+use crate::utils::ArrayString;
 use crate::{Bitmap, DateTime};
 use std::ffi::CStr;
 use std::marker::PhantomData;
@@ -112,7 +112,7 @@ impl Variant {
     }
 
     /// Create a new variant from a slice of Rust strings by storing a wxArrayString by value inside wxVariant.
-    pub fn from_array_string(strings: &WxdArrayString) -> Self {
+    pub fn from_array_string(strings: &ArrayString) -> Self {
         let mut var = Self::new();
         unsafe { ffi::wxd_Variant_SetArrayString(var.as_mut_ptr(), strings.as_const_ptr()) };
         var
@@ -243,14 +243,10 @@ impl Variant {
         if ptr.is_null() { None } else { Some(Bitmap::from(ptr)) }
     }
 
-    /// If this variant stores a wxArrayString, return it as a WxdArrayString.
-    pub fn get_array_string(&self) -> Option<WxdArrayString> {
+    /// If this variant stores a wxArrayString, return it as an ArrayString.
+    pub fn get_array_string(&self) -> Option<ArrayString> {
         let ptr = unsafe { ffi::wxd_Variant_GetArrayStringClone(self.as_const_ptr()) };
-        if ptr.is_null() {
-            None
-        } else {
-            Some(WxdArrayString::from(ptr))
-        }
+        if ptr.is_null() { None } else { Some(ArrayString::from(ptr)) }
     }
 }
 
@@ -401,33 +397,33 @@ impl<'a> From<&'a Bitmap> for Variant {
 
 impl<T: AsRef<str>> From<Vec<T>> for Variant {
     fn from(value: Vec<T>) -> Self {
-        let arr = WxdArrayString::from(value);
+        let arr = ArrayString::from(value);
         Variant::from(&arr)
     }
 }
 
 impl<T: AsRef<str>> From<&[T]> for Variant {
     fn from(value: &[T]) -> Self {
-        let arr = WxdArrayString::from(value);
+        let arr = ArrayString::from(value);
         Variant::from(&arr)
     }
 }
 
 impl<T: AsRef<str>> From<&Vec<T>> for Variant {
     fn from(value: &Vec<T>) -> Self {
-        let arr = WxdArrayString::from(value.as_slice());
+        let arr = ArrayString::from(value.as_slice());
         Variant::from(&arr)
     }
 }
 
-impl From<WxdArrayString> for Variant {
-    fn from(value: WxdArrayString) -> Self {
+impl From<ArrayString> for Variant {
+    fn from(value: ArrayString) -> Self {
         Variant::from_array_string(&value)
     }
 }
 
-impl From<&WxdArrayString> for Variant {
-    fn from(value: &WxdArrayString) -> Self {
+impl From<&ArrayString> for Variant {
+    fn from(value: &ArrayString) -> Self {
         Variant::from_array_string(value)
     }
 }
@@ -511,7 +507,7 @@ impl TryFrom<Variant> for Bitmap {
     }
 }
 
-impl TryFrom<Variant> for WxdArrayString {
+impl TryFrom<Variant> for ArrayString {
     type Error = std::io::Error;
 
     fn try_from(value: Variant) -> Result<Self, Self::Error> {
@@ -525,7 +521,7 @@ impl TryFrom<Variant> for WxdArrayString {
 #[cfg(test)]
 mod tests {
     use super::Variant;
-    use crate::WxdArrayString;
+    use crate::ArrayString;
 
     #[test]
     fn variant_array_string_roundtrip() {
@@ -539,7 +535,7 @@ mod tests {
         assert_eq!(src, got.get_strings());
 
         // TryFrom
-        let got2: WxdArrayString = v.clone().try_into().expect("convert to WxdArrayString");
+        let got2: ArrayString = v.clone().try_into().expect("convert to ArrayString");
         assert_eq!(src, got2.get_strings());
     }
 }
