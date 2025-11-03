@@ -771,5 +771,5 @@ widget_builder!(
 // Implement DataViewEventHandler for DataViewCtrl
 impl crate::widgets::dataview::DataViewEventHandler for DataViewCtrl {}
 
-// Implement TreeViewEventHandler for DataViewCtrl since it supports tree functionality
-impl crate::widgets::dataview::TreeViewEventHandler for DataViewCtrl {}
+// Implement DataViewTreeEventHandler for DataViewCtrl since it supports tree functionality
+impl crate::widgets::dataview::DataViewTreeEventHandler for DataViewCtrl {}

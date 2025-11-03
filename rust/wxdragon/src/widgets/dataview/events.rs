@@ -372,7 +372,7 @@ pub trait DataViewEventHandler: WxEvtHandler {
 }
 
 /// Extension trait for TreeView-specific events
-pub trait TreeViewEventHandler: DataViewEventHandler {
+pub trait DataViewTreeEventHandler: DataViewEventHandler {
     /// Binds a handler to the item expanded event.
     /// Returns an EventToken that can be used to unbind the handler later.
     fn on_item_expanded<F>(&self, callback: F) -> EventToken

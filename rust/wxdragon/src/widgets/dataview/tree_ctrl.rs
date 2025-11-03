@@ -419,8 +419,8 @@ implement_widget_traits_with_target!(DataViewTreeCtrl, window, Window);
 // Implement DataViewEventHandler for DataViewTreeCtrl
 impl crate::widgets::dataview::DataViewEventHandler for DataViewTreeCtrl {}
 
-// Implement TreeViewEventHandler for DataViewTreeCtrl since it supports tree functionality
-impl crate::widgets::dataview::TreeViewEventHandler for DataViewTreeCtrl {}
+// Implement DataViewTreeEventHandler for DataViewTreeCtrl since it supports tree functionality
+impl crate::widgets::dataview::DataViewTreeEventHandler for DataViewTreeCtrl {}
 
 // Missing wxd_DataViewTreeCtrl_new
 // This needs to be added to rust/wxdragon-sys/cpp/include/widgets/wxd_dataviewtreectrl.h
