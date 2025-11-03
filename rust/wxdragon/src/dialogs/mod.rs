@@ -175,25 +175,16 @@ impl<'a> DialogBuilder<'a> {
 
     /// Builds the Dialog.
     pub fn build(self) -> Dialog {
-        let parent_ptr = self.parent.handle_ptr();
-        let c_title = CString::new(self.title).unwrap_or_else(|_| CString::new("").unwrap());
+        let parent = self.parent.handle_ptr();
+        let title = CString::new(self.title).unwrap_or_else(|_| CString::new("").unwrap());
+        let s = self.style.bits() as ffi::wxd_Style_t;
 
-        let dialog_ptr = unsafe {
-            ffi::wxd_Dialog_Create(
-                parent_ptr,
-                c_title.as_ptr(),
-                self.style.bits() as ffi::wxd_Style_t,
-                self.x,
-                self.y,
-                self.width,
-                self.height,
-            )
-        };
+        let dialog = unsafe { ffi::wxd_Dialog_Create(parent, title.as_ptr(), s, self.x, self.y, self.width, self.height) };
 
-        if dialog_ptr.is_null() {
+        if dialog.is_null() {
             panic!("Failed to create Dialog");
         }
 
-        unsafe { Dialog::from_ptr(dialog_ptr) }
+        unsafe { Dialog::from_ptr(dialog) }
     }
 }

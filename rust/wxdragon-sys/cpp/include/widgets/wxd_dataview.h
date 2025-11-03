@@ -9,7 +9,7 @@ extern "C" {
 
 // Forward declarations
 typedef struct wxd_DataViewCtrl_tag wxd_DataViewCtrl_t;
-typedef struct wxd_DataViewRenderer_tag wxd_DataViewRenderer_t;
+typedef struct wxd_DataViewRenderer_t wxd_DataViewRenderer_t;
 // typedef struct wxd_DataViewColumn_tag wxd_DataViewColumn_t;
 
 // Define the alignment enum if not defined

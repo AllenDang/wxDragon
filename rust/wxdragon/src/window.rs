@@ -276,9 +276,7 @@ pub trait WxWidget: std::any::Any {
     fn set_min_size(&self, size: crate::geometry::Size) {
         let window_ptr = self.handle_ptr();
         if !window_ptr.is_null() {
-            unsafe {
-                ffi::wxd_Window_SetMinSize(window_ptr, size.into());
-            }
+            unsafe { ffi::wxd_Window_SetMinSize(window_ptr, size.into()) };
         }
     }
 
