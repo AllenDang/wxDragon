@@ -1075,6 +1075,116 @@ wxd_DataViewCtrl_SetAlternateRowColour(wxd_Window_t* self, const wxd_Colour_t* c
     return ctrl->SetAlternateRowColour(wxColour);
 }
 
+// Sorting controls
+WXD_EXPORTED void
+wxd_DataViewCtrl_ClearSorting(wxd_Window_t* self)
+{
+    wxDataViewCtrl* ctrl = reinterpret_cast<wxDataViewCtrl*>(self);
+    if (!ctrl)
+        return;
+    WXD_LOG_TRACEF("ClearSorting called on ctrl %p", ctrl);
+    const int count = ctrl->GetColumnCount();
+    for (int i = 0; i < count; ++i) {
+        wxDataViewColumn* col = ctrl->GetColumn(static_cast<unsigned int>(i));
+        if (col && col->IsSortKey()) {
+            WXD_LOG_TRACEF(" - UnsetAsSortKey for column %d", i);
+            col->UnsetAsSortKey();
+        }
+    }
+}
+
+WXD_EXPORTED bool
+wxd_DataViewCtrl_SetSortingColumn(wxd_Window_t* self, int32_t column_index, bool ascending)
+{
+    wxDataViewCtrl* ctrl = reinterpret_cast<wxDataViewCtrl*>(self);
+    if (!ctrl)
+        return false;
+    const int count = ctrl->GetColumnCount();
+    if (count <= 0)
+        return false;
+
+    // Map model column index to view/display position
+    int view_pos = -1;
+    wxDataViewColumn* col = nullptr;
+    for (int i = 0; i < count; ++i) {
+        wxDataViewColumn* c = ctrl->GetColumn(static_cast<unsigned int>(i));
+        if (c && static_cast<int>(c->GetModelColumn()) == column_index) {
+            view_pos = i;
+            col = c;
+            break;
+        }
+    }
+    if (view_pos < 0 || !col)
+        return false;
+
+    const bool is_key = col->IsSortKey();
+    const bool is_asc = col->IsSortOrderAscending();
+    WXD_LOG_TRACEF("SetSortingColumn called on ctrl %p, col=%d asc=%d", ctrl, (int)column_index,
+                   (int)ascending);
+    WXD_LOG_TRACEF(" - before: is_key=%d is_asc=%d", (int)is_key, (int)is_asc);
+
+    if (!is_key) {
+        // Programmatically set desired order; this also marks it as sort key
+        col->SetSortOrder(ascending);
+    }
+    else if (is_asc != ascending) {
+        // Already the sort key; just change direction
+        col->SetSortOrder(ascending);
+    }
+
+    // Ask the model/control to resort based on the new sort key/order
+    if (wxDataViewModel* m = ctrl->GetModel()) {
+        m->Resort();
+    }
+
+    // Ensure UI updates promptly
+    ctrl->Refresh();
+    ctrl->Update();
+
+    // Log after-state
+    const bool after_key = col->IsSortKey();
+    const bool after_asc = col->IsSortOrderAscending();
+    WXD_LOG_TRACEF(" - after: is_key=%d is_asc=%d", (int)after_key, (int)after_asc);
+
+    return true;
+}
+
+WXD_EXPORTED bool
+wxd_DataViewCtrl_GetSortingState(const wxd_Window_t* self, int32_t* model_column, bool* ascending)
+{
+    const wxDataViewCtrl* ctrl = reinterpret_cast<const wxDataViewCtrl*>(self);
+    if (!ctrl)
+        return false;
+
+    if (model_column)
+        *model_column = -1;
+    if (ascending)
+        *ascending = true;
+
+    // Prefer API if available
+    wxDataViewColumn* col = ctrl->GetSortingColumn();
+    if (!col) {
+        // Fallback: scan columns for sort key
+        const int count = ctrl->GetColumnCount();
+        for (int i = 0; i < count; ++i) {
+            wxDataViewColumn* c = ctrl->GetColumn(static_cast<unsigned int>(i));
+            if (c && c->IsSortKey()) {
+                col = c;
+                break;
+            }
+        }
+    }
+
+    if (!col)
+        return false;
+
+    if (model_column)
+        *model_column = static_cast<int32_t>(col->GetModelColumn());
+    if (ascending)
+        *ascending = col->IsSortOrderAscending();
+    return true;
+}
+
 // DataViewColumn property implementations
 WXD_EXPORTED void
 wxd_DataViewColumn_SetTitle(wxd_DataViewColumn_t* self, const char* title)

@@ -1,3 +1,4 @@
+use music_tree::MusicNode;
 use std::cell::RefCell;
 use std::rc::Rc;
 use wxdragon::DataViewCtrl;
@@ -53,7 +54,7 @@ fn main() {
             0,
             250,
             DataViewAlign::Left,
-            DataViewColumnFlags::Resizable,
+            DataViewColumnFlags::Resizable | DataViewColumnFlags::Sortable,
         );
 
         let artist_col = DataViewColumn::new(
@@ -62,7 +63,7 @@ fn main() {
             1,
             200,
             DataViewAlign::Left,
-            DataViewColumnFlags::Resizable,
+            DataViewColumnFlags::Resizable | DataViewColumnFlags::Sortable,
         );
 
         let year_col = DataViewColumn::new(
@@ -71,7 +72,7 @@ fn main() {
             2,
             100,
             DataViewAlign::Center,
-            DataViewColumnFlags::Resizable,
+            DataViewColumnFlags::Resizable | DataViewColumnFlags::Sortable,
         );
 
         let judg_col = DataViewColumn::new(
@@ -80,7 +81,7 @@ fn main() {
             3,
             120,
             DataViewAlign::Left,
-            DataViewColumnFlags::Resizable,
+            DataViewColumnFlags::Resizable | DataViewColumnFlags::Sortable,
         );
 
         dataview.append_column(&title_col);
@@ -130,9 +131,14 @@ fn main() {
                 // Ensure the item is selected so we can retrieve it later from the menu handler
                 dataview_for_menu.select(&item);
 
+                log::info!("Showing context menu for item at position {:?}", event.get_position());
+
                 // Build a simple context menu
                 let edit_id = ID_HIGHEST + 1;
-                let mut menu = Menu::builder().append_item(edit_id, "Edit", "Edit this item").build();
+                let mut menu = Menu::builder()
+                    .with_title("Managing Node")
+                    .append_item(edit_id, "Edit", "Edit this item")
+                    .build();
 
                 // Handle menu selection
                 let dataview_for_selected = dataview_for_menu.clone();
@@ -143,10 +149,10 @@ fn main() {
                         id if id == edit_id => {
                             // Get the currently selected item
                             if let Some(sel_item) = dataview_for_selected.get_selection()
-                                && let Some(ptr) = sel_item.get_id::<music_tree::MusicNode>()
+                                && let Some(ptr) = sel_item.get_id::<MusicNode>()
                             {
                                 // SAFETY: ptr is an opaque model ID set by us to a MusicNode address
-                                let node: &music_tree::MusicNode = unsafe { &*ptr };
+                                let node: &MusicNode = unsafe { &*ptr };
                                 let current_title = node.title.clone();
 
                                 // Show a simple text entry dialog to edit the title
@@ -168,11 +174,98 @@ fn main() {
 
                 // Show popup menu at mouse position
                 dataview_for_menu.popup_menu(&mut menu, None);
-
-                // Explicitly destroy the standalone popup menu to release its wxEvtHandler and closures
-                menu.destroy_menu();
             }
         });
+
+        dataview.on_selection_changed(move |event| {
+            if let Some(item) = event.get_item()
+                && let Some(ptr) = item.get_id::<MusicNode>()
+            {
+                let node: &MusicNode = unsafe { &*ptr };
+                log::info!("Selected item: {}", node.title);
+            }
+        });
+
+        dataview.on_item_activated(move |event| {
+            if let Some(item) = event.get_item()
+                && let Some(ptr) = item.get_id::<MusicNode>()
+            {
+                let node: &MusicNode = unsafe { &*ptr };
+                log::info!("Item activated: {}", node.title);
+            }
+        });
+
+        dataview.on_column_header_click(move |event| {
+            let col = event.get_column();
+            log::info!("Column header clicked: {:?}", col);
+            event.skip(true);
+        });
+
+        let dv_for_header_menu = dataview.clone();
+        dataview.on_column_header_right_click(move |event| {
+            if let Some(col_idx) = event.get_column() {
+                log::info!("Column header right-clicked: {}", col_idx);
+
+                // Build a simple sort menu
+                let sort_asc_id = ID_HIGHEST + 101;
+                let sort_desc_id = ID_HIGHEST + 102;
+                let mut menu = Menu::builder()
+                    .with_title("Sort")
+                    .append_item(sort_asc_id, "Sort ascending", "Sort ascending")
+                    .append_item(sort_desc_id, "Sort descending", "Sort descending")
+                    .build();
+
+                let dv_for_select = dv_for_header_menu.clone();
+                menu.on_selected(move |ev| match ev.get_id() {
+                    id if id == sort_asc_id => {
+                        let _ = dv_for_select.set_sorting_column(col_idx as usize, true);
+                        if let Some((c, asc)) = dv_for_select.sorting_state() {
+                            log::info!("Programmatic sort applied: col={}, ascending={}", c, asc);
+                        }
+                    }
+                    id if id == sort_desc_id => {
+                        let _ = dv_for_select.set_sorting_column(col_idx as usize, false);
+                        if let Some((c, asc)) = dv_for_select.sorting_state() {
+                            log::info!("Programmatic sort applied: col={}, ascending={}", c, asc);
+                        }
+                    }
+                    _ => {}
+                });
+
+                // Show the menu at mouse position if available
+                let pos = event.get_position();
+                dv_for_header_menu.popup_menu(&mut menu, pos);
+            } else {
+                log::info!("Column header right-clicked but no column index available");
+            }
+            // Don't block default processing
+            event.skip(true);
+        });
+
+        dataview.on_column_sorted(move |event| {
+            let col = event.get_column();
+            let ascending = event.get_sort_order();
+            log::info!("Column sorting changed: {:?}, ascending: {:?}", col, ascending);
+        });
+
+        dataview.on_item_expanded(move |event| {
+            if let Some(item) = event.get_item()
+                && let Some(ptr) = item.get_id::<MusicNode>()
+            {
+                let node: &MusicNode = unsafe { &*ptr };
+                log::info!("Item expanded: {}", node.title);
+            }
+        });
+
+        dataview.on_item_collapsed(move |event| {
+            if let Some(item) = event.get_item()
+                && let Some(ptr) = item.get_id::<MusicNode>()
+            {
+                let node: &MusicNode = unsafe { &*ptr };
+                log::info!("Item collapsed: {}", node.title);
+            }
+        });
+
         frame.show(true);
         frame.centre();
     });

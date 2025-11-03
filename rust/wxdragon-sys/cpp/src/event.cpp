@@ -2077,3 +2077,42 @@ wxd_ContextMenuEvent_GetPosition(wxd_Event_t* event)
 
     return result;
 }
+
+// --- DataView: sort order accessor ---
+
+WXD_EXPORTED bool
+wxd_DataViewEvent_GetSortOrder(const wxd_Event_t* event, bool* ascending)
+{
+    if (!event || !ascending) {
+        return false;
+    }
+
+    const wxEvent* wx_event = reinterpret_cast<const wxEvent*>(event);
+    // Only meaningful for wxEVT_DATAVIEW_COLUMN_SORTED
+    if (wx_event->GetEventType() != wxEVT_DATAVIEW_COLUMN_SORTED) {
+        return false;
+    }
+
+    const wxDataViewEvent* dv_event = wxDynamicCast(wx_event, wxDataViewEvent);
+    if (!dv_event) {
+        return false;
+    }
+
+    // Try to read the column sort order from the control's column
+    wxObject* obj = wx_event->GetEventObject();
+    wxDataViewCtrl* ctrl = wxDynamicCast(obj, wxDataViewCtrl);
+    if (!ctrl) {
+        return false;
+    }
+
+    int colIdx = dv_event->GetColumn();
+    if (colIdx < 0 || colIdx >= (int)ctrl->GetColumnCount()) {
+        return false;
+    }
+    wxDataViewColumn* col = ctrl->GetColumn((unsigned)colIdx);
+    if (!col) {
+        return false;
+    }
+    *ascending = col->IsSortOrderAscending();
+    return true;
+}

@@ -174,6 +174,39 @@ impl DataViewEventData {
 
         unsafe { ffi::wxd_DataViewEvent_SetValue(self.event.0, value.as_const_ptr()) }
     }
+
+    /// Returns whether the sort order is ascending for column-sorted events.
+    ///
+    /// This method is only meaningful for [`DataViewEvent::ColumnSorted`] events
+    /// (i.e., when handling `wxEVT_DATAVIEW_COLUMN_SORTED`). For all other event types,
+    /// this method will return `None`.
+    ///
+    /// # Example
+    /// Typical usage within an `on_column_sorted` handler:
+    /// ```no_run
+    /// # use wxdragon::prelude::*;
+    /// # let data_view: DataViewCtrl = todo!();
+    /// data_view.on_column_sorted(|event| {
+    ///     if let Some(ascending) = event.get_sort_order() {
+    ///         if ascending {
+    ///             // Handle ascending sort
+    ///         } else {
+    ///             // Handle descending sort
+    ///         }
+    ///     }
+    /// });
+    /// ```
+    pub fn get_sort_order(&self) -> Option<bool> {
+        if self.event.is_null() {
+            return None;
+        }
+        let mut ascending = false;
+        if unsafe { ffi::wxd_DataViewEvent_GetSortOrder(self.event.0, &mut ascending) } {
+            Some(ascending)
+        } else {
+            None
+        }
+    }
 }
 
 /// Trait for DataView event handling

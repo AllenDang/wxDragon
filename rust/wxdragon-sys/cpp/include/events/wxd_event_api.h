@@ -139,6 +139,10 @@ wxd_DataViewEvent_IsEditCancelled(wxd_Event_t* event);
 WXD_EXPORTED wxd_Point
 wxd_DataViewEvent_GetPosition(const wxd_Event_t* event);
 
+// Returns true if the sorted column order is ascending (only meaningful for wxEVT_DATAVIEW_COLUMN_SORTED)
+WXD_EXPORTED bool
+wxd_DataViewEvent_GetSortOrder(const wxd_Event_t* event, bool* ascending);
+
 // TreeListCtrl event accessors
 WXD_EXPORTED wxd_Long_t
 wxd_TreeListEvent_GetItem(wxd_Event_t* event);

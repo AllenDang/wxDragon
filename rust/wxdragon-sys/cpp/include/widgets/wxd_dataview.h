@@ -101,6 +101,16 @@ wxd_DataViewCtrl_SetRowHeight(wxd_Window_t* self, int height);
 WXD_EXPORTED bool
 wxd_DataViewCtrl_SetAlternateRowColour(wxd_Window_t* self, const wxd_Colour_t* colour);
 
+// Sorting controls
+WXD_EXPORTED void
+wxd_DataViewCtrl_ClearSorting(wxd_Window_t* self);
+WXD_EXPORTED bool
+wxd_DataViewCtrl_SetSortingColumn(wxd_Window_t* self, int32_t column_index, bool ascending);
+// Query current sorting state: returns true if a sorting column exists and writes
+// model column index and ascending flag to out parameters.
+WXD_EXPORTED bool
+wxd_DataViewCtrl_GetSortingState(const wxd_Window_t* self, int32_t* model_column, bool* ascending);
+
 // Provide tree-style navigation methods for DataViewCtrl when used with tree models
 WXD_EXPORTED const wxd_DataViewItem_t*
 wxd_DataViewCtrl_GetNthChild(wxd_Window_t* self, const wxd_DataViewItem_t* parent,

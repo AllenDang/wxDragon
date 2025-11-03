@@ -699,6 +699,55 @@ impl DataViewCtrl {
         let colour_raw = colour.to_raw();
         unsafe { ffi::wxd_DataViewCtrl_SetAlternateRowColour(self.window.handle_ptr(), &colour_raw) }
     }
+
+    /// Clears any current sorting on the control.
+    ///
+    /// Removes any active sorting from the `DataViewCtrl`, restoring the default (unsorted) order of items as provided by the model.
+    ///
+    /// # Behavior
+    ///
+    /// - The UI is updated immediately to reflect the removal of sorting; items will be displayed in their original order.
+    /// - If a sort indicator was shown in the column header, it will be cleared.
+    /// - This may trigger a `EVT_DATAVIEW_COLUMN_SORTED` or similar event, depending on the platform and model implementation.
+    ///
+    /// # Platform-specific notes
+    ///
+    /// - On all supported platforms (Windows, macOS, Linux/GTK), this method behaves consistently and clears sorting as expected.
+    /// - If the control is not currently sorted, calling this method has no effect.
+    pub fn clear_sorting(&self) {
+        unsafe { ffi::wxd_DataViewCtrl_ClearSorting(self.window.handle_ptr()) }
+    }
+
+    /// Programmatically set the sorting column and order.
+    ///
+    /// # Parameters
+    ///
+    /// * `column_index` - The **model column index** to sort by (not the display position). This refers to the index as used in your data model, regardless of column reordering or visibility in the UI.
+    /// * `ascending` - If `true`, sort in ascending order; if `false`, sort in descending order.
+    ///
+    /// # Behavior
+    ///
+    /// Calling this method will immediately trigger a resort of the data in the control according to the specified column and order.
+    ///
+    /// # Events
+    ///
+    /// This operation may emit sorting-related events, such as [`EVT_DATAVIEW_COLUMN_SORTED`](https://docs.wxwidgets.org/3.2/classwx_data_view_event.html), depending on the platform and model implementation.
+    ///
+    /// # Returns
+    ///
+    /// Returns `true` if the column index was valid and sorting was applied, `false` otherwise.
+    pub fn set_sorting_column(&self, column_index: usize, ascending: bool) -> bool {
+        unsafe { ffi::wxd_DataViewCtrl_SetSortingColumn(self.window.handle_ptr(), column_index as i32, ascending) }
+    }
+
+    /// Returns the current sorting state if any: (model_column_index, ascending).
+    /// If no sorting is active, returns None.
+    pub fn sorting_state(&self) -> Option<(usize, bool)> {
+        let mut col: i32 = -1;
+        let mut asc: bool = true;
+        let ok = unsafe { ffi::wxd_DataViewCtrl_GetSortingState(self.window.handle_ptr(), &mut col, &mut asc) };
+        if ok && col >= 0 { Some((col as usize, asc)) } else { None }
+    }
 }
 
 implement_widget_traits_with_target!(DataViewCtrl, window, Window);
