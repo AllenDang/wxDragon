@@ -41,7 +41,7 @@ fn main() {
 
         let panel = Panel::builder(&frame).build();
 
-        // Create the generic DataView control (works with custom models)
+        // Create the generic DataView control (works with custom models), it behaves like a tree view
         let dataview = DataViewCtrl::builder(&panel)
             .with_size(Size::new(860, 520))
             .with_style(DataViewStyle::RowLines | DataViewStyle::VerticalRules)
@@ -128,29 +128,23 @@ fn main() {
             // Keep the model alive as long as frame/control lives by holding it in mtm_slot.
             // Nothing to do here; mtm_slot captures the Rc. It will be cleared on frame destroy.
             if let Some(item) = event.get_item() {
-                // Ensure the item is selected so we can retrieve it later from the menu handler
-                dataview_for_menu.select(&item);
-
                 log::info!("Showing context menu for item at position {:?}", event.get_position());
 
                 // Build a simple context menu
                 let edit_id = ID_HIGHEST + 1;
                 let mut menu = Menu::builder()
-                    .with_title("Managing Node")
+                    .with_title("Manage Node")
                     .append_item(edit_id, "Edit", "Edit this item")
                     .build();
 
                 // Handle menu selection
-                let dataview_for_selected = dataview_for_menu.clone();
                 let frame_for_selected = frame_for_dialog.clone();
                 let mtm_for_selected = mtm_for_edit.clone();
                 menu.on_selected(move |ev| {
                     match ev.get_id() {
                         id if id == edit_id => {
                             // Get the currently selected item
-                            if let Some(sel_item) = dataview_for_selected.get_selection()
-                                && let Some(ptr) = sel_item.get_id::<MusicNode>()
-                            {
+                            if let Some(ptr) = item.get_id::<MusicNode>() {
                                 // SAFETY: ptr is an opaque model ID set by us to a MusicNode address
                                 let node: &MusicNode = unsafe { &*ptr };
                                 let current_title = node.title.clone();
