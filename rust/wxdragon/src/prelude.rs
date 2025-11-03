@@ -68,8 +68,9 @@ pub use crate::widgets::dataview::{
     DataViewCtrl,
     DataViewCtrlBuilder,
     DataViewCustomRenderer, // Added DataViewCustomRenderer
-    DataViewEventData,
+    DataViewEvent,
     DataViewEventHandler,
+    DataViewEventType,
     DataViewIconTextRenderer, // Added DataViewIconTextRenderer
     DataViewItem,
     DataViewItemAttr, // Added DataViewItemAttr

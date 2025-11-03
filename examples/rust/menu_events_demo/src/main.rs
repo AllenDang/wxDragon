@@ -304,7 +304,7 @@ impl MenuEventsApp {
         let dataview_clone = dataview.clone();
         let demo_data_clone = demo_data.clone();
         let frame_clone_for_dialog = self.frame.clone();
-        dataview.on_item_context_menu(move |event: DataViewEventData| {
+        dataview.on_item_context_menu(move |event: DataViewEvent| {
             log::trace!("🖱️ Context menu event received!");
             log::trace!("   Event ID: {}", event.get_id());
             let Some(item) = event.get_item() else {

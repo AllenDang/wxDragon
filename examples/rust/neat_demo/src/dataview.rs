@@ -155,7 +155,7 @@ pub fn create_data_view_panel(parent: &Window, model: &Rc<DataViewListModel>) ->
     dataview.associate_model(model.as_ref());
 
     let dataview_menu_panel = panel.clone();
-    dataview.on_item_context_menu(move |event: DataViewEventData| {
+    dataview.on_item_context_menu(move |event: DataViewEvent| {
         let point = event.get_position();
         log::debug!("Right click at position: {:?}", point);
 

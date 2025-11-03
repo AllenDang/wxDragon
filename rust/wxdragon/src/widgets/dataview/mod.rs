@@ -44,7 +44,7 @@ pub mod variant;
 pub use column::DataViewColumn;
 pub use ctrl::{DataViewCtrl, DataViewCtrlBuilder, DataViewStyle};
 pub use enums::{DataViewAlign, DataViewCellMode, DataViewColumnFlags, DataViewColumnFlags as DataViewColumnFlag};
-pub use events::{DataViewEvent, DataViewEventData, DataViewEventHandler, TreeViewEventHandler};
+pub use events::{DataViewEvent, DataViewEventHandler, DataViewEventType, TreeViewEventHandler};
 pub use item::DataViewItem;
 pub use list_ctrl::{DataViewListCtrl, DataViewListCtrlBuilder};
 pub use model::{

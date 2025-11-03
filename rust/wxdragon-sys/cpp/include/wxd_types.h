@@ -550,13 +550,8 @@ typedef struct wxd_TreeItemId_Opaque_ForBindgen
 // Define wxd_DropResult enum (ensure this is defined if used)
 // ... existing code ...
 
-// --- Opaque and FFI Struct Definitions ---
-// Moved from wxd_event_api.h to ensure it's defined before use in event.cpp
-typedef struct wxd_Event_t wxd_Event_t;
-
 typedef struct wxd_App_t wxd_App_t;
 typedef struct wxd_Window_t wxd_Window_t;
-// typedef struct wxd_Event_t wxd_Event_t; // Now defined above
 typedef struct wxd_EvtHandler_t wxd_EvtHandler_t;
 typedef struct wxd_Control_t wxd_Control_t;
 // ... existing code ...
