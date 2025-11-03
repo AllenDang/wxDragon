@@ -130,7 +130,7 @@ wxd_DataViewTreeModel_CreateWithCallbacks(const wxd_DataViewTreeModel_Callbacks*
 }
 
 extern "C" void
-wxd_DataViewTreeModel_ValueChanged(wxd_DataViewModel_t* model, void* item, unsigned int col)
+wxd_DataViewTreeModel_ItemValueChanged(wxd_DataViewModel_t* model, void* item, unsigned int col)
 {
     if (!model)
         return;
@@ -159,4 +159,79 @@ wxd_DataViewTreeModel_SetValue(wxd_DataViewModel_t* model, void* item, unsigned 
     wxVariant v = *reinterpret_cast<const wxVariant*>(variant);
 
     return m->SetValue(v, wxDataViewItem(item), col);
+}
+
+extern "C" void
+wxd_DataViewTreeModel_ItemAdded(wxd_DataViewModel_t* model, void* parent, void* item)
+{
+    if (!model)
+        return;
+    Wxd_Callbacks_DataViewTreeModel* m = reinterpret_cast<Wxd_Callbacks_DataViewTreeModel*>(model);
+    m->ItemAdded(wxDataViewItem(parent), wxDataViewItem(item));
+}
+
+extern "C" void
+wxd_DataViewTreeModel_ItemDeleted(wxd_DataViewModel_t* model, void* parent, void* item)
+{
+    if (!model)
+        return;
+    Wxd_Callbacks_DataViewTreeModel* m = reinterpret_cast<Wxd_Callbacks_DataViewTreeModel*>(model);
+    m->ItemDeleted(wxDataViewItem(parent), wxDataViewItem(item));
+}
+
+extern "C" void
+wxd_DataViewTreeModel_ItemsAdded(wxd_DataViewModel_t* model, void* parent, const void* const* items,
+                                 size_t count)
+{
+    if (!model || !items)
+        return;
+    Wxd_Callbacks_DataViewTreeModel* m = reinterpret_cast<Wxd_Callbacks_DataViewTreeModel*>(model);
+
+    wxDataViewItemArray array;
+    for (size_t i = 0; i < count; ++i) {
+        array.push_back(wxDataViewItem((void*)items[i]));
+    }
+    m->ItemsAdded(wxDataViewItem(parent), array);
+}
+
+// ItemsDeleted
+extern "C" void
+wxd_DataViewTreeModel_ItemsDeleted(wxd_DataViewModel_t* model, void* parent,
+                                   const void* const* items, size_t count)
+{
+    if (!model || !items)
+        return;
+    Wxd_Callbacks_DataViewTreeModel* m = reinterpret_cast<Wxd_Callbacks_DataViewTreeModel*>(model);
+
+    wxDataViewItemArray array;
+    for (size_t i = 0; i < count; ++i) {
+        array.push_back(wxDataViewItem((void*)items[i]));
+    }
+    m->ItemsDeleted(wxDataViewItem(parent), array);
+}
+
+// ItemsChanged
+extern "C" void
+wxd_DataViewTreeModel_ItemsChanged(wxd_DataViewModel_t* model, const void* const* items,
+                                   size_t count)
+{
+    if (!model || !items)
+        return;
+    Wxd_Callbacks_DataViewTreeModel* m = reinterpret_cast<Wxd_Callbacks_DataViewTreeModel*>(model);
+
+    wxDataViewItemArray array;
+    for (size_t i = 0; i < count; ++i) {
+        array.push_back(wxDataViewItem((void*)items[i]));
+    }
+    m->ItemsChanged(array);
+}
+
+// Cleared
+extern "C" void
+wxd_DataViewTreeModel_Cleared(wxd_DataViewModel_t* model)
+{
+    if (!model)
+        return;
+    Wxd_Callbacks_DataViewTreeModel* m = reinterpret_cast<Wxd_Callbacks_DataViewTreeModel*>(model);
+    m->Cleared();
 }

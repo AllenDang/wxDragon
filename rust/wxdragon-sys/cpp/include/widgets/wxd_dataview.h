@@ -303,12 +303,36 @@ wxd_DataViewTreeModel_CreateWithCallbacks(const wxd_DataViewTreeModel_Callbacks*
 
 // Notifications and helpers for custom tree models
 WXD_EXPORTED void
-wxd_DataViewTreeModel_ValueChanged(wxd_DataViewModel_t* model, void* item, unsigned int col);
+wxd_DataViewTreeModel_ItemValueChanged(wxd_DataViewModel_t* model, void* item, unsigned int col);
+
 WXD_EXPORTED void
 wxd_DataViewTreeModel_ItemChanged(wxd_DataViewModel_t* model, void* item);
+
 WXD_EXPORTED bool
 wxd_DataViewTreeModel_SetValue(wxd_DataViewModel_t* model, void* item, unsigned int col,
                                const wxd_Variant_t* variant);
+
+// Notify that a child item was added under a given parent. If parent is null, the child was added under the (invisible) root.
+WXD_EXPORTED void
+wxd_DataViewTreeModel_ItemAdded(wxd_DataViewModel_t* model, void* parent, void* item);
+
+WXD_EXPORTED void
+wxd_DataViewTreeModel_ItemDeleted(wxd_DataViewModel_t* model, void* parent, void* item);
+
+WXD_EXPORTED void
+wxd_DataViewTreeModel_ItemsAdded(wxd_DataViewModel_t* model, void* parent, const void* const* items,
+                                 size_t count);
+
+WXD_EXPORTED void
+wxd_DataViewTreeModel_ItemsDeleted(wxd_DataViewModel_t* model, void* parent,
+                                   const void* const* items, size_t count);
+
+WXD_EXPORTED void
+wxd_DataViewTreeModel_ItemsChanged(wxd_DataViewModel_t* model, const void* const* items,
+                                   size_t count);
+
+WXD_EXPORTED void
+wxd_DataViewTreeModel_Cleared(wxd_DataViewModel_t* model);
 
 // DataViewCtrl functions
 WXD_EXPORTED wxd_DataViewColumn_t*

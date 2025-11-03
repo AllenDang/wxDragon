@@ -317,6 +317,8 @@ impl Default for DataViewVirtualListModel {
 /// A callback-based DataView tree model wrapper.
 pub struct CustomDataViewTreeModel {
     model: *mut ffi::wxd_DataViewModel_t,
+    // Pointer to the Rust-owned callbacks block that holds the user's data (Box<dyn Any>)
+    callbacks: *mut OwnedTreeCallbacks,
 }
 
 impl_refcounted_object!(
@@ -325,7 +327,8 @@ impl_refcounted_object!(
     ffi::wxd_DataViewModel_t,
     ffi::wxd_DataViewModel_AddRef,
     ffi::wxd_DataViewModel_GetRefCount,
-    ffi::wxd_DataViewModel_Release
+    ffi::wxd_DataViewModel_Release,
+    callbacks
 );
 
 // Internal representation of the Rust-side callbacks and userdata. This is the
@@ -521,7 +524,10 @@ impl CustomDataViewTreeModel {
         // Create the native model which reference count is 1 now.
         let model = unsafe { ffi::wxd_DataViewTreeModel_CreateWithCallbacks(cb_raw) };
 
-        Self { model }
+        Self {
+            model,
+            callbacks: owned_raw,
+        }
     }
 
     /// Programmatically set a value via the model's SetValue callback and refresh on success.
@@ -531,6 +537,110 @@ impl CustomDataViewTreeModel {
         }
         let item = item as *mut std::ffi::c_void;
         unsafe { ffi::wxd_DataViewTreeModel_SetValue(self.model, item, col, value.as_const_ptr()) }
+    }
+
+    /// Notify the view that a specific item's value has changed.
+    /// Pass the item pointer (or null for root).
+    pub fn item_value_changed<N>(&self, item: *const N, col: u32) {
+        if self.model.is_null() {
+            return;
+        }
+        let item_id = item as *mut std::ffi::c_void;
+        unsafe { ffi::wxd_DataViewTreeModel_ItemValueChanged(self.model, item_id, col) };
+    }
+
+    /// Notify the view that an item has changed.
+    /// Pass the item pointer (or null for root).
+    pub fn item_changed<N>(&self, item: *const N) {
+        if self.model.is_null() {
+            return;
+        }
+        let item_id = item as *mut std::ffi::c_void;
+        unsafe { ffi::wxd_DataViewTreeModel_ItemChanged(self.model, item_id) };
+    }
+
+    /// Notify the view that a child item was added under the given parent.
+    /// Pass `None` for `parent` to indicate the (invisible) root.
+    pub fn item_added<N>(&self, parent: Option<*const N>, child: *const N) {
+        if self.model.is_null() {
+            return;
+        }
+        let parent_id = parent.map(|p| p as *mut std::ffi::c_void).unwrap_or(std::ptr::null_mut());
+        let child_id = child as *mut std::ffi::c_void;
+        unsafe { ffi::wxd_DataViewTreeModel_ItemAdded(self.model, parent_id, child_id) };
+    }
+
+    /// Notify the view that a child item was deleted under the given parent.
+    /// Pass `None` for `parent` to indicate the (invisible) root.
+    pub fn item_deleted<N>(&self, parent: Option<*const N>, child: *const N) {
+        if self.model.is_null() {
+            return;
+        }
+        let parent_id = parent.map(|p| p as *mut std::ffi::c_void).unwrap_or(std::ptr::null_mut());
+        let child_id = child as *mut std::ffi::c_void;
+        unsafe { ffi::wxd_DataViewTreeModel_ItemDeleted(self.model, parent_id, child_id) };
+    }
+
+    /// Notify the view that multiple child items were added under the given parent.
+    /// Pass `None` for `parent` to indicate the (invisible) root.
+    pub fn items_added<N>(&self, parent: Option<*const N>, children: &[*const N]) {
+        if self.model.is_null() {
+            return;
+        }
+        let parent_id = parent.map(|p| p as *mut std::ffi::c_void).unwrap_or(std::ptr::null_mut());
+        let child_ids: Vec<*const std::ffi::c_void> = children.iter().map(|&c| c as *const std::ffi::c_void).collect();
+        let ptr = child_ids.as_ptr();
+        let count = child_ids.len();
+        unsafe { ffi::wxd_DataViewTreeModel_ItemsAdded(self.model, parent_id, ptr, count) };
+    }
+
+    /// Notify the view that multiple child items were deleted under the given parent.
+    /// Pass `None` for `parent` to indicate the (invisible) root.
+    pub fn items_deleted<N>(&self, parent: Option<*const N>, children: &[*const N]) {
+        if self.model.is_null() {
+            return;
+        }
+        let parent_id = parent.map(|p| p as *mut std::ffi::c_void).unwrap_or(std::ptr::null_mut());
+        let child_ids: Vec<*const std::ffi::c_void> = children.iter().map(|&c| c as *const std::ffi::c_void).collect();
+        let ptr = child_ids.as_ptr();
+        let count = child_ids.len();
+        unsafe { ffi::wxd_DataViewTreeModel_ItemsDeleted(self.model, parent_id, ptr, count) };
+    }
+
+    /// Notify the view that multiple child items have changed.
+    /// Pass `None` for `parent` to indicate the (invisible) root.
+    pub fn items_changed<N>(&self, children: &[*const N]) {
+        if self.model.is_null() {
+            return;
+        }
+        let child_ids: Vec<*const std::ffi::c_void> = children.iter().map(|&c| c as *const std::ffi::c_void).collect();
+        let ptr = child_ids.as_ptr();
+        let count = child_ids.len();
+        unsafe { ffi::wxd_DataViewTreeModel_ItemsChanged(self.model, ptr, count) };
+    }
+
+    /// Notify the view that the model has been cleared.
+    /// Pass `None` for `parent` to indicate the (invisible) root.
+    pub fn cleared(&self) {
+        if self.model.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_DataViewTreeModel_Cleared(self.model) };
+    }
+
+    /// Execute a mutation against the model's underlying userdata `T` safely, if it matches the stored type.
+    /// Returns Some(result) when `T` matches, otherwise None.
+    ///
+    /// Safety and threading: This assumes you call it on the UI thread while the model is alive.
+    pub fn with_userdata_mut<T: Any + 'static, R>(&self, f: impl FnOnce(&mut T) -> R) -> Option<R> {
+        if self.callbacks.is_null() {
+            return None;
+        }
+        // SAFETY: callbacks was created by us in `new` and will be freed when the C++ model is destroyed.
+        // We only take a temporary mutable reference on the UI thread.
+        let cb: &mut OwnedTreeCallbacks = unsafe { &mut *self.callbacks };
+        // Access the boxed Any and try to downcast to T
+        cb.userdata.downcast_mut::<T>().map(f)
     }
 }
 
