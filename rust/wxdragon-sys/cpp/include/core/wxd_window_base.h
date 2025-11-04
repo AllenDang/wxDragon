@@ -237,4 +237,15 @@ wxd_Window_GetHandle(wxd_Window_t* window);
 WXD_EXPORTED bool
 wxd_Window_PopupMenu(wxd_Window_t* window, wxd_Menu_t* menu, const wxd_Point* pos);
 
+// --- Command/Menu Event Dispatch Helpers ---
+/// Synchronously dispatch a wxEVT_MENU command with the given ID to this window's event handler.
+/// Returns true if the event was handled by any bound handler.
+WXD_EXPORTED bool
+wxd_Window_ProcessMenuCommand(wxd_Window_t* window, int id);
+
+/// Asynchronously post a wxEVT_MENU command with the given ID to this window.
+/// The event will be queued and delivered later by the main loop.
+WXD_EXPORTED void
+wxd_Window_PostMenuCommand(wxd_Window_t* window, int id);
+
 #endif // WXD_WINDOW_BASE_H

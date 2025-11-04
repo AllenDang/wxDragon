@@ -10,6 +10,7 @@
 #include <wx/settings.h> // For wxSystemSettings and wxSYS_DEFAULT_GUI_FONT
 #include <wx/cursor.h>   // For wxCursor
 #include <wx/textctrl.h> // For wxTextCtrl scrolling
+#include <wx/menu.h>     // For wxCommandEvent wxEVT_MENU
 
 // Conditional includes for optional features
 #if wxdUSE_RICHTEXT
@@ -1057,6 +1058,32 @@ wxd_Window_PopupMenu(wxd_Window_t* window, wxd_Menu_t* menu, const wxd_Point* po
         // Use default position (current mouse position)
         return wx_window->PopupMenu(wx_menu);
     }
+}
+
+// --- Command/Menu Event Dispatch Helpers ---
+
+WXD_EXPORTED bool
+wxd_Window_ProcessMenuCommand(wxd_Window_t* window, int id)
+{
+    wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
+    if (!wx_window) {
+        return false;
+    }
+    wxCommandEvent evt(wxEVT_MENU, id);
+    evt.SetEventObject(wx_window);
+    return wx_window->GetEventHandler()->ProcessEvent(evt);
+}
+
+WXD_EXPORTED void
+wxd_Window_PostMenuCommand(wxd_Window_t* window, int id)
+{
+    wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
+    if (!wx_window) {
+        return;
+    }
+    wxCommandEvent evt(wxEVT_MENU, id);
+    evt.SetEventObject(wx_window);
+    wxPostEvent(wx_window, evt);
 }
 
 } // extern "C"

@@ -1511,6 +1511,26 @@ pub trait WxWidget: std::any::Any {
 
         unsafe { ffi::wxd_Window_PopupMenu(handle, menu.as_mut_ptr(), pos_ptr) }
     }
+
+    /// Synchronously dispatch a wxEVT_MENU with the given command ID to this window.
+    /// Returns true if any handler processed the event.
+    fn process_menu_command(&self, id: i32) -> bool {
+        let handle = self.handle_ptr();
+        if handle.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_Window_ProcessMenuCommand(handle, id) }
+    }
+
+    /// Asynchronously post a wxEVT_MENU with the given command ID to this window.
+    /// The event will be queued and delivered later by the main loop.
+    fn post_menu_command(&self, id: i32) {
+        let handle = self.handle_ptr();
+        if handle.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_Window_PostMenuCommand(handle, id) }
+    }
 }
 
 /// Trait for widgets that can be cast from a Window using class name matching
