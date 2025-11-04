@@ -147,20 +147,6 @@ wxd_DataViewTreeModel_ItemChanged(wxd_DataViewModel_t* model, void* item)
     m->ItemChanged(wxDataViewItem(item));
 }
 
-extern "C" bool
-wxd_DataViewTreeModel_SetValue(wxd_DataViewModel_t* model, void* item, unsigned int col,
-                               const wxd_Variant_t* variant)
-{
-    if (!model || !variant)
-        return false;
-    auto* m = reinterpret_cast<Wxd_Callbacks_DataViewTreeModel*>(model);
-
-    // Convert wxd_Variant_t back to wxVariant
-    wxVariant v = *reinterpret_cast<const wxVariant*>(variant);
-
-    return m->SetValue(v, wxDataViewItem(item), col);
-}
-
 extern "C" void
 wxd_DataViewTreeModel_ItemAdded(wxd_DataViewModel_t* model, void* parent, void* item)
 {

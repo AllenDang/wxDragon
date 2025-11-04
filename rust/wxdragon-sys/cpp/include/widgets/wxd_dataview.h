@@ -308,10 +308,6 @@ wxd_DataViewTreeModel_ItemValueChanged(wxd_DataViewModel_t* model, void* item, u
 WXD_EXPORTED void
 wxd_DataViewTreeModel_ItemChanged(wxd_DataViewModel_t* model, void* item);
 
-WXD_EXPORTED bool
-wxd_DataViewTreeModel_SetValue(wxd_DataViewModel_t* model, void* item, unsigned int col,
-                               const wxd_Variant_t* variant);
-
 // Notify that a child item was added under a given parent. If parent is null, the child was added under the (invisible) root.
 WXD_EXPORTED void
 wxd_DataViewTreeModel_ItemAdded(wxd_DataViewModel_t* model, void* parent, void* item);

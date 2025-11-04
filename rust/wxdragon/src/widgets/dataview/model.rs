@@ -536,15 +536,6 @@ impl CustomDataViewTreeModel {
         }
     }
 
-    /// Programmatically set a value via the model's SetValue callback and refresh on success.
-    pub fn set_value<N>(&self, item: *const N, col: u32, value: &Variant) -> bool {
-        if self.model.is_null() {
-            return false;
-        }
-        let item = item as *mut std::ffi::c_void;
-        unsafe { ffi::wxd_DataViewTreeModel_SetValue(self.model, item, col, value.as_const_ptr()) }
-    }
-
     /// Notify the view that a specific item's value has changed.
     /// Pass the item pointer (or null for root).
     pub fn item_value_changed<N>(&self, item: *const N, col: u32) {

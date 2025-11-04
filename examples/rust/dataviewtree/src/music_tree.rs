@@ -29,25 +29,29 @@ impl Drop for MusicNode {
 }
 
 impl MusicNode {
-    pub fn new(
-        node_type: NodeType,
-        title: &str,
-        artist: Option<&str>,
-        year: Option<i32>,
-        quality: Option<&str>,
-    ) -> Rc<RefCell<Self>> {
+    pub fn new<T, A, Q>(node_type: NodeType, title: T, artist: Option<A>, year: Option<i32>, quality: Option<Q>) -> Self
+    where
+        T: AsRef<str>,
+        A: AsRef<str>,
+        Q: AsRef<str>,
+    {
         let (artist_s, year_o, quality_s, children) = match node_type {
             NodeType::Branch => (None, None, None, Some(Vec::new())),
-            NodeType::Leaf => (artist.map(|s| s.to_string()), year, quality.map(|s| s.to_string()), None),
+            NodeType::Leaf => (
+                artist.map(|s| s.as_ref().to_string()),
+                year,
+                quality.map(|s| s.as_ref().to_string()),
+                None,
+            ),
         };
-        Rc::new(RefCell::new(Self {
+        Self {
             node_type,
-            title: title.to_string(),
+            title: title.as_ref().to_string(),
             artist: artist_s,
             year: year_o,
             quality: quality_s,
             children,
-        }))
+        }
     }
 
     /// Append a child to this node's children.
@@ -125,13 +129,13 @@ impl MusicNode {
     }
 
     fn from_dto(dto: &MusicNodeDto) -> Rc<RefCell<MusicNode>> {
-        let node = MusicNode::new(
+        let node = Rc::new(RefCell::new(MusicNode::new(
             dto.node_type,
             &dto.title,
             dto.artist.as_deref(),
             dto.year,
             dto.quality.as_deref(),
-        );
+        )));
 
         if matches!(dto.node_type, NodeType::Branch)
             && let Some(children) = &dto.children
@@ -216,50 +220,58 @@ pub fn save_music_tree_to_file<P: AsRef<Path>>(tree: &MusicTree, path: P) -> std
 
 pub fn generate_initial_music_tree() -> MusicTree {
     // Build nodes
-    let root = MusicNode::new(NodeType::Branch, "My Music", None, None, None);
+    let root = Rc::new(RefCell::new(MusicNode::new(
+        NodeType::Branch,
+        "My Music",
+        Option::<&str>::None,
+        None,
+        Option::<&str>::None,
+    )));
 
-    let pop = MusicNode::new(NodeType::Branch, "Pop music", None, None, None);
-    MusicNode::push_child(
-        &pop,
-        MusicNode::new(
-            NodeType::Leaf,
-            "You are not alone",
-            Some("Michael Jackson"),
-            Some(1995),
-            Some("good"),
-        ),
+    let pop = Rc::new(RefCell::new(MusicNode::new(
+        NodeType::Branch,
+        "Pop music",
+        Option::<&str>::None,
+        None,
+        Option::<&str>::None,
+    )));
+    let node1 = MusicNode::new(
+        NodeType::Leaf,
+        "You are not alone",
+        Some("Michael Jackson"),
+        Some(1995),
+        Some("good"),
     );
-    MusicNode::push_child(
-        &pop,
-        MusicNode::new(NodeType::Leaf, "Yesterday", Some("The Beatles"), None, Some("good")),
-    );
-    MusicNode::push_child(
-        &pop,
-        MusicNode::new(NodeType::Leaf, "Take a bow", Some("Madonna"), Some(1994), Some("good")),
-    );
+    MusicNode::push_child(&pop, Rc::new(RefCell::new(node1)));
+    let node2 = MusicNode::new(NodeType::Leaf, "Yesterday", Some("The Beatles"), None, Some("good"));
+    MusicNode::push_child(&pop, Rc::new(RefCell::new(node2)));
+    let node3 = MusicNode::new(NodeType::Leaf, "Take a bow", Some("Madonna"), Some(1994), Some("good"));
+    MusicNode::push_child(&pop, Rc::new(RefCell::new(node3)));
     MusicNode::push_child(&root, pop);
 
-    let classical = MusicNode::new(NodeType::Branch, "Classical music", None, None, None);
-    MusicNode::push_child(
-        &classical,
-        MusicNode::new(
-            NodeType::Leaf,
-            "Ninth symphony",
-            Some("Ludwig van Beethoven"),
-            Some(1824),
-            Some("good"),
-        ),
+    let classical = Rc::new(RefCell::new(MusicNode::new(
+        NodeType::Branch,
+        "Classical music",
+        Option::<&str>::None,
+        None,
+        Option::<&str>::None,
+    )));
+    let node4 = MusicNode::new(
+        NodeType::Leaf,
+        "Ninth symphony",
+        Some("Ludwig van Beethoven"),
+        Some(1824),
+        Some("good"),
     );
-    MusicNode::push_child(
-        &classical,
-        MusicNode::new(
-            NodeType::Leaf,
-            "German Requiem",
-            Some("Johannes Brahms"),
-            Some(1868),
-            Some("good"),
-        ),
+    MusicNode::push_child(&classical, Rc::new(RefCell::new(node4)));
+    let node5 = MusicNode::new(
+        NodeType::Leaf,
+        "German Requiem",
+        Some("Johannes Brahms"),
+        Some(1868),
+        Some("good"),
     );
+    MusicNode::push_child(&classical, Rc::new(RefCell::new(node5)));
     MusicNode::push_child(&root, classical);
 
     MusicTree { root, filepath: None }

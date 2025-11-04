@@ -1,10 +1,11 @@
-use music_tree::MusicNode;
+use music_tree::{MusicNode, MusicTree, NodeType};
 use std::cell::RefCell;
 use std::rc::Rc;
 use wxdragon::DataViewCtrl;
 use wxdragon::DataViewStyle;
 use wxdragon::prelude::*;
 
+mod edit_dialog;
 mod music_tree;
 mod mymodels;
 
@@ -32,7 +33,7 @@ fn main() {
     data.filepath = Some(data_path.clone());
 
     let data_rc: Rc<RefCell<music_tree::MusicTree>> = Rc::new(RefCell::new(data));
-    let model = mymodels::create_music_tree_model(data_rc);
+    let model = mymodels::create_music_tree_model(data_rc.clone());
     let _ = wxdragon::main(move |_| {
         let frame = Frame::builder()
             .with_title("wxDragon DataView Example")
@@ -47,42 +48,22 @@ fn main() {
             .with_style(DataViewStyle::RowLines | DataViewStyle::VerticalRules)
             .build();
 
+        fn create_column(title: &str, model_col: usize, width: i32) -> DataViewColumn {
+            DataViewColumn::new(
+                title,
+                &DataViewTextRenderer::new(VariantType::String, DataViewCellMode::Inert, DataViewAlign::Left),
+                model_col,
+                width,
+                DataViewAlign::Left,
+                DataViewColumnFlags::Resizable | DataViewColumnFlags::Sortable,
+            )
+        }
+
         // Create columns and text renderers
-        let title_col = DataViewColumn::new(
-            "Title",
-            &DataViewTextRenderer::new(VariantType::String, DataViewCellMode::Inert, DataViewAlign::Left),
-            0,
-            250,
-            DataViewAlign::Left,
-            DataViewColumnFlags::Resizable | DataViewColumnFlags::Sortable,
-        );
-
-        let artist_col = DataViewColumn::new(
-            "Artist",
-            &DataViewTextRenderer::new(VariantType::String, DataViewCellMode::Inert, DataViewAlign::Left),
-            1,
-            200,
-            DataViewAlign::Left,
-            DataViewColumnFlags::Resizable | DataViewColumnFlags::Sortable,
-        );
-
-        let year_col = DataViewColumn::new(
-            "Year",
-            &DataViewTextRenderer::new(VariantType::String, DataViewCellMode::Inert, DataViewAlign::Center),
-            2,
-            100,
-            DataViewAlign::Center,
-            DataViewColumnFlags::Resizable | DataViewColumnFlags::Sortable,
-        );
-
-        let judg_col = DataViewColumn::new(
-            "Judgement",
-            &DataViewTextRenderer::new(VariantType::String, DataViewCellMode::Inert, DataViewAlign::Left),
-            3,
-            120,
-            DataViewAlign::Left,
-            DataViewColumnFlags::Resizable | DataViewColumnFlags::Sortable,
-        );
+        let title_col = create_column("Title", 0, 250);
+        let artist_col = create_column("Artist", 1, 200);
+        let year_col = create_column("Year", 2, 100);
+        let judg_col = create_column("Judgement", 3, 120);
 
         dataview.append_column(&title_col);
         dataview.append_column(&artist_col);
@@ -130,40 +111,165 @@ fn main() {
             if let Some(item) = event.get_item() {
                 log::info!("Showing context menu for item at position {:?}", event.get_position());
 
-                // Build a simple context menu
+                // Build a context menu
                 let edit_id = ID_HIGHEST + 1;
-                let mut menu = Menu::builder()
-                    .with_title("Manage Node")
-                    .append_item(edit_id, "Edit", "Edit this item")
-                    .build();
+                let new_branch_id = ID_HIGHEST + 2;
+                let new_leaf_id = ID_HIGHEST + 3;
+                let delete_id = ID_HIGHEST + 4;
+                let mut menu = Menu::builder().with_title("Manage Node").build();
+
+                let _ = menu.append(edit_id, "Edit", "Edit this item", ItemKind::Normal);
+
+                // If the clicked item is a branch, offer creation of new child nodes
+                if let Some(ptr) = item.get_id::<MusicNode>() {
+                    let node: &MusicNode = unsafe { &*ptr };
+                    if matches!(node.node_type, NodeType::Branch) {
+                        // Runtime append uses Menu::append with an explicit ItemKind
+                        let h = "Add a new branch under this node";
+                        let _ = menu.append(new_branch_id, "New Branch", h, ItemKind::Normal);
+                        let _ = menu.append(new_leaf_id, "New Leaf", "Add a new leaf under this node", ItemKind::Normal);
+                    }
+                }
+
+                // Always offer Delete (we'll guard root deletion in handler)
+                let _ = menu.append(delete_id, "Delete", "Delete this item", ItemKind::Normal);
 
                 // Handle menu selection
                 let frame_for_selected = frame_for_dialog.clone();
                 let mtm_for_selected = mtm_for_edit.clone();
-                menu.on_selected(move |ev| {
-                    match ev.get_id() {
-                        id if id == edit_id => {
-                            // Get the currently selected item
-                            if let Some(ptr) = item.get_id::<MusicNode>() {
-                                // SAFETY: ptr is an opaque model ID set by us to a MusicNode address
-                                let node: &MusicNode = unsafe { &*ptr };
-                                let current_title = node.title.clone();
-
-                                // Show a simple text entry dialog to edit the title
-                                let dlg = TextEntryDialog::builder(&frame_for_selected, "Edit title", "Edit")
-                                    .with_default_value(&current_title)
-                                    .build();
-                                let ret = dlg.show_modal();
-                                if ret == ID_OK
-                                    && let Some(new_val) = dlg.get_value()
-                                {
-                                    let val = Variant::from_string(new_val);
-                                    mtm_for_selected.set_value(ptr, 0, &val);
+                let dv_for_actions = dataview_for_menu.clone();
+                // Move the DataViewItem itself into the closure; do NOT call .clone() as that would clone the inner pointer
+                let item_for_actions = item;
+                menu.on_selected(move |ev| match ev.get_id() {
+                    id if id == edit_id => {
+                        edit_item_with_dialog(&frame_for_selected, &mtm_for_selected, &item_for_actions);
+                    }
+                    id if id == new_branch_id => {
+                        if let Some(parent_ptr) = item_for_actions.get_id::<MusicNode>() {
+                            // Temporary node to drive dialog (only title enabled for branch)
+                            let temp = MusicNode::new(NodeType::Branch, "", Option::<&str>::None, None, Option::<&str>::None);
+                            let dlg = edit_dialog::NodeEditDialog::new(&frame_for_selected, &temp);
+                            if dlg.show_modal() == ID_OK {
+                                let edited = dlg.value();
+                                let title_trimmed = edited.title.trim().to_string();
+                                if !title_trimmed.is_empty() {
+                                    let node = MusicNode::new(
+                                        NodeType::Branch,
+                                        &title_trimmed,
+                                        Option::<&str>::None,
+                                        None,
+                                        Option::<&str>::None,
+                                    );
+                                    // Mutate underlying userdata via model, then notify view
+                                    let created = mtm_for_selected
+                                        .with_userdata_mut::<Rc<RefCell<MusicTree>>, Option<*const MusicNode>>(|tree_rc| {
+                                            if let Some(parent_rc) = mymodels::find_node_via_raw_ptr(tree_rc, parent_ptr) {
+                                                let child_rc = Rc::new(RefCell::new(node));
+                                                let child_ptr: *const MusicNode = {
+                                                    let b = child_rc.borrow();
+                                                    &*b as *const MusicNode
+                                                };
+                                                MusicNode::push_child(&parent_rc, child_rc);
+                                                Some(child_ptr)
+                                            } else {
+                                                None
+                                            }
+                                        });
+                                    if let Some(Some(child_ptr)) = created {
+                                        mtm_for_selected.item_added::<MusicNode>(Some(parent_ptr), child_ptr);
+                                        dv_for_actions.expand(&item_for_actions);
+                                        dv_for_actions.ensure_visible(&item_for_actions);
+                                    }
                                 }
                             }
                         }
-                        _ => {}
                     }
+                    id if id == new_leaf_id => {
+                        if let Some(parent_ptr) = item_for_actions.get_id::<MusicNode>() {
+                            let temp = MusicNode::new(NodeType::Leaf, "", Option::<&str>::None, None, Option::<&str>::None);
+                            let dlg = edit_dialog::NodeEditDialog::new(&frame_for_selected, &temp);
+                            if dlg.show_modal() == ID_OK {
+                                let edited = dlg.value();
+                                let title_trimmed = edited.title.trim().to_string();
+                                if !title_trimmed.is_empty() {
+                                    let node = MusicNode::new(
+                                        NodeType::Leaf,
+                                        &title_trimmed,
+                                        edited.artist.as_deref(),
+                                        edited.year,
+                                        edited.quality.as_deref(),
+                                    );
+
+                                    // Mutate underlying userdata via model, then notify view
+                                    let created = mtm_for_selected
+                                        .with_userdata_mut::<Rc<RefCell<music_tree::MusicTree>>, Option<*const MusicNode>>(
+                                            |tree_rc| {
+                                                if let Some(parent_rc) = mymodels::find_node_via_raw_ptr(tree_rc, parent_ptr) {
+                                                    let child_rc = Rc::new(RefCell::new(node));
+                                                    let child_ptr: *const MusicNode = {
+                                                        let b = child_rc.borrow();
+                                                        &*b as *const MusicNode
+                                                    };
+                                                    music_tree::MusicNode::push_child(&parent_rc, child_rc);
+                                                    Some(child_ptr)
+                                                } else {
+                                                    None
+                                                }
+                                            },
+                                        );
+                                    if let Some(Some(child_ptr)) = created {
+                                        mtm_for_selected.item_added::<MusicNode>(Some(parent_ptr), child_ptr);
+                                        dv_for_actions.expand(&item_for_actions);
+                                        dv_for_actions.ensure_visible(&item_for_actions);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    id if id == delete_id => {
+                        if let Some(child_ptr) = item_for_actions.get_id::<MusicNode>() {
+                            // Mutate underlying userdata: remove the child from its parent if not root
+                            let parent_opt = mtm_for_selected
+                                .with_userdata_mut::<Rc<RefCell<music_tree::MusicTree>>, Option<*const MusicNode>>(|tree_rc| {
+                                    let root_ptr: *const MusicNode = {
+                                        let tree_b = tree_rc.borrow();
+                                        let root_ref = tree_b.root.borrow();
+                                        let p: *const MusicNode = &*root_ref;
+                                        p
+                                    };
+                                    // Don't delete the visible root
+                                    if root_ptr == child_ptr {
+                                        return None;
+                                    }
+                                    // Find parent Rc
+                                    let parent_rc_opt = {
+                                        let tree_b = tree_rc.borrow();
+                                        tree_b.parent_of(unsafe { &*child_ptr })
+                                    };
+                                    if let Some(parent_rc) = parent_rc_opt {
+                                        // Remove child from parent's children vec
+                                        let mut parent_b = parent_rc.borrow_mut();
+                                        if let Some(children) = parent_b.children.as_mut()
+                                            && let Some(idx) = children.iter().position(|rc| {
+                                                let ptr: *const MusicNode = &*rc.borrow();
+                                                ptr == child_ptr
+                                            })
+                                        {
+                                            children.remove(idx);
+                                            // Return parent pointer for notification
+                                            let p_ptr: *const MusicNode = &*parent_b as *const MusicNode;
+                                            return Some(p_ptr);
+                                        }
+                                    }
+                                    None
+                                });
+                            if let Some(Some(parent_ptr)) = parent_opt {
+                                // Notify view about deletion
+                                mtm_for_selected.item_deleted::<MusicNode>(Some(parent_ptr), child_ptr);
+                            }
+                        }
+                    }
+                    _ => {}
                 });
 
                 // Show popup menu at mouse position
@@ -180,12 +286,11 @@ fn main() {
             }
         });
 
+        let frame_for_activate = frame.clone();
+        let model_for_activate = model.clone();
         dataview.on_item_activated(move |event| {
-            if let Some(item) = event.get_item()
-                && let Some(ptr) = item.get_id::<MusicNode>()
-            {
-                let node: &MusicNode = unsafe { &*ptr };
-                log::info!("Item activated: {}", node.title);
+            if let Some(item) = event.get_item() {
+                edit_item_with_dialog(&frame_for_activate, &model_for_activate, &item);
             }
         });
 
@@ -263,4 +368,33 @@ fn main() {
         frame.show(true);
         frame.centre();
     });
+}
+
+fn edit_item_with_dialog(parent: &dyn WxWidget, model: &CustomDataViewTreeModel, item: &DataViewItem) {
+    if let Some(ptr) = item.get_id::<MusicNode>() {
+        // SAFETY: ptr is an opaque model ID set by us to a MusicNode address
+        let node: &MusicNode = unsafe { &*ptr };
+        let dlg = edit_dialog::NodeEditDialog::new(parent, node);
+        let ret = dlg.show_modal();
+        if ret == ID_OK {
+            let edited = dlg.value();
+            // Mutate underlying data first, then notify the view that this item changed.
+            let _changed = model.with_userdata_mut::<Rc<RefCell<MusicTree>>, bool>(|tree_rc| {
+                if let Some(target_rc) = mymodels::find_node_via_raw_ptr(tree_rc, ptr) {
+                    let mut target = target_rc.borrow_mut();
+                    target.title = edited.title.clone();
+                    if matches!(target.node_type, NodeType::Leaf) {
+                        target.artist = edited.artist.clone();
+                        target.year = edited.year;
+                        target.quality = edited.quality.clone();
+                    }
+                    true
+                } else {
+                    false
+                }
+            });
+            // Notify that this item's values changed so the row re-renders.
+            model.item_changed::<MusicNode>(ptr); // or call `model.items_changed::<MusicNode>(&[ptr]);`
+        }
+    }
 }
