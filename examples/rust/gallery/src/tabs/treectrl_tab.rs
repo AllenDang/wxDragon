@@ -173,6 +173,7 @@ pub fn create_treectrl_tab(parent: &Notebook) -> TreeCtrlTabControls {
     tree_ctrl
         .append_item_with_data(&eng_id, "Bob Williams", dev1, Some(icons[2]), Some(icons[2])) // File icon
         .unwrap();
+    tree_ctrl.expand(&eng_id);
 
     let dev2 = PersonData {
         name: "Carol Davis".to_string(),
@@ -237,6 +238,7 @@ pub fn create_treectrl_tab(parent: &Notebook) -> TreeCtrlTabControls {
     tree_ctrl
         .append_item_with_data(&finance_id, "Eve Brown", finance_lead, Some(icons[2]), Some(icons[2])) // File icon
         .unwrap();
+    tree_ctrl.expand(&finance_id);
 
     // Expand the root item to show the structure
     tree_ctrl.select_item(&root_id);
@@ -261,6 +263,8 @@ pub fn create_treectrl_tab(parent: &Notebook) -> TreeCtrlTabControls {
 
     // Set the panel's sizer
     panel.set_sizer(main_sizer, true);
+
+    tree_ctrl.expand(&root_id);
 
     // Return the controls
     TreeCtrlTabControls {

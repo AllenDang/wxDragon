@@ -95,6 +95,7 @@ wxd_TreeEvent_GetLabel(wxd_Event_t* event, char* buffer, size_t buffer_len);
 
 WXD_EXPORTED wxd_TreeItemId_t*
 wxd_TreeEvent_GetOldItem(wxd_Event_t* event);
+
 WXD_EXPORTED int
 wxd_TreeEvent_IsEditCancelled(wxd_Event_t* event); // Returns bool as int (0 or 1)
 
@@ -176,12 +177,6 @@ wxd_IsSizeEvent(wxd_Event_t* event);
 // Gets the event's raw type (for debugging)
 WXD_EXPORTED int
 wxd_Event_GetRawType(wxd_Event_t* event);
-
-// Forward declaration for wxd_TreeItemId_t
-// This is already in wxd_types.h, but harmless to have here if it helps bindgen temporarily
-// However, it should ideally only be in wxd_types.h
-// typedef struct wxd_TreeItemId_s wxd_TreeItemId_t;
-// Commenting out as it should be in wxd_types.h
 
 // The WXDEventTypeCEnum is defined in wxd_types.h, so it should NOT be redefined here.
 

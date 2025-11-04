@@ -19,19 +19,27 @@ wxd_TreeItemData_SetClientData(wxd_TreeItemData_t* data, void* client_data);
 WXD_EXPORTED wxd_TreeCtrl_t*
 wxd_TreeCtrl_Create(wxd_Window_t* parent, wxd_Id id, wxd_Point pos, wxd_Size size,
                     wxd_Style_t style);
+
 WXD_EXPORTED wxd_TreeItemId_t*
 wxd_TreeCtrl_AddRoot(wxd_TreeCtrl_t* self, const char* text, int image, int selImage, void* data);
+
 WXD_EXPORTED wxd_TreeItemId_t*
 wxd_TreeCtrl_AppendItem(wxd_TreeCtrl_t* self, wxd_TreeItemId_t* parent_id, const char* text,
                         int image, int selImage, void* data);
 WXD_EXPORTED void
-wxd_TreeCtrl_Delete(wxd_TreeCtrl_t* self, wxd_TreeItemId_t* item_id);
+wxd_TreeCtrl_Delete(wxd_TreeCtrl_t* self, const wxd_TreeItemId_t* item_id);
 WXD_EXPORTED wxd_TreeItemId_t*
 wxd_TreeCtrl_GetSelection(wxd_TreeCtrl_t* self);
+
 WXD_EXPORTED void
 wxd_TreeCtrl_SelectItem(wxd_TreeCtrl_t* self, wxd_TreeItemId_t* item_id);
+
+WXD_EXPORTED void
+wxd_TreeCtrl_Expand(wxd_TreeCtrl_t* self, const wxd_TreeItemId_t* item_id);
+
 WXD_EXPORTED int64_t
 wxd_TreeCtrl_GetItemData(wxd_TreeCtrl_t* self, wxd_TreeItemId_t* item_id);
+
 WXD_EXPORTED bool
 wxd_TreeCtrl_SetItemData(wxd_TreeCtrl_t* self, wxd_TreeItemId_t* item_id, int64_t data);
 WXD_EXPORTED void
@@ -39,7 +47,7 @@ wxd_TreeItemId_Free(wxd_TreeItemId_t* item_id);
 WXD_EXPORTED bool
 wxd_TreeItemId_IsOk(wxd_TreeItemId_t* item_id);
 WXD_EXPORTED wxd_TreeItemId_t*
-wxd_TreeItemId_Clone(wxd_TreeItemId_t* item_id);
+wxd_TreeItemId_Clone(const wxd_TreeItemId_t* item_id);
 
 // New tree traversal functions
 WXD_EXPORTED wxd_TreeItemId_t*

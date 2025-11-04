@@ -80,13 +80,13 @@ wxd_TreeCtrl_AppendItem(wxd_TreeCtrl_t* self, wxd_TreeItemId_t* parent, const ch
 }
 
 WXD_EXPORTED void
-wxd_TreeCtrl_Delete(wxd_TreeCtrl_t* self, wxd_TreeItemId_t* item_id)
+wxd_TreeCtrl_Delete(wxd_TreeCtrl_t* self, const wxd_TreeItemId_t* item_id)
 {
     wxTreeCtrl* ctrl = WXD_UNWRAP_TREE_CTRL(self);
     if (!ctrl)
         return;
 
-    wxTreeItemId* id = WXD_UNWRAP_TREE_ITEM_ID(item_id);
+    const wxTreeItemId* id = reinterpret_cast<const wxTreeItemId*>(item_id);
     if (!id || !id->IsOk())
         return;
 
@@ -118,6 +118,20 @@ wxd_TreeCtrl_SelectItem(wxd_TreeCtrl_t* self, wxd_TreeItemId_t* item_id)
     ctrl->SelectItem(*id);
 }
 
+WXD_EXPORTED void
+wxd_TreeCtrl_Expand(wxd_TreeCtrl_t* self, const wxd_TreeItemId_t* item_id)
+{
+    wxTreeCtrl* ctrl = WXD_UNWRAP_TREE_CTRL(self);
+    if (!ctrl)
+        return;
+
+    const wxTreeItemId* id = reinterpret_cast<const wxTreeItemId*>(item_id);
+    if (!id || !id->IsOk())
+        return;
+
+    ctrl->Expand(*id);
+}
+
 // TreeItemId_Free
 WXD_EXPORTED void
 wxd_TreeItemId_Free(wxd_TreeItemId_t* item_id)
@@ -136,9 +150,9 @@ wxd_TreeItemId_IsOk(wxd_TreeItemId_t* item_id)
 
 // TreeItemId_Clone
 WXD_EXPORTED wxd_TreeItemId_t*
-wxd_TreeItemId_Clone(wxd_TreeItemId_t* item_id)
+wxd_TreeItemId_Clone(const wxd_TreeItemId_t* item_id)
 {
-    wxTreeItemId* id = WXD_UNWRAP_TREE_ITEM_ID(item_id);
+    const wxTreeItemId* id = reinterpret_cast<const wxTreeItemId*>(item_id);
     if (!id || !id->IsOk())
         return nullptr;
 

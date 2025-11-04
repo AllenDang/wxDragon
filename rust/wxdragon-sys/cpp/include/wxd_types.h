@@ -541,11 +541,7 @@ typedef enum {
 } wxd_BitmapType;
 
 // For wxd_TreeItemId_t, wxTreeItemId internally holds a void* m_pItem.
-// We will pass this void* directly as an opaque pointer type for Rust.
-// struct wxd_TreeItemId_s; // Remove old forward declaration
-// typedef struct wxd_TreeItemId_s wxd_TreeItemId_t; // Remove old typedef
-typedef struct wxd_TreeItemId_Opaque_ForBindgen
-    wxd_TreeItemId_t; // Define as opaque struct for bindgen
+typedef struct wxd_TreeItemId_t wxd_TreeItemId_t; // Define as opaque struct for bindgen
 
 // Define wxd_DropResult enum (ensure this is defined if used)
 // ... existing code ...

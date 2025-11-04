@@ -168,14 +168,8 @@ impl TreeItemId {
 
 impl Clone for TreeItemId {
     fn clone(&self) -> Self {
-        if self.ptr.is_null() {
-            // If the original is null, return a null TreeItemId
-            TreeItemId { ptr: ptr::null_mut() }
-        } else {
-            // Use the C++ Clone function to create a proper copy
-            let clone_ptr = unsafe { ffi::wxd_TreeItemId_Clone(self.ptr) };
-            TreeItemId { ptr: clone_ptr }
-        }
+        let clone_ptr = unsafe { ffi::wxd_TreeItemId_Clone(self.ptr) };
+        TreeItemId { ptr: clone_ptr }
     }
 }
 
@@ -393,16 +387,12 @@ impl TreeCtrl {
     }
 
     /// Deletes the specified item and all its children.
-    /// Note: The passed TreeItemId becomes invalid after this call,
-    /// but Rust's ownership rules mean it will still be dropped (calling Free).
-    pub fn delete(&self, item: TreeItemId) {
+    /// Note: The passed TreeItemId becomes invalid after this call.
+    pub fn delete(&self, item: &TreeItemId) {
         // Clean up any attached data before deleting the item
-        let _ = self.clear_custom_data(&item);
+        let _ = self.clear_custom_data(item);
 
-        unsafe {
-            ffi::wxd_TreeCtrl_Delete(self.as_ptr(), item.as_ptr());
-        }
-        // item is consumed and will be dropped here
+        unsafe { ffi::wxd_TreeCtrl_Delete(self.as_ptr(), item.as_ptr()) };
     }
 
     /// Gets the currently selected item.
@@ -417,6 +407,11 @@ impl TreeCtrl {
         unsafe {
             ffi::wxd_TreeCtrl_SelectItem(self.as_ptr(), item.as_ptr());
         }
+    }
+
+    /// Expands the given item to show its children.
+    pub fn expand(&self, item: &TreeItemId) {
+        unsafe { ffi::wxd_TreeCtrl_Expand(self.as_ptr(), item.as_ptr()) };
     }
 
     /// Sets up the TreeCtrl to clean up all custom data when it's destroyed.
