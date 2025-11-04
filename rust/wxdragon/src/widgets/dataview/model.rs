@@ -2,6 +2,7 @@
 
 use crate::widgets::dataview::variant::Variant;
 use std::any::Any;
+use std::cell::RefCell;
 use std::ffi::CString;
 use std::os::raw::c_void;
 use wxdragon_sys as ffi;
@@ -317,7 +318,8 @@ impl Default for DataViewVirtualListModel {
 /// A callback-based DataView tree model wrapper.
 pub struct CustomDataViewTreeModel {
     model: *mut ffi::wxd_DataViewModel_t,
-    // Pointer to the Rust-owned callbacks block that holds the user's data (Box<dyn Any>)
+    // Pointer to the Rust-owned callbacks block that holds the user's data (Box<dyn Any>),
+    // Here callbacks is kept alive as long as the model exists, it just a weak reference.
     callbacks: *mut OwnedTreeCallbacks,
 }
 
@@ -335,7 +337,11 @@ impl_refcounted_object!(
 // concrete type we store in `userdata` for the FFI struct.
 #[allow(clippy::type_complexity)]
 struct OwnedTreeCallbacks {
-    userdata: Box<dyn Any>,
+    // Use interior mutability to enforce Rust's aliasing rules at runtime across
+    // multiple handles/clones and FFI callbacks. This prevents creating multiple
+    // mutable references from shared references and turns re-entrancy issues into
+    // safe panics instead of UB.
+    userdata: RefCell<Box<dyn Any>>,
     get_parent: Box<dyn Fn(&dyn Any, *mut std::ffi::c_void) -> *mut std::ffi::c_void>,
     is_container: Box<dyn Fn(&dyn Any, *mut std::ffi::c_void) -> bool>,
     get_children: Box<dyn Fn(&dyn Any, *mut std::ffi::c_void) -> Vec<*mut std::ffi::c_void>>,
@@ -379,7 +385,7 @@ impl CustomDataViewTreeModel {
         // compare expects two concrete items (non-root)
         CMP: for<'a> Fn(&T, &'a N, &'a N, u32, bool) -> i32 + 'static,
     {
-        // Wrap typed data in a Box<dyn Any>
+        // Wrap typed data in a Box<dyn Any> and place it behind RefCell for safe interior mutability
         let boxed_data: Box<dyn Any> = Box::new(data);
 
         // Adapt typed closures into closures working with &dyn Any and *mut c_void
@@ -490,7 +496,7 @@ impl CustomDataViewTreeModel {
 
         // Build OwnedTreeCallbacks and move it to C as userdata.
         let owned = Box::new(OwnedTreeCallbacks {
-            userdata: boxed_data,
+            userdata: RefCell::new(boxed_data),
             get_parent: any_get_parent,
             is_container: any_is_container,
             get_children: any_get_children,
@@ -620,7 +626,6 @@ impl CustomDataViewTreeModel {
     }
 
     /// Notify the view that the model has been cleared.
-    /// Pass `None` for `parent` to indicate the (invisible) root.
     pub fn cleared(&self) {
         if self.model.is_null() {
             return;
@@ -631,16 +636,31 @@ impl CustomDataViewTreeModel {
     /// Execute a mutation against the model's underlying userdata `T` safely, if it matches the stored type.
     /// Returns Some(result) when `T` matches, otherwise None.
     ///
-    /// Safety and threading: This assumes you call it on the UI thread while the model is alive.
+    /// Threading & runtime borrow rules:
+    /// - Call from the GUI thread only. The underlying wxDataViewModel expects single-threaded (UI) access and this
+    ///   handle is not `Send`/`Sync`.
+    /// - This method uses `RefCell` for interior mutability. Conflicting borrows (e.g. attempting a mutable borrow
+    ///   while a borrow is still active from a trampoline/query) will panic at runtime instead of causing undefined
+    ///   behavior. Prefer small, non-reentrant mutations.
+    /// - Keep the closure short and avoid calling back into APIs that may synchronously query the model while the
+    ///   mutation is in progress, to prevent re-entrancy borrow conflicts.
+    /// - Do not hold references to the returned data outside the closure; the mutable borrow ends when the closure
+    ///   returns.
+    ///
+    /// UI updates:
+    /// - Perform the data mutation inside this method, then call one of the notification helpers
+    ///   (`item_added`, `item_deleted`, `item_changed`, `items_changed`) afterwards to refresh the view.
+    /// - Prefer batch notifications (`items_added`/`items_deleted`/`items_changed`) when changing multiple items.
     pub fn with_userdata_mut<T: Any + 'static, R>(&self, f: impl FnOnce(&mut T) -> R) -> Option<R> {
         if self.callbacks.is_null() {
             return None;
         }
         // SAFETY: callbacks was created by us in `new` and will be freed when the C++ model is destroyed.
-        // We only take a temporary mutable reference on the UI thread.
-        let cb: &mut OwnedTreeCallbacks = unsafe { &mut *self.callbacks };
-        // Access the boxed Any and try to downcast to T
-        cb.userdata.downcast_mut::<T>().map(f)
+        // We borrow the RefCell mutably, which will panic on conflicting borrows instead of causing UB.
+        let cb: &OwnedTreeCallbacks = unsafe { &*self.callbacks };
+        let mut guard = cb.userdata.borrow_mut();
+        let any_mut: &mut dyn Any = &mut **guard;
+        any_mut.downcast_mut::<T>().map(f)
     }
 }
 
@@ -654,7 +674,9 @@ extern "C" fn trampoline_get_parent(userdata: *mut std::ffi::c_void, item: *mut 
         return std::ptr::null_mut();
     }
     let cb = unsafe { &*(userdata as *mut OwnedTreeCallbacks) };
-    (cb.get_parent)(&*cb.userdata, item)
+    let u = cb.userdata.borrow();
+    let any_ref: &dyn Any = &**u;
+    (cb.get_parent)(any_ref, item)
 }
 
 extern "C" fn trampoline_is_container(userdata: *mut std::ffi::c_void, item: *mut std::ffi::c_void) -> bool {
@@ -662,7 +684,9 @@ extern "C" fn trampoline_is_container(userdata: *mut std::ffi::c_void, item: *mu
         return false;
     }
     let cb = unsafe { &*(userdata as *mut OwnedTreeCallbacks) };
-    (cb.is_container)(&*cb.userdata, item)
+    let u = cb.userdata.borrow();
+    let any_ref: &dyn Any = &**u;
+    (cb.is_container)(any_ref, item)
 }
 
 extern "C" fn trampoline_get_children(
@@ -677,7 +701,9 @@ extern "C" fn trampoline_get_children(
         return;
     }
     let cb = unsafe { &*(userdata as *mut OwnedTreeCallbacks) };
-    let vec = (cb.get_children)(&*cb.userdata, item);
+    let u = cb.userdata.borrow();
+    let any_ref: &dyn Any = &**u;
+    let vec = (cb.get_children)(any_ref, item);
     let (ptr, cnt) = tree_helpers::leak_children_vec(vec);
     // SAFETY: `ptr` is a pointer to a heap-allocated array of `*mut c_void`
     // produced by `leak_children_vec`. The FFI contract expects a
@@ -698,7 +724,9 @@ extern "C" fn trampoline_get_value(
         return std::ptr::null_mut();
     }
     let cb = unsafe { &*(userdata as *mut OwnedTreeCallbacks) };
-    let val = (cb.get_value)(&*cb.userdata, item, col);
+    let u = cb.userdata.borrow();
+    let any_ref: &dyn Any = &**u;
+    let val = (cb.get_value)(any_ref, item, col);
     // Transfer ownership to C++ side, which will destroy it when done.
     match val.try_into() {
         Ok(raw_ptr) => raw_ptr,
@@ -718,7 +746,9 @@ extern "C" fn trampoline_set_value(
     let cb = unsafe { &*(userdata as *mut OwnedTreeCallbacks) };
     if let Some(f) = &cb.set_value {
         let v = Variant::from(variant); // Here we just wrap the raw pointer, no ownership transfer
-        f(&*cb.userdata, item, col, &v)
+        let u = cb.userdata.borrow();
+        let any_ref: &dyn Any = &**u;
+        f(any_ref, item, col, &v)
     } else {
         false
     }
@@ -730,7 +760,9 @@ extern "C" fn trampoline_is_enabled(userdata: *mut std::ffi::c_void, item: *mut 
     }
     let cb = unsafe { &*(userdata as *mut OwnedTreeCallbacks) };
     if let Some(f) = &cb.is_enabled {
-        f(&*cb.userdata, item, col)
+        let u = cb.userdata.borrow();
+        let any_ref: &dyn Any = &**u;
+        f(any_ref, item, col)
     } else {
         true
     }
@@ -748,7 +780,9 @@ extern "C" fn trampoline_compare(
     }
     let cb = unsafe { &*(userdata as *mut OwnedTreeCallbacks) };
     if let Some(f) = &cb.compare {
-        f(&*cb.userdata, a, b, col, asc)
+        let u = cb.userdata.borrow();
+        let any_ref: &dyn Any = &**u;
+        f(any_ref, a, b, col, asc)
     } else {
         0
     }
