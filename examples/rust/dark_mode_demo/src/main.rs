@@ -1,11 +1,12 @@
 //! Minimal Dark Mode Demo for wxDragon
-//! 
+//!
 //! This example demonstrates the dark mode support added in wxDragon,
 //! based on wxWidgets 3.3.0+ appearance features.
 
 use wxdragon::prelude::*;
 
 fn main() {
+    SystemOptions::set_option_by_int("msw.no-manifest-check", 1);
     let _ = wxdragon::main(|_| {
         println!("=== wxDragon Dark Mode Demo ===");
 
@@ -13,7 +14,10 @@ fn main() {
         println!("\n1. System Appearance Information:");
         if let Some(system_appearance) = get_system_appearance() {
             println!("   System is using dark mode: {}", system_appearance.is_dark());
-            println!("   System using dark background: {}", system_appearance.is_using_dark_background());
+            println!(
+                "   System using dark background: {}",
+                system_appearance.is_using_dark_background()
+            );
             println!("   System appearance name: '{}'", system_appearance.get_name());
         } else {
             println!("   System appearance detection not available");
@@ -45,7 +49,7 @@ fn main() {
 
         // Try testing other appearance modes after window creation (should fail)
         println!("\n4. Testing appearance changes after window creation:");
-        
+
         println!("   Trying to set Light mode:");
         match set_appearance(Appearance::Light) {
             AppearanceResult::Ok => println!("   ✓ Light mode set successfully"),
@@ -79,4 +83,4 @@ fn main() {
         frame.show(true);
         set_top_window(&frame);
     });
-} 
+}
