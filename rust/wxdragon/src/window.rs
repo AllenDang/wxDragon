@@ -1484,7 +1484,7 @@ pub trait WxWidget: std::any::Any {
     /// # Parameters
     ///
     /// * `menu` - The menu to display
-    /// * `pos` - Optional position where to show the menu. If `None`, the menu is shown at the current mouse position.
+    /// * `screen_pos` - Optional screen position where to show the menu. If `None`, the menu is shown at the current mouse position.
     ///
     /// # Returns
     ///
@@ -1501,12 +1501,14 @@ pub trait WxWidget: std::any::Any {
     ///     .build();
     /// window.popup_menu(&mut menu, None);
     /// ```
-    fn popup_menu(&self, menu: &mut crate::Menu, pos: Option<crate::geometry::Point>) -> bool {
+    fn popup_menu(&self, menu: &mut crate::Menu, screen_pos: Option<crate::geometry::Point>) -> bool {
         let handle = self.handle_ptr();
         if handle.is_null() || menu.as_mut_ptr().is_null() {
             return false;
         }
-        let pos = pos.map(|p| self.screen_to_client(p)).unwrap_or(crate::DEFAULT_POSITION);
+        let pos = screen_pos
+            .map(|p| self.screen_to_client(p))
+            .unwrap_or(crate::DEFAULT_POSITION);
         let pos_ptr = &pos as *const crate::geometry::Point as *const ffi::wxd_Point;
 
         unsafe { ffi::wxd_Window_PopupMenu(handle, menu.as_mut_ptr(), pos_ptr) }
