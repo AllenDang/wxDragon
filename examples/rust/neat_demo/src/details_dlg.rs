@@ -1,7 +1,11 @@
+use crate::server_node::ServerNode;
 use crate::settings::center_rect;
 use wxdragon::prelude::*;
 
-pub fn details_dlg(parent: &dyn WxWidget) {
+/// Show details dialog.
+/// - If `node_opt` is provided, controls are initialized from it (edit mode).
+/// - Returns Some(ServerNode) when OK, or None when cancelled.
+pub fn details_dlg(parent: &dyn WxWidget, node_opt: Option<&ServerNode>) -> Option<ServerNode> {
     let (w, h) = (600, 400);
     let (x, y) = center_rect(parent, w, h);
 
@@ -164,6 +168,70 @@ pub fn details_dlg(parent: &dyn WxWidget) {
     dialog_sizer.add(&panel, 1, SizerFlag::Expand, 0);
     dialog.set_sizer(dialog_sizer, true);
 
+    // Initialize controls if editing an existing node
+    if let Some(node) = node_opt {
+        remarks_input.set_value(node.remarks.as_deref().unwrap_or(""));
+        tunnel_input.set_value(&node.tunnel_path);
+        // None -> unchecked; Some(true) -> checked; Some(false) -> unchecked (treat false same as None for UI)
+        disable_tls_checkbox.set_value(node.disable_tls.unwrap_or(false));
+        client_id_input.set_value(node.client_id.as_deref().unwrap_or(""));
+        server_host_input.set_value(&node.server_host);
+        server_port_input.set_value(node.server_port as i32);
+        server_domain_input.set_value(node.server_domain.as_deref().unwrap_or(""));
+        ca_file_input.set_value(node.ca_file.as_deref().unwrap_or(""));
+        dangerous_checkbox.set_value(node.dangerous_mode.unwrap_or(false));
+    }
+
     let result = dialog.show_modal();
     log::info!("Details dialog returned: {}", result);
+
+    let result = if result == ID_OK {
+        // Collect values into ServerNode
+        let remarks = {
+            let s = remarks_input.get_value();
+            let t = s.trim().to_string();
+            if t.is_empty() { None } else { Some(t) }
+        };
+        let tunnel_path = tunnel_input.get_value();
+        // Map checkbox to Option<bool>: checked => Some(true), unchecked => None (omit false in config)
+        let disable_tls = if disable_tls_checkbox.get_value() { Some(true) } else { None };
+        let client_id = {
+            let s = client_id_input.get_value();
+            let t = s.trim().to_string();
+            if t.is_empty() { None } else { Some(t) }
+        };
+        let server_host = server_host_input.get_value();
+        let server_port = {
+            let v = server_port_input.value();
+            v.max(0).min(u16::MAX as i32) as u16
+        };
+        let server_domain = {
+            let s = server_domain_input.get_value();
+            let t = s.trim().to_string();
+            if t.is_empty() { None } else { Some(t) }
+        };
+        let ca_file = {
+            let s = ca_file_input.get_value();
+            let t = s.trim().to_string();
+            if t.is_empty() { None } else { Some(t) }
+        };
+        let dangerous_mode = if dangerous_checkbox.get_value() { Some(true) } else { None };
+
+        let node = ServerNode {
+            remarks,
+            tunnel_path,
+            disable_tls,
+            client_id,
+            server_host,
+            server_port,
+            server_domain,
+            ca_file,
+            dangerous_mode,
+        };
+        Some(node)
+    } else {
+        None
+    };
+    dialog.destroy();
+    result
 }

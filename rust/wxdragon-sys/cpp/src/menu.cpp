@@ -33,6 +33,9 @@ wxd_MenuBar_EnableItem(wxd_MenuBar_t* menubar, wxd_Id id, bool enable)
     if (!menubar)
         return false;
     wxMenuBar* wx_menubar = reinterpret_cast<wxMenuBar*>(menubar);
+    wxMenuItem* item = wx_menubar->FindItem(id);
+    if (!item)
+        return false;
     wx_menubar->Enable(id, enable);
     return true;
 }

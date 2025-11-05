@@ -6,32 +6,24 @@ use std::path::Path;
 
 use wxdragon::prelude::*;
 
-#[derive(Serialize, Deserialize, Default)]
+use crate::server_node::ServerNode;
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct WindowConfig {
     pub position: (i32, i32),
     pub size: (i32, i32),
 }
 
-pub(crate) const WIDGET_MARGIN: i32 = 2;
-pub(crate) const APP_TITLE: &str = "Neet Demo";
-pub(crate) const MAIN_ICON: &[u8] = include_bytes!("../assets/main.png");
-pub(crate) const ICON_SIZE: u32 = 72;
+impl Default for WindowConfig {
+    fn default() -> Self {
+        Self {
+            position: (200, 250),
+            size: (700, 400),
+        }
+    }
+}
 
 impl WindowConfig {
-    pub fn load<P: AsRef<Path>>(path: P) -> Self {
-        std::fs::read_to_string(path.as_ref())
-            .ok()
-            .and_then(|s| serde_json::from_str(&s).ok())
-            .unwrap_or(WindowConfig {
-                position: (200, 250),
-                size: (700, 400),
-            })
-    }
-
-    pub fn save<P: AsRef<Path>>(&self, path: P) {
-        let _ = std::fs::write(path, serde_json::to_string_pretty(self).unwrap());
-    }
-
     pub fn new(position: Point, size: Size) -> Self {
         Self {
             position: (position.x, position.y),
@@ -39,22 +31,55 @@ impl WindowConfig {
         }
     }
 
-    pub fn to_point(&self) -> Point {
+    pub fn get_point(&self) -> Point {
         Point::new(self.position.0, self.position.1)
     }
 
-    pub fn to_size(&self) -> Size {
+    pub fn get_size(&self) -> Size {
         Size::new(self.size.0, self.size.1)
     }
 }
 
-pub fn load_settings() -> WindowConfig {
-    let config_path: std::path::PathBuf = retrieve_config_path();
-    WindowConfig::load(&config_path)
+/// Top-level application configuration.
+/// - `window`: window position/size
+/// - `servers`: a list of server nodes managed by the app
+#[derive(Serialize, Deserialize, Default, Debug, Clone, PartialEq)]
+pub struct Config {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub window: Option<WindowConfig>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub servers: Option<Vec<ServerNode>>,
 }
 
-pub fn save_settings(cfg: &WindowConfig) {
+pub(crate) const WIDGET_MARGIN: i32 = 2;
+pub(crate) const APP_TITLE: &str = "Neet Demo";
+pub(crate) const MAIN_ICON: &[u8] = include_bytes!("../assets/main.png");
+pub(crate) const ICON_SIZE: u32 = 72;
+
+impl Config {
+    pub fn load<P: AsRef<Path>>(path: P) -> Self {
+        std::fs::read_to_string(path.as_ref())
+            .ok()
+            .and_then(|s| serde_json::from_str(&s).ok())
+            .unwrap_or(Config {
+                window: Some(WindowConfig::default()),
+                servers: None,
+            })
+    }
+
+    pub fn save<P: AsRef<Path>>(&self, path: P) {
+        let _ = std::fs::write(path, serde_json::to_string_pretty(self).unwrap());
+    }
+}
+
+pub fn load_settings() -> Config {
     let config_path: std::path::PathBuf = retrieve_config_path();
+    Config::load(&config_path)
+}
+
+pub fn save_settings(cfg: &Config) {
+    let config_path: std::path::PathBuf = retrieve_config_path();
+    log::info!("Saving settings to {}", config_path.display());
     cfg.save(&config_path);
 }
 

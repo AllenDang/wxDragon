@@ -181,6 +181,8 @@ impl Menu {
         Some(MenuItem::from(item_ptr))
     }
 
+    /// Enables or disables a menu item by its ID.
+    /// Returns true if the operation was successful.
     pub fn enable_item(&self, id: Id, enable: bool) -> bool {
         unsafe { ffi::wxd_Menu_ItemEnable(self.ptr, id, enable) }
     }

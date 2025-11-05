@@ -30,24 +30,68 @@ mod about_dlg;
 mod dataview;
 mod details_dlg;
 mod logview;
+mod menu_actions;
+mod model;
+mod selection_ctx;
+mod server_node;
 mod settings;
 mod settings_dlg;
 mod show_qrcode_dlg;
 
+use model::{ServerList, create_server_tree_model};
 use settings::{MAIN_ICON, WindowConfig, create_bitmap_from_memory};
+use std::{cell::RefCell, rc::Rc};
 use wxdragon::prelude::*;
 
 fn main() {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("trace")).init();
-    let model = std::rc::Rc::new(dataview::create_data_model());
-    let model_clone = model.clone();
+    let cfg = Rc::new(RefCell::new(settings::load_settings()));
+    let cfg_clone = cfg.clone();
     let _ = wxdragon::main(move |_| {
-        let win_cfg = settings::load_settings();
+        // Build model once from settings.servers
+        let mut nodes = cfg_clone.borrow().servers.clone();
+
+        // Demo seed data: when servers key is missing (None), add two example nodes
+        if nodes.is_none() {
+            let seed1 = crate::server_node::ServerNode {
+                remarks: Some("Sample Server 1".to_string()),
+                tunnel_path: "/".to_string(),
+                disable_tls: None,
+                client_id: Some("client-001".to_string()),
+                server_host: "example.com".to_string(),
+                server_port: 443,
+                server_domain: Some("example.com".to_string()),
+                ca_file: None,
+                dangerous_mode: None,
+            };
+            let seed2 = crate::server_node::ServerNode {
+                remarks: Some("Local Dev".to_string()),
+                tunnel_path: "/dev".to_string(),
+                // Use Some(true) to indicate TLS disabled (plain) in config storage style
+                disable_tls: Some(true),
+                client_id: None,
+                server_host: "127.0.0.1".to_string(),
+                server_port: 8080,
+                server_domain: None,
+                ca_file: None,
+                dangerous_mode: None,
+            };
+            nodes = Some(vec![seed1, seed2]);
+        }
+        let nodes = nodes
+            .unwrap_or_default()
+            .into_iter()
+            .map(|n| Rc::new(RefCell::new(n)))
+            .collect();
+        let data = Rc::new(RefCell::new(ServerList { nodes }));
+        let model = create_server_tree_model(data);
+
+        let win_cfg = cfg_clone.borrow().window.as_ref().cloned().unwrap_or_default();
 
         let frame = Frame::builder()
             .with_title(settings::APP_TITLE)
-            .with_position(win_cfg.to_point())
-            .with_size(win_cfg.to_size())
+            .with_position(win_cfg.get_point())
+            .with_size(win_cfg.get_size())
             .build();
 
         let icon_bitmap = create_bitmap_from_memory(MAIN_ICON, None).unwrap();
@@ -154,35 +198,36 @@ fn main() {
             .build();
         frame.set_menu_bar(menubar);
 
+        // Dynamically enable/disable Node menu items when the menu bar opens
+        // Disable actions that require a selection if none is present
+        let frame_for_menu_open = frame.clone();
+        frame.on_menu_opened(move |event: wxdragon::MenuEventData| {
+            // Only handle the menubar case here; popup menus use a different path
+            if event.is_popup() {
+                return;
+            }
+            if let Some(mbar) = frame_for_menu_open.get_menu_bar() {
+                let has_sel = selection_ctx::has_pending_details();
+                // Items that require a selection
+                let gated = [
+                    MenuId::ViewDetails,
+                    MenuId::ExportNode,
+                    MenuId::ShowQrCode,
+                    MenuId::Delete,
+                    MenuId::Copy,
+                ];
+                for id in gated {
+                    // Enable only if there is a pending selection
+                    let _ = mbar.enable_item(id.into(), has_sel);
+                }
+            }
+        });
+
         let frame_for_menu = frame.clone();
-        frame.on_menu(move |event| match event.get_id() {
-            id if id == i32::from(MenuId::Quit) => {
-                log::info!("Menu/Toolbar: Quit clicked!");
-                frame_for_menu.close(true);
-            }
-            id if id == i32::from(MenuId::About) => {
-                about_dlg::show_about_dialog(&frame_for_menu);
-            }
-            id if id == i32::from(MenuId::Settings) => {
-                log::info!("Menu/Toolbar: Settings clicked!");
-                settings_dlg::settings_dlg(&frame_for_menu);
-            }
-            id if id == i32::from(MenuId::ViewDetails) => {
-                log::info!("Menu/Toolbar: View Details clicked!");
-                details_dlg::details_dlg(&frame_for_menu);
-            }
-            id if id == i32::from(MenuId::New) => {
-                log::info!("Menu/Toolbar: New clicked!");
-                details_dlg::details_dlg(&frame_for_menu);
-            }
-            id if id == i32::from(MenuId::ShowQrCode) => {
-                log::info!("Menu/Toolbar: Show QR Code clicked!");
-                show_qrcode_dlg::show_qrcode_dlg(&frame_for_menu);
-            }
-            _ => {
-                log::warn!("Unhandled Menu/Tool ID: {}", event.get_id());
-                event.skip(true);
-            }
+        let model_for_menu = model.clone();
+        frame.on_menu(move |event| {
+            let id = event.get_id();
+            menu_actions::handle_menu_command(&frame_for_menu, &model_for_menu, id);
         });
 
         let frame_clone = frame.clone();
@@ -199,11 +244,22 @@ fn main() {
         });
 
         let frame_for_destroy = frame.clone();
+        let model_for_destroy = model.clone();
+        let cfg_for_destroy = cfg_clone.clone();
         frame.on_destroy(move |_data| {
             let pos = frame_for_destroy.get_position();
             let size = frame_for_destroy.get_size();
-            let cfg = WindowConfig::new(pos, size);
-            settings::save_settings(&cfg);
+            let win = WindowConfig::new(pos, size);
+            let mut cfg = cfg_for_destroy.borrow_mut();
+            cfg.window = Some(win);
+            // Persist current servers from the model back to settings
+            if let Some(servers) =
+                model_for_destroy.with_userdata_mut::<Rc<RefCell<ServerList>>, Vec<server_node::ServerNode>>(|list_rc| {
+                    list_rc.borrow().nodes.iter().map(|rc| rc.borrow().clone()).collect()
+                })
+            {
+                cfg.servers = Some(servers);
+            }
 
             // Clean up the TaskBarIcon, it's important to call destroy() to remove the icon from the system tray,
             // or we can't exit the application main loop.
@@ -218,7 +274,7 @@ fn main() {
         let sizer = BoxSizer::builder(Orientation::Vertical).build();
 
         // Integrate DataView module (top, expands)
-        let dataview_panel = dataview::create_data_view_panel(&main_panel, &model_clone);
+        let dataview_panel = dataview::create_data_view_panel(&main_panel, &model, &frame);
         sizer.add(
             &dataview_panel,
             1,
@@ -239,4 +295,7 @@ fn main() {
 
         frame.show(true);
     });
+
+    // Save settings on exit
+    settings::save_settings(&cfg.borrow_mut());
 }
