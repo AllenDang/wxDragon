@@ -27,6 +27,25 @@ wxd_MenuBar_Append(wxd_MenuBar_t* menubar, wxd_Menu_t* menu, const char* title)
     wx_menubar->Append(wx_menu, wxString::FromUTF8(title ? title : ""));
 }
 
+WXD_EXPORTED bool
+wxd_MenuBar_EnableItem(wxd_MenuBar_t* menubar, wxd_Id id, bool enable)
+{
+    if (!menubar)
+        return false;
+    wxMenuBar* wx_menubar = reinterpret_cast<wxMenuBar*>(menubar);
+    wx_menubar->Enable(id, enable);
+    return true;
+}
+
+WXD_EXPORTED bool
+wxd_MenuBar_IsItemEnabled(const wxd_MenuBar_t* menubar, wxd_Id id)
+{
+    if (!menubar)
+        return false;
+    const wxMenuBar* wx_menubar = reinterpret_cast<const wxMenuBar*>(menubar);
+    return wx_menubar->IsEnabled(id);
+}
+
 // --- Menu Functions ---
 WXD_EXPORTED wxd_Menu_t*
 wxd_Menu_Create(const char* title, wxd_Style_t style)

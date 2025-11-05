@@ -10,6 +10,20 @@ wxd_MenuBar_Create(wxd_Style_t style);
 WXD_EXPORTED void
 wxd_MenuBar_Append(wxd_MenuBar_t* menubar, wxd_Menu_t* menu, const char* title);
 
+/**
+ * @brief Enable or disable a menu item by id across the entire menubar.
+ * This is equivalent to wxMenuBar::Enable(id, enable).
+ */
+WXD_EXPORTED bool
+wxd_MenuBar_EnableItem(wxd_MenuBar_t* menubar, wxd_Id id, bool enable);
+
+/**
+ * @brief Query whether a menu item is enabled via the menubar.
+ * This is equivalent to wxMenuBar::IsEnabled(id).
+ */
+WXD_EXPORTED bool
+wxd_MenuBar_IsItemEnabled(const wxd_MenuBar_t* menubar, wxd_Id id);
+
 WXD_EXPORTED wxd_Menu_t*
 wxd_Menu_Create(const char* title, wxd_Style_t style);
 

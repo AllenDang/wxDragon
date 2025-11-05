@@ -1,5 +1,6 @@
 //! wxMenuBar wrapper
 
+use crate::id::Id;
 use crate::menus::Menu;
 #[cfg(feature = "xrc")]
 use crate::menus::MenuItem;
@@ -67,6 +68,17 @@ impl MenuBar {
     /// NOTE: This is needed internally by Frame::set_menu_bar.
     pub(crate) unsafe fn as_ptr(&self) -> *mut ffi::wxd_MenuBar_t {
         self.ptr
+    }
+
+    /// Enables or disables a menu item by its ID across this menu bar.
+    /// Returns true if the item was found and its state changed.
+    pub fn enable_item(&self, id: Id, enable: bool) -> bool {
+        unsafe { ffi::wxd_MenuBar_EnableItem(self.ptr, id, enable) }
+    }
+
+    /// Checks if a menu item is enabled via this menu bar.
+    pub fn is_item_enabled(&self, id: Id) -> bool {
+        unsafe { ffi::wxd_MenuBar_IsItemEnabled(self.ptr, id) }
     }
 }
 
