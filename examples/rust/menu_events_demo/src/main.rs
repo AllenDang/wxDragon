@@ -225,6 +225,10 @@ impl MenuEventsApp {
             let action = if is_opening { "🔄 Opening" } else { "🔄 Closing" };
             log::trace!("{} menu lifecycle event: {}", action, event_type);
         });
+
+        self.frame.on_menu_opened(|event: MenuEventData| {
+            log::info!("✅ Menu opened event tracked: {}", event.format_for_logging());
+        });
     }
 
     fn setup_dataview(&self) {
@@ -353,7 +357,7 @@ impl MenuEventsApp {
                 }
             });
 
-            let pos = event.get_position();
+            let pos = event.get_position().map(|p| dataview_clone.client_to_screen(p));
             dataview_clone.popup_menu(&mut popup_menu, pos);
 
             // Clean up the popup menu after use to release rust closures attached to menu items
