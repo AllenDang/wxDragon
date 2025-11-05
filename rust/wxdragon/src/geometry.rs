@@ -20,6 +20,9 @@ impl Point {
     pub fn new(x: i32, y: i32) -> Self {
         Point { x, y }
     }
+
+    /// Default position (-1, -1) that lets the system choose the position.
+    pub const DEFAULT_POSITION: Point = Point { x: -1, y: -1 };
 }
 
 impl From<Point> for ffi::wxd_Point {
@@ -33,9 +36,6 @@ impl From<ffi::wxd_Point> for Point {
         Point { x: p.x, y: p.y }
     }
 }
-
-/// Default position (-1, -1) that lets the system choose the position.
-pub const DEFAULT_POSITION: Point = Point { x: -1, y: -1 };
 
 /// Standard window size type.
 ///
@@ -52,6 +52,9 @@ impl Size {
     pub fn new(width: i32, height: i32) -> Self {
         Size { width, height }
     }
+
+    /// Default size (-1, -1) that lets the system choose the size.
+    pub const DEFAULT_SIZE: Size = Size { width: -1, height: -1 };
 }
 
 impl From<Size> for ffi::wxd_Size {
@@ -71,9 +74,6 @@ impl From<ffi::wxd_Size> for Size {
         }
     }
 }
-
-/// Default size (-1, -1) that lets the system choose the size.
-pub const DEFAULT_SIZE: Size = Size { width: -1, height: -1 };
 
 /// Represents a rectangle with position (x, y) and dimensions (width, height).
 ///

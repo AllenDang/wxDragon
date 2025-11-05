@@ -1508,7 +1508,7 @@ pub trait WxWidget: std::any::Any {
         }
         let pos = screen_pos
             .map(|p| self.screen_to_client(p))
-            .unwrap_or(crate::DEFAULT_POSITION);
+            .unwrap_or(Point::DEFAULT_POSITION);
         let pos_ptr = &pos as *const crate::geometry::Point as *const ffi::wxd_Point;
 
         unsafe { ffi::wxd_Window_PopupMenu(handle, menu.as_mut_ptr(), pos_ptr) }

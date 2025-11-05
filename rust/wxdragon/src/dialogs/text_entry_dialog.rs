@@ -1,5 +1,5 @@
 use crate::dialogs::Dialog;
-use crate::geometry::{DEFAULT_POSITION, DEFAULT_SIZE, Point, Size};
+use crate::geometry::{Point, Size};
 use crate::window::WxWidget;
 use std::ffi::{CStr, CString};
 use wxdragon_sys as ffi;
@@ -113,8 +113,8 @@ impl<'a> TextEntryDialogBuilder<'a> {
             caption: caption.to_string(),
             default_value: String::new(),
             style: TextEntryDialogStyle::Default,
-            pos: DEFAULT_POSITION,
-            size: DEFAULT_SIZE,
+            pos: Point::DEFAULT_POSITION,
+            size: Size::DEFAULT_SIZE,
         }
     }
 

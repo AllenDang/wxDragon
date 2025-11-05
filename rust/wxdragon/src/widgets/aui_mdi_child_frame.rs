@@ -58,8 +58,8 @@ impl<'a> AuiMdiChildFrameBuilder<'a> {
             parent,
             id: ID_ANY as Id,
             title: String::new(),
-            pos: DEFAULT_POSITION,
-            size: DEFAULT_SIZE,
+            pos: Point::DEFAULT_POSITION,
+            size: Size::DEFAULT_SIZE,
             style: AuiMdiChildFrameStyle::Default,
             name: "wxAuiMDIChildFrame".to_string(),
         }

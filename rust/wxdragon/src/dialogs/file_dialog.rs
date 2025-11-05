@@ -1,5 +1,5 @@
 use crate::dialogs::Dialog;
-use crate::geometry::{DEFAULT_POSITION, DEFAULT_SIZE, Point, Size};
+use crate::geometry::{Point, Size};
 use crate::utils::ArrayString;
 use crate::widget_style_enum;
 use crate::window::WxWidget;
@@ -279,8 +279,8 @@ impl<'a> FileDialogBuilder<'a> {
             default_file: String::new(),
             wildcard: "*.*".to_string(), // Default wildcard
             style: FileDialogStyle::Open,
-            pos: DEFAULT_POSITION,
-            size: DEFAULT_SIZE,
+            pos: Point::DEFAULT_POSITION,
+            size: Size::DEFAULT_SIZE,
         }
     }
 

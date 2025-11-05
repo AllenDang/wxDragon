@@ -1,5 +1,5 @@
 use crate::bitmap::Bitmap; // ADDED: Import Bitmap
-use crate::geometry::{DEFAULT_POSITION, Point, Size};
+use crate::geometry::{Point, Size};
 use crate::id::ID_ANY;
 use crate::id::Id;
 use crate::menus::MenuBar; // ADDED: Import MenuBar
@@ -100,7 +100,7 @@ impl Default for FrameBuilder {
             parent_ptr: ptr::null_mut(),
             id: ID_ANY as i32,                      // Use ID_ANY from base (already i32)
             title: "wxDragon Frame".to_string(),    // Default title
-            pos: DEFAULT_POSITION,                  // Default position
+            pos: Point::DEFAULT_POSITION,           // Default position
             size: Size { width: 500, height: 400 }, // Specific default size for Frame
             style: FrameStyle::Default,
             // name: String::new(),

@@ -69,8 +69,8 @@ macro_rules! widget_builder {
                     Self {
                         parent,
                         id: $crate::id::ID_ANY as Id,
-                        pos: $crate::geometry::DEFAULT_POSITION,
-                        size: $crate::geometry::DEFAULT_SIZE,
+                        pos: $crate::geometry::Point::DEFAULT_POSITION,
+                        size: $crate::geometry::Size::DEFAULT_SIZE,
                         style: <$style_type>::default(),
                         $(
                             $field_name: $crate::__widget_builder_default!($($field_default)?),
@@ -489,7 +489,7 @@ macro_rules! custom_widget {
                 pub fn new(parent: &'a dyn $crate::window::WxWidget) -> Self {
                     Self {
                         parent,
-                        size: $crate::geometry::DEFAULT_SIZE,
+                        size: $crate::geometry::Size::DEFAULT_SIZE,
                         $(
                             $field_name: $field_default,
                         )*

@@ -114,8 +114,8 @@ impl<'a> StatusBarBuilder<'a> {
         Self {
             parent,
             id: crate::id::ID_ANY as Id,
-            pos: crate::geometry::DEFAULT_POSITION,
-            size: crate::geometry::DEFAULT_SIZE,
+            pos: Point::DEFAULT_POSITION,
+            size: Size::DEFAULT_SIZE,
             style: StatusBarStyle::Default,
             fields_count: None,
             status_widths: None,

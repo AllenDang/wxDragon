@@ -14,7 +14,7 @@ pub use crate::event::{AppEvents, ButtonEvents, MenuEvents, ScrollEvents, TextEv
 // ADDED: Event Data Structs
 pub use crate::event::event_data::{CommandEventData, KeyEventData, MouseEventData};
 pub use crate::event::{IdleEventData, MenuEventData};
-pub use crate::geometry::{DEFAULT_POSITION, DEFAULT_SIZE, Point, Rect, Size};
+pub use crate::geometry::{Point, Rect, Size};
 pub use crate::id::{ID_ANY, ID_CANCEL, ID_HIGHEST, ID_NO, ID_OK, ID_YES, Id};
 pub use crate::sizers::WxSizer;
 pub use crate::sysopt::SystemOptions;

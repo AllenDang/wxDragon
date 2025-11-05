@@ -1,4 +1,4 @@
-use crate::geometry::{DEFAULT_POSITION, DEFAULT_SIZE, Point, Size};
+use crate::geometry::{Point, Size};
 use crate::window::WxWidget;
 use std::ffi::{CStr, CString};
 use wxdragon_sys as ffi;
@@ -107,8 +107,8 @@ impl<'a> DirDialogBuilder<'a> {
             message: message.to_string(),
             default_path: default_path.to_string(),
             style: DirDialogStyle::default().bits(),
-            pos: DEFAULT_POSITION,
-            size: DEFAULT_SIZE,
+            pos: Point::DEFAULT_POSITION,
+            size: Size::DEFAULT_SIZE,
         }
     }
 

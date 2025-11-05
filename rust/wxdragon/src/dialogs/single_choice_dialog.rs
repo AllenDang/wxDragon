@@ -1,5 +1,5 @@
 use crate::dialogs::Dialog;
-use crate::geometry::{DEFAULT_POSITION, DEFAULT_SIZE, Point, Size};
+use crate::geometry::{Point, Size};
 use crate::utils::ArrayString;
 use crate::window::WxWidget;
 use std::ffi::{CStr, CString};
@@ -126,8 +126,8 @@ impl<'a> SingleChoiceDialogBuilder<'a> {
             caption: caption.to_string(),
             choices: choices.to_vec(),
             style: SingleChoiceDialogStyle::Default,
-            pos: DEFAULT_POSITION,
-            size: DEFAULT_SIZE,
+            pos: Point::DEFAULT_POSITION,
+            size: Size::DEFAULT_SIZE,
         }
     }
 
