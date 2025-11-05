@@ -28,10 +28,15 @@ pub enum TaskBarIconType {
 impl TaskBarIconType {
     /// Convert to C enum value
     pub fn to_c_enum(self) -> ffi::wxd_TaskBarIconType_t {
+        // Map to our C wrapper's enum values (wxd_taskbar.h):
+        //   WXD_TASKBAR_ICON_DEFAULT = 0
+        //   WXD_TASKBAR_ICON_DOCK = 1
+        //   WXD_TASKBAR_ICON_CUSTOM_STATUSITEM = 2
+        // These constants aren't exposed by bindgen, so use numeric values directly.
         match self {
-            TaskBarIconType::Dock => ffi::WXD_TBI_DOCK as ffi::wxd_TaskBarIconType_t,
-            TaskBarIconType::Default => ffi::WXD_TBI_DEFAULT_TYPE as ffi::wxd_TaskBarIconType_t,
-            TaskBarIconType::CustomStatusItem => ffi::WXD_TBI_CUSTOM_STATUSITEM as ffi::wxd_TaskBarIconType_t,
+            TaskBarIconType::Default => 0,
+            TaskBarIconType::Dock => 1,
+            TaskBarIconType::CustomStatusItem => 2,
         }
     }
 }
