@@ -113,6 +113,31 @@ wxd_Menu_AppendSubMenu(wxd_Menu_t* menu, wxd_Menu_t* submenu, const char* title,
     return reinterpret_cast<const wxd_MenuItem_t*>(wx_item);
 }
 
+WXD_EXPORTED bool
+wxd_Menu_ItemEnable(wxd_Menu_t* menu, wxd_Id id, bool enable)
+{
+    if (!menu)
+        return false;
+    wxMenu* wx_menu = reinterpret_cast<wxMenu*>(menu);
+    wxMenuItem* item = wx_menu->FindItem(id);
+    if (!item)
+        return false;
+    item->Enable(enable);
+    return true;
+}
+
+WXD_EXPORTED bool
+wxd_Menu_IsItemEnabled(const wxd_Menu_t* menu, wxd_Id id)
+{
+    if (!menu)
+        return false;
+    const wxMenu* wx_menu = reinterpret_cast<const wxMenu*>(menu);
+    const wxMenuItem* item = wx_menu->FindItem(id);
+    if (!item)
+        return false;
+    return item->IsEnabled();
+}
+
 WXD_EXPORTED void
 wxd_Menu_AppendSeparator(wxd_Menu_t* menu)
 {

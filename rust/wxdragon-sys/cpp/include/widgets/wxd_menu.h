@@ -57,6 +57,15 @@ WXD_EXPORTED const wxd_MenuItem_t*
 wxd_Menu_AppendSubMenu(wxd_Menu_t* menu, wxd_Menu_t* submenu, const char* title,
                        const char* helpString);
 
+/**
+ * @brief Enable or disable a menu item by its id.
+ */
+WXD_EXPORTED bool
+wxd_Menu_ItemEnable(wxd_Menu_t* menu, wxd_Id id, bool enable);
+
+WXD_EXPORTED bool
+wxd_Menu_IsItemEnabled(const wxd_Menu_t* menu, wxd_Id id);
+
 WXD_EXPORTED void
 wxd_Menu_AppendSeparator(wxd_Menu_t* menu);
 

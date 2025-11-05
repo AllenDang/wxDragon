@@ -181,6 +181,15 @@ impl Menu {
         Some(MenuItem::from(item_ptr))
     }
 
+    pub fn enable_item(&self, id: Id, enable: bool) -> bool {
+        unsafe { ffi::wxd_Menu_ItemEnable(self.ptr, id, enable) }
+    }
+
+    /// Checks if a menu item is enabled.
+    pub fn is_item_enabled(&self, id: Id) -> bool {
+        unsafe { ffi::wxd_Menu_IsItemEnabled(self.ptr, id) }
+    }
+
     /// Appends a separator.
     pub fn append_separator(&self) {
         self.append_separator_raw();
