@@ -1,15 +1,53 @@
 # Changelog
 
+## 0.9.3
+
+### New Features
+
+- Added MenuBar::enable_item & MenuBar::is_item_enabled
+- Added Menu::enable_item & Menu::is_item_enabled
+- Added Point::DEFAULT_POSITION & Size::DEFAULT_SIZE constants
+- Added TreeCtrl::expand method
+
+### Enhancements
+
+- Added WxWidget::process_menu_command & WxWidget::post_menu_command methods
+- Added CustomDataViewTreeModel::item_added
+- Added DataViewCtrl::set_sorting_column method
+- Refactored wxDragon::Menu
+- Improved CustomDataViewTreeModel
+
+### Bug Fixes
+
+- Fixed taskbar issues in macOS
+- Fixed popup_menu issue in menu_events_demo example
+- Fixed DataViewEventData::get_position
+
+### Examples
+
+- Completed neat_demo example
+- Refined menu_events_demo, dataviewtree, and dark_mode_demo examples
+
+### Refactoring
+
+- Renamed dataview example to dataviewtree
+- Renamed TreeViewEventHandler to DataViewTreeEventHandler
+- Renamed DataViewEvent to DataViewEventType
+- Renamed DataViewEventData to DataViewEvent
+
 ## 0.9.2
 
 ### New Features
+
 - **Dialog Icon Support**: Added `set_icon()` method to Dialog widget for setting window icons
 
 ### Bug Fixes
+
 - **Calendar Widget**: Fixed double adding month issue in calendar widget
 - **Build System**: Fixed wxWidgets source path issue in CMakeLists.txt
 
 ### Enhancements
+
 - **DataViewModel Trait Simplification**: Simplified the DataViewModel trait for better usability
 
 - **Memory Management Improvements**: Enhanced reference counting and memory safety
@@ -31,6 +69,7 @@
   - Better resource file detection (wx.rc) for gallery example
 
 ### Examples
+
 - **neat_demo**: Added new comprehensive example showcasing wxDragon features
   - Demonstrates modern UI patterns and best practices
   - Clean, minimal example for getting started with wxDragon
@@ -43,15 +82,18 @@
 ## 0.9.1
 
 ### Bug Fixes
+
 - **Build System**: Various build system improvements and fixes
 - **Code Quality**: General code refinements and cleanups
 
 ## 0.9.0
 
 ### New Features
+
 - **App Events Trait with macOS Implementation**: Added comprehensive application event handling system
 
 ### Enhancements
+
 - **Build System Improvements**: Major refactoring of the build system for better maintainability
   - Now downloads wxWidgets as a zip archive during build
 
@@ -73,17 +115,21 @@
   - Enhanced DataView functionality with tree-based data structures
 
 ### Bug Fixes
+
 - **Type Safety**: Improved type handling throughout the codebase
   - Using `Option<T>` instead of `-1` sentinel values for better type safety
   - Enhanced null-safety patterns
 
 ### Refactoring
+
 - **Build Configuration**: Streamlined build process
 
 ### Examples
+
 - **Gallery Example Updates**: Improved gallery example presentation
 
 ### Platform Support
+
 - ✅ **Enhanced macOS Support**: Full application event handling support
 - ✅ **Improved Windows GNU Support**: Better cross-compilation from macOS
 - ✅ **Linux**: All improvements fully compatible
@@ -95,6 +141,7 @@
 ## 0.8.29
 
 ### Enhancements
+
 - **DataViewCtrl Context Menu Support**: Added context menu event support for DataViewCtrl
   - Implemented `on_item_context_menu` event handler for DataViewCtrl
   - Added DataViewEventData `get_position` method for retrieving context menu position
@@ -102,6 +149,7 @@
   - Improved event handling for DataView controls with position information
 
 ### Bug Fixes
+
 - **Event System**: Fixed WXDEventTypeCEnum issue with negative value handling
   - Added a negative value to WXDEventTypeCEnum for proper event type representation
   - Resolved event enum discriminant issues across platforms
@@ -113,6 +161,7 @@
   - Enhanced menu positioning and context menu support
 
 ### Refactoring
+
 - **DataViewItem Architecture**: Refactored struct wxd_DataViewItem_t and related functionality
   - Improved DataViewItem internal structure for better memory management
   - Enhanced DataView event data handling
@@ -123,6 +172,7 @@
   - Improves bitmap-related API consistency
 
 ### Documentation
+
 - **Development Guidelines**: Added copilot-instructions.md for project development guidance
   - Provides coding standards and best practices for contributors
   - Documents architectural patterns and design decisions
@@ -130,11 +180,13 @@
 ## 0.8.28
 
 ### Enhancements
+
 - **Widget Traits Organization**: Embedded WindowEvents and MenuEvents trait implementations into widget_traits
   - Improved trait implementation structure for better organization
   - Enhanced widget trait system with embedded event handling capabilities
 
 ### Bug Fixes
+
 - **Popup Menu**: Fixed duplicate popup_menu implementation
   - Resolved code duplication issue in popup menu functionality
   - Ensured consistent popup menu behavior across widgets
@@ -142,6 +194,7 @@
 ## 0.8.27
 
 ### New Features
+
 - **TreeListCtrl Widget**: Added TreeListCtrl widget for hierarchical data display with column support
   - Combines tree structure with list/table functionality
   - Enhanced tree control with column-based data display
@@ -158,6 +211,7 @@
   - Improved text navigation and search functionality
 
 ### Enhancements
+
 - **TextCtrl Selection Management**: Enhanced TextCtrl with comprehensive selection methods
   - Added GetSelection/SetSelection methods for text selection control
   - Added SelectAll method for complete text selection
@@ -180,6 +234,7 @@
   - Improved cross-platform system setting management
 
 ### Bug Fixes
+
 - **SpinCtrl Initial Values**: Fixed SpinCtrl and SpinCtrlDouble initial value handling issues
   - Corrected widget initialization problems with spin controls
   - Improved default value handling for numeric input controls
@@ -191,11 +246,13 @@
   - Enhanced build system reliability
 
 ### Contributors
+
 - @mjfs - SearchAnchor functionality and improvements
 
 ## 0.8.26
 
 ### New Features
+
 - **ComboBox Text Manipulation**: Added comprehensive text manipulation functions for ComboBox widget
   - Added text insertion, deletion, selection and manipulation methods
   - Enhanced ComboBox API with text editing capabilities
@@ -207,6 +264,7 @@
   - Improved TabCtrl widget capabilities
 
 ### Enhancements
+
 - **Event Data Modifier State**: Added modifier state checking in event data
   - Enhanced event handling with keyboard modifier detection
   - Improved event system with modifier key state information
@@ -218,6 +276,7 @@
   - Improved builder pattern consistency across widgets
 
 ### Bug Fixes
+
 - **Cross-Platform Event Enum**: Fixed EventType enum cross-platform compatibility issues
   - Resolved enum discriminant inconsistencies between platforms
   - Applied bitflags to EventType for better type safety
@@ -234,12 +293,14 @@
 ## 0.8.25
 
 ### New Features
+
 - **Dialog Builder**: Added Dialog builder to support creating generic dialog directly
   - Enables creating custom dialogs with builder pattern
   - Provides direct access to generic dialog functionality
   - Simplifies custom dialog creation workflow
 
 ### Enhancements
+
 - **Virtual List Refinements**: Refined virtual list implementation
   - Improved virtual list performance and stability
   - Enhanced virtual list behavior consistency
@@ -248,25 +309,30 @@
 ## 0.8.24
 
 ### New Features
+
 - **DataViewTreeCtrl Clear Columns**: Added `clear_columns()` method to DataViewTreeCtrl for removing all columns at once
   - Enables dynamic column management for data view controls
   - Useful for rebuilding column layouts or clearing view state
 
 ### Bug Fixes
+
 - **Issue #42**: Fixed reported issue in the codebase
 
 ### Contributors
+
 - @mjfs - Issue fix and improvements
 
 ## 0.8.23
 
 ### New Features
+
 - **WxWidget Freeze/Thaw Support**: Added freeze() and thaw() methods to WxWidget trait for improved performance during bulk updates
   - Prevents flicker and improves responsiveness when making multiple UI changes
   - Automatically suspends window redraws until thaw() is called
   - Useful for bulk operations like populating large lists or complex layout changes
 
 ### Enhancements
+
 - **Frame Widget Enhancement**: Added access to internal window in Frame widget
   - Enables advanced window manipulation and integration with platform-specific APIs
   - Provides access to underlying wxWindow for specialized operations
@@ -278,6 +344,7 @@
   - Provides access to HWND on Windows, NSWindow on macOS, GtkWidget on Linux
 
 ### Bug Fixes
+
 - **TextCtrl Position Visibility**: Fixed wxd_Window_IsPositionVisible() implementation for TextCtrl
   - Corrected position visibility checking for text controls
   - Improved text control scrolling and positioning behavior
@@ -286,6 +353,7 @@
   - Enhanced build process reliability
 
 ### Contributors
+
 - @Merisy-Thing - Freeze/Thaw functionality
 - @lologor - Window handle API and Frame enhancements
 
@@ -300,15 +368,15 @@
 ## 0.8.20
 
 - Add more functions to various widgets
-ListBox
+  ListBox
   .delete
   .popup_menu
   .set_string_selection
-Menu: selected event
-  .on_selected 
-Notebook
- .remove_page
-AppProgressIndicator
+  Menu: selected event
+  .on_selected
+  Notebook
+  .remove_page
+  AppProgressIndicator
 
 Contributed by @Merisy-Thing
 
@@ -371,11 +439,12 @@ Try fix linux build error, provide compact util to dealing with different glib v
 
 ### Fix
 
-Fix linux build error reported via issue `#12` 
+Fix linux build error reported via issue `#12`
 
 ## 0.8.9
 
 ### New Features
+
 - **TaskBarIcon Widget**: Added comprehensive system tray/taskbar icon widget with full cross-platform support
   - **Platform-Aware Implementation**: Intelligent platform detection for optimal user experience
     - **Windows**: Shows in system tray (notification area) with full event support
@@ -398,7 +467,8 @@ Fix linux build error reported via issue `#12`
     - `with_icon_type()`, `with_icon()`, `with_icon_bundle()`, `with_tooltip()` configuration methods
     - Immediate icon setting during construction for streamlined initialization
 
-### Enhancements  
+### Enhancements
+
 - **Cross-Platform FFI Layer**: Enhanced C++ binding layer with robust platform detection
   - **TaskBarIcon C++ Class**: Custom `wxdTaskBarIcon` class extending `wxTaskBarIcon` with automatic popup menu support
   - **Platform-Specific Icon Type Mapping**: Intelligent default icon type selection based on platform capabilities
@@ -413,13 +483,15 @@ Fix linux build error reported via issue `#12`
   - **FFI Constant Generation**: Enhanced constant generation across all platforms (GTK, MSW, OSX)
 
 ### Platform Support
+
 - **Enhanced Cross-Platform Compatibility**: Full TaskBarIcon support across all wxDragon target platforms
   - ✅ **Windows (MSVC/MinGW)**: Complete system tray support with balloon tooltips and full event system
-  - ✅ **macOS**: Native menu bar integration with CustomStatusItem support and automatic popup menus  
+  - ✅ **macOS**: Native menu bar integration with CustomStatusItem support and automatic popup menus
   - ✅ **Linux (GTK)**: System tray integration with desktop environment compatibility
   - ✅ **Cross-Compilation**: Fixed Windows cross-compilation from macOS with proper event constant handling
 
 ### Bug Fixes
+
 - **Windows Cross-Compilation**: Fixed critical compilation errors when building for Windows targets
   - Resolved `wxEVT_TASKBAR_*` undefined symbol errors by adding proper conditional compilation guards
   - Enhanced event mapping to check individual event constants rather than assuming platform availability
@@ -430,6 +502,7 @@ Fix linux build error reported via issue `#12`
   - Validated constant mapping across all platform-specific constant files (GTK, MSW, OSX)
 
 ### Examples
+
 - **taskbar_demo**: New comprehensive example demonstrating complete TaskBarIcon functionality
   - Full popup menu creation with multiple menu items (Open, Settings, About, Exit)
   - Automatic popup menu display when clicking the taskbar icon
@@ -439,12 +512,13 @@ Fix linux build error reported via issue `#12`
   - Demonstrates proper TaskBarIcon lifecycle management and cleanup
 
 ### Technical Enhancements
+
 - **C++ Implementation**: Advanced TaskBarIcon C++ wrapper with virtual method override
   - Custom `wxdTaskBarIcon` class extending `wxTaskBarIcon` with `CreatePopupMenu()` override
   - Automatic menu copying system preserving item properties (enabled state, checkable status)
   - Platform-aware icon type selection with conditional compilation support
 - **Event Architecture**: Sophisticated event handling system with platform-specific feature detection
-  - Conditional compilation guards for platform-specific TaskBarIcon events  
+  - Conditional compilation guards for platform-specific TaskBarIcon events
   - Event type safety with individual constant availability checking
   - Graceful degradation for unsupported events returning `wxEVT_NULL`
 - **Memory Safety**: Enhanced memory management patterns for TaskBarIcon lifecycle
@@ -453,6 +527,7 @@ Fix linux build error reported via issue `#12`
   - Safe FFI pointer handling with comprehensive null pointer checks
 
 ### API Changes
+
 - Added new `TaskBarIcon` widget with complete builder pattern support
 - Added `TaskBarIconType` enum for platform-aware icon type configuration
 - Enhanced `Menu` widget with `from_ptr()` method for TaskBarIcon integration
@@ -461,6 +536,7 @@ Fix linux build error reported via issue `#12`
 - No breaking changes - all additions are backward compatible
 
 ### Migration Notes
+
 - **TaskBarIcon Usage**: New TaskBarIcon widget provides modern system tray integration
 - **Cross-Platform Behavior**: TaskBarIcon automatically adapts to platform conventions (menu bar on macOS, system tray on Windows/Linux)
 - **Event Handling**: TaskBarIcon menu events are handled by the icon itself, not parent windows
@@ -469,6 +545,7 @@ Fix linux build error reported via issue `#12`
 ## 0.8.8
 
 ### New Features
+
 - **Enhanced Virtual List System**: Major refactoring with comprehensive bug fixes and performance improvements
   - **New Cache Algorithm**: Introduced progressive measurement cache system with LRU eviction (100-item limit)
   - **Horizontal Layout Support**: Complete implementation of horizontal virtual list layout mode
@@ -481,6 +558,7 @@ Fix linux build error reported via issue `#12`
     - Eliminates measurement window shifting that caused item overlap issues
 
 ### Bug Fixes
+
 - **Virtual List Critical Issues**: Resolved multiple severe rendering and interaction problems
   - **Vertical Mode Overlap Fix**: Fixed items overlapping in vertical mode due to improper panel positioning
     - Newly created panels are now hidden until properly positioned to prevent visual artifacts
@@ -499,12 +577,14 @@ Fix linux build error reported via issue `#12`
     - Enhanced total content size synchronization with proper padding coordination
 
 ### Examples
+
 - **virtual_list_demo**: Enhanced example with comprehensive testing scenarios
   - Demonstrates both vertical and horizontal layout modes
   - Includes edge case testing (scrolling to end, rapid scrolling)
   - Shows proper configuration usage and error handling patterns
 
 ### Platform Support
+
 - Enhanced cross-platform virtual list performance for all supported platforms:
   - ✅ **Linux**: Improved GTK backend virtual list rendering
   - ✅ **macOS**: Enhanced Cocoa virtual list performance
@@ -512,12 +592,14 @@ Fix linux build error reported via issue `#12`
   - Consistent virtual list behavior and performance across all platforms
 
 ### API Changes
+
 - Added configurable parameters in `VirtualListInternalParams`
 - Enhanced virtual list configuration options for performance tuning
 - All changes are backward compatible - no breaking changes to existing API
 - New configuration parameters use sensible defaults for existing code
 
 ### Migration Notes
+
 - **Existing Virtual Lists**: All existing virtual list implementations will automatically benefit from bug fixes and performance improvements
 - **Configuration**: New configuration parameters use optimal defaults; no changes required for existing code
 - **Performance**: Users may notice improved responsiveness and eliminated visual artifacts in virtual list scrolling
@@ -525,6 +607,7 @@ Fix linux build error reported via issue `#12`
 ## 0.8.7
 
 ### New Features
+
 - **Universal Widget Casting System**: Added comprehensive runtime widget type determination and casting for all 41 wxDragon widgets
   - Type-safe casting with `window.as_widget::<T>()` method using wxWidgets RTTI (GetClassName)
   - Zero performance overhead with O(1) string comparison and graceful failure handling
@@ -538,11 +621,12 @@ Fix linux build error reported via issue `#12`
   - **Pre-built Libraries**: Complete wxWidgets 3.3.0 libraries for both 32-bit and 64-bit Windows 7 targets
   - **Build System Integration**: Enhanced build.rs with TARGET environment variable detection and fallback mechanisms
   - **Cross-Architecture Support**: Full support for both i686 (32-bit) and x86_64 (64-bit) Windows 7 architectures
-  - **Usage Examples**: 
+  - **Usage Examples**:
     - Direct: `cargo build --target i686-win7-windows-msvc` (when target is available)
     - Override: `WXDRAGON_TARGET_OVERRIDE=i686-win7-windows-msvc cargo build --target i686-pc-windows-msvc`
 
 ### Enhancements
+
 - **Enhanced Virtual List Example**: Added comprehensive `virtual_list_demo` example showcasing advanced DataView usage
   - Adaptive pooling system for efficient large dataset handling
   - Configuration-driven virtual list management
@@ -551,7 +635,7 @@ Fix linux build error reported via issue `#12`
 
 - **Improved C++ String Handling**: Fixed GetLabel/GetString API consistency across all widgets
   - Enhanced RichTextCtrl: GetValue, GetRange, GetSelectedText methods
-  - Enhanced StyledTextCtrl: GetText, GetSelectedText, GetLineText methods  
+  - Enhanced StyledTextCtrl: GetText, GetSelectedText, GetLineText methods
   - Enhanced CommandEvent: GetString method
   - Unified copy_wxstring_to_buffer pattern for consistent string handling across all widgets
 
@@ -562,6 +646,7 @@ Fix linux build error reported via issue `#12`
   - Enhanced version information and Windows 7 compatibility metadata in distributed packages
 
 ### Technical Enhancements
+
 - **Widget Casting Infrastructure**: Added comprehensive macro system for universal widget casting
   - `impl_widget_cast!` macro for automatic casting implementation across standard widgets
   - Manual casting implementations for complex widget patterns (tuple structs, composition patterns)
@@ -579,24 +664,28 @@ Fix linux build error reported via issue `#12`
   - Better memory management for string operations and widget casting
 
 ### Platform Support
+
 - ✅ **Windows 7 Compatibility**: Full support for Windows 7 (32-bit and 64-bit) with dedicated pre-built libraries
 - ✅ **Enhanced Windows MSVC**: Improved Windows MSVC build support with proper library organization
 - ✅ **Cross-Platform Widget Casting**: Universal widget casting works consistently across Linux, macOS, and Windows
 - ✅ **Build System Robustness**: Enhanced build reliability across all supported platforms
 
 ### Examples
+
 - **virtual_list_demo**: New comprehensive example demonstrating advanced virtual list functionality
   - Showcases adaptive pooling for handling large datasets efficiently
   - Demonstrates configuration-driven virtual list management
   - Includes error handling and best practices for virtual list implementations
 
 ### API Changes
+
 - Added `as_widget::<T>()` method to all widgets via `WxWidget` trait for runtime type casting
 - Enhanced window module with GetClassName functionality for type identification
 - All new APIs follow wxDragon's established patterns for memory safety and type consistency
 - No breaking changes - all additions are backward compatible
 
 ### Migration Notes
+
 - **Windows 7 Users**: Can now use dedicated Windows 7 targets for better compatibility
 - **Widget Casting**: Existing code continues to work unchanged; new casting functionality is purely additive
 - **Build System**: Enhanced target detection is transparent to existing users
@@ -604,6 +693,7 @@ Fix linux build error reported via issue `#12`
 ## 0.8.6
 
 ### New Features
+
 - **RichTextCtrl Widget**: Added comprehensive RichTextCtrl widget for advanced rich text editing
   - Full-featured rich text control with formatting capabilities (bold, italic, underline)
   - Color support for both text and background colors with selection-based and range-based methods
@@ -623,6 +713,7 @@ Fix linux build error reported via issue `#12`
   - Type-safe position-based scrolling with fallback mechanisms for different widget types
 
 ### Enhancements
+
 - **Enhanced Gallery Example**: Significantly expanded gallery with comprehensive RichText demonstration
   - Rich text editing with formatting buttons (bold, italic, underline, font size control)
   - Color manipulation tools (text color, background color, reset functionality)
@@ -643,6 +734,7 @@ Fix linux build error reported via issue `#12`
   - Improved conditional compilation system for optional richtext feature
 
 ### Technical Enhancements
+
 - **C++ API Extensions**: Added extensive C++ binding layer for rich text and scrolling
   - 75+ exported RichText functions covering all major functionality
   - Cross-platform scrolling implementations with intelligent widget detection
@@ -660,12 +752,14 @@ Fix linux build error reported via issue `#12`
   - Enhanced widget trait implementations following established patterns
 
 ### Examples
+
 - **Enhanced Gallery**: Major improvements to the gallery example
   - New comprehensive RichText tab with full functionality demonstration
   - Updated imports and dependencies for modern wxDragon patterns
   - Improved user interface and interaction patterns
 
 ### Platform Support
+
 - Enhanced cross-platform compatibility for all supported platforms:
   - ✅ **Linux**: Full RichText and scrolling support with GTK backend
   - ✅ **macOS**: Complete rich text functionality with native file dialogs
@@ -673,6 +767,7 @@ Fix linux build error reported via issue `#12`
   - Consistent behavior and performance across all platforms
 
 ### API Changes
+
 - Added new `scrollable` module with comprehensive scrolling trait
 - Extended `widgets` module with RichTextCtrl implementation
 - Enhanced `event` system with rich text event support
@@ -682,6 +777,7 @@ Fix linux build error reported via issue `#12`
 ## 0.8.5
 
 ### Bug Fixes
+
 - **Linux PIE Compatibility**: Enhanced Position Independent Executable (PIE) compilation support for modern Linux distributions
   - Replaced unreliable PIE detection with standard `CMAKE_POSITION_INDEPENDENT_CODE ON` approach
   - Always enables position independent code on Linux for maximum compatibility
@@ -708,12 +804,14 @@ Fix linux build error reported via issue `#12`
     - Maintains identical functionality across all architectures
 
 ### Platform Support
+
 - ✅ **Enhanced Linux Compatibility**: Improved PIE support for all modern Linux distributions
 - ✅ **New Windows 32-bit Support**: Full `i686-pc-windows-msvc` target support added
 - ✅ **CI Integration**: GitHub Actions now supports 32-bit Windows MSVC builds
 - ✅ **Cross-Architecture**: Unified support for both `"x86"` and `"i686"` architecture detection
 
 ### Technical Details
+
 - Simplified Linux CMake configuration by removing complex PIE detection logic
 - Enhanced Windows build system with robust architecture variant handling
 - Improved cross-platform consistency in platform detection and library management
@@ -722,6 +820,7 @@ Fix linux build error reported via issue `#12`
 ## 0.8.4
 
 ### Bug Fixes
+
 - **XRC Style Registration**: Fixed critical bug where `wxBORDER_THEME` and other border styles were not recognized in XRC files
   - Fixed `WxdPlatformAwareStaticBitmapHandler` constructor to properly call `AddWindowStyles()`
   - Resolved "XRC error: unknown style flag 'wxBORDER_THEME'" errors when using border styles in StaticBitmap widgets
@@ -731,11 +830,13 @@ Fix linux build error reported via issue `#12`
   - **Breaking**: No breaking changes - this is a pure bug fix that enables previously broken functionality
 
 ### Platform Support
+
 - ✅ **macOS**: Confirmed `wxBORDER_THEME` now works correctly in XRC files
-- ✅ **Windows**: Border styles now properly recognized in XRC StaticBitmap widgets  
+- ✅ **Windows**: Border styles now properly recognized in XRC StaticBitmap widgets
 - ✅ **Linux**: Full XRC border style support restored
 
 ### Technical Details
+
 - Enhanced `WxdPlatformAwareStaticBitmapHandler` to follow standard wxWidgets XRC handler patterns
 - Added proper style registration in handler constructor following wxWidgets best practices
 - Maintains platform-aware StaticBitmap functionality while fixing XRC compatibility
@@ -744,6 +845,7 @@ Fix linux build error reported via issue `#12`
 ## 0.8.3
 
 ### New Features
+
 - **WindowStyle Enum**: Added comprehensive WindowStyle enum according to wxWidgets 3.3.0 standards
   - 20 standard window style flags: Border, Child, ClipChildren, ClipSiblings, Disabled, Group, Maximize, MaximizeBox, Minimize, MinimizeBox, Overlapped, Popup, SysMenu, TabStop, ThickFrame, Visible, VScroll, and more
   - Type-safe bit flag operations using wxDragon's widget_style_enum macro
@@ -760,6 +862,7 @@ Fix linux build error reported via issue `#12`
   - Support for combined styles using bitwise OR operator (`|`)
 
 ### Enhancements
+
 - **C++ API Extensions**: Added window style management functions to the C API layer
   - `wxd_Window_SetWindowStyle(window, style)` - Set window style implementation
   - `wxd_Window_GetWindowStyle(window) -> i64` - Get window style implementation
@@ -767,7 +870,7 @@ Fix linux build error reported via issue `#12`
 
 - **Constants Generation**: Extended const_extractor tool with window style constants
   - Added 20+ window style constants to const_extractor for cross-platform compatibility
-  - Generated WXD_WS_* constants for all supported platforms (GTK, MSW, OSX)
+  - Generated WXD*WS*\* constants for all supported platforms (GTK, MSW, OSX)
   - Ensured consistent constant values across different operating systems
   - Enhanced CMakeLists.txt and Makefile for const_extractor improvements
 
@@ -777,6 +880,7 @@ Fix linux build error reported via issue `#12`
   - Comprehensive documentation with usage examples and platform notes
 
 ### Code Quality
+
 - **Documentation**: Added extensive documentation for WindowStyle and related methods
   - Detailed API documentation with practical usage examples
   - Platform-specific behavior notes and style combination warnings
@@ -787,6 +891,7 @@ Fix linux build error reported via issue `#12`
   - Updated simple example with improved UI structure using Panel and proper styling
 
 ### Platform Support
+
 - Enhanced cross-platform window style constant generation for all supported platforms:
   - ✅ **Linux (GTK)**: Full window style constant support with proper GTK mappings
   - ✅ **Windows (MSW)**: Complete Windows-specific style constant generation
@@ -794,6 +899,7 @@ Fix linux build error reported via issue `#12`
   - Unified constant generation system ensuring consistent behavior across platforms
 
 ### API Changes
+
 - Added new WindowStyle enum with comprehensive flag variants
 - Extended WxWidget trait with 6 new window style management methods
 - All new APIs follow wxDragon's established patterns for memory safety and type safety
@@ -802,6 +908,7 @@ Fix linux build error reported via issue `#12`
 ## 0.8.2
 
 ### Bug Fixes
+
 - **Linux PIE Compatibility**: Fixed Position Independent Executable (PIE) linker errors on modern Linux distributions
   - Added automatic PIE detection for Linux builds in CMakeLists.txt
   - Checks for `--enable-default-pie` in GCC compiler flags to detect PIE-enabled systems
@@ -821,6 +928,7 @@ Fix linux build error reported via issue `#12`
   - **Breaking**: External projects upgrading to 0.8.2 will now build successfully without requiring special configuration
 
 ### Platform Support
+
 - ✅ **Enhanced Linux Compatibility**: Full support for modern Linux distributions with PIE enabled by default
 - ✅ **Enhanced macOS Compatibility**: Full support for macOS 15.5 with Xcode 16.4
 - ✅ **External Project Support**: Verified compatibility when used as a dependency from crates.io
@@ -829,6 +937,7 @@ Fix linux build error reported via issue `#12`
 ## 0.8.1
 
 ### New Features
+
 - **Comprehensive Cursor API**: Added complete cursor management system with full wxWidgets 3.3.0 feature parity
   - 28 stock cursor types: Arrow, Hand, Cross, Wait, IBeam, Magnifier, sizing cursors, and more
   - Multiple cursor creation methods: stock cursors, file loading, bitmap conversion, raw data
@@ -854,6 +963,7 @@ Fix linux build error reported via issue `#12`
   - Integrated cursor management per window instance
 
 ### Enhancements
+
 - **Cross-Platform Enum Compatibility**: Comprehensive enum type system improvements
   - Fixed enum discriminant type compatibility across Linux/macOS (isize) and Windows (i32)
   - Replaced platform-specific explicit discriminant values with automatic assignment
@@ -868,6 +978,7 @@ Fix linux build error reported via issue `#12`
   - Improved enum constant generation and usage patterns
 
 ### Bug Fixes
+
 - **Windows Build Compatibility**: Resolved platform-specific build issues
   - Fixed Windows cursor constructor compatibility (C2661 compilation errors)
   - Corrected platform-specific cursor creation for Windows vs GTK/other platforms
@@ -881,6 +992,7 @@ Fix linux build error reported via issue `#12`
   - Improved build script efficiency and clarity
 
 ### Examples
+
 - **dark_mode_demo**: New comprehensive example demonstrating dark mode functionality
   - System appearance detection and dark mode checking
   - Application appearance mode switching (Light, Dark, System)
@@ -894,6 +1006,7 @@ Fix linux build error reported via issue `#12`
   - Interactive UI for testing all cursor and window features
 
 ### Platform Support
+
 - Enhanced cross-platform compatibility for all supported platforms:
   - ✅ **Linux**: Fixed enum type compatibility, cursor constructor issues
   - ✅ **macOS**: Full dark mode support, comprehensive cursor API
@@ -901,6 +1014,7 @@ Fix linux build error reported via issue `#12`
   - ✅ **Windows MinGW**: Cross-platform enum compatibility, cursor creation fixes
 
 ### API Changes
+
 - Added new modules: `cursor`, `appearance` with comprehensive APIs
 - Enhanced `window` module with cursor management, z-order, and mouse capture
 - Extended `app` module with appearance control functionality
@@ -909,15 +1023,17 @@ Fix linux build error reported via issue `#12`
 ## 0.8.0
 
 ### New Features
+
 - **Pre-built wxWidgets Library Integration**: Major build system enhancement with pre-built wxWidgets libraries
   - Reduced build times from 20-30 minutes to seconds (99%+ improvement)
   - macOS debug/release builds: ~5 seconds
-  - Windows cross-compilation: ~17 seconds 
+  - Windows cross-compilation: ~17 seconds
   - Automatic download of pre-built libraries from GitHub releases
   - Support for both debug and release configurations
   - Maintains full functionality with pre-built libraries
 
 ### Enhancements
+
 - **Cross-Platform Build System**: Comprehensive build system improvements for all platforms
   - Enhanced Windows MSVC build support with proper Visual Studio integration
   - Improved MSYS2/MinGW64 build compatibility with static linking
@@ -931,6 +1047,7 @@ Fix linux build error reported via issue `#12`
   - Enhanced build diagnostics and error reporting
 
 ### Bug Fixes
+
 - **Windows Build Fixes**: Resolved multiple Windows-specific build issues
   - Fixed MSVC setup.h include path issues and Unicode definitions
   - Resolved library placement and organization for Windows builds
@@ -944,6 +1061,7 @@ Fix linux build error reported via issue `#12`
 ## 0.7.1
 
 ### New Features
+
 - **GenericStaticBitmap Widget**: Added GenericStaticBitmap widget for enhanced cross-platform compatibility
   - Platform-aware StaticBitmap handling in XRC files
   - Automatic use of wxGenericStaticBitmap on Windows for better rendering consistency
@@ -951,24 +1069,28 @@ Fix linux build error reported via issue `#12`
   - Seamless integration with existing StaticBitmap API
 
 ### Enhancements
+
 - **Platform-Aware XRC Handling**: Enhanced XRC system with platform-specific widget selection
   - Intelligent StaticBitmap implementation selection based on target platform
   - Improved cross-platform rendering consistency
   - Better support for complex UI layouts across different operating systems
 
 ### Bug Fixes
+
 - **Windows Build**: Fixed Windows build compatibility issues
 - **XRC Integration**: Resolved StaticBitmap rendering issues in XRC-loaded interfaces
 
 ## 0.7.0
 
 ### New Features
+
 - **Enhanced Build System**: Initial groundwork for pre-built library support
 - **Cross-Platform Improvements**: Better support for Windows and cross-compilation scenarios
 
 ## 0.6.8
 
 ### New Features
+
 - **Bitmap RGBA Data Extraction**: Added `get_rgba_data()` method to `Bitmap` for seamless integration with Rust image processing libraries
   - Extracts raw RGBA pixel data as `Vec<u8>` with 4 bytes per pixel (R, G, B, A)
   - Data is ordered row by row from top to bottom, left to right within each row
@@ -978,17 +1100,20 @@ Fix linux build error reported via issue `#12`
   - Includes proper memory management with C++ allocated data cleanup
 
 ### Enhancements
+
 - **FFI Layer**: Added `wxd_Bitmap_GetRGBAData()` and `wxd_Bitmap_FreeRGBAData()` C++ functions
   - Utilizes wxWidgets' `ConvertToImage()` and pixel data extraction APIs
   - Safe memory allocation and deallocation patterns
   - Proper alpha channel handling for all bitmap types
 
 ### Bug Fixes
+
 - **MediaCtrl SeekMode**: Fixed clippy warning by using `#[derive(Default)]` instead of manual implementation
 
 ## 0.6.7
 
 ### Enhancements
+
 - **WxWidget Trait**: Added `get_parent()` method to `WxWidget` trait for accessing parent windows
   - Returns `Option<Window>` - `Some(Window)` if widget has a parent, `None` for top-level windows
   - Enables child widgets to trigger refresh and layout updates on their parent containers
@@ -1001,6 +1126,7 @@ Fix linux build error reported via issue `#12`
 ## 0.6.6
 
 ### New Features
+
 - **StaticBitmap Scale Mode Support**: Added comprehensive scale mode functionality for StaticBitmap widget
   - Added `ScaleMode` enum with variants: `None`, `Fill`, `AspectFit`, and `AspectFill`
   - Added `set_scale_mode()` and `get_scale_mode()` methods to StaticBitmap
@@ -1013,6 +1139,7 @@ Fix linux build error reported via issue `#12`
     - `AspectFill`: Scale to fill control while maintaining aspect ratio (may crop)
 
 ### Enhancements
+
 - **API Exports**: Added `ScaleMode` enum to public API exports in prelude and widgets module
 - **FFI Layer**: Extended C++ bindings with `wxd_StaticBitmap_SetScaleMode` and `wxd_StaticBitmap_GetScaleMode` functions
 - **Type Safety**: Implemented safe conversion between Rust enum and C++ scale mode constants
@@ -1020,6 +1147,7 @@ Fix linux build error reported via issue `#12`
 ## 0.6.5
 
 ### Bug Fixes
+
 - **XRC Loading from String**: Fixed critical UTF-8 encoding bug in `wxd_XmlResource_LoadFromString` function
   - Corrected memory stream size calculation to use actual UTF-8 byte length instead of Unicode character count
   - Fixed truncated XRC data when loading XML with non-ASCII characters (e.g., Chinese characters)
@@ -1027,6 +1155,7 @@ Fix linux build error reported via issue `#12`
   - **wxDragon is now fully compatible with wxFormBuilder-generated XRC files without requiring manual cleanup**
 
 ### Enhancements
+
 - **DataViewCustomRenderer GetSizeCallback**: Enhanced the `GetSizeCallback` signature to receive both the variant value and default cell size as parameters, making it more practical for content-aware sizing
   - The callback now has the signature `Fn(&Variant, Size) -> Size` instead of `Fn() -> Size`
   - Allows renderers to adjust their size based on the actual data content
@@ -1034,6 +1163,7 @@ Fix linux build error reported via issue `#12`
 ## 0.6.4
 
 ### New Features
+
 - **DataView Custom Renderers**: Added comprehensive custom renderer support for DataView controls
   - Implemented `DataViewCustomRenderer` with full editor functionality
   - Added editor-related APIs for custom DataView rendering with edit capabilities
@@ -1041,9 +1171,10 @@ Fix linux build error reported via issue `#12`
   - Added `custom_dataview_renderer` example demonstrating custom rendering functionality
 
 ### Enhancements
+
 - **Feature Gates**: Added granular feature flags for better build customization
   - Added `webview` feature flag for WebView widget support
-  - Added `media-ctrl` feature flag for MediaCtrl widget support  
+  - Added `media-ctrl` feature flag for MediaCtrl widget support
   - Added `stc` feature flag for StyledTextCtrl widget support
   - Added `xrc` feature flag for XML Resource support
   - Added `aui` feature flag for Advanced User Interface components
@@ -1059,6 +1190,7 @@ Fix linux build error reported via issue `#12`
   - Added window-related utility functions
 
 ### Bug Fixes
+
 - **Cross-Platform Build**: Fixed critical build issues affecting all platforms
   - Resolved HTML feature conflicts when both XRC and WebView features are enabled
   - Fixed Linux-specific build errors in the build script
@@ -1068,12 +1200,14 @@ Fix linux build error reported via issue `#12`
   - Improved memory management in custom renderer implementations
 
 ### Examples
+
 - **custom_dataview_renderer**: New comprehensive example showcasing custom DataView renderer functionality
   - Demonstrates custom cell rendering and editing capabilities
   - Shows integration with custom data models
   - Includes practical use cases for advanced DataView customization
 
 ### Platform Support
+
 - Enhanced cross-platform compatibility for Linux, Windows (MSVC/MinGW64), and macOS
 - Improved feature gate system for platform-specific functionality
 - Better conditional compilation support across different build environments
@@ -1081,6 +1215,7 @@ Fix linux build error reported via issue `#12`
 ## 0.6.2
 
 ### Bug Fixes
+
 - **DataView Event System**: Fixed critical issue where `event.get_row()` always returned 0 for custom DataView virtual list models
   - Corrected `wxd_DataViewEvent_GetRow` implementation to use proper wxWidgets 3.2.8 API (`GetModel()` instead of non-existent `GetDataViewCtrl()`)
   - Added support for both `wxDataViewVirtualListModel` and `wxDataViewIndexListModel` row index conversion
@@ -1089,11 +1224,13 @@ Fix linux build error reported via issue `#12`
   - Added comprehensive test case in gallery example with double-click row index verification
 
 ### Enhancements
+
 - **Prelude Module**: Added `DataViewEventHandler` trait to prelude for easier access to DataView event handling methods
   - Enables direct usage of methods like `on_item_activated()` without explicit trait imports
   - Improves developer experience for DataView event handling
 
 ### Examples
+
 - **Gallery Example**: Enhanced DataView Virtual tab with double-click testing functionality
   - Added `on_item_activated` event handler to demonstrate correct row index reporting
   - Includes console output showing employee details for clicked rows
@@ -1102,6 +1239,7 @@ Fix linux build error reported via issue `#12`
 ## 0.6.1
 
 ### New Features
+
 - **Enhanced Idle Event System**: Significantly improved idle event support for better async runtime integration
   - Added `Event::request_more()` and `Event::more_requested()` methods for intelligent idle event control
   - Added `IdleEvent` struct with static methods `set_mode()` and `get_mode()` for global idle mode management
@@ -1110,6 +1248,7 @@ Fix linux build error reported via issue `#12`
   - Enhanced window event handling with proper idle event data structures
 
 ### Examples
+
 - **tokio_async_demo**: Added comprehensive example demonstrating async runtime integration
   - Shows recommended patterns for tokio channel communication with GUI
   - Demonstrates efficient idle event usage with `request_more()` for optimal CPU usage
@@ -1117,6 +1256,7 @@ Fix linux build error reported via issue `#12`
   - Uses `ProcessSpecified` idle mode with per-window control for maximum efficiency
 
 ### Enhancements
+
 - **Window API**: Added extra window style management methods to `WxWidget` trait
   - `set_extra_style()`, `get_extra_style_raw()`, `has_extra_style()`
   - `add_extra_style()`, `remove_extra_style()` for fine-grained style control
@@ -1126,12 +1266,14 @@ Fix linux build error reported via issue `#12`
   - Cross-platform constant generation for idle event modes
 
 ### Platform Support
+
 - Enhanced cross-platform idle event constants for GTK, MSW, and OSX
 - Improved async integration compatibility across all supported platforms
 
 ## 0.6.0
 
 ### New Features
+
 - **StyledTextCtrl Widget**: Added comprehensive StyledTextCtrl widget for advanced text editing
   - Full-featured text editor component with syntax highlighting support
   - Extensive API with 1600+ lines of Rust bindings
@@ -1142,26 +1284,31 @@ Fix linux build error reported via issue `#12`
   - Integration with layout system for dynamic UI layouts
 
 ### Enhancements
+
 - **Build System Improvements**:
   - Enhanced static linking support from macOS to Windows via GNU toolchain
   - Added Windows manifest embedding for gallery example
   - Improved cross-platform build compatibility
 
 ### Bug Fixes
+
 - **Windows Build**: Fixed Windows build by adding missing imm32 library dependency
 
 ### Examples
+
 - Added `simple_stc_test` example demonstrating StyledTextCtrl functionality
 - Updated gallery example with CollapsiblePane demonstration
 - Enhanced custom_widget example documentation with README and GIF demonstration
 
 ### Platform Support
+
 - Improved Windows build stability and compatibility
 - Enhanced cross-compilation support from macOS to Windows
 
 ## 0.5.0
 
 ### New Features
+
 - **New Sizer Types**:
   - **WrapSizer**: Wrapping sizer with configurable wrapping behavior
     - `WrapSizerFlag` enum for controlling wrap behavior
@@ -1178,6 +1325,7 @@ Fix linux build error reported via issue `#12`
   - Enhanced DC constants and type definitions
 
 ### Breaking Changes
+
 - **Event System Refactoring**: Major refactor of the event system to allow multiple bindings to one event
   - Improved event handling architecture for better flexibility
   - More robust event binding mechanism
@@ -1186,6 +1334,7 @@ Fix linux build error reported via issue `#12`
   - Improved public API structure
 
 ### Enhancements
+
 - **MediaCtrl Feature Flag**: Enhanced conditional compilation for MediaCtrl event handling
   - Better feature flag support for optional components
 - **Build System Improvements**:
@@ -1194,8 +1343,9 @@ Fix linux build error reported via issue `#12`
   - Improved cross-platform build support
 
 ### Examples
+
 - Added `wrapsizer_test` example demonstrating WrapSizer functionality
-- Added `gridsizer_test` example showing GridSizer usage  
+- Added `gridsizer_test` example showing GridSizer usage
 - Added `gridbagsizer_test` example with advanced GridBagSizer positioning
 - Added `custom_widget` example showcasing:
   - `AutoBufferedPaintDC` usage
@@ -1203,6 +1353,7 @@ Fix linux build error reported via issue `#12`
   - Pie chart widget implementation with `pie_chart.rs`
 
 ### Refactoring
+
 - **Event System Architecture**: Complete refactoring to support multiple event bindings
 - **DC Module Enhancement**: Expanded drawing capabilities and constants
 - **Code Organization**: Better module structure and cleaner API surface
@@ -1210,6 +1361,7 @@ Fix linux build error reported via issue `#12`
 ## 0.4.0
 
 ### New Features
+
 - Added XRC (XML Resource) support for loading UI definitions from XML files
 - Added Clipboard support with full text, file, and bitmap functionality
 - Added Timer widget for scheduled events and callbacks
@@ -1221,6 +1373,7 @@ Fix linux build error reported via issue `#12`
   - MultiChoiceDialog for multiple item selection
 
 ### Enhancements
+
 - Enhanced Button widget with BitmapBundle support for better image handling
 - Enhanced StaticBitmap widget with BitmapBundle support
 - Enhanced Toolbar widget with BitmapBundle support for high-DPI icons
@@ -1228,11 +1381,13 @@ Fix linux build error reported via issue `#12`
 - Improved cross-compilation support from macOS to Windows
 
 ### Refactoring
+
 - Unified file naming conventions across the codebase
 - Improved data object architecture for clipboard and drag-and-drop operations
 - Enhanced build system for better cross-platform compatibility
 
 ### Examples
+
 - Added clipboard_test example demonstrating clipboard functionality
 - Added simple_xrc_test example showing XRC usage
 - Updated gallery example with new widgets and features
@@ -1240,6 +1395,7 @@ Fix linux build error reported via issue `#12`
 ## 0.3.0
 
 ### New Features
+
 - Added DataViewCtrl support with various components:
   - DataViewTreeCtrl for hierarchical data display
   - DataViewVirtualListModel for efficient large dataset handling
@@ -1250,6 +1406,7 @@ Fix linux build error reported via issue `#12`
 - Added more functions to FileDialog
 
 ### Enhancements
+
 - Comprehensive event system refactoring with three-tier approach:
   - Window events common to all widgets
   - Category-specific events for related controls
@@ -1259,18 +1416,21 @@ Fix linux build error reported via issue `#12`
 - Added more DataView-related functions
 
 ### Refactoring
+
 - Refactored SizerFlag constants to use enums for better type safety
-- Removed all raw pointer constants (*.PTR) in favor of safer alternatives
+- Removed all raw pointer constants (\*.PTR) in favor of safer alternatives
 - Removed libc dependency from wxdragon
 - Updated C++ event infrastructure with proper ownership management
 
 ### Bug Fixes
+
 - Fixed bitmap issue with DataViewVirtualListModel
 - Fixed potential memory leak in variant handling
 
 ## 0.2.0
 
 ### New Features
+
 - Added MediaPlayer widget for audio/video playback
 - Added EditableListBox widget
 - Added TimePicker widget
@@ -1297,6 +1457,7 @@ Fix linux build error reported via issue `#12`
 - Added `app::call_after` for scheduling work on the main thread
 
 ### Enhancements
+
 - Added more size-related functions to Window
 - Added more functions to ListCtrl
 - Added more functions and styles to TextCtrl
@@ -1310,6 +1471,7 @@ Fix linux build error reported via issue `#12`
 - Added general set_font capability to all widgets
 
 ### Refactoring
+
 - Refactored TreeCtrl to use unified item_data mechanism
 - Refined dialog code for better usability
 - Refined ListCtrl implementation
@@ -1318,13 +1480,14 @@ Fix linux build error reported via issue `#12`
 - Restructured wxdragon.h to use separate modules
 
 ### Platform Support
+
 - Added Windows theme support
 - Improved cross-compilation from macOS to Windows
 
 ### Breaking Changes
+
 - Removed RawWxPtr in favor of a more robust approach
 
 ## 0.1.0
 
 - Initial release of wxdragon and wxdragon-sys
-
