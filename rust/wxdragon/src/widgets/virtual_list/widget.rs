@@ -466,6 +466,9 @@ pub struct VirtualListState {
 
     // TASK 3.1: Owned panel context registry (replaces global static)
     panel_context_registry: HashMap<i32, ItemContext>,
+
+    // Re-entrancy guard to avoid handling scroll events triggered by programmatic updates
+    is_updating_scrollbar: bool,
 }
 
 impl std::fmt::Debug for VirtualListState {
@@ -555,6 +558,9 @@ impl VirtualListState {
 
             // TASK 3.1: Initialize owned panel context registry
             panel_context_registry: HashMap::new(),
+
+            // Re-entrancy guard initial state
+            is_updating_scrollbar: false,
         }
     }
 
@@ -1436,6 +1442,12 @@ custom_widget!(
 
         // Mouse wheel with proper bidirectional scrolling using wheel rotation
         panel.on_mouse_wheel(move |event| {
+            // Guard against re-entrancy while we're updating scrollbars/state
+            {
+                let mut st = state_scroll_wheel.borrow_mut();
+                if st.is_updating_scrollbar { return; }
+                st.is_updating_scrollbar = true;
+            }
             // Extract wheel rotation from event data for bidirectional scrolling
             let (wheel_rotation, _wheel_delta) = match event {
                 crate::event::window_events::WindowEventData::MouseButton(ref mouse_event) => {
@@ -1453,6 +1465,7 @@ custom_widget!(
 
             if scroll_amount == 0 {
                 event.skip(true);
+                state_scroll_wheel.borrow_mut().is_updating_scrollbar = false;
                 return;
             }
 
@@ -1585,6 +1598,9 @@ custom_widget!(
                 }
             }
 
+            // Release guard at end
+            state_scroll_wheel.borrow_mut().is_updating_scrollbar = false;
+
             event.skip(true);
         });
 
@@ -1592,6 +1608,12 @@ custom_widget!(
         // Arrow Down = scroll forward, Arrow Up = scroll backward
         let update_scrollbars_key = update_scrollbars.clone();
         panel.on_key_down(move |event| {
+            // Guard against re-entrancy while we're updating scrollbars/state
+            {
+                let mut st = state_scroll.borrow_mut();
+                if st.is_updating_scrollbar { return; }
+                st.is_updating_scrollbar = true;
+            }
             let key_code = match event {
                 crate::event::window_events::WindowEventData::Keyboard(ref kbd_event) => {
                     kbd_event.get_key_code().unwrap_or(0)
@@ -1652,10 +1674,13 @@ custom_widget!(
                 };
             }
 
+            // Release guard at end
+            state_scroll.borrow_mut().is_updating_scrollbar = false;
+
             event.skip(true);
         });
 
-        // Simplified scrollbar event handling - only thumb track for drag support
+        // Simplified scrollbar event handling - add full support for click/page/drag
         if let Some(ref vscrollbar) = v_scrollbar {
             let panel_vscroll = panel.clone();
             let state_vscroll = config.state.clone();
@@ -1663,82 +1688,95 @@ custom_widget!(
 
             // Only handle thumb track for smooth drag scrolling
             vscrollbar.on_thumb_track(move |event| {
+                // Re-entrancy guard for entire handler
+                {
+                    let mut st = state_vscroll.borrow_mut();
+                    if st.is_updating_scrollbar { return; }
+                    st.is_updating_scrollbar = true;
+                }
                 if let Some(position) = event.get_position() {
                     let state = state_vscroll.clone();
 
-                    // CRITICAL FIX: Store the desired scroll RATIO instead of absolute position
-                    // This prevents mismatch when total_content_size changes during update_visible_items
-                    let effective_max_position = 95.0;
+                    // Map scrollbar position using the current effective range (range - thumb_size)
+                    // Compute thumb size the same way we set it in update_scrollbars
+                    let (viewport_h, content_h) = {
+                        let b = state.borrow();
+                        (b.viewport_size.height, b.total_content_size.height)
+                    };
+                    let thumb_size = if content_h > 0 {
+                        ((viewport_h * 100) / content_h).clamp(1, 99)
+                    } else {
+                        95
+                    };
+                    let effective_max_position = (100 - thumb_size).max(1) as f32;
                     let scroll_ratio = (position as f32 / effective_max_position).clamp(0.0, 1.0);
 
                     // CRITICAL FIX: Last-item-aware scrolling for end-of-list positioning
                     if scroll_ratio >= 0.95 {
                         // User is dragging near the end - ensure last item is fully visible
-                        let data_source_opt = state.borrow().data_source.clone();
-                        let item_renderer_opt = state.borrow().item_renderer.clone();
+                        let (data_source_opt, item_renderer_opt) = {
+                            let b = state.borrow();
+                            (b.data_source.clone(), b.item_renderer.clone())
+                        };
 
                         if let (Some(data_source), Some(item_renderer)) = (data_source_opt, item_renderer_opt) {
                             let total_items = data_source.get_item_count();
                             if total_items > 0 {
                                 let last_item_index = total_items - 1;
 
-                                // Force measurement of the last item to get its actual size
-                                let mut cloned_state = state.borrow().clone();
-                                let last_item_size = cloned_state.measure_item_size(
+                                // Work entirely on a cloned state to avoid overlapping borrows
+                                let mut cloned = { state.borrow().clone() };
+                                let last_item_size = cloned.measure_item_size(
                                     last_item_index,
                                     data_source.as_ref(),
                                     item_renderer.as_ref(),
                                     &panel_vscroll,
                                 );
-                                *state.borrow_mut() = cloned_state;
 
-                                // Calculate total content size up to and including the last item
+                                // Calculate total content size up to and including the last item using cloned cache
                                 let mut total_height = 0;
                                 for i in 0..total_items {
-                                    let item_height = if let Some(cached_size) = state.borrow().item_size_cache.peek(i) {
+                                    let item_height = if let Some(cached_size) = cloned.item_size_cache.peek(i) {
                                         cached_size.size.height
                                     } else if i == last_item_index {
                                         last_item_size.height
                                     } else {
-                                        state.borrow().internal_params.estimated_item_height
+                                        cloned.internal_params.estimated_item_height
                                     };
                                     total_height += item_height;
                                 }
 
-                                // CRITICAL FIX: Add safety padding to total height to ensure last item has space
-                                let safety_padding = state.borrow().internal_params.safety_padding;
-                                let padded_total_height = total_height + safety_padding;
+                                // Add safety padding and set on cloned state
+                                let padded_total_height = total_height + cloned.internal_params.safety_padding;
+                                cloned.total_content_size.height = padded_total_height;
 
                                 // Calculate scroll position to show the end with the safety padding
-                                let target_scroll_y = (padded_total_height - state.borrow().viewport_size.height).max(0);
+                                let target_scroll_y = (padded_total_height - cloned.viewport_size.height).max(0);
+                                cloned.scroll_position.y = target_scroll_y;
 
-                                state.borrow_mut().scroll_position.y = target_scroll_y;
-
-                                // CRITICAL FIX: Update total_content_size to match the padded calculation
-                                // This ensures mouse wheel scrolling uses the same bounds as scrollbar dragging
-                                state.borrow_mut().total_content_size.height = padded_total_height;
-
-                                let mut cloned_state = state.borrow().clone();
-                                cloned_state.update_visible_items(&panel_vscroll);
-                                *state.borrow_mut() = cloned_state;
+                                // Update visible items on cloned state and commit
+                                cloned.update_visible_items(&panel_vscroll);
+                                *state.borrow_mut() = cloned;
                             }
                         }
                     } else {
                         // Normal scrolling for non-end positions
-                        let old_max_scroll = (state.borrow().total_content_size.height - state.borrow().viewport_size.height).max(0);
+                        let old_max_scroll = {
+                            let b = state.borrow();
+                            (b.total_content_size.height - b.viewport_size.height).max(0)
+                        };
                         let target_scroll_y = if old_max_scroll > 0 {
                             (scroll_ratio * old_max_scroll as f32).round() as i32
                         } else {
                             0
                         };
 
-                        let old_y = state.borrow().scroll_position.y;
+                        let old_y = { state.borrow().scroll_position.y };
                         if target_scroll_y != old_y {
-                            state.borrow_mut().scroll_position.y = target_scroll_y;
-
-                            let mut cloned_state = state.borrow().clone();
-                            cloned_state.update_visible_items(&panel_vscroll);
-                            *state.borrow_mut() = cloned_state;
+                            let mut cloned = { state.borrow().clone() };
+                            cloned.scroll_position.y = target_scroll_y;
+                            cloned.update_visible_items(&panel_vscroll);
+                            *state.borrow_mut() = cloned;
                         }
                     }
 
@@ -1754,7 +1792,209 @@ custom_widget!(
                     update_scrollbars_vscroll();
                     panel_vscroll.refresh(false, None);
                 }
+                // Release guard at end
+                state_vscroll.borrow_mut().is_updating_scrollbar = false;
             });
+
+            // Also handle single-clicks on arrow/page areas and final position changes
+            let panel_vscroll_click = panel.clone();
+            let state_vscroll_click = config.state.clone();
+            let update_scrollbars_vscroll_click = update_scrollbars.clone();
+
+            // Helper: apply a relative vertical delta (positive = down, negative = up)
+            let state_for_apply = state_vscroll_click.clone();
+            let panel_for_apply = panel_vscroll_click.clone();
+            let update_for_apply = update_scrollbars_vscroll_click.clone();
+            let apply_vertical_delta = move |delta: i32| {
+                let state = state_for_apply.clone();
+                // Guard for entire operation
+                {
+                    let mut st = state.borrow_mut();
+                    if st.is_updating_scrollbar { return; }
+                    st.is_updating_scrollbar = true;
+                }
+
+                // Compute new target within bounds using cloned state
+                let (old_y, max_scroll) = { let b = state.borrow(); (b.scroll_position.y, (b.total_content_size.height - b.viewport_size.height).max(0)) };
+                let mut cloned = { state.borrow().clone() };
+                let new_y = (old_y + delta).max(0).min(max_scroll);
+                if new_y != old_y {
+                    cloned.scroll_position.y = new_y;
+                    cloned.update_visible_items(&panel_for_apply);
+                    *state.borrow_mut() = cloned;
+                    update_for_apply();
+                    panel_for_apply.refresh(false, None);
+                }
+
+                // Release guard
+                { let mut st = state.borrow_mut(); st.is_updating_scrollbar = false; }
+            };
+
+            let state_for_handle = state_vscroll_click.clone();
+            let panel_for_handle = panel_vscroll_click.clone();
+            let update_for_handle = update_scrollbars_vscroll_click.clone();
+            let handle_vertical_position = move |pos: i32| {
+                let state = state_for_handle.clone();
+                // Re-entrancy guard for entire handler
+                {
+                    let mut st = state.borrow_mut();
+                    if st.is_updating_scrollbar { return; }
+                    st.is_updating_scrollbar = true;
+                }
+
+                // Map scrollbar logical position (0..range-thumb) to content scroll range
+                // Compute thumb size as in update_scrollbars
+                let (viewport_h, content_h) = { let b = state.borrow(); (b.viewport_size.height, b.total_content_size.height) };
+                let thumb_size = if content_h > 0 {
+                    ((viewport_h * 100) / content_h).clamp(1, 99)
+                } else {
+                    95
+                };
+                let effective_max_position = (100 - thumb_size).max(1) as f32;
+                let scroll_ratio = (pos as f32 / effective_max_position).clamp(0.0, 1.0);
+
+                // Compute target based on current content size
+                let max_scroll = { let b = state.borrow(); (b.total_content_size.height - b.viewport_size.height).max(0) };
+                let mut target_scroll_y = if max_scroll > 0 {
+                    (scroll_ratio * max_scroll as f32).round() as i32
+                } else {
+                    0
+                };
+
+                // End-of-list assist to ensure last item fully visible when near end
+                if scroll_ratio >= 0.95 {
+                    let (data_source_opt, item_renderer_opt) = { let b = state.borrow(); (b.data_source.clone(), b.item_renderer.clone()) };
+                    if let (Some(data_source), Some(item_renderer)) = (data_source_opt, item_renderer_opt) {
+                        let total_items = data_source.get_item_count();
+                        if total_items > 0 {
+                            let last = total_items - 1;
+                            let mut cloned = { state.borrow().clone() };
+                            let last_size = cloned.measure_item_size(last, data_source.as_ref(), item_renderer.as_ref(), &panel_for_handle);
+                            let mut total_h = 0;
+                            for i in 0..total_items {
+                                let h = if let Some(cached) = cloned.item_size_cache.peek(i) {
+                                    cached.size.height
+                                } else if i == last {
+                                    last_size.height
+                                } else {
+                                    cloned.internal_params.estimated_item_height
+                                };
+                                total_h += h;
+                            }
+                            let padded = total_h + cloned.internal_params.safety_padding;
+                            cloned.total_content_size.height = padded;
+                            target_scroll_y = (padded - cloned.viewport_size.height).max(0);
+                            // Commit cloned later below when we also update visible items
+                            *state.borrow_mut() = cloned;
+                        }
+                    }
+                }
+
+                let old_y = { state.borrow().scroll_position.y };
+                if target_scroll_y != old_y {
+                    let mut cloned = { state.borrow().clone() };
+                    cloned.scroll_position.y = target_scroll_y;
+                    cloned.update_visible_items(&panel_for_handle);
+                    *state.borrow_mut() = cloned;
+
+                    update_for_handle();
+                    panel_for_handle.refresh(false, None);
+                }
+                // Release guard at end
+                {
+                    let mut st = state.borrow_mut();
+                    st.is_updating_scrollbar = false;
+                }
+            };
+
+            // Bind scroll events with relative movement for line/page/top/bottom
+            {
+                // LineUp: small negative delta
+                let apply = apply_vertical_delta.clone();
+                let state_for_step = config.state.clone();
+                vscrollbar.on_scroll_lineup(move |_e| {
+                    let step = { let b = state_for_step.borrow(); (b.viewport_size.height / 10).max(b.internal_params.estimated_item_height).max(1) };
+                    apply(-step);
+                });
+            }
+
+            {
+                // LineDown: small positive delta
+                let apply = apply_vertical_delta.clone();
+                let state_for_step = config.state.clone();
+                vscrollbar.on_scroll_linedown(move |_e| {
+                    let step = { let b = state_for_step.borrow(); (b.viewport_size.height / 10).max(b.internal_params.estimated_item_height).max(1) };
+                    apply(step);
+                });
+            }
+
+            {
+                // PageUp: negative viewport height
+                let apply = apply_vertical_delta.clone();
+                let state_for_step = config.state.clone();
+                vscrollbar.on_scroll_pageup(move |_e| {
+                    let page = { let b = state_for_step.borrow(); b.viewport_size.height.max(1) };
+                    apply(-page);
+                });
+            }
+
+            {
+                // PageDown: positive viewport height
+                let apply = apply_vertical_delta.clone();
+                let state_for_step = config.state.clone();
+                vscrollbar.on_scroll_pagedown(move |_e| {
+                    let page = { let b = state_for_step.borrow(); b.viewport_size.height.max(1) };
+                    apply(page);
+                });
+            }
+
+            {
+                // Top
+                let state_for_top = config.state.clone();
+                let panel_for_top = panel.clone();
+                let update_for_top = update_scrollbars.clone();
+                vscrollbar.on_scroll_top(move |_e| {
+                    {
+                        let mut st = state_for_top.borrow_mut();
+                        if st.is_updating_scrollbar { return; }
+                        st.is_updating_scrollbar = true;
+                    }
+                    let mut cloned = { state_for_top.borrow().clone() };
+                    cloned.scroll_position.y = 0;
+                    cloned.update_visible_items(&panel_for_top);
+                    *state_for_top.borrow_mut() = cloned;
+                    update_for_top();
+                    panel_for_top.refresh(false, None);
+                    { let mut st = state_for_top.borrow_mut(); st.is_updating_scrollbar = false; }
+                });
+            }
+
+            {
+                // Bottom: compute end position robustly
+                let state_for_bottom = config.state.clone();
+                let panel_for_bottom = panel.clone();
+                let update_for_bottom = update_scrollbars.clone();
+                vscrollbar.on_scroll_bottom(move |_e| {
+                    {
+                        let mut st = state_for_bottom.borrow_mut();
+                        if st.is_updating_scrollbar { return; }
+                        st.is_updating_scrollbar = true;
+                    }
+                    let mut cloned = { state_for_bottom.borrow().clone() };
+                    let (content_h, view_h) = (cloned.total_content_size.height, cloned.viewport_size.height);
+                    let max_scroll = (content_h - view_h).max(0);
+                    cloned.scroll_position.y = max_scroll;
+                    cloned.update_visible_items(&panel_for_bottom);
+                    *state_for_bottom.borrow_mut() = cloned;
+                    update_for_bottom();
+                    panel_for_bottom.refresh(false, None);
+                    { let mut st = state_for_bottom.borrow_mut(); st.is_updating_scrollbar = false; }
+                });
+            }
+
+            // Changed: map position proportionally (kept for sanity when toolkit reports new pos)
+            let handler_changed = handle_vertical_position.clone();
+            vscrollbar.on_scroll_changed(move |e| { if let Some(p) = e.get_position() { handler_changed(p); } });
         }
 
         if let Some(ref hscrollbar) = h_scrollbar {
@@ -1764,39 +2004,50 @@ custom_widget!(
 
             // Only handle thumb track for horizontal scrollbar drag
             hscrollbar.on_thumb_track(move |event| {
+                // Re-entrancy guard for entire handler
+                {
+                    let mut st = state.borrow_mut();
+                    if st.is_updating_scrollbar { return; }
+                    st.is_updating_scrollbar = true;
+                }
                 if let Some(position) = event.get_position() {
 
-                    // CRITICAL FIX: Store the desired scroll RATIO instead of absolute position
-                    // This prevents mismatch when total_content_size changes during update_visible_items
-                    let effective_scrollbar_range = 99.0;
+                    // Map scrollbar position using current effective range (range - thumb_size)
+                    let (viewport_w, content_w) = { let b = state.borrow(); (b.viewport_size.width, b.total_content_size.width) };
+                    let thumb_size = if content_w > 0 {
+                        ((viewport_w * 100) / content_w).clamp(1, 95)
+                    } else {
+                        90
+                    };
+                    let effective_scrollbar_range = (100 - thumb_size).max(1) as f32;
                     let scroll_ratio = (position as f32 / effective_scrollbar_range).clamp(0.0, 1.0);
 
                     // Calculate initial scroll position
-                    let old_max_scroll = (state.borrow().total_content_size.width - state.borrow().viewport_size.width).max(0);
+                    let old_max_scroll = { let b = state.borrow(); (b.total_content_size.width - b.viewport_size.width).max(0) };
                     let initial_scroll_x = if old_max_scroll > 0 {
                         (scroll_ratio * old_max_scroll as f32).round() as i32
                     } else {
                         0
                     };
 
-                    let old_x = state.borrow().scroll_position.x;
+                    let old_x = { state.borrow().scroll_position.x };
                     if initial_scroll_x != old_x {
-                        state.borrow_mut().scroll_position.x = initial_scroll_x;
-
-                        let mut cloned_state = state.borrow().clone();
-                        cloned_state.update_visible_items(&panel_hscroll);
-                        *state.borrow_mut() = cloned_state;
+                        let mut cloned = { state.borrow().clone() };
+                        cloned.scroll_position.x = initial_scroll_x;
+                        cloned.update_visible_items(&panel_hscroll);
+                        *state.borrow_mut() = cloned;
 
                         // CRITICAL FIX: Force immediate content size recalculation with fresh measurements
                         // The issue was that update_visible_items measures items but cache update happens later
-                        let total_items =  state.borrow().data_source.as_ref().map(|data_source| data_source.get_item_count());
-                        let estimated_item_size = state.borrow().internal_params.estimated_item_width;
-                        if let Some(total_items) = total_items {
-                            let new_content_size = state.borrow().calculate_total_content_size_progressive(total_items, estimated_item_size);
-                            state.borrow_mut().total_content_size = new_content_size;
+                        let (total_items_opt, estimated_item_size) = { let b = state.borrow(); (b.data_source.as_ref().map(|ds| ds.get_item_count()), b.internal_params.estimated_item_width) };
+                        if let Some(total_items) = total_items_opt {
+                            let mut cloned = { state.borrow().clone() };
+                            let new_content_size = cloned.calculate_total_content_size_progressive(total_items, estimated_item_size);
+                            cloned.total_content_size = new_content_size;
+                            *state.borrow_mut() = cloned;
                         }
                         // Now recalculate scroll position with the corrected content size
-                        let new_max_scroll = (state.borrow().total_content_size.width - state.borrow().viewport_size.width).max(0);
+                        let new_max_scroll = { let b = state.borrow(); (b.total_content_size.width - b.viewport_size.width).max(0) };
                         let final_scroll_x = if new_max_scroll > 0 {
                             (scroll_ratio * new_max_scroll as f32).round() as i32
                         } else {
@@ -1804,14 +2055,15 @@ custom_widget!(
                         }.max(0).min(new_max_scroll);
 
                         // Update scroll position to account for content size changes
-                        state.borrow_mut().scroll_position.x = final_scroll_x;
+                        let mut cloned = { state.borrow().clone() };
+                        cloned.scroll_position.x = final_scroll_x;
+                        *state.borrow_mut() = cloned;
 
                         // For DynamicSize mode, ensure a final layout pass after rapid scrolling
                         if state.borrow().item_sizing_mode == ItemSizingMode::DynamicSize {
                             // Force layout on all visible panels to ensure proper text wrapping
-                            for panel in state.borrow().item_to_panel.values() {
-                                panel.layout();
-                            }
+                            let panels: Vec<_> = { state.borrow().item_to_panel.values().cloned().collect() };
+                            for panel in panels { panel.layout(); }
                         }
 
                         // Use central scrollbar update function for consistent behavior
@@ -1819,7 +2071,141 @@ custom_widget!(
                         panel_hscroll.refresh(false, None);
                     }
                 }
+                // Release guard at end
+                state.borrow_mut().is_updating_scrollbar = false;
             });
+
+            // Also handle single-clicks and page events for horizontal scrollbar
+            let panel_hscroll_click = panel.clone();
+            let state_hscroll_click = config.state.clone();
+            let update_scrollbars_hscroll_click = update_scrollbars.clone();
+
+            // Clone shared captures before moving into the handler to avoid moving originals
+            let state_for_handle_h = state_hscroll_click.clone();
+            let panel_for_handle_h = panel_hscroll_click.clone();
+            let update_for_handle_h = update_scrollbars_hscroll_click.clone();
+
+            let handle_horizontal_position = move |pos: i32| {
+                let state = state_for_handle_h.clone();
+                // Re-entrancy guard for entire handler
+                {
+                    let mut st = state.borrow_mut();
+                    if st.is_updating_scrollbar { return; }
+                    st.is_updating_scrollbar = true;
+                }
+                // Compute thumb size and effective range like update_scrollbars
+                let (viewport_w, content_w) = { let b = state.borrow(); (b.viewport_size.width, b.total_content_size.width) };
+                let thumb_size = if content_w > 0 {
+                    ((viewport_w * 100) / content_w).clamp(1, 95)
+                } else {
+                    90
+                };
+                let effective_range = (100 - thumb_size).max(1) as f32;
+                let scroll_ratio = (pos as f32 / effective_range).clamp(0.0, 1.0);
+
+                let max_scroll = { let b = state.borrow(); (b.total_content_size.width - b.viewport_size.width).max(0) };
+                let target_scroll_x = if max_scroll > 0 {
+                    (scroll_ratio * max_scroll as f32).round() as i32
+                } else { 0 };
+
+                let old_x = { state.borrow().scroll_position.x };
+                if target_scroll_x != old_x {
+                    let mut cloned = { state.borrow().clone() };
+                    cloned.scroll_position.x = target_scroll_x;
+                    cloned.update_visible_items(&panel_for_handle_h);
+                    *state.borrow_mut() = cloned;
+
+                    // Recompute content size to reflect fresh measurements
+                    let (total_items_opt, estimated) = { let b = state.borrow(); (b.data_source.as_ref().map(|ds| ds.get_item_count()), b.internal_params.estimated_item_width) };
+                    if let Some(total_items) = total_items_opt {
+                        let mut cloned = { state.borrow().clone() };
+                        let new_size = cloned.calculate_total_content_size_progressive(total_items, estimated);
+                        cloned.total_content_size = new_size;
+                        *state.borrow_mut() = cloned;
+                    }
+
+                    update_for_handle_h();
+                    panel_for_handle_h.refresh(false, None);
+                }
+                // Release guard at end
+                state.borrow_mut().is_updating_scrollbar = false;
+            };
+
+            // Horizontal delta handler: moves scroll by a relative amount
+            let apply_horizontal_delta = {
+                let state = state_hscroll_click.clone();
+                let panel = panel_hscroll_click.clone();
+                let update_scrollbars = update_scrollbars_hscroll_click.clone();
+                move |delta: i32| {
+                    // Re-entrancy guard for entire handler
+                    {
+                        let mut st = state.borrow_mut();
+                        if st.is_updating_scrollbar { return; }
+                        st.is_updating_scrollbar = true;
+                    }
+                    let max_scroll = { let b = state.borrow(); (b.total_content_size.width - b.viewport_size.width).max(0) };
+                    let old_x = { state.borrow().scroll_position.x };
+                    let mut new_x = old_x.saturating_add(delta);
+                    new_x = new_x.clamp(0, max_scroll);
+                    if new_x != old_x {
+                        let mut cloned = { state.borrow().clone() };
+                        cloned.scroll_position.x = new_x;
+                        cloned.update_visible_items(&panel);
+                        *state.borrow_mut() = cloned;
+                        // Recompute content size to reflect fresh measurements
+                        let (total_items_opt, estimated) = {
+                            let b = state.borrow();
+                            (b.data_source.as_ref().map(|ds| ds.get_item_count()), b.internal_params.estimated_item_width)
+                        };
+                        if let Some(total_items) = total_items_opt {
+                            let mut cloned = { state.borrow().clone() };
+                            let new_size = cloned.calculate_total_content_size_progressive(total_items, estimated);
+                            cloned.total_content_size = new_size;
+                            *state.borrow_mut() = cloned;
+                        }
+                        update_scrollbars();
+                        panel.refresh(false, None);
+                    }
+                    // Release guard at end
+                    state.borrow_mut().is_updating_scrollbar = false;
+                }
+            };
+            // Use relative deltas for lineup/linedown/pageup/pagedown
+            let handler_lineup = apply_horizontal_delta.clone();
+            let state_for_lineup = state_hscroll_click.clone();
+            hscrollbar.on_scroll_lineup(move |_| {
+                // Move left by one "line" (estimated item width)
+                let estimated = { state_for_lineup.borrow().internal_params.estimated_item_width.max(1) };
+                handler_lineup(-estimated);
+            });
+            let handler_linedown = apply_horizontal_delta.clone();
+            let state_for_linedown = state_hscroll_click.clone();
+            hscrollbar.on_scroll_linedown(move |_| {
+                let estimated = { state_for_linedown.borrow().internal_params.estimated_item_width.max(1) };
+                handler_linedown(estimated);
+            });
+            let handler_pageup = apply_horizontal_delta.clone();
+            let state_for_pageup = state_hscroll_click.clone();
+            hscrollbar.on_scroll_pageup(move |_| {
+                let viewport_w = { state_for_pageup.borrow().viewport_size.width.max(1) };
+                handler_pageup(-viewport_w);
+            });
+            let handler_pagedown = apply_horizontal_delta.clone();
+            let state_for_pagedown = state_hscroll_click.clone();
+            hscrollbar.on_scroll_pagedown(move |_| {
+                let viewport_w = { state_for_pagedown.borrow().viewport_size.width.max(1) };
+                handler_pagedown(viewport_w);
+            });
+            // Use absolute position for top/bottom/changed
+
+            let handler_top = handle_horizontal_position.clone();
+            hscrollbar.on_scroll_top(move |e| { if let Some(p) = e.get_position() { handler_top(p); } });
+
+            let handler_bottom = handle_horizontal_position.clone();
+            hscrollbar.on_scroll_bottom(move |e| { if let Some(p) = e.get_position() { handler_bottom(p); } });
+
+            let handler_changed = handle_horizontal_position.clone();
+            hscrollbar.on_scroll_changed(move |e| { if let Some(p) = e.get_position() { handler_changed(p); } });
         }
 
         // Set up virtual list event handling
