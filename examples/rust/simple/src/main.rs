@@ -1,6 +1,8 @@
 use wxdragon::prelude::*;
 
 fn main() {
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("trace")).init();
+    SystemOptions::set_option_by_int("msw.no-manifest-check", 1);
     let _ = wxdragon::main(|_| {
         let frame = Frame::builder()
             .with_title("Hello, World!")
@@ -12,7 +14,12 @@ fn main() {
         let button = Button::builder(&frame).with_label("Click me").build();
 
         button.on_click(|_| {
-            println!("Button clicked");
+            log::info!("Button clicked");
+        });
+
+        button.on_destroy(|evt| {
+            log::info!("Button is being destroyed");
+            evt.skip(true);
         });
 
         sizer.add_stretch_spacer(1);
@@ -21,6 +28,11 @@ fn main() {
         sizer.add_stretch_spacer(1);
 
         frame.set_sizer(sizer, true);
+
+        frame.on_destroy(|evt| {
+            log::info!("Frame is being destroyed");
+            evt.skip(true);
+        });
 
         frame.show(true);
         frame.centre();
