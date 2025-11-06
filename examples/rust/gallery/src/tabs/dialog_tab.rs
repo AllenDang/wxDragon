@@ -1,7 +1,10 @@
 use wxdragon::prelude::*;
 
 use std::time::Duration;
-use std::{sync::Mutex, thread};
+use std::{
+    sync::{Arc, Mutex},
+    thread,
+};
 
 #[allow(dead_code)]
 pub struct DialogTabControls {
@@ -40,10 +43,9 @@ pub struct DialogTabControls {
     pub show_multi_choice_dialog_btn: Button,
     pub multi_choice_dialog_status_label: StaticText,
     pub dlg_dir_button: Button,
+    // Keep NotificationMessage alive while showing
+    pub notification_message: Arc<Mutex<Option<NotificationMessage>>>,
 }
-
-// Just make NotificationMessage alive long enough to show it
-static NOTIFICATION_MESSAGE: Mutex<Option<NotificationMessage>> = Mutex::new(None);
 
 pub fn create_dialog_tab(notebook: &Notebook, _frame: &Frame) -> DialogTabControls {
     let dialog_panel = Panel::builder(notebook).with_style(PanelStyle::TabTraversal).build();
@@ -312,6 +314,7 @@ pub fn create_dialog_tab(notebook: &Notebook, _frame: &Frame) -> DialogTabContro
         show_multi_choice_dialog_btn,
         multi_choice_dialog_status_label,
         dlg_dir_button,
+        notification_message: Arc::new(Mutex::new(None)),
     }
 }
 
@@ -498,6 +501,7 @@ impl DialogTabControls {
         // NotificationMessage button
         let frame_clone_notify = frame.clone();
         let status_label_clone_notify = self.notification_status_label.clone();
+        let notif_store = self.notification_message.clone();
         self.show_notification_btn.on_click(move |_event| {
             let notification_result = NotificationMessage::builder()
                 .with_title("wxDragon Notification")
@@ -511,7 +515,7 @@ impl DialogTabControls {
                     notification.show(wxdragon::widgets::notification_message::TIMEOUT_AUTO);
                     status_label_clone_notify.set_label("Notification shown.");
                     println!("NotificationMessage: Shown.");
-                    NOTIFICATION_MESSAGE.lock().unwrap().replace(notification);
+                    notif_store.lock().unwrap().replace(notification);
                 }
                 Err(e) => {
                     status_label_clone_notify.set_label(&format!("Notify Err: {e:?}"));
@@ -641,8 +645,9 @@ impl DialogTabControls {
             }
         });
 
+        let notif_store_on_destroy = self.notification_message.clone();
         frame.on_destroy(move |_| {
-            let _ = NOTIFICATION_MESSAGE.lock().unwrap().take();
+            let _ = notif_store_on_destroy.lock().unwrap().take();
         });
     }
 }
