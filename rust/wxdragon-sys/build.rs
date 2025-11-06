@@ -15,6 +15,40 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
     let target = std::env::var("TARGET").unwrap();
     let profile = std::env::var("PROFILE").unwrap();
 
+    let mut bindings_builder = bindgen::Builder::default()
+        .header("cpp/include/wxdragon.h")
+        .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
+        .clang_arg(format!("--target={target}"));
+
+    // Feature flags for conditional compilation in headers
+    bindings_builder = bindings_builder
+        .clang_arg(format!("-DwxdUSE_AUI={}", if cfg!(feature = "aui") { 1 } else { 0 }))
+        .clang_arg(format!(
+            "-DwxdUSE_MEDIACTRL={}",
+            if cfg!(feature = "media-ctrl") { 1 } else { 0 }
+        ))
+        .clang_arg(format!("-DwxdUSE_WEBVIEW={}", if cfg!(feature = "webview") { 1 } else { 0 }))
+        .clang_arg(format!("-DwxdUSE_STC={}", if cfg!(feature = "stc") { 1 } else { 0 }))
+        .clang_arg(format!("-DwxdUSE_XRC={}", if cfg!(feature = "xrc") { 1 } else { 0 }))
+        .clang_arg(format!(
+            "-DwxdUSE_RICHTEXT={}",
+            if cfg!(feature = "richtext") { 1 } else { 0 }
+        ));
+
+    // Skip library setup for docs.rs and rust-analyzer
+    if std::env::var("DOCS_RS").is_ok() || std::env::var("RUST_ANALYZER") == Ok("true".to_string()) {
+        println!("info: docs/IDE mode - generating minimal bindings only");
+
+        let bindings = bindings_builder
+            .generate()
+            .expect("Unable to generate bindings (docs.rs mode)");
+        bindings
+            .write_to_file(out_dir.join("bindings.rs"))
+            .expect("Couldn't write bindings!");
+        println!("cargo::warning=Successfully generated FFI bindings (docs/IDE)");
+        return Ok(());
+    }
+
     let dest_bin_dir = std::path::Path::new(&out_dir)
         .ancestors()
         .find(|p| p.file_name().map(|n| *n == *profile).unwrap_or(false))
@@ -54,40 +88,9 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
     // --- 1. Generate FFI Bindings ---
     println!("info: Generating FFI bindings...");
 
-    let mut bindings_builder = bindgen::Builder::default()
-        .header("cpp/include/wxdragon.h")
-        .clang_arg(format!("-I{wxwidgets_dir_str}/include"))
-        .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()));
+    bindings_builder = bindings_builder.clang_arg(format!("-I{wxwidgets_dir_str}/include"));
 
-    // Add feature flags for conditional compilation
-    bindings_builder = bindings_builder
-        .clang_arg(format!("-DwxdUSE_AUI={}", if cfg!(feature = "aui") { 1 } else { 0 }))
-        .clang_arg(format!(
-            "-DwxdUSE_MEDIACTRL={}",
-            if cfg!(feature = "media-ctrl") { 1 } else { 0 }
-        ))
-        .clang_arg(format!("-DwxdUSE_WEBVIEW={}", if cfg!(feature = "webview") { 1 } else { 0 }))
-        .clang_arg(format!("-DwxdUSE_STC={}", if cfg!(feature = "stc") { 1 } else { 0 }))
-        .clang_arg(format!("-DwxdUSE_XRC={}", if cfg!(feature = "xrc") { 1 } else { 0 }))
-        .clang_arg(format!(
-            "-DwxdUSE_RICHTEXT={}",
-            if cfg!(feature = "richtext") { 1 } else { 0 }
-        ));
-
-    bindings_builder = bindings_builder.clang_arg(format!("--target={target}"));
-
-    // Skip library setup for docs.rs and rust-analyzer
-    use std::env::var;
-    if var("DOCS_RS").is_ok() || std::env::var("RUST_ANALYZER") == Ok("true".to_string()) {
-        let bindings = bindings_builder.generate().expect("Unable to generate bindings");
-
-        bindings
-            .write_to_file(out_dir.join("bindings.rs"))
-            .expect("Couldn't write bindings!");
-
-        println!("info: Successfully generated FFI bindings");
-        return Ok(());
-    }
+    // From this point on we assume full build (not docs/IDE mode)
 
     let mut bindings_builder2 = bindings_builder.clone();
     let bindings = match bindings_builder.generate() {

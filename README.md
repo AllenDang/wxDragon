@@ -321,6 +321,15 @@ wxDragon provides comprehensive widget support including:
 
 - Event handling: see [docs/events](docs/events.md) for a practical mapping from wxWidgets to wxDragon, safety notes across FFI, skip/veto patterns, and common recipes.
 
+- To avoid rust-analyzer always building the entire workspace, add this to your VS Code settings.json:
+```json
+{
+  "rust-analyzer.cargo.extraEnv": {
+    "RUST_ANALYZER": "true"
+  }
+}
+```
+
 ## Examples
 
 Explore the `examples/` directory for comprehensive demonstrations:
