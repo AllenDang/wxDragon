@@ -169,14 +169,13 @@ impl Menu {
     }
 
     /// Appends a submenu.
-    pub fn append_submenu(&self, submenu: &mut Menu, title: &str, help_string: &str) -> Option<MenuItem> {
-        let title_c = CString::new(title).unwrap_or_default();
+    pub fn append_submenu(&self, submenu: Menu, title: &str, help_string: &str) -> Option<MenuItem> {
+        let title = CString::new(title).unwrap_or_default();
         let help_c = CString::new(help_string).unwrap_or_default();
-        let item_ptr = unsafe { ffi::wxd_Menu_AppendSubMenu(self.ptr, submenu.as_mut_ptr(), title_c.as_ptr(), help_c.as_ptr()) };
+        let item_ptr = unsafe { ffi::wxd_Menu_AppendSubMenu(self.ptr, submenu.into_raw_mut(), title.as_ptr(), help_c.as_ptr()) };
         if item_ptr.is_null() {
             return None;
         }
-        submenu.relinquish_ownership();
         // Return a MenuItem wrapper, but don't give it ownership
         Some(MenuItem::from(item_ptr))
     }
@@ -220,14 +219,6 @@ impl Menu {
         } else {
             None
         }
-    }
-
-    /// Relinquish ownership of the underlying wxMenu.
-    ///
-    /// Use this when transferring ownership to another native owner (e.g. MenuBar::append).
-    /// After calling this, Drop will not delete the native wxMenu.
-    pub(crate) fn relinquish_ownership(&mut self) {
-        self.owned = false;
     }
 
     // Make append private as it's called by builder
