@@ -168,7 +168,58 @@ fn build_wxdragon_wrapper(
     let profile = std::env::var("PROFILE").unwrap_or_else(|_| "debug".to_string());
 
     let mut is_debug = profile == "debug";
-    if target_os == "windows" {
+
+    let mut toolchain_file: Option<String> = None;
+
+    // Try to detect zigbuild toolchain file from env
+    let env_toolchain_vars = [
+        format!("CMAKE_TOOLCHAIN_FILE_{target}"),
+        format!("CMAKE_TOOLCHAIN_FILE_{}", target.replace('-', "_")),
+        format!("CMAKE_TOOLCHAIN_FILE_{}", target.replace('-', "")),
+        "CMAKE_TOOLCHAIN_FILE".to_string(),
+    ];
+    for var in &env_toolchain_vars {
+        if let Ok(val) = std::env::var(var)
+            && !val.is_empty()
+        {
+            toolchain_file = Some(val);
+            break;
+        }
+    }
+
+    let is_zigbuild = toolchain_file.as_ref().map(|s| s.contains("zigbuild")).unwrap_or_default();
+
+    // Prefer Ninja if available, fallback to Unix Makefiles
+    let ninja_available = std::process::Command::new("ninja")
+        .arg("--version")
+        .output()
+        .map(|out| out.status.success())
+        .unwrap_or(false);
+
+    // --- PATCH: Detect cross-compiling from Linux to Windows (zigbuild/cargo-zigbuild zig) ---
+    let host_os = std::env::consts::OS;
+    let is_cross_linux_to_windows = host_os == "linux" && target_os == "windows" && target_env == "gnu" && is_zigbuild;
+    if is_cross_linux_to_windows {
+        // Command line: cargo zigbuild --target x86_64-pc-windows-gnu
+
+        cmake_config.cxxflag("-Wno-error=date-time");
+        cmake_config.cflag("-Wno-error=date-time");
+
+        // Use zigbuild toolchain file if present
+        if let Some(file) = &toolchain_file {
+            cmake_config.define("CMAKE_TOOLCHAIN_FILE", file);
+        } else {
+            // Set CMake compilers to zig if zig is used (cargo-zigbuild)
+            if let Ok(zig_cc) = std::env::var("CC") {
+                cmake_config.env("CC", zig_cc);
+            }
+            if let Ok(zig_cxx) = std::env::var("CXX") {
+                cmake_config.env("CXX", zig_cxx);
+            }
+        }
+
+        cmake_config.generator(if ninja_available { "Ninja" } else { "Unix Makefiles" });
+    } else if target_os == "windows" {
         if target_env == "gnu" {
             // Potentially set MinGW toolchain for CMake if not automatically detected
             let host_os = std::env::consts::OS;
@@ -250,8 +301,8 @@ fn build_wxdragon_wrapper(
 
             // --- Dynamically find MinGW GCC library paths ---
             let host_os = std::env::consts::OS;
-            let gcc_path = if host_os == "macos" {
-                // On macOS, use the cross-compiler
+            let gcc_path = if host_os == "macos" || host_os == "linux" {
+                // On macOS and Linux, use the cross-compiler
                 "x86_64-w64-mingw32-gcc"
             } else {
                 // On Windows, use the native compiler
@@ -269,8 +320,10 @@ fn build_wxdragon_wrapper(
                 if !libgcc_path_str.is_empty() {
                     let libgcc_path = std::path::Path::new(&libgcc_path_str);
                     if let Some(libgcc_dir) = libgcc_path.parent() {
-                        println!("cargo:rustc-link-search=native={}", libgcc_dir.display());
-                        println!("info: Added GCC library search path (from libgcc): {}", libgcc_dir.display());
+                        let libgcc_dir_str = libgcc_dir.display().to_string();
+
+                        println!("cargo:rustc-link-search=native={}", libgcc_dir_str);
+                        println!("info: Added GCC library search path (from libgcc): {}", libgcc_dir_str);
 
                         // Attempt to find the path containing libstdc++.a (often one level up, in `../<target>/lib`)
                         if let Some(gcc_dir) = libgcc_dir.parent() {
@@ -404,8 +457,8 @@ fn build_wxdragon_wrapper(
         let host_os = std::env::consts::OS;
         let is_macos_to_windows_gnu = host_os == "macos" && target_os == "windows" && target_env == "gnu";
 
-        if is_macos_to_windows_gnu {
-            // Cross-compilation from macOS: libraries have -Windows suffix
+        if is_macos_to_windows_gnu || is_cross_linux_to_windows {
+            // Cross-compilation from macOS or Linux: libraries have -Windows suffix
             println!("cargo:rustc-link-lib=static=wx_mswu_core-3.3-Windows");
             println!("cargo:rustc-link-lib=static=wx_mswu_adv-3.3-Windows");
             println!("cargo:rustc-link-lib=static=wx_baseu-3.3-Windows");
@@ -447,15 +500,17 @@ fn build_wxdragon_wrapper(
             println!("cargo:rustc-link-lib=static=wxzlib-3.3");
             println!("cargo:rustc-link-lib=static=wxexpat-3.3");
 
-            println!("info: Using static linking for cross-compilation from macOS to Windows GNU");
-            // Static linking for cross-compilation to avoid runtime dependencies
-            println!("cargo:rustc-link-lib=static=stdc++");
-            println!("cargo:rustc-link-lib=static=gcc");
-            println!("cargo:rustc-link-lib=static=gcc_eh");
-            println!("cargo:rustc-link-lib=static=pthread");
-            // Add linker arguments for fully static C++ runtime
-            println!("cargo:rustc-link-arg=-static-libgcc");
-            println!("cargo:rustc-link-arg=-static-libstdc++");
+            if is_macos_to_windows_gnu {
+                println!("info: Using static linking for cross-compilation from macOS to Windows GNU");
+                // Static linking for cross-compilation to avoid runtime dependencies
+                println!("cargo:rustc-link-lib=static=stdc++");
+                println!("cargo:rustc-link-lib=static=gcc");
+                println!("cargo:rustc-link-lib=static=gcc_eh");
+                println!("cargo:rustc-link-lib=static=pthread");
+                // Add linker arguments for fully static C++ runtime
+                println!("cargo:rustc-link-arg=-static-libgcc");
+                println!("cargo:rustc-link-arg=-static-libstdc++");
+            }
         } else {
             let debug_suffix = if is_debug { "d" } else { "" };
 

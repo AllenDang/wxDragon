@@ -9,13 +9,14 @@ fn main() {
     let target = std::env::var("TARGET").unwrap_or_default();
 
     if target.contains("windows") {
-        let pkg_name = std::env::var("CARGO_PKG_NAME").unwrap();
-        embed_windows_manifest(&pkg_name);
+        // let pkg_name = std::env::var("CARGO_PKG_NAME").unwrap();
+        // embed_windows_manifest(&pkg_name);
 
         embed_wx_resources();
     }
 }
 
+#[allow(dead_code)]
 fn embed_windows_manifest(name: &str) {
     // Create a comprehensive manifest for Windows theming and modern features
     let manifest = new_manifest(name)
