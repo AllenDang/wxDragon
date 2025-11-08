@@ -94,7 +94,7 @@ fn main() {
             .with_size(win_cfg.get_size())
             .build();
 
-        let icon_bitmap = create_bitmap_from_memory(MAIN_ICON, None).unwrap();
+        let icon_bitmap = create_bitmap_from_memory(MAIN_ICON, Some((48, 48))).unwrap();
         frame.set_icon(&icon_bitmap);
 
         // --- Status Bar Setup ---
