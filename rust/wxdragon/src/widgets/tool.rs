@@ -77,18 +77,18 @@ impl Tool {
     /// Binds a click handler using a platform-appropriate route.
     ///
     /// Platform default routing:
-    /// - Windows (MSW + XRC): bind as a MENU command on the top-level frame
-    /// - macOS / Linux (GTK): bind as a TOOL event on the parent toolbar
+    /// - Windows (MSW + XRC) / Linux (GTK): bind as a MENU command on the top-level frame
+    /// - macOS: bind as a TOOL event on the parent toolbar
     ///
     /// Use `on_click_via_menu` or `on_click_via_tool` to override explicitly.
     pub fn on_click<F>(&self, handler: F)
     where
         F: FnMut(Event) + 'static,
     {
-        #[cfg(target_os = "windows")]
+        #[cfg(any(target_os = "windows", target_os = "linux"))]
         self.on_click_via_menu(handler);
 
-        #[cfg(not(target_os = "windows"))]
+        #[cfg(target_os = "macos")]
         self.on_click_via_tool(handler);
     }
 
