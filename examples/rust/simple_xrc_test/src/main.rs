@@ -78,6 +78,10 @@ fn main() {
             dialog_clone.destroy();
         });
 
+        dialog_ui.test_dialog.on_destroy(move |_event| {
+            log::debug!("Dialog is being destroyed");
+        });
+
         // Frame automatically handles layout with toolbar/statusbar
 
         // Tools are now auto-generated fields from XRC
@@ -206,24 +210,38 @@ fn main() {
             statusbar_clone3.set_status_text(&format!("Features: {flag}"), 0);
         });
 
+        value_slider.set_range(0, 100);
+        number_spin.set_range(0, 100);
+        progress_gauge.set_range(100);
+
+        let value_slider_clone = value_slider.clone();
+        let progress_gauge_clone = progress_gauge.clone();
+        let number_spin_clone = number_spin.clone();
+        let status_label_clone = status_label.clone();
+        let statusbar_clone = statusbar.clone();
+
+        let update_all = std::rc::Rc::new(move |value: i32| {
+            value_slider_clone.set_value(value);
+            progress_gauge_clone.set_value(value);
+            number_spin_clone.set_value(value);
+            status_label_clone.set_label(&format!("Value: {value}"));
+            statusbar_clone.set_status_text(&format!("Value: {value}"), 0);
+        });
+
         // Slider
-        let status_clone4 = status_label.clone();
-        let gauge_clone = progress_gauge.clone();
-        let statusbar_clone4 = statusbar.clone();
+        let update_all_slider = update_all.clone();
         value_slider.on_scroll_changed(move |event_data| {
             let value = event_data.get_position().unwrap_or(0);
             log::info!("Slider value: {value}");
-            status_clone4.set_label(&format!("Slider: {value}"));
-            gauge_clone.set_value(value);
-            statusbar_clone4.set_status_text(&format!("Value: {value}"), 0);
+            update_all_slider(value);
         });
 
         // Spin control
-        let status_clone5 = status_label.clone();
+        let update_all_spin = update_all.clone();
         number_spin.on_value_changed(move |event_data| {
             let value = event_data.get_value();
             log::info!("Spin control value: {value}");
-            status_clone5.set_label(&format!("Number: {value}"));
+            update_all_spin(value);
         });
 
         // Text controls
