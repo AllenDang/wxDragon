@@ -1,5 +1,5 @@
 use crate::MenuId;
-use crate::model::{ServerList, find_node_via_raw_ptr};
+use crate::model::{NodeFields, ServerList, find_node_via_raw_ptr};
 use crate::selection_ctx;
 use crate::server_node::ServerNode;
 use crate::settings::WIDGET_MARGIN;
@@ -18,23 +18,29 @@ pub fn create_data_view_panel(parent: &Window, model: &CustomDataViewTreeModel, 
         .build();
 
     // Helper to create a sortable, resizable text column mapping to a model column index
-    fn create_text_column(title: &str, model_col: usize, width: i32, align: DataViewAlign) -> DataViewColumn {
+    fn create_text_column(title: &str, model_col: NodeFields, width: i32, align: DataViewAlign) -> DataViewColumn {
         DataViewColumn::new(
             title,
             &DataViewTextRenderer::new(VariantType::String, DataViewCellMode::Inert, align),
-            model_col,
+            model_col.bits() as usize,
             width,
             align,
             DataViewColumnFlags::Resizable | DataViewColumnFlags::Sortable,
         )
     }
 
-    // Columns mapping to model indices: 0 (remarks), 1 (tunnel_path), 3 (server_host), 4 (server_port)
-    let remarks_col = create_text_column("Remarks", 0, 200, DataViewAlign::Left);
-    let path_col = create_text_column("Tunnel Path", 1, 260, DataViewAlign::Left);
-    let host_col = create_text_column("Server Host", 3, 160, DataViewAlign::Left);
-    let port_col = create_text_column("Server Port", 4, 90, DataViewAlign::Center);
-    let domain_col = create_text_column("Server Domain", 5, 160, DataViewAlign::Left);
+    use bitflags::Flags;
+    use std::collections::HashMap;
+    let name_map: HashMap<NodeFields, &'static str> = NodeFields::iter_defined_names().map(|(name, flag)| (flag, name)).collect();
+
+    let align = DataViewAlign::Left;
+    let align2 = DataViewAlign::Center;
+
+    let remarks_col = create_text_column(name_map[&NodeFields::Remarks], NodeFields::Remarks, 200, align);
+    let path_col = create_text_column(name_map[&NodeFields::TunnelPath], NodeFields::TunnelPath, 260, align);
+    let host_col = create_text_column(name_map[&NodeFields::ServerHost], NodeFields::ServerHost, 160, align);
+    let port_col = create_text_column(name_map[&NodeFields::ServerPort], NodeFields::ServerPort, 90, align2);
+    let domain_col = create_text_column(name_map[&NodeFields::ServerDomain], NodeFields::ServerDomain, 160, align);
 
     dataview.append_column(&remarks_col);
     dataview.append_column(&host_col);

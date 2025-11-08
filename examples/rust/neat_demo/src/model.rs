@@ -9,6 +9,21 @@ pub struct ServerList {
     pub nodes: Vec<ServerRc>,
 }
 
+bitflags::bitflags! {
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub struct NodeFields : u32 {
+    const Remarks = 0;
+    const TunnelPath = 1;
+    const ClientID = 2;
+    const ServerHost = 3;
+    const ServerPort = 4;
+    const ServerDomain = 5;
+    const CAFile = 6;
+    const DisableTLS = 7;
+    const DangerousMode = 8;
+}
+}
+
 /// Build a CustomDataViewTreeModel that exposes ServerList as a flat list under a virtual root.
 /// - Root (None) is a container
 /// - Each ServerNode is a leaf item
@@ -47,27 +62,29 @@ pub fn create_server_tree_model(data: Rc<RefCell<ServerList>>) -> CustomDataView
 }
 
 fn get_value_cb(data: &Rc<RefCell<ServerList>>, item: Option<&ServerNode>, col: u32) -> Variant {
-    fn render(node: &ServerNode, col: u32) -> Variant {
+    fn render(node: &ServerNode, col: NodeFields) -> Variant {
         match col {
-            0 => Variant::from_string(node.remarks.clone().unwrap_or_default()),
-            1 => Variant::from_string(node.tunnel_path.clone()),
-            2 => Variant::from_string(node.client_id.clone().unwrap_or_default()),
-            3 => Variant::from_string(node.server_host.clone()),
+            NodeFields::Remarks => Variant::from_string(node.remarks.clone().unwrap_or_default()),
+            NodeFields::TunnelPath => Variant::from_string(node.tunnel_path.clone()),
+            NodeFields::ClientID => Variant::from_string(node.client_id.clone().unwrap_or_default()),
+            NodeFields::ServerHost => Variant::from_string(node.server_host.clone()),
             // DataViewTextRenderer expects a string; display port as string
-            4 => Variant::from_string(node.server_port.to_string()),
-            5 => Variant::from_string(node.server_domain.clone().unwrap_or_default()),
-            6 => Variant::from_string(node.ca_file.clone().unwrap_or_default()),
-            7 => Variant::from_bool(node.disable_tls.unwrap_or(false)),
-            8 => Variant::from_bool(node.dangerous_mode.unwrap_or(false)),
+            NodeFields::ServerPort => Variant::from_string(node.server_port.to_string()),
+            NodeFields::ServerDomain => Variant::from_string(node.server_domain.clone().unwrap_or_default()),
+            NodeFields::CAFile => Variant::from_string(node.ca_file.clone().unwrap_or_default()),
+            NodeFields::DisableTLS => Variant::from_bool(node.disable_tls.unwrap_or(false)),
+            NodeFields::DangerousMode => Variant::from_bool(node.dangerous_mode.unwrap_or(false)),
             _ => Variant::from_string(String::new()),
         }
     }
+
+    let col = NodeFields::from_bits_retain(col);
 
     match item {
         None => {
             // Virtual root: show a summary in col 0, blanks elsewhere
             let count = data.borrow().nodes.len();
-            if col == 0 {
+            if col == NodeFields::Remarks {
                 Variant::from_string(format!("{count} node(s)"))
             } else {
                 Variant::from_string(String::new())
@@ -89,8 +106,8 @@ fn set_value_cb(data: &Rc<RefCell<ServerList>>, item: Option<&ServerNode>, col: 
     };
 
     let mut node = target_rc.borrow_mut();
-    match col {
-        0 => {
+    match NodeFields::from_bits_retain(col) {
+        NodeFields::Remarks => {
             if let Some(s) = var.get_string() {
                 node.remarks = if s.trim().is_empty() { None } else { Some(s) };
                 true
@@ -98,7 +115,7 @@ fn set_value_cb(data: &Rc<RefCell<ServerList>>, item: Option<&ServerNode>, col: 
                 false
             }
         }
-        1 => {
+        NodeFields::TunnelPath => {
             if let Some(s) = var.get_string() {
                 node.tunnel_path = s;
                 true
@@ -106,7 +123,7 @@ fn set_value_cb(data: &Rc<RefCell<ServerList>>, item: Option<&ServerNode>, col: 
                 false
             }
         }
-        2 => {
+        NodeFields::ClientID => {
             if let Some(s) = var.get_string() {
                 let s = s.trim().to_string();
                 node.client_id = if s.is_empty() { None } else { Some(s) };
@@ -115,7 +132,7 @@ fn set_value_cb(data: &Rc<RefCell<ServerList>>, item: Option<&ServerNode>, col: 
                 false
             }
         }
-        3 => {
+        NodeFields::ServerHost => {
             if let Some(s) = var.get_string() {
                 node.server_host = s;
                 true
@@ -123,7 +140,7 @@ fn set_value_cb(data: &Rc<RefCell<ServerList>>, item: Option<&ServerNode>, col: 
                 false
             }
         }
-        4 => {
+        NodeFields::ServerPort => {
             if let Some(v) = var.get_i32() {
                 if v >= 0 && v <= u16::MAX as i32 {
                     node.server_port = v as u16;
@@ -135,7 +152,7 @@ fn set_value_cb(data: &Rc<RefCell<ServerList>>, item: Option<&ServerNode>, col: 
                 false
             }
         }
-        5 => {
+        NodeFields::ServerDomain => {
             if let Some(s) = var.get_string() {
                 let s = s.trim().to_string();
                 node.server_domain = if s.is_empty() { None } else { Some(s) };
@@ -144,7 +161,7 @@ fn set_value_cb(data: &Rc<RefCell<ServerList>>, item: Option<&ServerNode>, col: 
                 false
             }
         }
-        6 => {
+        NodeFields::CAFile => {
             if let Some(s) = var.get_string() {
                 let s = s.trim().to_string();
                 node.ca_file = if s.is_empty() { None } else { Some(s) };
@@ -153,7 +170,7 @@ fn set_value_cb(data: &Rc<RefCell<ServerList>>, item: Option<&ServerNode>, col: 
                 false
             }
         }
-        7 => {
+        NodeFields::DisableTLS => {
             if let Some(b) = var.get_bool() {
                 // Store None for false to keep config concise
                 node.disable_tls = if b { Some(true) } else { None };
@@ -162,7 +179,7 @@ fn set_value_cb(data: &Rc<RefCell<ServerList>>, item: Option<&ServerNode>, col: 
                 false
             }
         }
-        8 => {
+        NodeFields::DangerousMode => {
             if let Some(b) = var.get_bool() {
                 node.dangerous_mode = if b { Some(true) } else { None };
                 true
@@ -175,35 +192,35 @@ fn set_value_cb(data: &Rc<RefCell<ServerList>>, item: Option<&ServerNode>, col: 
 }
 
 fn compare_cb(_data: &Rc<RefCell<ServerList>>, a: &ServerNode, b: &ServerNode, col: u32, asc: bool) -> i32 {
-    let ord = match col {
-        0 => {
+    let ord = match NodeFields::from_bits_retain(col) {
+        NodeFields::Remarks => {
             let la = a.remarks.as_deref().unwrap_or(&a.server_host).to_lowercase();
             let lb = b.remarks.as_deref().unwrap_or(&b.server_host).to_lowercase();
             la.cmp(&lb)
         }
-        1 => a.tunnel_path.to_lowercase().cmp(&b.tunnel_path.to_lowercase()),
-        2 => a
+        NodeFields::TunnelPath => a.tunnel_path.to_lowercase().cmp(&b.tunnel_path.to_lowercase()),
+        NodeFields::ClientID => a
             .client_id
             .as_deref()
             .unwrap_or("")
             .to_lowercase()
             .cmp(&b.client_id.as_deref().unwrap_or("").to_lowercase()),
-        3 => a.server_host.to_lowercase().cmp(&b.server_host.to_lowercase()),
-        4 => a.server_port.cmp(&b.server_port),
-        5 => a
+        NodeFields::ServerHost => a.server_host.to_lowercase().cmp(&b.server_host.to_lowercase()),
+        NodeFields::ServerPort => a.server_port.cmp(&b.server_port),
+        NodeFields::ServerDomain => a
             .server_domain
             .as_deref()
             .unwrap_or("")
             .to_lowercase()
             .cmp(&b.server_domain.as_deref().unwrap_or("").to_lowercase()),
-        6 => a
+        NodeFields::CAFile => a
             .ca_file
             .as_deref()
             .unwrap_or("")
             .to_lowercase()
             .cmp(&b.ca_file.as_deref().unwrap_or("").to_lowercase()),
-        7 => a.disable_tls.cmp(&b.disable_tls),
-        8 => a.dangerous_mode.cmp(&b.dangerous_mode),
+        NodeFields::DisableTLS => a.disable_tls.cmp(&b.disable_tls),
+        NodeFields::DangerousMode => a.dangerous_mode.cmp(&b.dangerous_mode),
         _ => std::cmp::Ordering::Equal,
     };
     let v = match ord {
