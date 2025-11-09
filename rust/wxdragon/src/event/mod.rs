@@ -33,7 +33,7 @@ pub use text_events::{TextEvent, TextEventData, TextEvents};
 pub use tree_events::{TreeEvent, TreeEventData, TreeEvents};
 
 // Re-export scroll events for easier access
-pub use scroll_events::{ScrollEvent, ScrollEventData, ScrollEvents};
+pub use scroll_events::{ScrollEvent, ScrollEventType, ScrollEvents};
 
 // Re-export menu events for easier access
 pub use menu_events::{MenuEvent, MenuEventData, MenuEvents};

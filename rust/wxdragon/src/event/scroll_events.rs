@@ -5,7 +5,7 @@ use wxdragon_sys as ffi;
 
 /// Events specific to scrollable controls (ScrollBar, Slider, etc.)
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum ScrollEvent {
+pub enum ScrollEventType {
     /// Fired when scrolling to the top
     Top,
     /// Fired when scrolling to the bottom
@@ -28,11 +28,11 @@ pub enum ScrollEvent {
 
 /// Event data for scroll events
 #[derive(Debug)]
-pub struct ScrollEventData {
+pub struct ScrollEvent {
     pub event: Event,
 }
 
-impl ScrollEventData {
+impl ScrollEvent {
     pub fn new(event: Event) -> Self {
         Self { event }
     }
@@ -62,7 +62,7 @@ impl ScrollEventData {
 }
 
 // Use the macro to implement the trait
-crate::implement_category_event_handlers!(ScrollEvents, ScrollEvent, ScrollEventData,
+crate::implement_category_event_handlers!(ScrollEvents, ScrollEventType, ScrollEvent,
     Top => scroll_top, EventType::SCROLL_TOP,
     Bottom => scroll_bottom, EventType::SCROLL_BOTTOM,
     LineUp => scroll_lineup, EventType::SCROLL_LINEUP,
