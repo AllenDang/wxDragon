@@ -230,8 +230,8 @@ fn main() {
 
         // Slider
         let update_all_slider = update_all.clone();
-        value_slider.on_scroll_changed(move |event_data| {
-            let value = event_data.get_position().unwrap_or(0);
+        value_slider.on_slider(move |event| {
+            let value = event.get_value();
             log::info!("Slider value: {value}");
             update_all_slider(value);
         });

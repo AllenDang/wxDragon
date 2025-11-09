@@ -1,12 +1,12 @@
 //! Safe wrapper for wxSlider.
 
-use crate::event::ScrollEvents;
+use crate::event::{Event, ScrollEvents};
 use crate::geometry::{Point, Size};
 use crate::id::Id;
-use crate::implement_widget_traits_with_target;
-use crate::widget_builder;
-use crate::widget_style_enum;
 use crate::window::{Window, WxWidget};
+use crate::{CommandEventData, implement_widget_traits_with_target};
+use crate::{EventType, widget_style_enum};
+use crate::{implement_widget_local_event_handlers, widget_builder};
 use std::os::raw::c_int;
 use wxdragon_sys as ffi;
 
@@ -125,3 +125,36 @@ impl_xrc_support!(Slider, { window });
 
 // Widget casting support for Slider
 impl_widget_cast!(Slider, "wxSlider", { window });
+
+/// Events that can be emitted by a [`Slider`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SliderEventType {
+    /// The slider value has changed.
+    /// Corresponds to `EventType::SLIDER` (`wxEVT_SLIDER`).
+    Slider,
+}
+
+/// Event data for a `SpinCtrl::ValueChanged` event.
+#[derive(Debug)]
+pub struct SliderEvent {
+    /// The base command event data.
+    pub base: CommandEventData,
+}
+
+impl SliderEvent {
+    /// Creates a new `SpinCtrlEventData`.
+    pub fn new(event: Event) -> Self {
+        Self {
+            base: CommandEventData::new(event),
+        }
+    }
+
+    /// Gets the current value of the Slider from the event.
+    pub fn get_value(&self) -> i32 {
+        self.base.get_int().unwrap_or(0)
+    }
+}
+
+implement_widget_local_event_handlers!(Slider, SliderEventType, SliderEvent,
+    Slider => slider, EventType::SLIDER
+);
