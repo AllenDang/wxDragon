@@ -14,7 +14,7 @@ categories = ["gui", "api-bindings"] # Already good
 features = ["aui", "stc", "xrc", "richtext"]
 
 [features]
-# default = ["aui", "stc", "xrc", "richtext"]
+default = ["aui", "stc", "xrc", "richtext"]
 aui = ["wxdragon-sys/aui"]
 media-ctrl = ["wxdragon-sys/media-ctrl"]
 webview = ["wxdragon-sys/webview"]

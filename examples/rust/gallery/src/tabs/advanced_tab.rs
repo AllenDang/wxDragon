@@ -1,3 +1,4 @@
+use std::sync::{Arc, atomic::AtomicI32, atomic::Ordering};
 use wxdragon::prelude::*;
 
 pub struct AdvancedTabControls {
@@ -178,19 +179,23 @@ impl AdvancedTabControls {
             }
         });
 
+        let gauge_value = Arc::new(AtomicI32::new(0));
+
         // Gauge button events
         let gauge_clone_for_inc = self.gauge.clone();
         let gauge_status_label_clone_for_inc = self.gauge_status_label.clone();
+        let gauge_value_clone = gauge_value.clone();
         self.gauge_increase_btn.on_click(move |_event| {
-            let current_value = gauge_clone_for_inc.get_value();
-            let new_value = std::cmp::min(current_value + 10, 100);
+            let new_value = gauge_value_clone.fetch_add(10, Ordering::SeqCst) + 10;
             gauge_clone_for_inc.set_value(new_value);
             gauge_status_label_clone_for_inc.set_label(&format!("Gauge Value: {new_value}%"));
         });
 
         let gauge_clone_for_reset = self.gauge.clone();
         let gauge_status_label_clone_for_reset = self.gauge_status_label.clone();
+        let gauge_value_clone_for_reset = gauge_value.clone();
         self.gauge_reset_btn.on_click(move |_event| {
+            gauge_value_clone_for_reset.store(0, Ordering::SeqCst);
             gauge_clone_for_reset.set_value(0);
             gauge_status_label_clone_for_reset.set_label("Gauge Value: 0%");
         });
@@ -198,9 +203,11 @@ impl AdvancedTabControls {
         // Slider Event Binding
         let gauge_clone = self.gauge.clone();
         let gauge_status_label_clone = self.gauge_status_label.clone();
+        let gauge_value_clone = gauge_value.clone();
         self.slider.on_slider(move |event| {
             let value = event.get_value();
             gauge_clone.set_value(value);
+            gauge_value_clone.store(value, Ordering::SeqCst);
             gauge_status_label_clone.set_label(&format!("Gauge Value: {value}"));
         });
 
@@ -209,10 +216,12 @@ impl AdvancedTabControls {
         let gauge_status_label_for_timer = self.gauge_status_label.clone();
         // Timer for Gauge Pulse Demo (simulate pulse by cycling value)
         let timer = Timer::new(&self.gauge); // Use any widget as owner; here use gauge
-        let mut pulse_value = 0;
         timer.start(200, false); // 200ms interval, repeating
+        let gauge_value_for_timer = gauge_value.clone();
         timer.on_tick(move |_| {
+            let mut pulse_value = gauge_value_for_timer.load(Ordering::SeqCst);
             pulse_value = (pulse_value + 5) % 105; // 0..100, step 5
+            gauge_value_for_timer.store(pulse_value, Ordering::SeqCst);
             gauge_for_timer.set_value(pulse_value);
             gauge_status_label_for_timer.set_label(&format!("Gauge Value: {pulse_value}%"));
         });
