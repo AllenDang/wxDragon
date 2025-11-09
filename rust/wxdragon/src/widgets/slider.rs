@@ -1,6 +1,6 @@
 //! Safe wrapper for wxSlider.
 
-use crate::event::{Event, ScrollEvents};
+use crate::event::Event;
 use crate::geometry::{Point, Size};
 use crate::id::Id;
 use crate::window::{Window, WxWidget};
@@ -116,9 +116,6 @@ widget_builder!(
         unsafe { Slider::from_ptr(slider_ptr) }
     }
 );
-
-// At the bottom of the file, add the ScrollEvents trait implementation
-impl ScrollEvents for Slider {}
 
 // Add XRC Support - enables Slider to be created from XRC-managed pointers
 impl_xrc_support!(Slider, { window });

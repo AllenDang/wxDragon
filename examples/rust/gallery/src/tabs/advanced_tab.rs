@@ -198,17 +198,26 @@ impl AdvancedTabControls {
         // Slider Event Binding
         let gauge_clone = self.gauge.clone();
         let gauge_status_label_clone = self.gauge_status_label.clone();
-        self.slider.on_thumb_track(move |event_data| {
-            let value = event_data.get_position().unwrap_or(0);
+        self.slider.on_slider(move |event| {
+            let value = event.get_value();
             gauge_clone.set_value(value);
             gauge_status_label_clone.set_label(&format!("Gauge Value: {value}"));
         });
 
         // Timer for Gauge Pulse
-        let gauge_status_label_clone_timer = self.gauge_status_label.clone();
-        self.slider.on_scroll_changed(move |event_data| {
-            let value = event_data.get_position().unwrap_or(0);
-            gauge_status_label_clone_timer.set_label(&format!("Gauge Value: {value}"));
+        let gauge_for_timer = self.gauge.clone();
+        let gauge_status_label_for_timer = self.gauge_status_label.clone();
+        // Timer for Gauge Pulse Demo (simulate pulse by cycling value)
+        let timer = Timer::new(&self.gauge); // Use any widget as owner; here use gauge
+        let mut pulse_value = 0;
+        timer.start(200, false); // 200ms interval, repeating
+        timer.on_tick(move |_| {
+            pulse_value = (pulse_value + 5) % 105; // 0..100, step 5
+            gauge_for_timer.set_value(pulse_value);
+            gauge_status_label_for_timer.set_label(&format!("Gauge Value: {pulse_value}%"));
+        });
+        self.gauge.on_destroy(move |_| {
+            timer.stop();
         });
 
         // SpinCtrl Event Binding
