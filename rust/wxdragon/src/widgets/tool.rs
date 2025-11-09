@@ -85,11 +85,7 @@ impl Tool {
     where
         F: FnMut(Event) + 'static,
     {
-        #[cfg(any(target_os = "windows", target_os = "linux"))]
         self.on_click_via_menu(handler);
-
-        #[cfg(target_os = "macos")]
-        self.on_click_via_tool(handler);
     }
 
     /// Binds a click event handler for this tool as a `MENU` command on the top-level frame.
@@ -97,22 +93,12 @@ impl Tool {
     /// This is useful on platforms where toolbar commands are routed as menu commands
     /// to the owning frame (notably MSW with some XRC configurations). If you just need
     /// the frame-level MENU route, call this; otherwise prefer `on_click` which binds both.
-    pub fn on_click_via_menu<F>(&self, handler: F)
+    fn on_click_via_menu<F>(&self, handler: F)
     where
         F: FnMut(Event) + 'static,
     {
         let frame_win = self.top_level_window();
         frame_win.bind_with_id_internal(EventType::MENU, self.tool_id, handler);
-    }
-
-    /// Binds a click event handler for this tool as an `EVT_TOOL` on the parent toolbar.
-    pub fn on_click_via_tool<F>(&self, handler: F)
-    where
-        F: FnMut(Event) + 'static,
-    {
-        // Use ID-specific binding for TOOL events
-        self.toolbar_window
-            .bind_with_id_internal(EventType::TOOL, self.tool_id, handler);
     }
 
     // Internal helper: locate top-level parent window (typically a Frame)
