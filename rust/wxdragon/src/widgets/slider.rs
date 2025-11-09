@@ -139,7 +139,7 @@ pub struct SliderEvent {
 }
 
 impl SliderEvent {
-    /// Creates a new `SpinCtrlEventData`.
+    /// Creates a new [`SliderEvent`] from a generic [`Event`].
     pub fn new(event: Event) -> Self {
         Self {
             base: CommandEventData::new(event),
