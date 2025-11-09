@@ -9,8 +9,8 @@ fn main() {
     let target = std::env::var("TARGET").unwrap_or_default();
 
     if target.contains("windows") {
-        // let pkg_name = std::env::var("CARGO_PKG_NAME").unwrap();
-        // embed_windows_manifest(&pkg_name);
+        let pkg_name = std::env::var("CARGO_PKG_NAME").unwrap();
+        embed_windows_manifest(&pkg_name);
 
         embed_wx_resources();
     }
@@ -54,8 +54,9 @@ fn embed_wx_resources() {
 
     let wx_include_path = wx_dir.join("include");
 
-    use embed_resource::{CompilationResult, ParamsIncludeDirs, compile};
-    let res = compile(&wx_rc_path, ParamsIncludeDirs([&wx_include_path]));
+    use embed_resource::{CompilationResult, ParamsMacrosAndIncludeDirs, compile};
+    let parameters = ParamsMacrosAndIncludeDirs(["wxUSE_NO_MANIFEST=1"], &[&wx_include_path]);
+    let res = compile(&wx_rc_path, parameters);
     if res != CompilationResult::Ok {
         println!("cargo::warning=Compile resources with embed_resource: {res:?}");
     }
