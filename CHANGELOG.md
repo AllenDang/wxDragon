@@ -1,5 +1,31 @@
 # Changelog
 
+## 0.9.4
+
+### Enhancements
+
+- Refined gauge logic in gallery example for better demonstration
+- Improved development workflow with default features enabled in wxdragon crate
+- Added wxUSE_NO_MANIFEST=1 flag for better Windows compatibility
+
+### Bug Fixes
+
+- Fixed Tool::on_click event handling for Linux platform
+- Resolved cross-platform issues with tool events (EVT_TOOL)
+
+### Refactoring
+
+- Renamed ScrollEvent to ScrollEventType and ScrollEventData to ScrollEvent for better clarity
+- Removed unused ScrollEvents trait implementation from Slider widget
+- Added dedicated Slider::on_slider method for slider-specific event handling
+- Enhanced simple_xrc_test and neat_demo examples with improved code organization
+
+### Platform Support
+
+- Enhanced Linux compatibility for tool events and window icons
+- Improved cross-platform consistency for event handling
+- Added cross-compiling support from Linux to Windows
+
 ## 0.9.3
 
 ### New Features
