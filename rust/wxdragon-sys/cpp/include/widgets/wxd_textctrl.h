@@ -46,4 +46,7 @@ wxd_TextCtrl_SelectAll(wxd_TextCtrl_t* textCtrl);
 WXD_EXPORTED int
 wxd_TextCtrl_GetStringSelection(wxd_TextCtrl_t* textCtrl, char* buffer, int buffer_len);
 
+WXD_EXPORTED void
+wxd_TextCtrl_SetInsertionPointEnd(wxd_TextCtrl_t* textCtrl);
+
 #endif // WXD_TEXTCTRL_H

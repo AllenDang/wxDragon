@@ -255,6 +255,11 @@ impl TextCtrl {
             }
         }
     }
+
+    /// Sets the insertion point to the end of the text control.
+    pub fn set_insertion_point_end(&self) {
+        unsafe { ffi::wxd_TextCtrl_SetInsertionPointEnd(self.window.as_ptr() as *mut ffi::wxd_TextCtrl_t) };
+    }
 }
 
 // Apply common trait implementations for this widget

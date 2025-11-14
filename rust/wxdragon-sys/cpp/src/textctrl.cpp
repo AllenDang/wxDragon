@@ -203,4 +203,13 @@ wxd_TextCtrl_GetStringSelection(wxd_TextCtrl_t* textCtrl, char* buffer, int buff
     return wxd_cpp_utils::copy_wxstring_to_buffer(selection, buffer, (size_t)buffer_len);
 }
 
+WXD_EXPORTED void
+wxd_TextCtrl_SetInsertionPointEnd(wxd_TextCtrl_t* textCtrl)
+{
+    wxTextCtrl* ctrl = reinterpret_cast<wxTextCtrl*>(textCtrl);
+    if (ctrl) {
+        ctrl->SetInsertionPointEnd();
+    }
+}
+
 } // extern "C"
