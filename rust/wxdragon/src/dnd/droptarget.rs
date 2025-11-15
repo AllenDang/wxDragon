@@ -164,7 +164,10 @@ struct FileDropTargetCallbacks {
 }
 
 /// A drop target handles file data dropped via drag and drop.
-pub struct FileDropTarget {}
+#[derive(Debug, Clone)]
+pub struct FileDropTarget {
+    _obj: *mut ffi::wxd_FileDropTarget_t,
+}
 
 /// Builder for FileDropTarget to allow setting optional callbacks.
 pub struct FileDropTargetBuilder<'a, W: WxWidget> {
@@ -267,7 +270,7 @@ impl<'a, W: WxWidget> FileDropTargetBuilder<'a, W> {
         let user_data = data_ptr as *mut c_void;
 
         // Create the drop target with our callback trampolines
-        unsafe {
+        let _obj = unsafe {
             ffi::wxd_FileDropTarget_CreateFull(
                 self.window.handle_ptr(),
                 Some(file_on_enter_trampoline),
@@ -281,7 +284,7 @@ impl<'a, W: WxWidget> FileDropTargetBuilder<'a, W> {
         };
 
         // The C++ side now owns the drop target and callback data, so we don't need to keep track of them
-        FileDropTarget {}
+        FileDropTarget { _obj }
     }
 }
 
@@ -485,18 +488,17 @@ extern "C" fn file_on_drop_files_trampoline(
 
     // Extract filenames from wxArrayString
     let mut filenames = Vec::<String>::new();
-    unsafe {
-        let count = ffi::wxd_ArrayString_GetCount(filenames_ptr as *mut _);
-        filenames.reserve(count as usize);
 
-        for i in 0..count {
-            let mut buffer = vec![0; 2048]; // Buffer for path
-            let len = ffi::wxd_ArrayString_GetString(filenames_ptr as *mut _, i, buffer.as_mut_ptr(), buffer.len());
+    let count = unsafe { ffi::wxd_ArrayString_GetCount(filenames_ptr) };
+    filenames.reserve(count as usize);
 
-            if len > 0 {
-                let s = CStr::from_ptr(buffer.as_ptr()).to_string_lossy().to_string();
-                filenames.push(s);
-            }
+    for i in 0..count {
+        let mut buffer = vec![0; 2048]; // Buffer for path
+        let len = unsafe { ffi::wxd_ArrayString_GetString(filenames_ptr, i, buffer.as_mut_ptr(), buffer.len()) };
+
+        if len > 0 {
+            let s = unsafe { CStr::from_ptr(buffer.as_ptr()).to_string_lossy().to_string() };
+            filenames.push(s);
         }
     }
 
