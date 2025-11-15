@@ -10,10 +10,21 @@ public:
     WxdTextDropTargetFull(wxd_OnEnter_Callback onEnter, wxd_OnDragOver_Callback onDragOver,
                           wxd_OnLeave_Callback onLeave, wxd_OnDrop_Callback onDrop,
                           wxd_OnData_Callback onData, wxd_OnDropText_Callback onDropText,
-                          void* userData)
+                          void* userData, wxd_FreeUserData_Callback freeUserData)
         : m_onEnter(onEnter), m_onDragOver(onDragOver), m_onLeave(onLeave), m_onDrop(onDrop),
-          m_onData(onData), m_onDropText(onDropText), m_userData(userData)
+          m_onData(onData), m_onDropText(onDropText), m_userData(userData),
+          m_freeUserData(freeUserData)
     {
+        WXD_LOG_TRACE("WxdTextDropTargetFull created");
+    }
+
+    virtual ~WxdTextDropTargetFull()
+    {
+        WXD_LOG_TRACE("WxdTextDropTargetFull destroyed");
+        if (m_userData && m_freeUserData) {
+            m_freeUserData(m_userData);
+            m_userData = nullptr;
+        }
     }
 
     virtual wxDragResult
@@ -92,6 +103,7 @@ private:
     wxd_OnData_Callback m_onData;
     wxd_OnDropText_Callback m_onDropText;
     void* m_userData;
+    wxd_FreeUserData_Callback m_freeUserData;
 };
 
 // Full-featured file drop target implementation
@@ -100,10 +112,21 @@ public:
     WxdFileDropTargetFull(wxd_OnEnter_Callback onEnter, wxd_OnDragOver_Callback onDragOver,
                           wxd_OnLeave_Callback onLeave, wxd_OnDrop_Callback onDrop,
                           wxd_OnData_Callback onData, wxd_OnDropFiles_Callback onDropFiles,
-                          void* userData)
+                          void* userData, wxd_FreeUserData_Callback freeUserData)
         : m_onEnter(onEnter), m_onDragOver(onDragOver), m_onLeave(onLeave), m_onDrop(onDrop),
-          m_onData(onData), m_onDropFiles(onDropFiles), m_userData(userData)
+          m_onData(onData), m_onDropFiles(onDropFiles), m_userData(userData),
+          m_freeUserData(freeUserData)
     {
+        WXD_LOG_TRACE("WxdFileDropTargetFull created");
+    }
+
+    virtual ~WxdFileDropTargetFull()
+    {
+        WXD_LOG_TRACE("WxdFileDropTargetFull destroyed");
+        if (m_userData && m_freeUserData) {
+            m_freeUserData(m_userData);
+            m_userData = nullptr;
+        }
     }
 
     virtual wxDragResult
@@ -182,6 +205,7 @@ private:
     wxd_OnData_Callback m_onData;
     wxd_OnDropFiles_Callback m_onDropFiles;
     void* m_userData;
+    wxd_FreeUserData_Callback m_freeUserData;
 };
 
 extern "C" {
@@ -191,7 +215,8 @@ WXD_EXPORTED wxd_TextDropTarget_t*
 wxd_TextDropTarget_CreateFull(wxd_Window_t* window, wxd_OnEnter_Callback onEnter,
                               wxd_OnDragOver_Callback onDragOver, wxd_OnLeave_Callback onLeave,
                               wxd_OnDrop_Callback onDrop, wxd_OnData_Callback onData,
-                              wxd_OnDropText_Callback onDropText, void* userData)
+                              wxd_OnDropText_Callback onDropText, void* userData,
+                              wxd_FreeUserData_Callback freeUserData)
 {
     if (!window)
         return nullptr;
@@ -200,7 +225,7 @@ wxd_TextDropTarget_CreateFull(wxd_Window_t* window, wxd_OnEnter_Callback onEnter
 
     WxdTextDropTargetFull* drop_target = new WxdTextDropTargetFull(onEnter, onDragOver, onLeave,
                                                                    onDrop, onData, onDropText,
-                                                                   userData);
+                                                                   userData, freeUserData);
 
     wx_window->SetDropTarget(drop_target);
 
@@ -212,7 +237,8 @@ WXD_EXPORTED wxd_FileDropTarget_t*
 wxd_FileDropTarget_CreateFull(wxd_Window_t* window, wxd_OnEnter_Callback onEnter,
                               wxd_OnDragOver_Callback onDragOver, wxd_OnLeave_Callback onLeave,
                               wxd_OnDrop_Callback onDrop, wxd_OnData_Callback onData,
-                              wxd_OnDropFiles_Callback onDropFiles, void* userData)
+                              wxd_OnDropFiles_Callback onDropFiles, void* userData,
+                              wxd_FreeUserData_Callback freeUserData)
 {
     if (!window)
         return nullptr;
@@ -221,7 +247,7 @@ wxd_FileDropTarget_CreateFull(wxd_Window_t* window, wxd_OnEnter_Callback onEnter
 
     WxdFileDropTargetFull* drop_target = new WxdFileDropTargetFull(onEnter, onDragOver, onLeave,
                                                                    onDrop, onData, onDropFiles,
-                                                                   userData);
+                                                                   userData, freeUserData);
 
     wx_window->SetDropTarget(drop_target);
 

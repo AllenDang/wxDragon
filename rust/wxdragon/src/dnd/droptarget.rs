@@ -24,6 +24,12 @@ struct TextDropTargetCallbacks {
     on_drop_text: DropTextCallback,
 }
 
+impl Drop for TextDropTargetCallbacks {
+    fn drop(&mut self) {
+        log::debug!("Dropping TextDropTargetCallbacks");
+    }
+}
+
 /// A drop target handles text data dropped via drag and drop.
 pub struct TextDropTarget {}
 
@@ -138,6 +144,7 @@ impl<'a, W: WxWidget> TextDropTargetBuilder<'a, W> {
                 Some(text_on_data_trampoline),
                 Some(text_on_drop_text_trampoline),
                 user_data,
+                Some(free_text_drop_target_userdata),
             )
         };
 
@@ -161,6 +168,12 @@ struct FileDropTargetCallbacks {
     on_drop: Option<DropCallback>,
     on_data: Option<DragCallback>,
     on_drop_files: DropFilesCallback,
+}
+
+impl Drop for FileDropTargetCallbacks {
+    fn drop(&mut self) {
+        log::debug!("Dropping FileDropTargetCallbacks");
+    }
 }
 
 /// A drop target handles file data dropped via drag and drop.
@@ -280,6 +293,7 @@ impl<'a, W: WxWidget> FileDropTargetBuilder<'a, W> {
                 Some(file_on_data_trampoline),
                 Some(file_on_drop_files_trampoline),
                 user_data,
+                Some(free_file_drop_target_userdata),
             )
         };
 
@@ -505,4 +519,20 @@ extern "C" fn file_on_drop_files_trampoline(
     let callbacks = unsafe { &mut *(data_ptr as *mut FileDropTargetCallbacks) };
 
     (callbacks.on_drop_files)(filenames, x, y)
+}
+
+// --- Rust-side cleanup functions for boxed user data ---
+
+extern "C" fn free_text_drop_target_userdata(ptr: *mut c_void) {
+    if ptr.is_null() {
+        return;
+    }
+    let _ = unsafe { Box::from_raw(ptr as *mut TextDropTargetCallbacks) };
+}
+
+extern "C" fn free_file_drop_target_userdata(ptr: *mut c_void) {
+    if ptr.is_null() {
+        return;
+    }
+    let _ = unsafe { Box::from_raw(ptr as *mut FileDropTargetCallbacks) };
 }

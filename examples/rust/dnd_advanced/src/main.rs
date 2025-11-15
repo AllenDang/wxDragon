@@ -76,14 +76,14 @@ impl DropTargetPanel {
         let status_text_clone = status_text.clone();
         let text_area_clone = text_area.clone();
 
-        println!("Creating TextDropTarget...");
+        log::info!("Creating TextDropTarget...");
         let panel_clone_text = panel.clone(); // Clone for the text closure
         TextDropTarget::builder(&text_area)
             .with_on_enter({
                 let status_text = status_text_clone.clone();
                 let text_area = text_area_clone.clone();
                 move |x, y, _def_result| {
-                    println!("TEXT target: OnEnter at ({x}, {y})");
+                    log::info!("TEXT target: OnEnter at ({x}, {y})");
                     status_text.set_label("Text entering drop zone");
                     text_area.set_background_color(Colour::rgb(180, 255, 180));
                     DragResult::Copy // Override to Copy
@@ -92,7 +92,7 @@ impl DropTargetPanel {
             .with_on_drag_over({
                 let status_text = status_text_clone.clone();
                 move |x, y, def_result| {
-                    println!("TEXT target: OnDragOver at ({x}, {y})");
+                    log::info!("TEXT target: OnDragOver at ({x}, {y})");
                     let msg = format!("Text dragging over at ({x}, {y})");
                     status_text.set_label(&msg);
                     def_result // Use default behavior
@@ -102,7 +102,7 @@ impl DropTargetPanel {
                 let status_text = status_text_clone.clone();
                 let text_area = text_area_clone.clone();
                 move || {
-                    println!("TEXT target: OnLeave");
+                    log::info!("TEXT target: OnLeave");
                     status_text.set_label("Text left drop zone");
                     text_area.set_background_color(Colour::rgb(220, 240, 220));
                 }
@@ -110,7 +110,7 @@ impl DropTargetPanel {
             .with_on_drop({
                 let status_text = status_text_clone.clone();
                 move |x, y| {
-                    println!("TEXT target: OnDrop at ({x}, {y})");
+                    log::info!("TEXT target: OnDrop at ({x}, {y})");
                     status_text.set_label("Text dropped, waiting for data...");
                     true // Accept the drop - IMPORTANT TO RETURN TRUE
                 }
@@ -118,9 +118,9 @@ impl DropTargetPanel {
             .with_on_data({
                 let status_text = status_text_clone.clone();
                 move |x, y, _def_result| {
-                    println!("TEXT target: OnData at ({x}, {y})");
+                    log::info!("TEXT target: OnData at ({x}, {y})");
                     status_text.set_label("Getting text data...");
-                    println!("TEXT target: Returning DragResult::Copy from OnData");
+                    log::info!("TEXT target: Returning DragResult::Copy from OnData");
                     DragResult::Copy // Must return Copy to continue to OnDropText
                 }
             })
@@ -128,7 +128,7 @@ impl DropTargetPanel {
                 let status_text = status_text_clone.clone();
                 let panel_for_text_dialog = panel_clone_text.clone();
                 move |text, x, y| {
-                    println!("TEXT dropped: '{text}' at ({x}, {y})");
+                    log::info!("TEXT dropped: '{text}' at ({x}, {y})");
                     let msg = format!("Received text: {text}");
                     status_text.set_label(&msg);
 
@@ -137,7 +137,7 @@ impl DropTargetPanel {
                         .build()
                         .show_modal();
 
-                    println!("TEXT target: OnDropText returning true");
+                    log::info!("TEXT target: OnDropText returning true");
                     true
                 }
             })
@@ -148,13 +148,13 @@ impl DropTargetPanel {
         let file_area_clone_files = file_area.clone();
         let panel_clone_files = panel.clone();
 
-        println!("Creating FileDropTarget...");
+        log::info!("Creating FileDropTarget...");
         FileDropTarget::builder(&file_area_clone_files)
             .with_on_enter({
                 let status_text = status_text_clone_files.clone();
                 let file_area = file_area_clone_files.clone();
                 move |x, y, _def_result| {
-                    println!("FILE target: OnEnter at ({x}, {y})");
+                    log::info!("FILE target: OnEnter at ({x}, {y})");
                     status_text.set_label("Files entering drop zone");
                     file_area.set_background_color(Colour::rgb(180, 180, 255));
                     DragResult::Copy
@@ -163,7 +163,7 @@ impl DropTargetPanel {
             .with_on_drag_over({
                 let status_text = status_text_clone_files.clone();
                 move |x, y, def_result| {
-                    println!("FILE target: OnDragOver at ({x}, {y})");
+                    log::info!("FILE target: OnDragOver at ({x}, {y})");
                     let msg = format!("Files dragging over at ({x}, {y})");
                     status_text.set_label(&msg);
                     def_result
@@ -173,7 +173,7 @@ impl DropTargetPanel {
                 let status_text = status_text_clone_files.clone();
                 let file_area = file_area_clone_files.clone();
                 move || {
-                    println!("FILE target: OnLeave");
+                    log::info!("FILE target: OnLeave");
                     status_text.set_label("Files left drop zone");
                     file_area.set_background_color(Colour::rgb(220, 220, 240));
                 }
@@ -181,18 +181,18 @@ impl DropTargetPanel {
             .with_on_drop({
                 let status_text = status_text_clone_files.clone();
                 move |x, y| {
-                    println!("FILE target: OnDrop at ({x}, {y})");
+                    log::info!("FILE target: OnDrop at ({x}, {y})");
                     status_text.set_label("Files dropped, waiting for data...");
-                    println!("FILE target: OnDrop returning true");
+                    log::info!("FILE target: OnDrop returning true");
                     true
                 }
             })
             .with_on_data({
                 let status_text = status_text_clone_files.clone();
                 move |x, y, _def_result| {
-                    println!("FILE target: OnData at ({x}, {y})");
+                    log::info!("FILE target: OnData at ({x}, {y})");
                     status_text.set_label("Getting file data...");
-                    println!("FILE target: Returning DragResult::Copy from OnData");
+                    log::info!("FILE target: Returning DragResult::Copy from OnData");
                     DragResult::Copy
                 }
             })
@@ -200,15 +200,15 @@ impl DropTargetPanel {
                 let status_text = status_text_clone_files.clone();
                 let panel_for_files_dialog = panel_clone_files.clone();
                 move |files, x, y| {
-                    println!("FILES dropped: {} files at ({}, {})", files.len(), x, y);
+                    log::info!("FILES dropped: {} files at ({}, {})", files.len(), x, y);
 
                     for (i, file) in files.iter().enumerate() {
-                        println!("  File {}: {}", i + 1, file);
+                        log::info!("  File {}: {}", i + 1, file);
                     }
 
                     let files_str = files.join(", ");
                     let msg = format!("Received {} files: {}", files.len(), files_str);
-                    println!("Setting status text to: {msg}");
+                    log::info!("Setting status text to: {msg}");
                     status_text.set_label(&msg);
 
                     MessageDialog::builder(&panel_for_files_dialog, &msg, "Files Received")
@@ -216,7 +216,7 @@ impl DropTargetPanel {
                         .build()
                         .show_modal();
 
-                    println!("FILE target: OnDropFiles returning true");
+                    log::info!("FILE target: OnDropFiles returning true");
                     true
                 }
             })
@@ -225,6 +225,8 @@ impl DropTargetPanel {
 }
 
 fn main() {
+    SystemOptions::set_option_by_int("msw.no-manifest-check", 1);
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("trace")).init();
     let _ = wxdragon::main(|_| {
         let frame = Frame::builder()
             .with_title("Advanced Drag and Drop Example")
