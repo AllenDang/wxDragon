@@ -31,7 +31,10 @@ impl Drop for TextDropTargetCallbacks {
 }
 
 /// A drop target handles text data dropped via drag and drop.
-pub struct TextDropTarget {}
+#[derive(Debug)]
+pub struct TextDropTarget {
+    _obj: *mut ffi::wxd_TextDropTarget_t,
+}
 
 /// Builder for TextDropTarget with full callback support
 pub struct TextDropTargetBuilder<'a, W: WxWidget> {
@@ -134,7 +137,7 @@ impl<'a, W: WxWidget> TextDropTargetBuilder<'a, W> {
         let user_data = data_ptr as *mut c_void;
 
         // Create the drop target with our callback trampolines
-        unsafe {
+        let _obj = unsafe {
             ffi::wxd_TextDropTarget_CreateFull(
                 self.window.handle_ptr(),
                 Some(text_on_enter_trampoline),
@@ -149,7 +152,7 @@ impl<'a, W: WxWidget> TextDropTargetBuilder<'a, W> {
         };
 
         // The C++ side now owns the drop target and callback data, so we don't need to keep track of them
-        TextDropTarget {}
+        TextDropTarget { _obj }
     }
 }
 
@@ -177,7 +180,7 @@ impl Drop for FileDropTargetCallbacks {
 }
 
 /// A drop target handles file data dropped via drag and drop.
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct FileDropTarget {
     _obj: *mut ffi::wxd_FileDropTarget_t,
 }
