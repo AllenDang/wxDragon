@@ -248,19 +248,17 @@ impl BitmapBundle {
 
 impl Clone for BitmapBundle {
     fn clone(&self) -> Self {
-        unsafe {
-            let cloned_ptr = ffi::wxd_BitmapBundle_Clone(self.ptr);
-            if cloned_ptr.is_null() {
-                panic!(
-                    "Failed to clone wxBitmapBundle: wxd_BitmapBundle_Clone returned null. Original: {:?}",
-                    self.ptr
-                );
-            }
-            // A cloned bundle is always owned by Rust
-            BitmapBundle {
-                ptr: cloned_ptr,
-                is_owned: true,
-            }
+        let cloned_ptr = unsafe { ffi::wxd_BitmapBundle_Clone(self.ptr) };
+        if cloned_ptr.is_null() {
+            panic!(
+                "Failed to clone wxBitmapBundle: wxd_BitmapBundle_Clone returned null. Original: {:?}",
+                self.ptr
+            );
+        }
+        // A cloned bundle is always owned by Rust
+        BitmapBundle {
+            ptr: cloned_ptr,
+            is_owned: true,
         }
     }
 }
@@ -268,9 +266,7 @@ impl Clone for BitmapBundle {
 impl Drop for BitmapBundle {
     fn drop(&mut self) {
         if !self.ptr.is_null() && self.is_owned {
-            unsafe {
-                ffi::wxd_BitmapBundle_Destroy(self.ptr);
-            }
+            unsafe { ffi::wxd_BitmapBundle_Destroy(self.ptr) };
         }
     }
 }
