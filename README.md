@@ -38,6 +38,7 @@ wxdragon = "*"
 use wxdragon::prelude::*;
 
 fn main() {
+    SystemOptions::set_option_by_int("msw.no-manifest-check", 1);
     let _ = wxdragon::main(|_| {
         let frame = Frame::builder()
             .with_title("Hello, World!")
@@ -106,6 +107,7 @@ use wxdragon::prelude::*;
 wxdragon::include_xrc!("ui/main.xrc", MyUI);
 
 fn main() {
+    SystemOptions::set_option_by_int("msw.no-manifest-check", 1);
     wxdragon::main(|_| {
         let ui = MyUI::new(None);
 
