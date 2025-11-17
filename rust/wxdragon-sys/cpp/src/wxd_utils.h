@@ -3,6 +3,7 @@
 
 #include <wx/gdicmn.h>            // For wxPoint, wxSize, wxDefaultPosition, wxDefaultSize
 #include <wx/string.h>            // For wxString
+#include <wx/window.h>            // For wxWindow and FromDIP/ToDIP functions
 #include "../include/wxd_types.h" // For wxd_Point, wxd_Size (CHANGED from wxdragon.h)
 #include <wx/colour.h>            // For wxColour type
 
@@ -34,23 +35,29 @@ wxd_Variant_Free_Rust_String(char* str);
 namespace wxd_cpp_utils {
 
 // Inline helper function to convert wxd_Point to wxPoint
+// This function automatically applies FromDIP() to ensure DPI-aware positioning
 inline wxPoint
 to_wx(const wxd_Point& p)
 {
     if (p.x == -1 && p.y == -1) { // Common convention for default pos
         return wxDefaultPosition;
     }
-    return wxPoint(p.x, p.y);
+    // Apply FromDIP to convert device-independent pixels to physical pixels
+    // This ensures consistent positioning across different DPI settings and build configurations
+    return wxWindow::FromDIP(wxPoint(p.x, p.y), nullptr);
 }
 
 // Inline helper function to convert wxd_Size to wxSize
+// This function automatically applies FromDIP() to ensure DPI-aware sizing
 inline wxSize
 to_wx(const wxd_Size& s)
 {
     if (s.width == -1 && s.height == -1) { // Common convention for default size
         return wxDefaultSize;
     }
-    return wxSize(s.width, s.height);
+    // Apply FromDIP to convert device-independent pixels to physical pixels
+    // This ensures consistent sizing across different DPI settings and build configurations
+    return wxWindow::FromDIP(wxSize(s.width, s.height), nullptr);
 }
 
 /**
