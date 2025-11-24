@@ -63,6 +63,12 @@ set(wxBUILD_BENCHMARKS OFF CACHE BOOL "Do not build wxWidgets benchmarks")
 
 set(wxUSE_EXCEPTIONS ON CACHE BOOL "Enable wxWidgets exceptions")
 
+# Set CMAKE_TLS_VERIFY if provided via environment (for CI SSL bypass when downloading WebView2 SDK)
+if(DEFINED ENV{CMAKE_TLS_VERIFY})
+    set(CMAKE_TLS_VERIFY $ENV{CMAKE_TLS_VERIFY} CACHE STRING "TLS verification for file downloads" FORCE)
+    message(STATUS "CMAKE_TLS_VERIFY set to: $ENV{CMAKE_TLS_VERIFY} (from environment)")
+endif()
+
 add_subdirectory(${WXWIDGETS_LIB_DIR} ${WXWIDGETS_BUILD_DIR})
 
 # --- Platform Detection ---
