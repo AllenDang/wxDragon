@@ -129,7 +129,11 @@ jobs:
       - run: rustup component add rustfmt clippy
 
       - run: cargo fmt --check
-      - run: cargo clippy --features "aui,xrc,richtext,stc,webview" --target x86_64-pc-windows-gnu --release -- -D warnings
+
+      - name: Run clippy
+        env:
+          CMAKE_TLS_VERIFY: "0"
+        run: cargo clippy --features "aui,xrc,richtext,stc,webview" --target x86_64-pc-windows-gnu --release -- -D warnings
 
       - name: Build default features
         shell: bash
