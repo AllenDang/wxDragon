@@ -154,6 +154,11 @@ fn build_wxdragon_wrapper(
     cmake_config.define("WXWIDGETS_LIB_DIR", wxwidgets_source_path);
     cmake_config.define("WXWIDGETS_BUILD_DIR", wxwidgets_build_dir);
 
+    // Check for CMAKE_TLS_VERIFY environment variable (used in CI to bypass SSL verification)
+    if let Ok(tls_verify) = std::env::var("CMAKE_TLS_VERIFY") {
+        cmake_config.env("CMAKE_TLS_VERIFY", tls_verify);
+    }
+
     // Disable WebP support since we'll use the image crate for image decoding
     cmake_config.define("wxUSE_LIBWEBP", "OFF");
 
