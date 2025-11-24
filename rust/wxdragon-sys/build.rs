@@ -155,8 +155,10 @@ fn build_wxdragon_wrapper(
     cmake_config.define("WXWIDGETS_BUILD_DIR", wxwidgets_build_dir);
 
     // Check for CMAKE_TLS_VERIFY environment variable (used in CI to bypass SSL verification)
+    // Pass it both as environment variable and CMake definition to ensure it reaches nested builds
     if let Ok(tls_verify) = std::env::var("CMAKE_TLS_VERIFY") {
-        cmake_config.env("CMAKE_TLS_VERIFY", tls_verify);
+        cmake_config.env("CMAKE_TLS_VERIFY", &tls_verify);
+        cmake_config.define("CMAKE_TLS_VERIFY", &tls_verify);
     }
 
     // Disable WebP support since we'll use the image crate for image decoding
