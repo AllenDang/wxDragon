@@ -224,7 +224,7 @@ endif()
 
 if (wxdUSE_WEBVIEW)
     # Add webview wrapper when implemented
-    # list(APPEND WXDRAGON_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/webview.cpp)
+    list(APPEND WXDRAGON_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/webview.cpp)
 endif()
 
 if (wxdUSE_RICHTEXT)

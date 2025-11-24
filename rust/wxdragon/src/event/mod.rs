@@ -15,6 +15,8 @@ pub mod scroll_events;
 pub mod taskbar_events;
 pub mod text_events;
 pub mod tree_events;
+#[cfg(feature = "webview")]
+pub mod webview_events;
 pub mod window_events;
 
 // Re-export window events for easier access
@@ -34,6 +36,10 @@ pub use tree_events::{TreeEvent, TreeEventData, TreeEvents};
 
 // Re-export scroll events for easier access
 pub use scroll_events::{ScrollEvent, ScrollEventType, ScrollEvents};
+
+// Re-export webview events for easier access
+#[cfg(feature = "webview")]
+pub use webview_events::{WebViewEvent, WebViewEventData, WebViewEvents};
 
 // Re-export menu events for easier access
 pub use menu_events::{MenuEvent, MenuEventData, MenuEvents};
@@ -403,6 +409,34 @@ pub struct EventType: ffi::WXDEventTypeCEnum { // Use the generated C enum type
     const RICHTEXT_STYLESHEET_REPLACING = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_RICHTEXT_STYLESHEET_REPLACING;
     #[cfg(feature = "richtext")]
     const RICHTEXT_STYLESHEET_REPLACED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_RICHTEXT_STYLESHEET_REPLACED;
+
+    // WebView event types - only available when webview feature is enabled
+    #[cfg(feature = "webview")]
+    const WEBVIEW_CREATED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_WEBVIEW_CREATED;
+    #[cfg(feature = "webview")]
+    const WEBVIEW_NAVIGATING = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_WEBVIEW_NAVIGATING;
+    #[cfg(feature = "webview")]
+    const WEBVIEW_NAVIGATED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_WEBVIEW_NAVIGATED;
+    #[cfg(feature = "webview")]
+    const WEBVIEW_LOADED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_WEBVIEW_LOADED;
+    #[cfg(feature = "webview")]
+    const WEBVIEW_ERROR = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_WEBVIEW_ERROR;
+    #[cfg(feature = "webview")]
+    const WEBVIEW_NEWWINDOW = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_WEBVIEW_NEWWINDOW;
+    #[cfg(feature = "webview")]
+    const WEBVIEW_NEWWINDOW_FEATURES = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_WEBVIEW_NEWWINDOW_FEATURES;
+    #[cfg(feature = "webview")]
+    const WEBVIEW_TITLE_CHANGED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_WEBVIEW_TITLE_CHANGED;
+    #[cfg(feature = "webview")]
+    const WEBVIEW_FULLSCREEN_CHANGED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_WEBVIEW_FULLSCREEN_CHANGED;
+    #[cfg(feature = "webview")]
+    const WEBVIEW_SCRIPT_MESSAGE_RECEIVED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_WEBVIEW_SCRIPT_MESSAGE_RECEIVED;
+    #[cfg(feature = "webview")]
+    const WEBVIEW_SCRIPT_RESULT = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_WEBVIEW_SCRIPT_RESULT;
+    #[cfg(feature = "webview")]
+    const WEBVIEW_WINDOW_CLOSE_REQUESTED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_WEBVIEW_WINDOW_CLOSE_REQUESTED;
+    #[cfg(feature = "webview")]
+    const WEBVIEW_BROWSING_DATA_CLEARED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_WEBVIEW_BROWSING_DATA_CLEARED;
 
     // TaskBarIcon Event Types - platform-specific support
 

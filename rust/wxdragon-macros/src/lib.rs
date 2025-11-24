@@ -179,6 +179,7 @@ fn get_class_mapping() -> HashMap<&'static str, &'static str> {
     map.insert("wxMediaCtrl", "wxdragon::widgets::MediaCtrl");
     map.insert("wxTimePickerCtrl", "wxdragon::widgets::TimePickerCtrl");
     map.insert("wxRichTextCtrl", "wxdragon::widgets::RichTextCtrl");
+    // Note: wxWebView doesn't have XRC support in wxWidgets
 
     // AUI widgets
     map.insert("wxAuiManager", "wxdragon::widgets::AuiManager");

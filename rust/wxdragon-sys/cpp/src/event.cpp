@@ -34,6 +34,9 @@
 #if wxdUSE_MEDIACTRL
 #include <wx/mediactrl.h> // ADDED: For MediaCtrl events
 #endif
+#if wxdUSE_WEBVIEW
+#include <wx/webview.h> // ADDED: For WebView events
+#endif
 #include <wx/dataview.h> // ADDED: For DataView events
 #include <wx/grid.h>
 #if wxdUSE_STC
@@ -1467,6 +1470,36 @@ get_wx_event_type_for_c_enum(WXDEventTypeCEnum c_enum_val)
 #else
         return wxEVT_NULL; // Event not available on this platform
 #endif
+#endif
+
+// WebView event types - only available when webview feature is enabled
+#if wxdUSE_WEBVIEW
+    case WXD_EVENT_TYPE_WEBVIEW_CREATED:
+        return wxEVT_WEBVIEW_CREATED;
+    case WXD_EVENT_TYPE_WEBVIEW_NAVIGATING:
+        return wxEVT_WEBVIEW_NAVIGATING;
+    case WXD_EVENT_TYPE_WEBVIEW_NAVIGATED:
+        return wxEVT_WEBVIEW_NAVIGATED;
+    case WXD_EVENT_TYPE_WEBVIEW_LOADED:
+        return wxEVT_WEBVIEW_LOADED;
+    case WXD_EVENT_TYPE_WEBVIEW_ERROR:
+        return wxEVT_WEBVIEW_ERROR;
+    case WXD_EVENT_TYPE_WEBVIEW_NEWWINDOW:
+        return wxEVT_WEBVIEW_NEWWINDOW;
+    case WXD_EVENT_TYPE_WEBVIEW_NEWWINDOW_FEATURES:
+        return wxEVT_WEBVIEW_NEWWINDOW_FEATURES;
+    case WXD_EVENT_TYPE_WEBVIEW_TITLE_CHANGED:
+        return wxEVT_WEBVIEW_TITLE_CHANGED;
+    case WXD_EVENT_TYPE_WEBVIEW_FULLSCREEN_CHANGED:
+        return wxEVT_WEBVIEW_FULLSCREEN_CHANGED;
+    case WXD_EVENT_TYPE_WEBVIEW_SCRIPT_MESSAGE_RECEIVED:
+        return wxEVT_WEBVIEW_SCRIPT_MESSAGE_RECEIVED;
+    case WXD_EVENT_TYPE_WEBVIEW_SCRIPT_RESULT:
+        return wxEVT_WEBVIEW_SCRIPT_RESULT;
+    case WXD_EVENT_TYPE_WEBVIEW_WINDOW_CLOSE_REQUESTED:
+        return wxEVT_WEBVIEW_WINDOW_CLOSE_REQUESTED;
+    case WXD_EVENT_TYPE_WEBVIEW_BROWSING_DATA_CLEARED:
+        return wxEVT_WEBVIEW_BROWSING_DATA_CLEARED;
 #endif
 
     // NEW: Menu event types - use actual dynamic wxWidgets constants

@@ -67,6 +67,10 @@ extern "C" {
 #include "widgets/wxd_scrollbar.h"
 #include "widgets/wxd_bitmapbutton.h"
 
+#if wxdUSE_WEBVIEW
+#include "widgets/wxd_webview.h"
+#endif
+
 // List and choice widgets
 #include "widgets/wxd_listbox.h"
 #include "widgets/wxd_choice.h"

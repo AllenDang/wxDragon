@@ -32,13 +32,13 @@ jobs:
             build_type: Release
             setup_script: |
               sudo apt-get update
-              sudo apt-get install -y libgtk-3-dev libpng-dev libjpeg-dev libgl1-mesa-dev libglu1-mesa-dev libxkbcommon-dev libexpat1-dev libtiff-dev build-essential cmake
+              sudo apt-get install -y libgtk-3-dev libpng-dev libjpeg-dev libgl1-mesa-dev libglu1-mesa-dev libxkbcommon-dev libexpat1-dev libtiff-dev libwebkit2gtk-4.1-dev build-essential cmake
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
             build_type: Debug
             setup_script: |
               sudo apt-get update
-              sudo apt-get install -y libgtk-3-dev libpng-dev libjpeg-dev libgl1-mesa-dev libglu1-mesa-dev libxkbcommon-dev libexpat1-dev libtiff-dev build-essential cmake
+              sudo apt-get install -y libgtk-3-dev libpng-dev libjpeg-dev libgl1-mesa-dev libglu1-mesa-dev libxkbcommon-dev libexpat1-dev libtiff-dev libwebkit2gtk-4.1-dev build-essential cmake
           - os: macos-13
             target: x86_64-apple-darwin
             build_type: Release
@@ -254,6 +254,7 @@ jobs:
                 -DCMAKE_OSX_DEPLOYMENT_TARGET=10.13
                 -DCMAKE_OSX_ARCHITECTURES=x86_64
                 -DwxBUILD_TOOLKIT=osx_cocoa
+                -DwxUSE_WEBVIEW_WEBKIT=ON
               )
               ;;
             "aarch64-apple-darwin")
@@ -261,6 +262,7 @@ jobs:
                 -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0
                 -DCMAKE_OSX_ARCHITECTURES=arm64
                 -DwxBUILD_TOOLKIT=osx_cocoa
+                -DwxUSE_WEBVIEW_WEBKIT=ON
               )
               ;;
             "x86_64-pc-windows-msvc")
@@ -268,6 +270,7 @@ jobs:
                 -G "Visual Studio 17 2022"
                 -A x64
                 -DwxBUILD_TOOLKIT=msw
+                -DwxUSE_WEBVIEW_EDGE=ON
                 -DHAVE_INTPTR_T=1
                 -DWXINTPTR_DEFINED=1
                 -D_WINDOWS=1
@@ -281,6 +284,7 @@ jobs:
                 -G "Visual Studio 17 2022"
                 -A Win32
                 -DwxBUILD_TOOLKIT=msw
+                -DwxUSE_WEBVIEW_EDGE=ON
                 -DHAVE_INTPTR_T=1
                 -DWXINTPTR_DEFINED=1
                 -D_WINDOWS=1
@@ -294,6 +298,7 @@ jobs:
                 -G "Visual Studio 17 2022"
                 -A Win32
                 -DwxBUILD_TOOLKIT=msw
+                -DwxUSE_WEBVIEW_EDGE=ON
                 -DHAVE_INTPTR_T=1
                 -DWXINTPTR_DEFINED=1
                 -D_WINDOWS=1
@@ -307,6 +312,7 @@ jobs:
                 -G "Visual Studio 17 2022"
                 -A x64
                 -DwxBUILD_TOOLKIT=msw
+                -DwxUSE_WEBVIEW_EDGE=ON
                 -DHAVE_INTPTR_T=1
                 -DWXINTPTR_DEFINED=1
                 -D_WINDOWS=1
@@ -318,6 +324,7 @@ jobs:
             "x86_64-unknown-linux-gnu")
               CMAKE_ARGS+=(
                 -DwxBUILD_TOOLKIT=gtk3
+                -DwxUSE_WEBVIEW_WEBKIT=ON
               )
               ;;
           esac
@@ -366,6 +373,7 @@ jobs:
           CMAKE_ARGS+=(
             -G "MinGW Makefiles"
             -DwxBUILD_TOOLKIT=msw
+            -DwxUSE_WEBVIEW_EDGE=ON
           )
           
           echo "Configuring with: cmake ${CMAKE_ARGS[@]} ../${WX_SOURCE_DIR}"

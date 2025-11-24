@@ -26,6 +26,7 @@ members = [
   "examples/rust/virtual_list_demo",
   "examples/rust/window_features_test",
   "examples/rust/wrapsizer_test",
+  "examples/rust/webview_test",
   "rust/wxdragon",
   "rust/wxdragon-macros",
   "rust/wxdragon-sys",

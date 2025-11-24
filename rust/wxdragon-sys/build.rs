@@ -160,7 +160,18 @@ fn build_wxdragon_wrapper(
     cmake_config
         .define("wxdUSE_AUI", if cfg!(feature = "aui") { "1" } else { "0" })
         .define("wxdUSE_MEDIACTRL", if cfg!(feature = "media-ctrl") { "1" } else { "0" })
-        .define("wxdUSE_WEBVIEW", if cfg!(feature = "webview") { "1" } else { "0" })
+        .define("wxdUSE_WEBVIEW", if cfg!(feature = "webview") { "1" } else { "0" });
+    cmake_config.define("wxUSE_WEBVIEW", if cfg!(feature = "webview") { "ON" } else { "OFF" });
+    if cfg!(feature = "webview") {
+        if target_os == "macos" {
+            cmake_config.define("wxUSE_WEBVIEW_WEBKIT", "ON");
+        } else if target_os == "windows" {
+            cmake_config.define("wxUSE_WEBVIEW_EDGE", "ON");
+        } else if target_os == "linux" {
+            cmake_config.define("wxUSE_WEBVIEW_WEBKIT", "ON");
+        }
+    }
+    cmake_config
         .define("wxdUSE_STC", if cfg!(feature = "stc") { "1" } else { "0" })
         .define("wxdUSE_XRC", if cfg!(feature = "xrc") { "1" } else { "0" })
         .define("wxdUSE_RICHTEXT", if cfg!(feature = "richtext") { "1" } else { "0" });
@@ -451,6 +462,10 @@ fn build_wxdragon_wrapper(
             println!("cargo:rustc-link-lib=framework=CoreMedia");
         }
 
+        if cfg!(feature = "webview") {
+            println!("cargo:rustc-link-lib=framework=WebKit");
+        }
+
         fix_isPlatformVersionAtLeast()?;
     } else if target_os == "windows" {
         // Detect cross-compilation from macOS to Windows
@@ -606,6 +621,29 @@ fn build_wxdragon_wrapper(
         }
         if cfg!(feature = "webview") {
             println!("cargo:rustc-link-lib=static=wx_gtk3u_webview-3.3");
+
+            // Link WebKitGTK for Linux WebView support
+            // Try webkit2gtk-4.1 first (newer), fall back to webkit2gtk-4.0 if not available
+            if let Ok(webkit) = pkg_config::Config::new().probe("webkit2gtk-4.1") {
+                for lib in webkit.libs {
+                    println!("cargo:rustc-link-lib={lib}");
+                }
+                println!("info: Using webkit2gtk-4.1 for WebView support");
+            } else if let Ok(webkit) = pkg_config::Config::new().probe("webkit2gtk-4.0") {
+                for lib in webkit.libs {
+                    println!("cargo:rustc-link-lib={lib}");
+                }
+                println!("info: Using webkit2gtk-4.0 for WebView support");
+            } else {
+                println!("cargo:warning=WebKitGTK not found. WebView feature may not work on Linux.");
+                println!("cargo:warning=Install webkit2gtk-4.1 or webkit2gtk-4.0 development packages:");
+                println!("cargo:warning=  Ubuntu/Debian: sudo apt install libwebkit2gtk-4.1-dev");
+                println!("cargo:warning=  or: sudo apt install libwebkit2gtk-4.0-dev");
+                println!("cargo:warning=  Fedora: sudo dnf install webkit2gtk4.1-devel");
+                println!("cargo:warning=  or: sudo dnf install webkit2gtk4.0-devel");
+                println!("cargo:warning=  Arch: sudo pacman -S webkit2gtk-4.1");
+                println!("cargo:warning=  or: sudo pacman -S webkit2gtk");
+            }
         }
         if cfg!(feature = "xrc") || cfg!(feature = "webview") {
             println!("cargo:rustc-link-lib=static=wx_gtk3u_html-3.3");

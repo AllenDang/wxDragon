@@ -70,6 +70,8 @@ pub mod treebook;
 pub mod treectrl;
 pub mod treelistctrl;
 pub mod virtual_list;
+#[cfg(feature = "webview")]
+pub mod webview;
 
 // Add ImageList module
 pub mod imagelist;
@@ -167,6 +169,12 @@ pub use treelistctrl::{
 pub use virtual_list::{VirtualList, VirtualListDataSource, VirtualListItemRenderer, VirtualListLayoutMode};
 
 // Re-export ImageList
+#[cfg(feature = "webview")]
+pub use webview::{
+    WebView, WebViewBrowsingDataTypes, WebViewBuilder, WebViewFindFlags, WebViewNavigationError, WebViewReloadFlags,
+    WebViewUserScriptInjectionTime, WebViewZoom, WebViewZoomType,
+};
+
 pub use imagelist::ImageList;
 
 pub mod tool;

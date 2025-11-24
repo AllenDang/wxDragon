@@ -22,7 +22,7 @@ jobs:
         submodules: recursive
     - name: Install deps
       if: runner.os == 'Linux'
-      run: sudo apt-get update && sudo apt-get install -y libgtk-3-dev libpng-dev libjpeg-dev libgl1-mesa-dev libglu1-mesa-dev libxkbcommon-dev libexpat1-dev libtiff-dev
+      run: sudo apt-get update && sudo apt-get install -y libgtk-3-dev libpng-dev libjpeg-dev libgl1-mesa-dev libglu1-mesa-dev libxkbcommon-dev libexpat1-dev libtiff-dev libwebkit2gtk-4.1-dev
 
     - run: rustup component add rustfmt clippy
 
@@ -32,7 +32,7 @@ jobs:
 
     - name: clippy
       if: ${{ !cancelled() }}
-      run: cargo clippy --features "aui,xrc,richtext,stc" -- -D warnings
+      run: cargo clippy --features "aui,xrc,richtext,stc,webview" -- -D warnings
 
     - name: Build default features
       if: ${{ !cancelled() }}
@@ -51,6 +51,13 @@ jobs:
       run: |
         cargo clean
         cargo build --package simple_stc_test
+
+    - name: Build webview_test example
+      if: ${{ !cancelled() }}
+      shell: bash
+      run: |
+        cargo clean
+        cargo build --package webview_test
 
     - name: Build feature example gallery
       if: ${{ !cancelled() }}
@@ -141,12 +148,12 @@ jobs:
         submodules: recursive
     - name: Install deps
       if: runner.os == 'Linux'
-      run: sudo apt-get update && sudo apt-get install -y libgtk-3-dev libpng-dev libjpeg-dev libgl1-mesa-dev libglu1-mesa-dev libxkbcommon-dev libexpat1-dev libtiff-dev
+      run: sudo apt-get update && sudo apt-get install -y libgtk-3-dev libpng-dev libjpeg-dev libgl1-mesa-dev libglu1-mesa-dev libxkbcommon-dev libexpat1-dev libtiff-dev libwebkit2gtk-4.1-dev
 
     - run: rustup component add rustfmt clippy
 
     - name: Run tests
-      run: cargo test --features "aui,xrc,richtext,stc" --all -- --nocapture
+      run: cargo test --features "aui,xrc,richtext,stc,webview" --all -- --nocapture
 
   linux-to-windows-build:
     runs-on: ubuntu-latest
@@ -169,4 +176,4 @@ jobs:
 
     - run: rustup target add x86_64-pc-windows-gnu i686-pc-windows-gnu
 
-    - run: cargo zigbuild --target x86_64-pc-windows-gnu --features "aui,xrc,richtext,stc" --release
+    - run: cargo zigbuild --target x86_64-pc-windows-gnu --features "aui,xrc,richtext,stc,webview" --release
