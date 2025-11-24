@@ -221,6 +221,8 @@ jobs:
 
       - name: Configure wxWidgets build (Non-Windows GNU)
         if: steps.check_release.outputs.skip_build != 'true' && matrix.target != 'x86_64-pc-windows-gnu'
+        env:
+          CMAKE_TLS_VERIFY: "0"
         run: |
           mkdir -p build
           cd build
@@ -334,6 +336,8 @@ jobs:
           
       - name: Configure wxWidgets build (Windows GNU)
         if: steps.check_release.outputs.skip_build != 'true' && matrix.target == 'x86_64-pc-windows-gnu'
+        env:
+          CMAKE_TLS_VERIFY: "0"
         run: |
           # Verify tools are available
           echo "Checking build tools..."
@@ -381,6 +385,8 @@ jobs:
 
       - name: Build wxWidgets (Non-Windows GNU)
         if: steps.check_release.outputs.skip_build != 'true' && matrix.target != 'x86_64-pc-windows-gnu'
+        env:
+          CMAKE_TLS_VERIFY: "0"
         run: |
           cd build
           
@@ -398,6 +404,8 @@ jobs:
           
       - name: Build wxWidgets (Windows GNU)
         if: steps.check_release.outputs.skip_build != 'true' && matrix.target == 'x86_64-pc-windows-gnu'
+        env:
+          CMAKE_TLS_VERIFY: "0"
         run: |
           cd build
           

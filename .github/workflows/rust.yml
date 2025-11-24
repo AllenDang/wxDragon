@@ -176,4 +176,7 @@ jobs:
 
     - run: rustup target add x86_64-pc-windows-gnu i686-pc-windows-gnu
 
-    - run: cargo zigbuild --target x86_64-pc-windows-gnu --features "aui,xrc,richtext,stc,webview" --release
+    - name: Build with zigbuild (cross-compile to Windows)
+      env:
+        CMAKE_TLS_VERIFY: "0"
+      run: cargo zigbuild --target x86_64-pc-windows-gnu --features "aui,xrc,richtext,stc,webview" --release
