@@ -303,6 +303,33 @@ pub trait WxWidget: std::any::Any {
         }
     }
 
+    /// Repaints all invalid areas of the window immediately.
+    ///
+    /// This function forces an immediate repaint of any areas marked as invalid
+    /// by previous calls to `refresh()`. Unlike `refresh()` which only marks
+    /// areas as needing repaint, `update()` causes the paint event to be processed
+    /// immediately rather than waiting for the next event loop iteration.
+    ///
+    /// This is typically used when you need to ensure the window is redrawn
+    /// before continuing with other operations, such as during animation or
+    /// progress display.
+    ///
+    /// # Example
+    /// ```ignore
+    /// // Mark the window as needing repaint
+    /// window.refresh(true, None);
+    /// // Force immediate repaint
+    /// window.update();
+    /// ```
+    fn update(&self) {
+        let window_ptr = self.handle_ptr();
+        if !window_ptr.is_null() {
+            unsafe {
+                ffi::wxd_Window_Update(window_ptr);
+            }
+        }
+    }
+
     /// Sets the tooltip string for this widget.
     fn set_tooltip(&self, tip: &str) {
         let handle = self.handle_ptr();

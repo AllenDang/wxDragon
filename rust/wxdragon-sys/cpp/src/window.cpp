@@ -120,6 +120,15 @@ wxd_Window_Refresh(wxd_Window_t* window, int eraseBackground, const wxd_Rect* re
 }
 
 WXD_EXPORTED void
+wxd_Window_Update(wxd_Window_t* window)
+{
+    wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
+    if (wx_window) {
+        wx_window->Update();
+    }
+}
+
+WXD_EXPORTED void
 wxd_Window_Fit(wxd_Window_t* window)
 {
     wxWindow* win = (wxWindow*)window;

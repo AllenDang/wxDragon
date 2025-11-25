@@ -27,6 +27,8 @@ wxd_Window_SetMinSize(wxd_Window_t* window, wxd_Size size);
 WXD_EXPORTED void
 wxd_Window_Refresh(wxd_Window_t* window, int eraseBackground, const wxd_Rect* rect);
 WXD_EXPORTED void
+wxd_Window_Update(wxd_Window_t* window);
+WXD_EXPORTED void
 wxd_Window_SetToolTip(wxd_Window_t* window, const char* tipString);
 
 // Size and position related functions
