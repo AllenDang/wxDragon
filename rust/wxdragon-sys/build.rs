@@ -154,9 +154,22 @@ fn build_wxdragon_wrapper(
     cmake_config.define("WXWIDGETS_LIB_DIR", wxwidgets_source_path);
     cmake_config.define("WXWIDGETS_BUILD_DIR", wxwidgets_build_dir);
 
-    // Check for CMAKE_TLS_VERIFY environment variable (used in CI to bypass SSL verification)
-    // Pass it both as environment variable and CMake definition to ensure it reaches nested builds
-    if let Ok(tls_verify) = std::env::var("CMAKE_TLS_VERIFY") {
+    // Handle CMAKE_TLS_VERIFY for SSL certificate verification during downloads
+    // On Windows with webview feature, we need to download WebView2 SDK from NuGet
+    // Some environments have SSL certificate issues, so we automatically disable verification
+    // Users can override by setting CMAKE_TLS_VERIFY environment variable explicitly
+    let tls_verify = if let Ok(val) = std::env::var("CMAKE_TLS_VERIFY") {
+        // User explicitly set it, use their value
+        val
+    } else if target_os == "windows" && cfg!(feature = "webview") {
+        // Automatically disable for Windows webview builds to avoid SSL issues with WebView2 SDK download
+        "0".to_string()
+    } else {
+        // Default: let CMake use its default behavior (verification enabled)
+        String::new()
+    };
+
+    if !tls_verify.is_empty() {
         cmake_config.env("CMAKE_TLS_VERIFY", &tls_verify);
         cmake_config.define("CMAKE_TLS_VERIFY", &tls_verify);
     }
