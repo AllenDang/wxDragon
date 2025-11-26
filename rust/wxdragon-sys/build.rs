@@ -415,12 +415,14 @@ fn build_wxdragon_wrapper(
             if cfg!(feature = "webview") {
                 let webview2_arch = if target == "i686-pc-windows-msvc" { "x86" } else { "x64" };
 
-                // wxWidgets downloads WebView2 to CMAKE_CURRENT_BINARY_DIR/packages in lib/webview/CMakeLists.txt
-                // So the actual path is: wxwidgets_build_dir/lib/webview/packages/Microsoft.Web.WebView2.*/
+                // wxWidgets downloads WebView2 to CMAKE_CURRENT_BINARY_DIR/packages in build/cmake/lib/webview/CMakeLists.txt
+                // The wxWidgets CMake uses add_subdirectory(build/cmake/lib libs), so the binary dir is "libs" (plural)
+                // Then webview is added via add_subdirectory(${LIB}) which creates "libs/webview/"
+                // So the actual path is: wxwidgets_build_dir/libs/webview/packages/Microsoft.Web.WebView2.*/
                 let webview2_search_paths = [
-                    "lib/webview/packages", // wxWidgets webview CMake build location
+                    "libs/webview/packages", // wxWidgets webview CMake build location (note: "libs" plural)
+                    "lib/webview/packages",  // Alternative path in case CMake structure changes
                     "build/packages",
-                    "lib/packages",
                     "packages",
                 ];
 
@@ -442,6 +444,9 @@ fn build_wxdragon_wrapper(
                                     let webview2_lib_path = entry.path().join(format!("build/native/{}", webview2_arch));
                                     if webview2_lib_path.exists() {
                                         println!("cargo:rustc-link-search=native={}", webview2_lib_path.display());
+                                        // Explicitly link WebView2LoaderStatic - the #pragma comment in wxWidgets
+                                        // only works during MSVC compilation, not during Rust's final link stage
+                                        println!("cargo:rustc-link-lib=static=WebView2LoaderStatic");
                                         println!(
                                             "info: Added WebView2 {} library path: {}",
                                             webview2_arch,
