@@ -160,9 +160,18 @@ impl WebView {
             panic!("Failed to create WebView widget");
         }
 
-        WebView {
+        let webview = WebView {
             window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
+        };
+
+        // Workaround for IE backend: Set zoom type to Layout to avoid assertion failures
+        // IE's text zoom API (OLECMDID_ZOOM) doesn't work reliably, but optical zoom does
+        let backend_name = webview.get_backend();
+        if backend_name.contains("IE") || backend_name.contains("wxWebViewIE") {
+            webview.set_zoom_type(WebViewZoomType::Layout);
         }
+
+        webview
     }
 
     // --- Navigation ---
@@ -574,6 +583,26 @@ impl WebView {
 
     pub fn get_native_backend(&self) -> *mut std::os::raw::c_void {
         unsafe { ffi::wxd_WebView_GetNativeBackend(self.as_ptr()) }
+    }
+
+    pub fn get_backend(&self) -> String {
+        unsafe {
+            let mut buffer: Vec<c_char> = vec![0; 256];
+            let len = ffi::wxd_WebView_GetBackend(self.as_ptr(), buffer.as_mut_ptr(), buffer.len() as i32);
+
+            if len < 0 {
+                return String::new();
+            }
+
+            // Check if we need a larger buffer
+            if len >= buffer.len() as i32 {
+                buffer = vec![0; len as usize + 1];
+                ffi::wxd_WebView_GetBackend(self.as_ptr(), buffer.as_mut_ptr(), buffer.len() as i32);
+            }
+
+            let byte_slice = std::slice::from_raw_parts(buffer.as_ptr() as *const u8, len as usize);
+            String::from_utf8_lossy(byte_slice).to_string()
+        }
     }
 
     fn as_ptr(&self) -> *mut ffi::wxd_WebView_t {

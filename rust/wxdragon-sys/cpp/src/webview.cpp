@@ -531,6 +531,18 @@ wxd_WebView_GetNativeBackend(wxd_WebView_t* self)
     return webview ? webview->GetNativeBackend() : nullptr;
 }
 
+WXD_EXPORTED int
+wxd_WebView_GetBackend(wxd_WebView_t* self, char* buffer, int len)
+{
+    wxWebView* webview = (wxWebView*)self;
+    if (!webview)
+        return 0;
+
+    // Get the class name to determine the backend
+    wxString backendName = webview->GetClassInfo()->GetClassName();
+    return wxd_cpp_utils::copy_wxstring_to_buffer(backendName, buffer, len);
+}
+
 } // extern "C"
 
 #endif // wxdUSE_WEBVIEW
