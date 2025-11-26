@@ -108,6 +108,13 @@ bitflags::bitflags! {
     }
 }
 
+// WebView Backend identifiers
+// These correspond to wxWidgets backend names
+pub const WEBVIEW_BACKEND_DEFAULT: &str = "";
+pub const WEBVIEW_BACKEND_IE: &str = "wxWebViewIE";
+pub const WEBVIEW_BACKEND_EDGE: &str = "wxWebViewEdge";
+pub const WEBVIEW_BACKEND_WEBKIT: &str = "wxWebViewWebKit";
+
 /// Represents a wxWebView widget.
 #[derive(Clone)]
 pub struct WebView {
@@ -121,6 +128,7 @@ impl WebView {
     }
 
     /// Creates a new WebView (low-level constructor used by the builder)
+    #[allow(clippy::too_many_arguments)]
     fn new_impl(
         parent_ptr: *mut ffi::wxd_Window_t,
         id: Id,
@@ -129,9 +137,11 @@ impl WebView {
         size: Size,
         style: i64,
         name: Option<&str>,
+        backend: Option<&str>,
     ) -> Self {
         let c_url = url.map(|s| CString::new(s).unwrap_or_default());
         let c_name = name.map(|s| CString::new(s).unwrap_or_default());
+        let c_backend = backend.map(|s| CString::new(s).unwrap_or_default());
 
         let ptr = unsafe {
             ffi::wxd_WebView_Create(
@@ -142,6 +152,7 @@ impl WebView {
                 size.into(),
                 style as _,
                 c_name.map(|c| c.as_ptr()).unwrap_or(std::ptr::null()),
+                c_backend.map(|c| c.as_ptr()).unwrap_or(std::ptr::null()),
             )
         };
 
@@ -576,7 +587,8 @@ widget_builder!(
     style_type: WebViewStyle,
     fields: {
         url: Option<String> = None,
-        name: String = "webView".to_string()
+        name: String = "webView".to_string(),
+        backend: Option<String> = None
     },
     build_impl: |slf| {
         let parent_ptr = slf.parent.handle_ptr();
@@ -588,6 +600,7 @@ widget_builder!(
             slf.size,
             slf.style.bits(),
             Some(slf.name.as_str()),
+            slf.backend.as_deref(),
         )
     }
 );

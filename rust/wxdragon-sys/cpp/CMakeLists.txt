@@ -19,6 +19,7 @@ set(wxdUSE_MEDIACTRL OFF CACHE BOOL "Use Media Ctrl widgets, not completed yet, 
 set(wxdUSE_STC ON CACHE BOOL "Use Styled Text Control widget")
 set(wxdUSE_XRC ON CACHE BOOL "Use XML Resource (XRC) support")
 set(wxdUSE_WEBVIEW ON CACHE BOOL "Use the Webview widget")
+set(wxdUSE_WEBVIEW_EDGE ON CACHE BOOL "Use Edge/WebView2 backend (modern Chromium-based, preferred over IE)")
 set(wxdUSE_RICHTEXT ON CACHE BOOL "Use Rich Text Control widget")
 
 # --- Output Directories ---
@@ -32,6 +33,8 @@ set(wxUSE_MEDIACTRL ${wxdUSE_MEDIACTRL} CACHE BOOL "Use Media Ctrl widgets")
 set(wxUSE_STC ${wxdUSE_STC} CACHE BOOL "Use Styled Text Control widget")
 set(wxUSE_XRC ON CACHE BOOL "Use XML Resource (XRC) support, always enabled, cannot reuse from wxdUSE_XRC. We don't know the reason why.")
 set(wxUSE_WEBVIEW ${wxdUSE_WEBVIEW} CACHE BOOL "Use the Webview widget")
+set(wxUSE_WEBVIEW_EDGE ${wxdUSE_WEBVIEW_EDGE} CACHE BOOL "Use Edge/WebView2 backend")
+set(wxUSE_WEBVIEW_IE ON CACHE BOOL "Use IE backend (fallback for systems without WebView2)")
 set(wxUSE_RICHTEXT ${wxdUSE_RICHTEXT} CACHE BOOL "Use Rich Text Control widget")
 
 set(wxUSE_GUI ON CACHE BOOL "Use wxWidgets GUI features")

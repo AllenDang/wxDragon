@@ -13,7 +13,7 @@ typedef struct wxd_WebView wxd_WebView_t;
 // Creation
 WXD_EXPORTED wxd_WebView_t* wxd_WebView_Create(wxd_Window_t* parent, wxd_Id id, const char* url,
                                                wxd_Point pos, wxd_Size size, long style,
-                                               const char* name);
+                                               const char* name, const char* backend);
 
 // Navigation
 WXD_EXPORTED void wxd_WebView_LoadURL(wxd_WebView_t* self, const char* url);

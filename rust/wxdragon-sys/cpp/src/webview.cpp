@@ -15,14 +15,15 @@ extern "C" {
 
 WXD_EXPORTED wxd_WebView_t*
 wxd_WebView_Create(wxd_Window_t* parent, wxd_Id id, const char* url, wxd_Point pos, wxd_Size size,
-                   long style, const char* name)
+                   long style, const char* name, const char* backend)
 {
     wxWindow* parentWin = (wxWindow*)parent;
     wxString urlStr = url ? wxString::FromUTF8(url) : wxString();
     wxString nameStr = name ? wxString::FromUTF8(name) : wxWebViewNameStr;
+    wxString backendStr = backend ? wxString::FromUTF8(backend) : wxWebViewBackendDefault;
 
     wxWebView* webview = wxWebView::New(parentWin, id, urlStr, wxd_cpp_utils::to_wx(pos),
-                                        wxd_cpp_utils::to_wx(size), wxWebViewBackendDefault, style,
+                                        wxd_cpp_utils::to_wx(size), backendStr, style,
                                         nameStr);
 
     return (wxd_WebView_t*)webview;

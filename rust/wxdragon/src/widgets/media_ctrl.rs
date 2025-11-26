@@ -1,4 +1,4 @@
-use crate::event::{Event, EventType, WindowEvents};
+use crate::event::{Event, EventType};
 use crate::geometry::{Point, Size};
 use crate::id::Id;
 use crate::implement_widget_traits_with_target;

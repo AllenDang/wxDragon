@@ -171,8 +171,9 @@ pub use virtual_list::{VirtualList, VirtualListDataSource, VirtualListItemRender
 // Re-export ImageList
 #[cfg(feature = "webview")]
 pub use webview::{
-    WebView, WebViewBrowsingDataTypes, WebViewBuilder, WebViewFindFlags, WebViewNavigationError, WebViewReloadFlags,
-    WebViewUserScriptInjectionTime, WebViewZoom, WebViewZoomType,
+    WEBVIEW_BACKEND_DEFAULT, WEBVIEW_BACKEND_EDGE, WEBVIEW_BACKEND_IE, WEBVIEW_BACKEND_WEBKIT, WebView, WebViewBrowsingDataTypes,
+    WebViewBuilder, WebViewFindFlags, WebViewNavigationError, WebViewReloadFlags, WebViewUserScriptInjectionTime, WebViewZoom,
+    WebViewZoomType,
 };
 
 pub use imagelist::ImageList;

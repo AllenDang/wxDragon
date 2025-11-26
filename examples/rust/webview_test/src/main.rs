@@ -1,7 +1,7 @@
 use wxdragon::event::WebViewEvents;
 use wxdragon::prelude::*;
 use wxdragon::sizers::SizerFlag;
-use wxdragon::widgets::{WebView, WebViewFindFlags, WebViewReloadFlags, WebViewUserScriptInjectionTime};
+use wxdragon::widgets::{WebView, WebViewFindFlags, WebViewReloadFlags, WebViewUserScriptInjectionTime, WEBVIEW_BACKEND_DEFAULT};
 
 fn main() {
     wxdragon::main(|_app| {
@@ -37,7 +37,13 @@ fn main() {
         sizer.add_sizer(&toolbar_sizer, 0, SizerFlag::Expand, 0);
 
         // WebView
-        let webview = WebView::builder(&panel).build();
+        // Uses WEBVIEW_BACKEND_DEFAULT which automatically prefers Edge over IE on Windows
+        // when WebView2 is available. You can also explicitly specify:
+        // - WEBVIEW_BACKEND_EDGE for Edge/Chromium backend (modern, recommended)
+        // - WEBVIEW_BACKEND_IE for Internet Explorer backend (legacy)
+        let webview = WebView::builder(&panel)
+            .with_backend(Some(WEBVIEW_BACKEND_DEFAULT.to_string()))
+            .build();
 
         // Enable dev tools and context menu
         webview.enable_access_to_dev_tools(true);
