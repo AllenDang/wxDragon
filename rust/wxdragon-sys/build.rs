@@ -419,22 +419,22 @@ fn build_wxdragon_wrapper(
 
                 for search_base in &webview2_search_paths {
                     let packages_dir = wxdragon_sys_build_dir.join(search_base);
-                    if packages_dir.exists() {
-                        if let Ok(entries) = std::fs::read_dir(&packages_dir) {
-                            for entry in entries.flatten() {
-                                let entry_name = entry.file_name();
-                                let entry_name_str = entry_name.to_string_lossy();
-                                if entry_name_str.starts_with("Microsoft.Web.WebView2") {
-                                    // Add architecture-specific library path for WebView2LoaderStatic.lib
-                                    let webview2_lib_path = entry.path().join(format!("build/native/{}", webview2_arch));
-                                    if webview2_lib_path.exists() {
-                                        println!("cargo:rustc-link-search=native={}", webview2_lib_path.display());
-                                        println!(
-                                            "info: Added WebView2 {} library path: {}",
-                                            webview2_arch,
-                                            webview2_lib_path.display()
-                                        );
-                                    }
+                    if packages_dir.exists()
+                        && let Ok(entries) = std::fs::read_dir(&packages_dir)
+                    {
+                        for entry in entries.flatten() {
+                            let entry_name = entry.file_name();
+                            let entry_name_str = entry_name.to_string_lossy();
+                            if entry_name_str.starts_with("Microsoft.Web.WebView2") {
+                                // Add architecture-specific library path for WebView2LoaderStatic.lib
+                                let webview2_lib_path = entry.path().join(format!("build/native/{}", webview2_arch));
+                                if webview2_lib_path.exists() {
+                                    println!("cargo:rustc-link-search=native={}", webview2_lib_path.display());
+                                    println!(
+                                        "info: Added WebView2 {} library path: {}",
+                                        webview2_arch,
+                                        webview2_lib_path.display()
+                                    );
                                 }
                             }
                         }
@@ -579,6 +579,9 @@ fn build_wxdragon_wrapper(
                 println!("cargo:rustc-link-arg=-static-libgcc");
                 println!("cargo:rustc-link-arg=-static-libstdc++");
             }
+            // Note: For webview feature with MinGW, wxWidgets uses dynamic loading of WebView2Loader.dll
+            // at runtime (wxUSE_WEBVIEW_EDGE_STATIC=OFF in CMakeLists.txt), so no compile-time linking needed.
+            // The WebView2Loader.dll must be present on the target system or alongside the executable.
         } else {
             let debug_suffix = if is_debug { "d" } else { "" };
 
