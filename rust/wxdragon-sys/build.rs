@@ -152,7 +152,7 @@ fn build_wxdragon_wrapper(
     let mut cmake_config = cmake::Config::new(libwxdragon_cmake_source_dir);
     cmake_config.out_dir(&wxdragon_sys_build_dir);
     cmake_config.define("WXWIDGETS_LIB_DIR", wxwidgets_source_path);
-    cmake_config.define("WXWIDGETS_BUILD_DIR", wxwidgets_build_dir);
+    cmake_config.define("WXWIDGETS_BUILD_DIR", &wxwidgets_build_dir);
 
     // Handle CMAKE_TLS_VERIFY for SSL certificate verification during downloads
     // On Windows with webview feature, we need to download WebView2 SDK from NuGet
@@ -415,30 +415,54 @@ fn build_wxdragon_wrapper(
             if cfg!(feature = "webview") {
                 let webview2_arch = if target == "i686-pc-windows-msvc" { "x86" } else { "x64" };
 
-                let webview2_search_paths = ["build/packages", "lib/packages"];
+                // wxWidgets downloads WebView2 to CMAKE_CURRENT_BINARY_DIR/packages in lib/webview/CMakeLists.txt
+                // So the actual path is: wxwidgets_build_dir/lib/webview/packages/Microsoft.Web.WebView2.*/
+                let webview2_search_paths = [
+                    "lib/webview/packages", // wxWidgets webview CMake build location
+                    "build/packages",
+                    "lib/packages",
+                    "packages",
+                ];
 
-                for search_base in &webview2_search_paths {
-                    let packages_dir = wxdragon_sys_build_dir.join(search_base);
-                    if packages_dir.exists()
-                        && let Ok(entries) = std::fs::read_dir(&packages_dir)
-                    {
-                        for entry in entries.flatten() {
-                            let entry_name = entry.file_name();
-                            let entry_name_str = entry_name.to_string_lossy();
-                            if entry_name_str.starts_with("Microsoft.Web.WebView2") {
-                                // Add architecture-specific library path for WebView2LoaderStatic.lib
-                                let webview2_lib_path = entry.path().join(format!("build/native/{}", webview2_arch));
-                                if webview2_lib_path.exists() {
-                                    println!("cargo:rustc-link-search=native={}", webview2_lib_path.display());
-                                    println!(
-                                        "info: Added WebView2 {} library path: {}",
-                                        webview2_arch,
-                                        webview2_lib_path.display()
-                                    );
+                // Search in both wxdragon_sys build dir and wxwidgets build dir
+                let search_dirs = [&wxdragon_sys_build_dir, &wxwidgets_build_dir];
+
+                let mut found_webview2 = false;
+                'outer: for search_dir in &search_dirs {
+                    for search_base in &webview2_search_paths {
+                        let packages_dir = search_dir.join(search_base);
+                        if packages_dir.exists()
+                            && let Ok(entries) = std::fs::read_dir(&packages_dir)
+                        {
+                            for entry in entries.flatten() {
+                                let entry_name = entry.file_name();
+                                let entry_name_str = entry_name.to_string_lossy();
+                                if entry_name_str.starts_with("Microsoft.Web.WebView2") {
+                                    // Add architecture-specific library path for WebView2LoaderStatic.lib
+                                    let webview2_lib_path = entry.path().join(format!("build/native/{}", webview2_arch));
+                                    if webview2_lib_path.exists() {
+                                        println!("cargo:rustc-link-search=native={}", webview2_lib_path.display());
+                                        println!(
+                                            "info: Added WebView2 {} library path: {}",
+                                            webview2_arch,
+                                            webview2_lib_path.display()
+                                        );
+                                        found_webview2 = true;
+                                        break 'outer;
+                                    }
                                 }
                             }
                         }
                     }
+                }
+
+                if !found_webview2 {
+                    println!(
+                        "cargo:warning=WebView2 SDK not found. Searched in: {:?} and {:?}",
+                        wxdragon_sys_build_dir, wxwidgets_build_dir
+                    );
+                    println!("cargo:warning=WebView feature is enabled but WebView2LoaderStatic.lib may not be found.");
+                    println!("cargo:warning=If linking fails, ensure wxWidgets downloaded the WebView2 NuGet package.");
                 }
             }
         }
