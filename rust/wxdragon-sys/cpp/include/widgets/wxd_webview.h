@@ -104,6 +104,9 @@ WXD_EXPORTED void wxd_WebView_RemoveAllUserScripts(wxd_WebView_t* self);
 WXD_EXPORTED void* wxd_WebView_GetNativeBackend(wxd_WebView_t* self);
 WXD_EXPORTED int wxd_WebView_GetBackend(wxd_WebView_t* self, char* buffer, int len);
 
+// Static utility functions
+WXD_EXPORTED bool wxd_WebView_IsBackendAvailable(const char* backend);
+
 #ifdef __cplusplus
 }
 #endif

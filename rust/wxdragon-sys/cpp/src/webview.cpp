@@ -20,7 +20,10 @@ wxd_WebView_Create(wxd_Window_t* parent, wxd_Id id, const char* url, wxd_Point p
     wxWindow* parentWin = (wxWindow*)parent;
     wxString urlStr = url ? wxString::FromUTF8(url) : wxString();
     wxString nameStr = name ? wxString::FromUTF8(name) : wxWebViewNameStr;
-    wxString backendStr = backend ? wxString::FromUTF8(backend) : wxWebViewBackendDefault;
+    // Use wxWebViewBackendDefault if backend is null or empty string
+    // On Windows, wxWebViewBackendDefault is "" which triggers Edge/IE auto-selection
+    // On macOS/Linux, wxWebViewBackendDefault is "wxWebViewWebKit"
+    wxString backendStr = (!backend || backend[0] == '\0') ? wxWebViewBackendDefault : wxString::FromUTF8(backend);
 
     wxWebView* webview = wxWebView::New(parentWin, id, urlStr, wxd_cpp_utils::to_wx(pos),
                                         wxd_cpp_utils::to_wx(size), backendStr, style,
@@ -151,7 +154,23 @@ WXD_EXPORTED int
 wxd_WebView_GetZoom(wxd_WebView_t* self)
 {
     wxWebView* webview = (wxWebView*)self;
-    return webview ? (int)webview->GetZoom() : 0;
+    if (!webview)
+        return 0;
+
+#ifdef __WXMSW__
+    // On Windows with IE backend, GetZoom() internally calls GetZoomFactor()
+    // which can trigger an assertion failure with the optical zoom API.
+    // Detect IE backend and return a safe default instead of crashing.
+    wxString backendName = webview->GetClassInfo()->GetClassName();
+    if (backendName.Contains("IE")) {
+        // IE backend - GetZoom is unreliable, return medium as default
+        // The zoom type should have been set to Layout at creation time
+        // to make SetZoom work, but GetZoom may still fail
+        return (int)wxWEBVIEW_ZOOM_MEDIUM;
+    }
+#endif
+
+    return (int)webview->GetZoom();
 }
 
 WXD_EXPORTED int
@@ -165,18 +184,41 @@ WXD_EXPORTED void
 wxd_WebView_SetZoom(wxd_WebView_t* self, int zoom)
 {
     wxWebView* webview = (wxWebView*)self;
-    if (webview) {
-        webview->SetZoom((wxWebViewZoom)zoom);
+    if (!webview)
+        return;
+
+#ifdef __WXMSW__
+    // On Windows with IE backend, SetZoom internally calls SetIEOpticalZoomFactor
+    // which can trigger assertion failures. Skip zoom operations on IE backend
+    // as they are unreliable.
+    wxString backendName = webview->GetClassInfo()->GetClassName();
+    if (backendName.Contains("IE")) {
+        // IE backend - SetZoom is unreliable, skip the operation
+        return;
     }
+#endif
+
+    webview->SetZoom((wxWebViewZoom)zoom);
 }
 
 WXD_EXPORTED void
 wxd_WebView_SetZoomType(wxd_WebView_t* self, int zoomType)
 {
     wxWebView* webview = (wxWebView*)self;
-    if (webview) {
-        webview->SetZoomType((wxWebViewZoomType)zoomType);
+    if (!webview)
+        return;
+
+#ifdef __WXMSW__
+    // On Windows with IE backend, zoom operations are unreliable and can
+    // trigger assertion failures. Skip all zoom type changes on IE.
+    wxString backendName = webview->GetClassInfo()->GetClassName();
+    if (backendName.Contains("IE")) {
+        // IE backend - skip zoom type changes
+        return;
     }
+#endif
+
+    webview->SetZoomType((wxWebViewZoomType)zoomType);
 }
 
 WXD_EXPORTED int
@@ -405,15 +447,41 @@ WXD_EXPORTED float
 wxd_WebView_GetZoomFactor(wxd_WebView_t* self)
 {
     wxWebView* webview = (wxWebView*)self;
-    return webview ? webview->GetZoomFactor() : 1.0f;
+    if (!webview)
+        return 1.0f;
+
+#ifdef __WXMSW__
+    // On Windows with IE backend, GetZoomFactor() calls GetIEOpticalZoomFactor()
+    // which triggers an assertion failure. Return 1.0 as safe default.
+    wxString backendName = webview->GetClassInfo()->GetClassName();
+    if (backendName.Contains("IE")) {
+        // IE backend - GetZoomFactor is unreliable, return 1.0 (100%)
+        return 1.0f;
+    }
+#endif
+
+    return webview->GetZoomFactor();
 }
 
 WXD_EXPORTED void
 wxd_WebView_SetZoomFactor(wxd_WebView_t* self, float zoom)
 {
     wxWebView* webview = (wxWebView*)self;
-    if (webview)
-        webview->SetZoomFactor(zoom);
+    if (!webview)
+        return;
+
+#ifdef __WXMSW__
+    // On Windows with IE backend, SetZoomFactor uses optical zoom which
+    // may not work reliably. Skip to avoid potential issues.
+    // Use SetZoom() with discrete zoom levels instead for IE.
+    wxString backendName = webview->GetClassInfo()->GetClassName();
+    if (backendName.Contains("IE")) {
+        // IE backend - SetZoomFactor is unreliable, ignore the call
+        return;
+    }
+#endif
+
+    webview->SetZoomFactor(zoom);
 }
 
 // Page Loading
@@ -541,6 +609,13 @@ wxd_WebView_GetBackend(wxd_WebView_t* self, char* buffer, int len)
     // Get the class name to determine the backend
     wxString backendName = webview->GetClassInfo()->GetClassName();
     return wxd_cpp_utils::copy_wxstring_to_buffer(backendName, buffer, len);
+}
+
+WXD_EXPORTED bool
+wxd_WebView_IsBackendAvailable(const char* backend)
+{
+    wxString backendStr = backend ? wxString::FromUTF8(backend) : wxWebViewBackendDefault;
+    return wxWebView::IsBackendAvailable(backendStr);
 }
 
 } // extern "C"

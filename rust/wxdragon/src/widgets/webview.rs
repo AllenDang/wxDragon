@@ -108,11 +108,29 @@ bitflags::bitflags! {
     }
 }
 
-// WebView Backend identifiers
-// These correspond to wxWidgets backend names
+/// WebView Backend identifiers - these correspond to wxWidgets backend names.
+///
+/// # Platform Support
+/// - **Windows**: Prefers Edge (WebView2/Chromium) when available, falls back to IE (Trident).
+///   The Edge backend requires the WebView2 runtime to be installed.
+/// - **macOS**: Uses WebKit (Safari engine).
+/// - **Linux**: Uses WebKit2GTK.
+///
+/// # IE Backend Limitations
+/// The IE backend (used when Edge/WebView2 is not available on Windows) has significant
+/// limitations:
+/// - Many modern websites may not render correctly or may show a white screen
+/// - Some zoom operations are not fully supported
+/// - JavaScript execution may be limited
+/// - For best results on Windows, ensure the WebView2 runtime is installed
+
+/// Default backend for the current platform.
 pub const WEBVIEW_BACKEND_DEFAULT: &str = "";
+/// Legacy Internet Explorer (Trident) backend for Windows. Limited compatibility with modern websites.
 pub const WEBVIEW_BACKEND_IE: &str = "wxWebViewIE";
+/// Modern Edge (WebView2/Chromium) backend for Windows. Requires WebView2 runtime.
 pub const WEBVIEW_BACKEND_EDGE: &str = "wxWebViewEdge";
+/// WebKit backend for macOS and Linux.
 pub const WEBVIEW_BACKEND_WEBKIT: &str = "wxWebViewWebKit";
 
 /// Represents a wxWebView widget.
@@ -143,16 +161,21 @@ impl WebView {
         let c_name = name.map(|s| CString::new(s).unwrap_or_default());
         let c_backend = backend.map(|s| CString::new(s).unwrap_or_default());
 
+        // Get raw pointers while keeping CStrings alive
+        let url_ptr = c_url.as_ref().map(|c| c.as_ptr()).unwrap_or(std::ptr::null());
+        let name_ptr = c_name.as_ref().map(|c| c.as_ptr()).unwrap_or(std::ptr::null());
+        let backend_ptr = c_backend.as_ref().map(|c| c.as_ptr()).unwrap_or(std::ptr::null());
+
         let ptr = unsafe {
             ffi::wxd_WebView_Create(
                 parent_ptr,
                 id,
-                c_url.map(|c| c.as_ptr()).unwrap_or(std::ptr::null()),
+                url_ptr,
                 pos.into(),
                 size.into(),
                 style as _,
-                c_name.map(|c| c.as_ptr()).unwrap_or(std::ptr::null()),
-                c_backend.map(|c| c.as_ptr()).unwrap_or(std::ptr::null()),
+                name_ptr,
+                backend_ptr,
             )
         };
 
@@ -164,12 +187,8 @@ impl WebView {
             window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
         };
 
-        // Workaround for IE backend: Set zoom type to Layout to avoid assertion failures
-        // IE's text zoom API (OLECMDID_ZOOM) doesn't work reliably, but optical zoom does
-        let backend_name = webview.get_backend();
-        if backend_name.contains("IE") || backend_name.contains("wxWebViewIE") {
-            webview.set_zoom_type(WebViewZoomType::Layout);
-        }
+        // Note: Zoom operations on IE backend are disabled in the C++ layer
+        // to avoid assertion failures. All zoom-related calls become no-ops on IE.
 
         webview
     }
@@ -603,6 +622,31 @@ impl WebView {
             let byte_slice = std::slice::from_raw_parts(buffer.as_ptr() as *const u8, len as usize);
             String::from_utf8_lossy(byte_slice).to_string()
         }
+    }
+
+    /// Checks if a specific WebView backend is available on the current system.
+    ///
+    /// # Arguments
+    /// * `backend` - The backend name to check. Use one of:
+    ///   - `WEBVIEW_BACKEND_EDGE` ("wxWebViewEdge") - Modern Edge/Chromium backend (Windows)
+    ///   - `WEBVIEW_BACKEND_IE` ("wxWebViewIE") - Legacy IE backend (Windows)
+    ///   - `WEBVIEW_BACKEND_WEBKIT` ("wxWebViewWebKit") - WebKit backend (macOS/Linux)
+    ///   - `WEBVIEW_BACKEND_DEFAULT` ("") - The default backend for the platform
+    ///
+    /// # Returns
+    /// `true` if the backend is available and can be used, `false` otherwise.
+    ///
+    /// # Example
+    /// ```no_run
+    /// use wxdragon::widgets::{WebView, WEBVIEW_BACKEND_EDGE};
+    ///
+    /// if WebView::is_backend_available(WEBVIEW_BACKEND_EDGE) {
+    ///     println!("Edge backend is available!");
+    /// }
+    /// ```
+    pub fn is_backend_available(backend: &str) -> bool {
+        let c_backend = CString::new(backend).unwrap_or_default();
+        unsafe { ffi::wxd_WebView_IsBackendAvailable(c_backend.as_ptr()) }
     }
 
     fn as_ptr(&self) -> *mut ffi::wxd_WebView_t {

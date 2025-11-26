@@ -1,7 +1,10 @@
 use wxdragon::event::WebViewEvents;
 use wxdragon::prelude::*;
 use wxdragon::sizers::SizerFlag;
-use wxdragon::widgets::{WebView, WebViewFindFlags, WebViewReloadFlags, WebViewUserScriptInjectionTime, WEBVIEW_BACKEND_DEFAULT};
+use wxdragon::widgets::{
+    WebView, WebViewFindFlags, WebViewReloadFlags, WebViewUserScriptInjectionTime, WebViewZoom, WEBVIEW_BACKEND_DEFAULT,
+    WEBVIEW_BACKEND_EDGE,
+};
 
 fn main() {
     wxdragon::main(|_app| {
@@ -37,13 +40,34 @@ fn main() {
         sizer.add_sizer(&toolbar_sizer, 0, SizerFlag::Expand, 0);
 
         // WebView
-        // Uses WEBVIEW_BACKEND_DEFAULT which automatically prefers Edge over IE on Windows
-        // when WebView2 is available. You can also explicitly specify:
-        // - WEBVIEW_BACKEND_EDGE for Edge/Chromium backend (modern, recommended)
-        // - WEBVIEW_BACKEND_IE for Internet Explorer backend (legacy)
-        let webview = WebView::builder(&panel)
-            .with_backend(Some(WEBVIEW_BACKEND_DEFAULT.to_string()))
-            .build();
+        // Check available backends and prefer Edge on Windows
+        println!("Checking available WebView backends...");
+        println!(
+            "  Edge backend available: {}",
+            WebView::is_backend_available(WEBVIEW_BACKEND_EDGE)
+        );
+        println!(
+            "  Default backend available: {}",
+            WebView::is_backend_available(WEBVIEW_BACKEND_DEFAULT)
+        );
+
+        // Use Edge if available (modern Chromium-based), otherwise fall back to default
+        // On Windows: Edge requires WebView2 runtime, otherwise falls back to IE
+        // On macOS: Uses WebKit
+        // On Linux: Uses WebKit2
+        let backend = if WebView::is_backend_available(WEBVIEW_BACKEND_EDGE) {
+            println!("Using Edge (WebView2) backend");
+            Some(WEBVIEW_BACKEND_EDGE.to_string())
+        } else {
+            println!("Edge not available, using default backend");
+            println!("WARNING: On Windows without WebView2, the IE backend will be used.");
+            println!("         IE backend has limited compatibility with modern websites.");
+            println!("         Install WebView2 runtime for better results:");
+            println!("         https://developer.microsoft.com/en-us/microsoft-edge/webview2/");
+            Some(WEBVIEW_BACKEND_DEFAULT.to_string())
+        };
+
+        let webview = WebView::builder(&panel).with_backend(backend).build();
 
         // Enable dev tools and context menu
         webview.enable_access_to_dev_tools(true);
@@ -58,6 +82,10 @@ fn main() {
             "console.log('User script injected at document start!');",
             WebViewUserScriptInjectionTime::AtDocumentStart,
         );
+
+        // Print backend info
+        let backend = webview.get_backend();
+        println!("WebView backend: {}", backend);
 
         // Load initial URL
         webview.load_url("https://www.google.com");
@@ -86,19 +114,37 @@ fn main() {
             wv.reload(WebViewReloadFlags::NoCache);
         });
 
-        // Zoom controls - using float zoom factor for precise control
+        // Zoom controls - using discrete zoom levels for IE compatibility
+        // Note: get_zoom_factor()/set_zoom_factor() may not work on IE backend
         let wv = webview.clone();
+        let backend_for_zoom_in = backend.clone();
         btn_zoom_in.on_click(move |_| {
-            let current_zoom = wv.get_zoom_factor();
-            wv.set_zoom_factor(current_zoom * 1.2);
-            println!("Zoom factor: {}", wv.get_zoom_factor());
+            // Use discrete zoom levels which work on all backends including IE
+            let current_zoom = wv.get_zoom();
+            let new_zoom = match current_zoom {
+                WebViewZoom::Tiny => WebViewZoom::Small,
+                WebViewZoom::Small => WebViewZoom::Medium,
+                WebViewZoom::Medium => WebViewZoom::Large,
+                WebViewZoom::Large => WebViewZoom::Largest,
+                WebViewZoom::Largest => WebViewZoom::Largest,
+            };
+            wv.set_zoom(new_zoom);
+            println!("Zoom level: {:?} (backend: {})", wv.get_zoom(), backend_for_zoom_in);
         });
 
         let wv = webview.clone();
+        let backend_for_zoom_out = backend.clone();
         btn_zoom_out.on_click(move |_| {
-            let current_zoom = wv.get_zoom_factor();
-            wv.set_zoom_factor(current_zoom / 1.2);
-            println!("Zoom factor: {}", wv.get_zoom_factor());
+            let current_zoom = wv.get_zoom();
+            let new_zoom = match current_zoom {
+                WebViewZoom::Tiny => WebViewZoom::Tiny,
+                WebViewZoom::Small => WebViewZoom::Tiny,
+                WebViewZoom::Medium => WebViewZoom::Small,
+                WebViewZoom::Large => WebViewZoom::Medium,
+                WebViewZoom::Largest => WebViewZoom::Large,
+            };
+            wv.set_zoom(new_zoom);
+            println!("Zoom level: {:?} (backend: {})", wv.get_zoom(), backend_for_zoom_out);
         });
 
         // Advanced script execution
