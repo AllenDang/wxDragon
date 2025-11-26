@@ -123,8 +123,10 @@ bitflags::bitflags! {
 /// - Some zoom operations are not fully supported
 /// - JavaScript execution may be limited
 /// - For best results on Windows, ensure the WebView2 runtime is installed
-
+///
 /// Default backend for the current platform.
+///
+/// Uses the platform's native web view implementation.
 pub const WEBVIEW_BACKEND_DEFAULT: &str = "";
 /// Legacy Internet Explorer (Trident) backend for Windows. Limited compatibility with modern websites.
 pub const WEBVIEW_BACKEND_IE: &str = "wxWebViewIE";
@@ -183,14 +185,12 @@ impl WebView {
             panic!("Failed to create WebView widget");
         }
 
-        let webview = WebView {
-            window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
-        };
-
         // Note: Zoom operations on IE backend are disabled in the C++ layer
         // to avoid assertion failures. All zoom-related calls become no-ops on IE.
 
-        webview
+        WebView {
+            window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
+        }
     }
 
     // --- Navigation ---
