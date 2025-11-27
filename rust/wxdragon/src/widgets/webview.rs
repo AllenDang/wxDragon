@@ -157,7 +157,6 @@ impl std::fmt::Display for WebViewBackend {
     }
 }
 
-
 /// Represents a wxWebView widget.
 #[derive(Clone)]
 pub struct WebView {
