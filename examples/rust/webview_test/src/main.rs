@@ -2,8 +2,7 @@ use wxdragon::event::WebViewEvents;
 use wxdragon::prelude::*;
 use wxdragon::sizers::SizerFlag;
 use wxdragon::widgets::{
-    WebView, WebViewFindFlags, WebViewReloadFlags, WebViewUserScriptInjectionTime, WebViewZoom, WEBVIEW_BACKEND_DEFAULT,
-    WEBVIEW_BACKEND_EDGE,
+    WebView, WebViewBackend, WebViewFindFlags, WebViewReloadFlags, WebViewUserScriptInjectionTime, WebViewZoom,
 };
 
 fn main() {
@@ -44,27 +43,27 @@ fn main() {
         println!("Checking available WebView backends...");
         println!(
             "  Edge backend available: {}",
-            WebView::is_backend_available(WEBVIEW_BACKEND_EDGE)
+            WebView::is_backend_available(WebViewBackend::Edge)
         );
         println!(
             "  Default backend available: {}",
-            WebView::is_backend_available(WEBVIEW_BACKEND_DEFAULT)
+            WebView::is_backend_available(WebViewBackend::Default)
         );
 
         // Use Edge if available (modern Chromium-based), otherwise fall back to default
         // On Windows: Edge requires WebView2 runtime, otherwise falls back to IE
         // On macOS: Uses WebKit
         // On Linux: Uses WebKit2
-        let backend = if WebView::is_backend_available(WEBVIEW_BACKEND_EDGE) {
+        let backend = if WebView::is_backend_available(WebViewBackend::Edge) {
             println!("Using Edge (WebView2) backend");
-            Some(WEBVIEW_BACKEND_EDGE.to_string())
+            WebViewBackend::Edge
         } else {
             println!("Edge not available, using default backend");
             println!("WARNING: On Windows without WebView2, the IE backend will be used.");
             println!("         IE backend has limited compatibility with modern websites.");
             println!("         Install WebView2 runtime for better results:");
             println!("         https://developer.microsoft.com/en-us/microsoft-edge/webview2/");
-            Some(WEBVIEW_BACKEND_DEFAULT.to_string())
+            WebViewBackend::Default
         };
 
         let webview = WebView::builder(&panel).with_backend(backend).build();
@@ -84,8 +83,8 @@ fn main() {
         );
 
         // Print backend info
-        let backend = webview.get_backend();
-        println!("WebView backend: {}", backend);
+        let backend_name = webview.get_backend();
+        println!("WebView backend: {}", backend_name);
 
         // Load initial URL
         webview.load_url("https://www.google.com");
@@ -117,7 +116,6 @@ fn main() {
         // Zoom controls - using discrete zoom levels for IE compatibility
         // Note: get_zoom_factor()/set_zoom_factor() may not work on IE backend
         let wv = webview.clone();
-        let backend_for_zoom_in = backend.clone();
         btn_zoom_in.on_click(move |_| {
             // Use discrete zoom levels which work on all backends including IE
             let current_zoom = wv.get_zoom();
@@ -129,11 +127,10 @@ fn main() {
                 WebViewZoom::Largest => WebViewZoom::Largest,
             };
             wv.set_zoom(new_zoom);
-            println!("Zoom level: {:?} (backend: {})", wv.get_zoom(), backend_for_zoom_in);
+            println!("Zoom level: {:?} (backend: {:?})", wv.get_zoom(), backend);
         });
 
         let wv = webview.clone();
-        let backend_for_zoom_out = backend.clone();
         btn_zoom_out.on_click(move |_| {
             let current_zoom = wv.get_zoom();
             let new_zoom = match current_zoom {
@@ -144,7 +141,7 @@ fn main() {
                 WebViewZoom::Largest => WebViewZoom::Large,
             };
             wv.set_zoom(new_zoom);
-            println!("Zoom level: {:?} (backend: {})", wv.get_zoom(), backend_for_zoom_out);
+            println!("Zoom level: {:?} (backend: {:?})", wv.get_zoom(), backend);
         });
 
         // Advanced script execution

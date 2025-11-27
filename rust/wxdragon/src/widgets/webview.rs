@@ -108,7 +108,7 @@ bitflags::bitflags! {
     }
 }
 
-/// WebView Backend identifiers - these correspond to wxWidgets backend names.
+/// WebView Backend selection.
 ///
 /// # Platform Support
 /// - **Windows**: Prefers Edge (WebView2/Chromium) when available, falls back to IE (Trident).
@@ -123,17 +123,40 @@ bitflags::bitflags! {
 /// - Some zoom operations are not fully supported
 /// - JavaScript execution may be limited
 /// - For best results on Windows, ensure the WebView2 runtime is installed
-///
-/// Default backend for the current platform.
-///
-/// Uses the platform's native web view implementation.
-pub const WEBVIEW_BACKEND_DEFAULT: &str = "";
-/// Legacy Internet Explorer (Trident) backend for Windows. Limited compatibility with modern websites.
-pub const WEBVIEW_BACKEND_IE: &str = "wxWebViewIE";
-/// Modern Edge (WebView2/Chromium) backend for Windows. Requires WebView2 runtime.
-pub const WEBVIEW_BACKEND_EDGE: &str = "wxWebViewEdge";
-/// WebKit backend for macOS and Linux.
-pub const WEBVIEW_BACKEND_WEBKIT: &str = "wxWebViewWebKit";
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum WebViewBackend {
+    /// Default backend for the current platform.
+    /// Uses the platform's native web view implementation.
+    #[default]
+    Default,
+    /// Legacy Internet Explorer (Trident) backend for Windows.
+    /// Limited compatibility with modern websites.
+    IE,
+    /// Modern Edge (WebView2/Chromium) backend for Windows.
+    /// Requires WebView2 runtime.
+    Edge,
+    /// WebKit backend for macOS and Linux.
+    WebKit,
+}
+
+impl WebViewBackend {
+    /// Returns the wxWidgets backend identifier string.
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            WebViewBackend::Default => "",
+            WebViewBackend::IE => "wxWebViewIE",
+            WebViewBackend::Edge => "wxWebViewEdge",
+            WebViewBackend::WebKit => "wxWebViewWebKit",
+        }
+    }
+}
+
+impl std::fmt::Display for WebViewBackend {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.as_str())
+    }
+}
+
 
 /// Represents a wxWebView widget.
 #[derive(Clone)]
@@ -627,25 +650,21 @@ impl WebView {
     /// Checks if a specific WebView backend is available on the current system.
     ///
     /// # Arguments
-    /// * `backend` - The backend name to check. Use one of:
-    ///   - `WEBVIEW_BACKEND_EDGE` ("wxWebViewEdge") - Modern Edge/Chromium backend (Windows)
-    ///   - `WEBVIEW_BACKEND_IE` ("wxWebViewIE") - Legacy IE backend (Windows)
-    ///   - `WEBVIEW_BACKEND_WEBKIT` ("wxWebViewWebKit") - WebKit backend (macOS/Linux)
-    ///   - `WEBVIEW_BACKEND_DEFAULT` ("") - The default backend for the platform
+    /// * `backend` - The backend to check.
     ///
     /// # Returns
     /// `true` if the backend is available and can be used, `false` otherwise.
     ///
     /// # Example
     /// ```no_run
-    /// use wxdragon::widgets::{WebView, WEBVIEW_BACKEND_EDGE};
+    /// use wxdragon::widgets::{WebView, WebViewBackend};
     ///
-    /// if WebView::is_backend_available(WEBVIEW_BACKEND_EDGE) {
+    /// if WebView::is_backend_available(WebViewBackend::Edge) {
     ///     println!("Edge backend is available!");
     /// }
     /// ```
-    pub fn is_backend_available(backend: &str) -> bool {
-        let c_backend = CString::new(backend).unwrap_or_default();
+    pub fn is_backend_available(backend: WebViewBackend) -> bool {
+        let c_backend = CString::new(backend.as_str()).unwrap_or_default();
         unsafe { ffi::wxd_WebView_IsBackendAvailable(c_backend.as_ptr()) }
     }
 
@@ -661,7 +680,7 @@ widget_builder!(
     fields: {
         url: Option<String> = None,
         name: String = "webView".to_string(),
-        backend: Option<String> = None
+        backend: WebViewBackend = WebViewBackend::Default
     },
     build_impl: |slf| {
         let parent_ptr = slf.parent.handle_ptr();
@@ -673,7 +692,7 @@ widget_builder!(
             slf.size,
             slf.style.bits(),
             Some(slf.name.as_str()),
-            slf.backend.as_deref(),
+            Some(slf.backend.as_str()),
         )
     }
 );
