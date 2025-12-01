@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.9.5
+
+### New Features
+
+- **WebView Widget**: Added WebView widget with Edge/WebView2 backend support for Windows
+  - Added Edge/WebView2 backend support for modern Windows rendering
+  - Auto-switch zoom type to Layout when WebView backend is IE
+  - Disable zoom in/out for IE backend
+  - Cross-platform WebView support with backend selection via enum
+
+### Enhancements
+
+- **DPI Awareness**: Apply DIP (Device Independent Pixels) awareness when converting wxPoint and wxSize
+
+- **TextCtrl**: Added `set_insertion_point_end()` method for convenient cursor positioning at end of text
+
+- **Drag and Drop Improvements**:
+  - Fixed Drag-N-Drop closures memory leakage
+  - Refined TextDropTarget implementation
+  - Refined FileDropTarget implementation
+
 ## 0.9.4
 
 ### Enhancements
