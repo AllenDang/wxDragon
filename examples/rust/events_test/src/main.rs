@@ -60,11 +60,10 @@ fn main() {
         });
 
         // Add window events using the WindowEvents trait
-        let status_clone = event_status.clone();
         button.on_mouse_left_down(move |mouse_event| {
             if let WindowEventData::MouseButton(ref mouse_data) = mouse_event {
                 if let Some(pos) = mouse_data.get_position() {
-                    status_clone.set_label(&format!("Event Status: Left mouse down at ({}, {})", pos.x, pos.y));
+                    event_status.set_label(&format!("Event Status: Left mouse down at ({}, {})", pos.x, pos.y));
                     println!("Left mouse down on button at ({}, {})", pos.x, pos.y);
                 }
 
@@ -73,11 +72,10 @@ fn main() {
             }
         });
 
-        let status_clone = event_status.clone();
         button.on_mouse_right_down(move |mouse_event| {
             if let WindowEventData::MouseButton(ref mouse_data) = mouse_event {
                 if let Some(pos) = mouse_data.get_position() {
-                    status_clone.set_label(&format!("Event Status: Right mouse down at ({}, {})", pos.x, pos.y));
+                    event_status.set_label(&format!("Event Status: Right mouse down at ({}, {})", pos.x, pos.y));
                     println!("Right mouse down on button at ({}, {})", pos.x, pos.y);
                 }
 
@@ -86,11 +84,10 @@ fn main() {
             }
         });
 
-        let status_clone = event_status.clone();
         toggle_button.on_mouse_motion(move |motion_event| {
             if let WindowEventData::MouseMotion(ref motion_data) = motion_event {
                 if let Some(pos) = motion_data.get_position() {
-                    status_clone.set_label(&format!("Event Status: Mouse motion at ({}, {})", pos.x, pos.y));
+                    event_status.set_label(&format!("Event Status: Mouse motion at ({}, {})", pos.x, pos.y));
                     println!("Mouse motion at ({}, {})", pos.x, pos.y);
                 }
 
@@ -100,18 +97,16 @@ fn main() {
         });
 
         // Also test window events on the panel
-        let status_clone = event_status.clone();
         panel.on_size(move |_event_data| {
-            status_clone.set_label("Event Status: Panel resized");
+            event_status.set_label("Event Status: Panel resized");
             println!("Panel resized");
         });
 
         // Handle frame close event
-        let frame_clone = frame.clone();
         frame.on_close(move |_event_data| {
             println!("Frame close event received!");
             // Allow the close to proceed
-            frame_clone.destroy();
+            frame.destroy();
         });
 
         // Add widgets to sizer with spacing

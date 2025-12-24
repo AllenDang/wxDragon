@@ -66,18 +66,16 @@ custom_widget!(
         let timer = Rc::new(Timer::new(&panel));
 
         // Set up paint event
-        let panel_paint = panel.clone();
         let animation_data_paint = animation_data.clone();
         let config_paint = config.clone();
         panel.on_paint(move |event| {
             let animation = animation_data_paint.borrow();
-            PieChart::draw_pie_chart(&panel_paint, &config_paint, &animation);
+            PieChart::draw_pie_chart(&panel, &config_paint, &animation);
             event.skip(true);
         });
 
         // Set up mouse motion event for hover detection
         let animation_data_motion = animation_data.clone();
-        let panel_motion = panel.clone();
         let timer_motion = timer.clone();
         let config_motion = config.clone();
         panel.on_mouse_motion(move |event| {
@@ -89,7 +87,7 @@ custom_widget!(
             };
 
             if let Some(pos) = mouse_pos {
-                let size = panel_motion.get_size();
+                let size = panel.get_size();
                 let center_x = size.width / 2;
                 let center_y = size.height / 2;
 
@@ -117,7 +115,7 @@ custom_widget!(
                         timer_motion.start(16, false); // 60fps
                     }
 
-                    panel_motion.refresh(false, None);
+                    panel.refresh(false, None);
                 }
             }
 
@@ -126,7 +124,6 @@ custom_widget!(
 
         // Set up mouse leave event
         let animation_data_leave = animation_data.clone();
-        let panel_leave = panel.clone();
         let timer_leave = timer.clone();
         panel.on_mouse_leave(move |event| {
             let mut animation = animation_data_leave.borrow_mut();
@@ -138,7 +135,7 @@ custom_widget!(
                 drop(animation);
 
                 timer_leave.start(16, false); // 60fps
-                panel_leave.refresh(false, None);
+                panel.refresh(false, None);
             }
 
             event.skip(true);
@@ -147,7 +144,6 @@ custom_widget!(
         // Set up timer event for animations
         let animation_data_timer = animation_data.clone();
         let config_timer = config.clone();
-        let panel_timer = panel.clone();
         let timer_clone = timer.clone();
         timer.on_tick(move |event| {
             let mut animation = animation_data_timer.borrow_mut();
@@ -180,7 +176,7 @@ custom_widget!(
                     }
                 }
 
-                panel_timer.refresh(false, None);
+                panel.refresh(false, None);
 
                 // Animation complete
                 if progress_ratio >= 1.0 {

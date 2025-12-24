@@ -17,7 +17,7 @@ widget_style_enum!(
 );
 
 /// Represents a wxWrapSizer.
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct WrapSizer {
     raw_specific_ptr: *mut ffi::wxd_WrapSizer_t, // Specific pointer for WrapSizer FFI calls
     sizer_base: Sizer,                           // Base Sizer for common functionality and Deref

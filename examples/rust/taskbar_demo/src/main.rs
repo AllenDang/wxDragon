@@ -49,38 +49,34 @@ fn main() {
         taskbar.set_popup_menu(&mut popup_menu);
 
         // Bind menu event handler to the TaskBarIcon itself (not the frame)
-        taskbar.on_menu({
-            let status = status.clone();
-            let frame = frame.clone();
-            move |event| {
-                let menu_id = event.get_id();
-                match menu_id {
-                    1001 => {
-                        // Open Application
-                        log::info!("📂 Open Application clicked!");
-                        status.set_label("Menu: Open Application clicked!");
-                    }
-                    1002 => {
-                        // Settings
-                        log::info!("⚙️ Settings clicked!");
-                        status.set_label("Menu: Settings clicked!");
-                    }
-                    1003 => {
-                        // About
-                        log::info!("ℹ️ About clicked!");
-                        status.set_label("Menu: About clicked!");
-                    }
-                    1004 => {
-                        // Exit
-                        log::info!("🚪 Exit clicked!");
-                        status.set_label("Menu: Exit clicked - closing application...");
+        taskbar.on_menu(move |event| {
+            let menu_id = event.get_id();
+            match menu_id {
+                1001 => {
+                    // Open Application
+                    log::info!("📂 Open Application clicked!");
+                    status.set_label("Menu: Open Application clicked!");
+                }
+                1002 => {
+                    // Settings
+                    log::info!("⚙️ Settings clicked!");
+                    status.set_label("Menu: Settings clicked!");
+                }
+                1003 => {
+                    // About
+                    log::info!("ℹ️ About clicked!");
+                    status.set_label("Menu: About clicked!");
+                }
+                1004 => {
+                    // Exit
+                    log::info!("🚪 Exit clicked!");
+                    status.set_label("Menu: Exit clicked - closing application...");
 
-                        // Close the frame, which will trigger the on_close event
-                        frame.close(true);
-                    }
-                    _ => {
-                        log::warn!("Unknown menu item clicked: {menu_id}");
-                    }
+                    // Close the frame, which will trigger the on_close event
+                    frame.close(true);
+                }
+                _ => {
+                    log::warn!("Unknown menu item clicked: {menu_id}");
                 }
             }
         });
@@ -114,20 +110,15 @@ fn main() {
         frame.show(true);
         frame.centre();
 
-        let frame_clone = frame.clone();
         frame.on_close(move |evt| {
             if let wxdragon::WindowEventData::General(event) = &evt
                 && event.can_veto()
             {
                 use MessageDialogStyle as MDS;
-                let res = MessageDialog::builder(
-                    &frame_clone,
-                    "Are you sure you want to close the application?",
-                    "Confirm Close",
-                )
-                .with_style(MDS::OK | MDS::Cancel | MDS::IconInformation)
-                .build()
-                .show_modal();
+                let res = MessageDialog::builder(&frame, "Are you sure you want to close the application?", "Confirm Close")
+                    .with_style(MDS::OK | MDS::Cancel | MDS::IconInformation)
+                    .build()
+                    .show_modal();
 
                 if res != wxdragon::ID_OK {
                     // User cancelled (clicked No or Cancel), prevent the close

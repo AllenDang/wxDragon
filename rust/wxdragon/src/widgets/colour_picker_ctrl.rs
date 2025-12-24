@@ -2,9 +2,6 @@ use crate::color::{Colour, colours};
 use crate::event::{Event, EventType};
 use crate::geometry::{Point, Size};
 use crate::id::Id;
-use crate::implement_widget_traits_with_target;
-use crate::widget_builder;
-use crate::widget_style_enum;
 use crate::window::{Window, WxWidget};
 use std::default::Default;
 use wxdragon_sys as ffi;
@@ -56,7 +53,7 @@ impl ColourPickerCtrlEventData {
 // --- ColourPickerCtrl Widget ---
 
 /// Represents a wxColourPickerCtrl, which allows the user to select a colour.
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct ColourPickerCtrl {
     window: Window,
 }

@@ -1,7 +1,7 @@
 use std::ffi::CString;
 use std::ptr;
 
-use crate::{dialogs::Dialog, widget_style_enum, window::WxWidget};
+use crate::{dialogs::Dialog, window::WxWidget};
 use wxdragon_sys as ffi;
 
 // Define ProgressDialogStyle enum using the widget_style_enum macro

@@ -1,8 +1,5 @@
 use crate::geometry::{Point, Size};
 use crate::id::Id;
-use crate::implement_widget_traits_with_target;
-use crate::widget_builder;
-use crate::widget_style_enum;
 use crate::window::{Window, WxWidget};
 use wxdragon_sys as ffi;
 
@@ -18,7 +15,7 @@ widget_style_enum!(
 
 /// Represents a `wxActivityIndicator`, an animated control that shows
 /// an animation to indicate a long-running process is occurring.
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct ActivityIndicator {
     window: Window,
 }

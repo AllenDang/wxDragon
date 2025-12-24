@@ -101,8 +101,9 @@ fn main() {
         panel.set_sizer(sizer, true);
 
         // Right-click item context menu with an "Edit" entry
-        let dataview_for_menu = dataview.clone();
-        let frame_for_dialog = frame.clone();
+        // Widgets are Copy, so use them directly
+        let dataview_for_menu = dataview;
+        let frame_for_dialog = frame;
         let mtm_for_edit = model.clone();
 
         dataview.on_item_context_menu(move |event| {
@@ -135,9 +136,10 @@ fn main() {
                 let _ = menu.append(delete_id, "Delete", "Delete this item", ItemKind::Normal);
 
                 // Handle menu selection
-                let frame_for_selected = frame_for_dialog.clone();
+                // Widgets are Copy
+                let frame_for_selected = frame_for_dialog;
                 let mtm_for_selected = mtm_for_edit.clone();
-                let dv_for_actions = dataview_for_menu.clone();
+                let dv_for_actions = dataview_for_menu;
                 // Move the DataViewItem itself into the closure; do NOT call .clone() as that would clone the inner pointer
                 let item_for_actions = item;
                 menu.on_selected(move |ev| match ev.get_id() {
@@ -286,7 +288,8 @@ fn main() {
             }
         });
 
-        let frame_for_activate = frame.clone();
+        // Widgets are Copy
+        let frame_for_activate = frame;
         let model_for_activate = model.clone();
         dataview.on_item_activated(move |event| {
             if let Some(item) = event.get_item() {
@@ -300,7 +303,8 @@ fn main() {
             event.skip(true);
         });
 
-        let dv_for_header_menu = dataview.clone();
+        // Widgets are Copy
+        let dv_for_header_menu = dataview;
         dataview.on_column_header_right_click(move |event| {
             if let Some(col_idx) = event.get_column() {
                 log::info!("Column header right-clicked: {}", col_idx);
@@ -314,7 +318,7 @@ fn main() {
                     .append_item(sort_desc_id, "Sort descending", "Sort descending")
                     .build();
 
-                let dv_for_select = dv_for_header_menu.clone();
+                let dv_for_select = dv_for_header_menu;
                 menu.on_selected(move |ev| match ev.get_id() {
                     id if id == sort_asc_id => {
                         let _ = dv_for_select.set_sorting_column(col_idx as usize, true);

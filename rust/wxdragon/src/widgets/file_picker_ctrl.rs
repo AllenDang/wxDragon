@@ -5,10 +5,7 @@ use std::ffi::{CString, c_longlong};
 use wxdragon_sys as ffi;
 
 use crate::event::{Event, EventType};
-use crate::implement_widget_traits_with_target;
 use crate::prelude::*;
-use crate::widget_builder;
-use crate::widget_style_enum;
 use crate::window::{Window, WxWidget};
 
 // --- Style enum using macro ---
@@ -53,7 +50,7 @@ impl FilePickerCtrlEventData {
 }
 
 // --- FilePickerCtrl ---
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct FilePickerCtrl {
     window: Window, // Embed Window
 }

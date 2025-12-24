@@ -98,9 +98,9 @@ fn main() {
         let clipboard = Clipboard::get();
 
         // Implement button event handlers
-        let text_ctrl_copy = text_ctrl.clone();
+        // Widgets are Copy, so they can be used directly in closures
         copy_button.on_click(move |_| {
-            let text = text_ctrl_copy.get_value();
+            let text = text_ctrl.get_value();
             if clipboard.set_text(&text) {
                 println!("Text copied to clipboard: {text}");
             } else {
@@ -108,10 +108,9 @@ fn main() {
             }
         });
 
-        let text_ctrl_paste = text_ctrl.clone();
         paste_button.on_click(move |_| {
             if let Some(text) = clipboard.get_text() {
-                text_ctrl_paste.set_value(&text);
+                text_ctrl.set_value(&text);
                 println!("Text pasted from clipboard: {text}");
             } else {
                 println!("No text on clipboard or clipboard access failed");
@@ -143,8 +142,7 @@ fn main() {
             }
         });
 
-        // For paste bitmap button - this should now work correctly with StaticBitmap's proper Clone
-        let static_bitmap_clone = static_bitmap.clone();
+        // For paste bitmap button - widgets are Copy
         paste_bitmap_button.on_click(move |_| {
             // Check if bitmap format is supported
             if !clipboard.is_format_supported(DataFormat::BITMAP) {
@@ -159,8 +157,7 @@ fn main() {
             if let Some(_locker) = clipboard.locker() {
                 if clipboard.get_data(&bitmap_data) {
                     if let Some(bitmap) = bitmap_data.get_bitmap() {
-                        // Now static_bitmap_clone is a proper StaticBitmap, not just a Window
-                        static_bitmap_clone.set_bitmap(&bitmap);
+                        static_bitmap.set_bitmap(&bitmap);
                         println!("Bitmap pasted from clipboard");
                     }
                 } else {
@@ -199,42 +196,40 @@ fn main() {
         });
 
         // Paste files from clipboard
-        let clipboard_paste = clipboard;
-        let file_text_ctrl_paste = file_text_ctrl.clone();
         paste_file_button.on_click(move |_| {
-            if let Some(_locker) = clipboard_paste.locker() {
+            if let Some(_locker) = clipboard.locker() {
                 // Check if file format is supported
-                if clipboard_paste.is_format_supported(DataFormat::FILENAME) {
+                if clipboard.is_format_supported(DataFormat::FILENAME) {
                     // Create a file data object to receive the data
                     let file_data = FileDataObject::new();
 
                     // Try getting the data - this should now work with our fixed implementation
-                    if clipboard_paste.get_data(&file_data) {
+                    if clipboard.get_data(&file_data) {
                         // Get all files from the data object
                         let files = file_data.get_files();
 
                         if files.is_empty() {
                             println!("No files on clipboard");
-                            file_text_ctrl_paste.set_value("No files on clipboard");
+                            file_text_ctrl.set_value("No files on clipboard");
                         } else {
                             // Display the file paths in the text control
                             let file_list = files.join("\n");
                             println!("Files pasted from clipboard:\n{file_list}");
-                            file_text_ctrl_paste.set_value(&file_list);
+                            file_text_ctrl.set_value(&file_list);
                         }
                     } else {
                         // Fallback to text for files
-                        if let Some(text) = clipboard_paste.get_text() {
+                        if let Some(text) = clipboard.get_text() {
                             println!("Retrieved file path as text: {text}");
-                            file_text_ctrl_paste.set_value(&text);
+                            file_text_ctrl.set_value(&text);
                         } else {
                             println!("Failed to get files from clipboard");
-                            file_text_ctrl_paste.set_value("Failed to get files from clipboard");
+                            file_text_ctrl.set_value("Failed to get files from clipboard");
                         }
                     }
                 } else {
                     println!("No files on clipboard");
-                    file_text_ctrl_paste.set_value("No files on clipboard");
+                    file_text_ctrl.set_value("No files on clipboard");
                 }
             }
         });

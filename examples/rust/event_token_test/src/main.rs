@@ -51,21 +51,19 @@ fn main() {
         // Button 2: Remove the first event binding from Button 1
         {
             let tokens_clone = tokens.clone();
-            let button1_clone = button1.clone();
             let log_buffer_clone = log_buffer.clone();
-            let log_view_clone = log_view.clone();
             button2.on_click(move |_| {
                 let mut tokens_vec = tokens_clone.borrow_mut();
                 if tokens_vec.is_empty() {
-                    append_line(&log_buffer_clone, &log_view_clone, "No event bindings to remove!");
+                    append_line(&log_buffer_clone, &log_view, "No event bindings to remove!");
                 } else {
                     // Remove the first token
                     let token = tokens_vec.remove(0);
-                    if button1_clone.unbind(token) {
+                    if button1.unbind(token) {
                         let line = format!("Removed event binding! {} binding(s) remaining.", tokens_vec.len());
-                        append_line(&log_buffer_clone, &log_view_clone, &line);
+                        append_line(&log_buffer_clone, &log_view, &line);
                     } else {
-                        append_line(&log_buffer_clone, &log_view_clone, "Failed to unbind event!");
+                        append_line(&log_buffer_clone, &log_view, "Failed to unbind event!");
                     }
                 }
             });
@@ -75,9 +73,7 @@ fn main() {
         {
             let tokens_clone = tokens.clone();
             let next_index_clone = next_index.clone();
-            let button1_clone = button1.clone();
             let log_buffer_clone = log_buffer.clone();
-            let log_view_clone = log_view.clone();
 
             button3.on_click(move |_| {
                 let mut index_val = next_index_clone.borrow_mut();
@@ -86,10 +82,9 @@ fn main() {
 
                 // Add a new event binding to button1
                 let log_buffer_clicked = log_buffer_clone.clone();
-                let log_view_clicked = log_view_clone.clone();
-                let token = button1_clone.on_click(move |_| {
+                let token = button1.on_click(move |_| {
                     let line = format!("On click callback #{current_index}");
-                    append_line(&log_buffer_clicked, &log_view_clicked, &line);
+                    append_line(&log_buffer_clicked, &log_view, &line);
                 });
 
                 // Store the token
@@ -99,7 +94,7 @@ fn main() {
                     "Added event binding #{current_index}! Total bindings: {}",
                     tokens_clone.borrow().len()
                 );
-                append_line(&log_buffer_clone, &log_view_clone, &line);
+                append_line(&log_buffer_clone, &log_view, &line);
             });
         }
 

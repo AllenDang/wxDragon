@@ -15,7 +15,7 @@ widget_style_enum!(
     default_variant: Default
 );
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct AuiMdiParentFrame {
     window: Window, // Composition: AuiMdiParentFrame uses a Window internally
     // Store parent pointer to manage drop behavior

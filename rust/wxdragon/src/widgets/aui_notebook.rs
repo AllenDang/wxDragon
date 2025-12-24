@@ -15,7 +15,7 @@ widget_style_enum!(
     default_variant: Default
 );
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct AuiNotebook {
     window: Window,
     #[allow(dead_code)]

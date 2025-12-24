@@ -53,7 +53,7 @@ impl ScaleMode {
 }
 
 /// Represents a wxStaticBitmap widget, used to display a bitmap.
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct StaticBitmap {
     window: Window,
 }

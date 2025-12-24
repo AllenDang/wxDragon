@@ -6,7 +6,7 @@ use std::ops::Deref;
 use wxdragon_sys as ffi;
 
 /// Represents a wxGridSizer.
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct GridSizer {
     raw_specific_ptr: *mut ffi::wxd_GridSizer_t, // Specific pointer for GridSizer FFI calls
     sizer_base: Sizer,                           // Base Sizer for common functionality and Deref

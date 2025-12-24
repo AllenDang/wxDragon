@@ -4,10 +4,7 @@ use wxdragon_sys as ffi;
 
 use crate::datetime::DateTime;
 use crate::event::{Event, EventType};
-use crate::implement_widget_traits_with_target;
 use crate::prelude::*;
-use crate::widget_builder;
-use crate::widget_style_enum;
 use crate::window::{Window, WxWidget};
 use std::default::Default;
 
@@ -58,7 +55,7 @@ impl DatePickerCtrlEventData {
 }
 
 // --- wxDatePickerCtrl ---
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct DatePickerCtrl {
     window: Window, // Embed Window for common wxWindow functionality
 }

@@ -46,8 +46,7 @@ fn main() {
         let status_label = StaticText::builder(&panel).with_label("Status: Ready").build();
 
         // Test key events on the ComboBox
-        let status_clone = status_label.clone();
-        let combo_clone = combo_box.clone();
+        // Widgets are Copy, so they can be used directly in closures
         combo_box.on_key_down(move |event| {
             if let WindowEventData::Keyboard(ref key_event) = event {
                 let mut should_handle = false;
@@ -56,7 +55,7 @@ fn main() {
                 if let Some(key_code) = key_event.get_key_code() {
                     // Check for CTRL+BACKSPACE (key code 8 is backspace)
                     if key_code == 8 && key_event.control_down() {
-                        delete_word_back(&combo_clone);
+                        delete_word_back(&combo_box);
                         status_text = "CTRL+BACKSPACE: Deleted word back".to_string();
                         should_handle = true;
                     }
@@ -86,7 +85,7 @@ fn main() {
 
                 // Update status if we detected something interesting
                 if !status_text.is_empty() {
-                    status_clone.set_label(&status_text);
+                    status_label.set_label(&status_text);
                     println!("{}", status_text);
                 }
 
@@ -100,15 +99,13 @@ fn main() {
         });
 
         // Also handle regular ComboBox events for completeness
-        let status_clone2 = status_label.clone();
         combo_box.on_text_updated(move |_event_data| {
-            status_clone2.set_label("Status: Text updated");
+            status_label.set_label("Status: Text updated");
         });
 
-        let status_clone3 = status_label.clone();
         combo_box.on_selection_changed(move |event_data| {
             if let Some(selection) = event_data.get_selection() {
-                status_clone3.set_label(&format!("Status: Selected item {}", selection));
+                status_label.set_label(&format!("Status: Selected item {}", selection));
             }
         });
 
@@ -132,10 +129,9 @@ fn main() {
         panel.set_sizer(sizer, true);
 
         // Handle frame close event
-        let frame_clone = frame.clone();
         frame.on_close(move |_event_data| {
             println!("Frame closing!");
-            frame_clone.destroy();
+            frame.destroy();
         });
 
         // Show the frame

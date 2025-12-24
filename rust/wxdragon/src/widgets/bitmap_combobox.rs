@@ -4,8 +4,6 @@ use crate::bitmap::Bitmap;
 use crate::event::EventType;
 use crate::geometry::{Point, Size};
 use crate::id::Id;
-use crate::implement_widget_traits_with_target;
-use crate::widget_builder;
 use crate::widgets::combobox::ComboBoxStyle;
 use crate::window::{Window, WxWidget};
 use std::ffi::{CStr, CString};
@@ -13,7 +11,7 @@ use std::ptr;
 use wxdragon_sys as ffi;
 
 /// Represents a wxBitmapComboBox widget.
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct BitmapComboBox {
     window: Window,
 }

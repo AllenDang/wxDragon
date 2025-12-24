@@ -16,7 +16,7 @@ widget_style_enum!(
     default_variant: Default
 );
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct AuiMdiChildFrame {
     window: Window,
     #[allow(dead_code)]

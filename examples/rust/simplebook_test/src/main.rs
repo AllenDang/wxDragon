@@ -123,45 +123,43 @@ fn setup_event_handlers(
     next_button: &Button,
     info_button: &Button,
 ) {
-    let simplebook_clone = simplebook.clone();
+    // Widgets are Copy, so use them directly (dereference to get owned copy)
+    let simplebook = *simplebook;
+    let frame = *frame;
 
     // Previous button handler
     prev_button.on_click(move |_| {
-        let current = simplebook_clone.selection();
+        let current = simplebook.selection();
         if current > 0 {
-            simplebook_clone.set_selection((current - 1) as usize);
+            simplebook.set_selection((current - 1) as usize);
         }
     });
 
-    let simplebook_clone2 = simplebook.clone();
     // Next button handler
     next_button.on_click(move |_| {
-        let current = simplebook_clone2.selection();
-        let page_count = simplebook_clone2.get_page_count() as i32;
+        let current = simplebook.selection();
+        let page_count = simplebook.get_page_count() as i32;
         if current < page_count - 1 {
-            simplebook_clone2.set_selection((current + 1) as usize);
+            simplebook.set_selection((current + 1) as usize);
         }
     });
 
-    let simplebook_clone3 = simplebook.clone();
-    let frame_clone = frame.clone();
     // Info button handler
     info_button.on_click(move |_| {
-        let current = simplebook_clone3.selection();
-        let page_count = simplebook_clone3.get_page_count();
+        let current = simplebook.selection();
+        let page_count = simplebook.get_page_count();
         let message = format!("Current page: {} of {}\nTotal pages: {}", current + 1, page_count, page_count);
 
-        let dialog = MessageDialog::builder(&frame_clone, &message, "Page Info")
+        let dialog = MessageDialog::builder(&frame, &message, "Page Info")
             .with_style(MessageDialogStyle::OK | MessageDialogStyle::IconInformation)
             .build();
         dialog.show_modal();
     });
 
     // Listen for page change events using the generated method
-    let frame_clone2 = frame.clone();
     simplebook.on_page_changed(move |event| {
         if let (Some(old_page), Some(new_page)) = (event.get_old_selection(), event.get_selection()) {
-            frame_clone2.set_status_text(&format!("Changed from page {} to page {}", old_page + 1, new_page + 1), 0);
+            frame.set_status_text(&format!("Changed from page {} to page {}", old_page + 1, new_page + 1), 0);
         }
     });
 }

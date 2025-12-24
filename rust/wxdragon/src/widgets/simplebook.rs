@@ -4,9 +4,6 @@
 use crate::event::{Event, EventType};
 use crate::geometry::{Point, Size};
 use crate::id::Id;
-use crate::implement_widget_traits_with_target;
-use crate::widget_builder;
-use crate::widget_style_enum;
 use crate::window::{Window, WxWidget};
 use std::ffi::CString;
 use std::os::raw::c_int;
@@ -31,7 +28,7 @@ widget_style_enum!(
 /// wxSimpleBook is a book control without visual tabs. Pages are switched programmatically,
 /// not through visible tabs. This makes it ideal for wizard-like interfaces or when you
 /// want to control page navigation through other UI elements.
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct SimpleBook {
     window: Window,
 }

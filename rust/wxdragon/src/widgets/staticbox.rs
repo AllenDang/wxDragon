@@ -19,7 +19,7 @@ widget_style_enum!(
 );
 
 /// Represents the wxStaticBox widget.
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct StaticBox {
     window: Window,
 }

@@ -8,11 +8,11 @@ pub struct AuiTabControls {
 
 impl AuiTabControls {
     pub fn bind_events(&self) {
-        // Use a simple approach for the demo that doesn't try to access self inside the closure
-        let toolbar_ref = self.toolbar.clone();
+        // Widgets are Copy, so toolbar can be used directly
+        let toolbar = self.toolbar;
 
         // Use on_menu directly since we've added it to AuiToolBar via the event handlers macro
-        toolbar_ref.on_menu(move |event| {
+        toolbar.on_menu(move |event| {
             let id = event.get_id();
             if id == 1001 {
                 log::info!("Save Perspective button clicked");

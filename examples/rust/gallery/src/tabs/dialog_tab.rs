@@ -320,11 +320,27 @@ pub fn create_dialog_tab(notebook: &Notebook, _frame: &Frame) -> DialogTabContro
 
 impl DialogTabControls {
     pub fn bind_events(&self, frame: &Frame) {
+        // Widgets are Copy, so copy them for use in closures
+        let frame = *frame;
+        let show_msg_btn = self.show_msg_dialog_btn;
+        let file_dialog_status_label = self.file_dialog_status_label;
+        let text_entry_status_label = self.text_entry_status_label;
+        let colour_dialog_status_label = self.colour_dialog_status_label;
+        let font_sample_text = self.font_sample_text;
+        let notification_status_label = self.notification_status_label;
+        let file_picker_ctrl = self.file_picker_ctrl;
+        let file_picker_status_label = self.file_picker_status_label;
+        let dir_picker_ctrl = self.dir_picker_ctrl;
+        let dir_picker_status_label = self.dir_picker_status_label;
+        let font_picker_ctrl = self.font_picker_ctrl;
+        let font_picker_status_label = self.font_picker_status_label;
+        let single_choice_status_label = self.single_choice_dialog_status_label;
+        let multi_choice_status_label = self.multi_choice_dialog_status_label;
+
         // Message Dialog button
-        let show_msg_btn_clone = self.show_msg_dialog_btn.clone();
         self.show_msg_dialog_btn.on_click(move |_event| {
             MessageDialog::builder(
-                &show_msg_btn_clone,                // Parent
+                &show_msg_btn,                      // Parent
                 "This is a sample message dialog.", // Message
                 "Message Dialog Title",             // Caption
             )
@@ -334,10 +350,8 @@ impl DialogTabControls {
         });
 
         // File Dialog buttons
-        let frame_clone_open = frame.clone();
-        let status_label_clone_open = self.file_dialog_status_label.clone();
         self.open_file_btn.on_click(move |_event| {
-            let dialog = FileDialog::builder(&frame_clone_open)
+            let dialog = FileDialog::builder(&frame)
                 .with_message("Choose a file to open")
                 .with_style(FileDialogStyle::Open | FileDialogStyle::FileMustExist)
                 .with_default_dir(".")
@@ -346,18 +360,16 @@ impl DialogTabControls {
             if dialog.show_modal() == wxdragon::id::ID_OK {
                 let path_option = dialog.get_path();
                 let path_str = path_option.unwrap_or_else(|| "(None)".to_string());
-                status_label_clone_open.set_label(&format!("Opened: {path_str}"));
+                file_dialog_status_label.set_label(&format!("Opened: {path_str}"));
                 println!("File Dialog: Opened file: {path_str}");
             } else {
-                status_label_clone_open.set_label("Open cancelled.");
+                file_dialog_status_label.set_label("Open cancelled.");
                 println!("File Dialog: Open cancelled.");
             }
         });
 
-        let frame_clone_save = frame.clone();
-        let status_label_clone_save = self.file_dialog_status_label.clone();
         self.save_file_btn.on_click(move |_event| {
-            let dialog = FileDialog::builder(&frame_clone_save)
+            let dialog = FileDialog::builder(&frame)
                 .with_message("Choose a file to save to")
                 .with_style(FileDialogStyle::Save | FileDialogStyle::OverwritePrompt)
                 .with_default_dir(".")
@@ -367,39 +379,35 @@ impl DialogTabControls {
             if dialog.show_modal() == wxdragon::id::ID_OK {
                 let path_option = dialog.get_path();
                 let path_str = path_option.unwrap_or_else(|| "(None)".to_string());
-                status_label_clone_save.set_label(&format!("Saved to: {path_str}"));
+                file_dialog_status_label.set_label(&format!("Saved to: {path_str}"));
                 println!("File Dialog: Saved to file: {path_str}");
             } else {
-                status_label_clone_save.set_label("Save cancelled.");
+                file_dialog_status_label.set_label("Save cancelled.");
                 println!("File Dialog: Save cancelled.");
             }
         });
 
         // Text Entry Dialog buttons
-        let frame_clone_text = frame.clone();
-        let status_label_clone_text = self.text_entry_status_label.clone();
         self.get_text_btn.on_click(move |_event| {
-            let dialog = TextEntryDialog::builder(&frame_clone_text, "Please enter your name:", "Text Input")
+            let dialog = TextEntryDialog::builder(&frame, "Please enter your name:", "Text Input")
                 .with_default_value("wxDragon User")
                 .build();
             if dialog.show_modal() == wxdragon::id::ID_OK {
                 if let Some(text) = dialog.get_value() {
-                    status_label_clone_text.set_label(&format!("Entered: {text}"));
+                    text_entry_status_label.set_label(&format!("Entered: {text}"));
                     println!("Text Entry Dialog: Entered text: {text}");
                 } else {
-                    status_label_clone_text.set_label("Input: No value.");
+                    text_entry_status_label.set_label("Input: No value.");
                     println!("Text Entry Dialog: Input: No value returned.");
                 }
             } else {
-                status_label_clone_text.set_label("Input cancelled.");
+                text_entry_status_label.set_label("Input cancelled.");
                 println!("Text Entry Dialog: Input cancelled.");
             }
         });
 
-        let frame_clone_pass = frame.clone();
-        let status_label_clone_pass = self.text_entry_status_label.clone();
         self.get_password_btn.on_click(move |_event| {
-            let dialog = TextEntryDialog::builder(&frame_clone_pass, "Please enter your password:", "Password Input")
+            let dialog = TextEntryDialog::builder(&frame, "Please enter your password:", "Password Input")
                 .with_style(
                     TextEntryDialogStyle::Password
                         | TextEntryDialogStyle::Centre
@@ -409,54 +417,49 @@ impl DialogTabControls {
                 .build();
             if dialog.show_modal() == wxdragon::id::ID_OK {
                 if let Some(text) = dialog.get_value() {
-                    status_label_clone_pass.set_label(&format!("Password entered (length: {})", text.len()));
+                    text_entry_status_label.set_label(&format!("Password entered (length: {})", text.len()));
                     println!(
                         "Text Entry Dialog: Password entered (length: {}). Value: 'REDACTED'",
                         text.len()
                     );
                 } else {
-                    status_label_clone_pass.set_label("Password input: No value.");
+                    text_entry_status_label.set_label("Password input: No value.");
                     println!("Text Entry Dialog: Password input: No value returned.");
                 }
             } else {
-                status_label_clone_pass.set_label("Password input cancelled.");
+                text_entry_status_label.set_label("Password input cancelled.");
                 println!("Text Entry Dialog: Password input cancelled.");
             }
         });
 
         // Colour Dialog button
-        let frame_clone_colour = frame.clone();
-        let status_label_clone_colour = self.colour_dialog_status_label.clone();
-        let colour_sample_panel_clone = self.colour_dialog_status_label.clone();
         self.choose_colour_btn.on_click(move |_event| {
-            let dialog = ColourDialog::builder(&frame_clone_colour)
+            let dialog = ColourDialog::builder(&frame)
                 .with_title("Select a Colour")
                 .with_initial_colour(colours::BLUE)
                 .build();
             if dialog.show_modal() == wxdragon::id::ID_OK {
                 if let Some(colour) = dialog.get_colour() {
-                    status_label_clone_colour.set_label(&format!("Chosen: {colour:?}"));
-                    colour_sample_panel_clone.set_background_color(colour);
-                    colour_sample_panel_clone.refresh(true, None);
+                    colour_dialog_status_label.set_label(&format!("Chosen: {colour:?}"));
+                    colour_dialog_status_label.set_background_color(colour);
+                    colour_dialog_status_label.refresh(true, None);
                     println!("Colour Dialog: Chosen colour: {colour:?}");
                 }
             } else {
-                status_label_clone_colour.set_label("Colour choice cancelled.");
+                colour_dialog_status_label.set_label("Colour choice cancelled.");
                 println!("Colour Dialog: Colour choice cancelled.");
             }
         });
 
         // Font Dialog Button
-        let frame_clone_font = frame.clone();
-        let font_sample_text_clone = self.font_sample_text.clone();
         self.font_button.on_click(move |_event| {
-            let font_dialog = FontDialog::builder(&frame_clone_font).build();
+            let font_dialog = FontDialog::builder(&frame).build();
             if font_dialog.show_modal() == wxdragon::id::ID_OK {
                 if let Some(font) = font_dialog.get_font() {
                     // Create a copy of the font before setting it on the text control
                     let font_copy = font.to_owned();
-                    font_sample_text_clone.set_font(&font_copy);
-                    font_sample_text_clone.set_label("Font Changed!");
+                    font_sample_text.set_font(&font_copy);
+                    font_sample_text.set_label("Font Changed!");
                     println!(
                         "Font Dialog: Font chosen: {:?}, Family: {:?}, Size: {}, Style: {:?}, Weight: {:?}",
                         font_copy.get_face_name(),
@@ -474,9 +477,8 @@ impl DialogTabControls {
         });
 
         // Progress Dialog button
-        let frame_clone_progress = frame.clone();
         self.progress_button.on_click(move |_event| {
-            let dialog = ProgressDialog::builder(&frame_clone_progress, "Processing...", "Please wait", 100)
+            let dialog = ProgressDialog::builder(&frame, "Processing...", "Please wait", 100)
                 .with_style(ProgressDialogStyle::CanAbort | ProgressDialogStyle::Smooth | ProgressDialogStyle::AutoHide)
                 .build();
 
@@ -499,54 +501,46 @@ impl DialogTabControls {
         });
 
         // NotificationMessage button
-        let frame_clone_notify = frame.clone();
-        let status_label_clone_notify = self.notification_status_label.clone();
         let notif_store = self.notification_message.clone();
         self.show_notification_btn.on_click(move |_event| {
             let notification_result = NotificationMessage::builder()
                 .with_title("wxDragon Notification")
                 .with_message("This is a notification message from the gallery example!")
-                .with_parent(&frame_clone_notify)
+                .with_parent(&frame)
                 .with_style(NotificationStyle::Information)
                 .build();
 
             match notification_result {
                 Ok(notification) => {
                     notification.show(wxdragon::widgets::notification_message::TIMEOUT_AUTO);
-                    status_label_clone_notify.set_label("Notification shown.");
+                    notification_status_label.set_label("Notification shown.");
                     println!("NotificationMessage: Shown.");
                     notif_store.lock().unwrap().replace(notification);
                 }
                 Err(e) => {
-                    status_label_clone_notify.set_label(&format!("Notify Err: {e:?}"));
+                    notification_status_label.set_label(&format!("Notify Err: {e:?}"));
                     println!("NotificationMessage Error: {e:?}");
                 }
             }
         });
 
         // Event handler for FilePickerCtrl
-        let fpc_status_label_clone = self.file_picker_status_label.clone();
-        let fpc_clone = self.file_picker_ctrl.clone();
         self.file_picker_ctrl.on_file_changed(move |_event| {
-            let path = fpc_clone.get_path();
-            fpc_status_label_clone.set_label(&format!("FilePicker Path: {path}"));
+            let path = file_picker_ctrl.get_path();
+            file_picker_status_label.set_label(&format!("FilePicker Path: {path}"));
             println!("FilePickerCtrl changed: {path}");
         });
 
         // Event handler for DirPickerCtrl
-        let dpc_status_label_clone = self.dir_picker_status_label.clone();
-        let dpc_clone = self.dir_picker_ctrl.clone();
         self.dir_picker_ctrl.on_dir_changed(move |_event| {
-            let path = dpc_clone.get_path();
-            dpc_status_label_clone.set_label(&format!("DirPicker Path: {path}"));
+            let path = dir_picker_ctrl.get_path();
+            dir_picker_status_label.set_label(&format!("DirPicker Path: {path}"));
             println!("DirPickerCtrl changed: {path}");
         });
 
         // Event handler for FontPickerCtrl
-        let font_pc_status_label_clone = self.font_picker_status_label.clone();
-        let font_picker_ctrl_clone = self.font_picker_ctrl.clone();
         self.font_picker_ctrl.on_font_changed(move |_event| {
-            let selected_font = font_picker_ctrl_clone.get_selected_font();
+            let selected_font = font_picker_ctrl.get_selected_font();
             let mut font_desc = "FontPicker: No font selected".to_string();
             if let Some(font) = selected_font {
                 let font_desc_base = format!(
@@ -558,45 +552,40 @@ impl DialogTabControls {
                 );
                 font_desc = format!("Font: {font_desc_base}");
             }
-            font_pc_status_label_clone.set_label(&font_desc);
+            font_picker_status_label.set_label(&font_desc);
             println!("{font_desc}");
         });
 
         // SingleChoiceDialog button
-        let frame_clone_choice = frame.clone();
-        let status_label_clone_choice = self.single_choice_dialog_status_label.clone();
         self.show_single_choice_dialog_btn.on_click(move |_event| {
             let choices = ["Red", "Green", "Blue", "Yellow", "Purple", "Orange", "Black", "White"];
 
-            let dialog =
-                SingleChoiceDialog::builder(&frame_clone_choice, "Please select a color:", "Color Choice", &choices).build();
+            let dialog = SingleChoiceDialog::builder(&frame, "Please select a color:", "Color Choice", &choices).build();
 
             if dialog.show_modal() == wxdragon::id::ID_OK {
                 if let Some(selection) = dialog.get_string_selection() {
-                    status_label_clone_choice.set_label(&format!("Choice: {selection}"));
+                    single_choice_status_label.set_label(&format!("Choice: {selection}"));
                     println!("SingleChoiceDialog: Selected '{selection}'");
 
                     // Alternatively, get selection index
                     let index = dialog.get_selection();
                     println!("SingleChoiceDialog: Selected index {index}");
                 } else {
-                    status_label_clone_choice.set_label("Choice: None selected");
+                    single_choice_status_label.set_label("Choice: None selected");
                     println!("SingleChoiceDialog: No selection retrieved");
                 }
             } else {
-                status_label_clone_choice.set_label("Choice: Cancelled");
+                single_choice_status_label.set_label("Choice: Cancelled");
                 println!("SingleChoiceDialog: Cancelled");
             }
         });
 
         // MultiChoiceDialog button
-        let frame_clone_multi = frame.clone();
-        let status_label_clone_multi = self.multi_choice_dialog_status_label.clone();
         self.show_multi_choice_dialog_btn.on_click(move |_event| {
             let choices = ["Red", "Green", "Blue", "Yellow", "Purple", "Orange", "Black", "White"];
 
             let dialog = MultiChoiceDialog::builder(
-                &frame_clone_multi,
+                &frame,
                 "Please select one or more colors:",
                 "Multiple Color Choices",
                 &choices,
@@ -614,23 +603,22 @@ impl DialogTabControls {
                     let indices_str = selections.iter().map(|i| i.to_string()).collect::<Vec<String>>().join(", ");
                     let strings_str = string_selections.join(", ");
 
-                    status_label_clone_multi.set_label(&format!("Choices: {strings_str}"));
+                    multi_choice_status_label.set_label(&format!("Choices: {strings_str}"));
                     println!("MultiChoiceDialog: Selected indices [{indices_str}]");
                     println!("MultiChoiceDialog: Selected strings [{strings_str}]");
                 } else {
-                    status_label_clone_multi.set_label("Choices: None selected");
+                    multi_choice_status_label.set_label("Choices: None selected");
                     println!("MultiChoiceDialog: No selections made");
                 }
             } else {
-                status_label_clone_multi.set_label("Choices: Cancelled");
+                multi_choice_status_label.set_label("Choices: Cancelled");
                 println!("MultiChoiceDialog: Cancelled");
             }
         });
 
         // Dir Dialog Button
-        let frame_clone_dir = frame.clone();
         self.dlg_dir_button.on_click(move |_| {
-            let dialog = DirDialog::builder(&frame_clone_dir, "Choose a directory", "")
+            let dialog = DirDialog::builder(&frame, "Choose a directory", "")
                 .with_style(DirDialogStyle::default().bits() | DirDialogStyle::MustExist.bits())
                 .build();
 

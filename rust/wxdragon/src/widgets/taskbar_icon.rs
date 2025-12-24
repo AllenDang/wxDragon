@@ -8,7 +8,6 @@ use crate::event::taskbar_events::{TaskBarIconEvent, TaskBarIconEventData};
 
 use crate::menus::menu::Menu;
 
-use crate::widget_style_enum;
 use std::ffi::CString;
 use std::ptr;
 use wxdragon_sys as ffi;

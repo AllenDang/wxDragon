@@ -49,11 +49,15 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
         return Ok(());
     }
 
+    // Use OUT_DIR for all build artifacts - this is unique per package configuration
+    // (including features), so different feature combinations get separate builds.
+    // wxWidgets source is shared across builds (profile-level) to avoid re-downloading.
     let dest_bin_dir = std::path::Path::new(&out_dir)
         .ancestors()
         .find(|p| p.file_name().map(|n| *n == *profile).unwrap_or(false))
         .expect("Could not find destination binary directory");
-    // Download wxWidgets to target directory to avoid including it in published crate
+
+    // wxWidgets source download location (shared per profile to avoid re-downloading)
     let wxwidgets_dir = dest_bin_dir.join("wxWidgets");
 
     let wxwidgets_dir_str = wxwidgets_dir.display().to_string();
@@ -131,13 +135,13 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
     println!("info: Successfully generated FFI bindings");
 
     // --- 4. Build wxDragon Wrapper ---
-    build_wxdragon_wrapper(dest_bin_dir, &target, &wxwidgets_dir, &target_os, &target_env)
+    build_wxdragon_wrapper(&out_dir, &target, &wxwidgets_dir, &target_os, &target_env)
         .expect("Failed to build wxDragon wrapper library");
     Ok(())
 }
 
 fn build_wxdragon_wrapper(
-    dest_bin_dir: &std::path::Path,
+    out_dir: &std::path::Path,
     target: &str,
     wxwidgets_source_path: &std::path::Path,
     target_os: &str,
@@ -146,8 +150,10 @@ fn build_wxdragon_wrapper(
     // --- 3. Configure and Build libwxdragon (and wxWidgets) using CMake ---
     let libwxdragon_cmake_source_dir = std::path::PathBuf::from("cpp");
 
-    let wxdragon_sys_build_dir = dest_bin_dir.join("wxdragon_sys_cmake_build");
-    let wxwidgets_build_dir = dest_bin_dir.join("wxwidgets_cmake_build");
+    // Use out_dir for build artifacts - this is unique per feature configuration
+    // so different feature combinations get separate builds without conflicts
+    let wxdragon_sys_build_dir = out_dir.join("wxdragon_sys_cmake_build");
+    let wxwidgets_build_dir = out_dir.join("wxwidgets_cmake_build");
 
     let mut cmake_config = cmake::Config::new(libwxdragon_cmake_source_dir);
     cmake_config.out_dir(&wxdragon_sys_build_dir);

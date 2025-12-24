@@ -2,9 +2,6 @@ use crate::event::event_data::CommandEventData;
 use crate::event::{Event, EventType};
 use crate::geometry::{Point, Size};
 use crate::id::Id;
-use crate::implement_widget_traits_with_target;
-use crate::widget_builder;
-use crate::widget_style_enum;
 use crate::window::{Window, WxWidget};
 use std::ffi::CString;
 use wxdragon_sys as ffi;
@@ -12,7 +9,7 @@ use wxdragon_sys as ffi;
 // Re-export specific CheckBox constants if needed later
 
 /// Represents a wxCheckBox.
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct CheckBox {
     window: Window,
 }

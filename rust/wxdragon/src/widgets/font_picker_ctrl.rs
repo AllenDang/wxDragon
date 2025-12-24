@@ -6,10 +6,7 @@ use wxdragon_sys as ffi;
 
 use crate::event::{Event, EventType};
 use crate::font::Font;
-use crate::implement_widget_traits_with_target;
 use crate::prelude::*;
-use crate::widget_builder;
-use crate::widget_style_enum;
 use crate::window::{Window, WxWidget};
 
 // --- Style enum using macro ---
@@ -56,7 +53,7 @@ impl FontChangedEventData {
 }
 
 // --- FontPickerCtrl ---
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct FontPickerCtrl {
     window: Window, // Embed Window
 }

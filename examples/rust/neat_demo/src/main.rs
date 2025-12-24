@@ -119,27 +119,26 @@ fn main() {
             .with_icon_type(TaskBarIconType::CustomStatusItem)
             .build();
         taskbar.set_popup_menu(&mut tray_icon_menu);
-        let frame_taskbar = frame.clone();
         taskbar.on_menu(move |event| {
             let menu_id = event.get_id();
             match menu_id {
                 x if x == MenuId::Open as i32 => {
                     log::info!("📂 Open Application clicked!");
-                    frame_taskbar.show(true);
-                    frame_taskbar.iconize(false);
-                    frame_taskbar.raise();
+                    frame.show(true);
+                    frame.iconize(false);
+                    frame.raise();
                 }
                 x if x == MenuId::Settings as i32 => {
                     log::info!("⚙️ Settings clicked!");
-                    settings_dlg::settings_dlg(&frame_taskbar);
+                    settings_dlg::settings_dlg(&frame);
                 }
                 x if x == MenuId::About as i32 => {
                     log::info!("ℹ️ About clicked!");
-                    about_dlg::show_about_dialog(&frame_taskbar);
+                    about_dlg::show_about_dialog(&frame);
                 }
                 x if x == MenuId::Quit as i32 => {
                     log::info!("🚪 Quit clicked!");
-                    frame_taskbar.close(true);
+                    frame.close(true);
                 }
                 _ => {
                     log::warn!("Unknown menu item clicked: {menu_id}");
@@ -200,13 +199,12 @@ fn main() {
 
         // Dynamically enable/disable Node menu items when the menu bar opens
         // Disable actions that require a selection if none is present
-        let frame_for_menu_open = frame.clone();
         frame.on_menu_opened(move |event: wxdragon::MenuEventData| {
             // Only handle the menubar case here; popup menus use a different path
             if event.is_popup() {
                 return;
             }
-            if let Some(mbar) = frame_for_menu_open.get_menu_bar() {
+            if let Some(mbar) = frame.get_menu_bar() {
                 let has_sel = selection_ctx::has_pending_details();
                 // Items that require a selection
                 let gated = [
@@ -223,14 +221,12 @@ fn main() {
             }
         });
 
-        let frame_for_menu = frame.clone();
         let model_for_menu = model.clone();
         frame.on_menu(move |event| {
             let id = event.get_id();
-            menu_actions::handle_menu_command(&frame_for_menu, &model_for_menu, id);
+            menu_actions::handle_menu_command(&frame, &model_for_menu, id);
         });
 
-        let frame_clone = frame.clone();
         frame.on_close(move |evt| {
             if let wxdragon::WindowEventData::General(event) = &evt
                 && event.can_veto()
@@ -239,16 +235,15 @@ fn main() {
                 // we veto the close and hide the window instead
                 log::debug!("Close event vetoed, hiding window instead of closing.");
                 event.veto();
-                frame_clone.show(false);
+                frame.show(false);
             }
         });
 
-        let frame_for_destroy = frame.clone();
         let model_for_destroy = model.clone();
         let cfg_for_destroy = cfg_clone.clone();
         frame.on_destroy(move |_data| {
-            let pos = frame_for_destroy.get_position();
-            let size = frame_for_destroy.get_size();
+            let pos = frame.get_position();
+            let size = frame.get_size();
             let win = WindowConfig::new(pos, size);
             let mut cfg = cfg_for_destroy.borrow_mut();
             cfg.window = Some(win);

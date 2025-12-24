@@ -5,7 +5,7 @@ use wxdragon_sys as ffi;
 
 /// Wrapper for wxFontDialog.
 /// A dialog for choosing a font.
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct FontDialog {
     dialog_base: Dialog,
 }

@@ -9,36 +9,25 @@ use wxdragon_sys as ffi;
 ///
 /// In wxWidgets, tools are not standalone widgets but are managed by their parent toolbar.
 /// This wrapper provides a convenient way to access XRC-defined tools and bind events to them.
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct Tool {
     /// Reference to the parent toolbar that manages this tool
     toolbar_window: Window,
     /// The tool's ID for event handling and toolbar operations
     tool_id: Id,
-    /// The tool's XRC name for identification
-    tool_name: String,
 }
 
 impl Tool {
     /// Creates a Tool wrapper from a toolbar and tool information.
     /// This is typically called by the XRC loading system.
     #[cfg(feature = "xrc")]
-    pub(crate) fn new(toolbar_window: Window, tool_id: Id, tool_name: String) -> Self {
-        Self {
-            toolbar_window,
-            tool_id,
-            tool_name,
-        }
+    pub(crate) fn new(toolbar_window: Window, tool_id: Id) -> Self {
+        Self { toolbar_window, tool_id }
     }
 
     /// Gets the tool's ID used for event handling.
     pub fn get_tool_id(&self) -> Id {
         self.tool_id
-    }
-
-    /// Gets the tool's XRC name.
-    pub fn get_tool_name(&self) -> &str {
-        &self.tool_name
     }
 
     /// Enables or disables this tool.
@@ -126,7 +115,6 @@ impl Tool {
             Some(Tool::new(
                 unsafe { crate::window::Window::from_ptr(toolbar.handle_ptr()) },
                 tool_id,
-                tool_name.to_string(),
             ))
         } else {
             None

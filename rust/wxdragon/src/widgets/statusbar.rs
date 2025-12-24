@@ -4,8 +4,6 @@
 // Add WindowEvents import
 use crate::geometry::{Point, Size};
 use crate::id::Id;
-use crate::implement_widget_traits_with_target;
-use crate::widget_style_enum;
 use crate::widgets::frame::Frame; // Parent must be a Frame
 use crate::window::{Window, WxWidget}; // Import trait for handle_ptr() and Window type
 use std::ffi::CString;
@@ -28,7 +26,7 @@ widget_style_enum!(
 
 /// Represents a wxStatusBar attached to a Frame.
 /// Note: The StatusBar itself is typically managed by the Frame.
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct StatusBar {
     window: Window, // Use a Window field for widget_traits_with_target
 }

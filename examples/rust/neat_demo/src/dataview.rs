@@ -8,6 +8,8 @@ use std::rc::{Rc, Weak};
 use wxdragon::*;
 
 pub fn create_data_view_panel(parent: &Window, model: &CustomDataViewTreeModel, frame: &Frame) -> Panel {
+    // Copy frame since Frame is Copy (thin pointer wrapper)
+    let frame = *frame;
     // Create a panel for the parent
     let panel = Panel::builder(parent).build();
 
@@ -49,12 +51,10 @@ pub fn create_data_view_panel(parent: &Window, model: &CustomDataViewTreeModel, 
     dataview.append_column(&path_col);
     dataview.associate_model(model);
 
-    let dataview_menu_panel = panel.clone();
-    let dataview_clone = dataview.clone();
     dataview.on_item_context_menu(move |event: DataViewEvent| {
         let point = event.get_position();
         log::info!("Right click at position: {:?}", point);
-        let point = point.map(|p| dataview_clone.client_to_screen(p));
+        let point = point.map(|p| dataview.client_to_screen(p));
 
         let endabled = selection_ctx::has_pending_details();
 
@@ -74,17 +74,16 @@ pub fn create_data_view_panel(parent: &Window, model: &CustomDataViewTreeModel, 
         dataview_menu.enable_item(MenuId::ShowQrCode.into(), endabled);
         dataview_menu.enable_item(MenuId::Delete.into(), endabled);
 
-        dataview_menu_panel.popup_menu(&mut dataview_menu, point);
+        panel.popup_menu(&mut dataview_menu, point);
     });
 
-    let frame_for_activate = frame.clone();
     dataview.on_item_activated(move |event: DataViewEvent| {
         // FIXME: Remove this comment after verifying the get_row() works as intended
         let row = event.get_row();
         log::info!("Item activated for row: {row:?}");
 
         // Synchronously dispatch the standard ViewDetails menu command to the frame
-        let _ = frame_for_activate.process_menu_command(MenuId::ViewDetails.into());
+        let _ = frame.process_menu_command(MenuId::ViewDetails.into());
     });
 
     let model_for_selection = model.clone();

@@ -167,53 +167,49 @@ pub fn create_advanced_tab(notebook: &Notebook) -> (SplitterWindow, AdvancedTabC
 
 impl AdvancedTabControls {
     pub fn bind_events(&self) {
+        // Widgets are Copy, so copy them from &self for use in closures
+        let tree_status_label = self.tree_status_label;
+        let gauge = self.gauge;
+        let gauge_status_label = self.gauge_status_label;
+        let spin_ctrl_label = self.spin_ctrl_label;
+
         // TreeCtrl Selection Changed event
-        let tree_status_label_clone = self.tree_status_label.clone();
         self.tree_ctrl.on_selection_changed(move |event_data| {
             if let Some(selected_item) = event_data.get_item() {
                 let mut status = String::new();
                 std::fmt::Write::write_fmt(&mut status, format_args!("Tree Selection: Item {selected_item:?}")).unwrap();
-                tree_status_label_clone.set_label(&status);
+                tree_status_label.set_label(&status);
             } else {
-                tree_status_label_clone.set_label("Tree Selection: None");
+                tree_status_label.set_label("Tree Selection: None");
             }
         });
 
         let gauge_value = Arc::new(AtomicI32::new(0));
 
         // Gauge button events
-        let gauge_clone_for_inc = self.gauge.clone();
-        let gauge_status_label_clone_for_inc = self.gauge_status_label.clone();
         let gauge_value_clone = gauge_value.clone();
         self.gauge_increase_btn.on_click(move |_event| {
             let new_value = gauge_value_clone.fetch_add(10, Ordering::SeqCst) + 10;
-            gauge_clone_for_inc.set_value(new_value);
-            gauge_status_label_clone_for_inc.set_label(&format!("Gauge Value: {new_value}%"));
+            gauge.set_value(new_value);
+            gauge_status_label.set_label(&format!("Gauge Value: {new_value}%"));
         });
 
-        let gauge_clone_for_reset = self.gauge.clone();
-        let gauge_status_label_clone_for_reset = self.gauge_status_label.clone();
-        let gauge_value_clone_for_reset = gauge_value.clone();
+        let gauge_value_clone = gauge_value.clone();
         self.gauge_reset_btn.on_click(move |_event| {
-            gauge_value_clone_for_reset.store(0, Ordering::SeqCst);
-            gauge_clone_for_reset.set_value(0);
-            gauge_status_label_clone_for_reset.set_label("Gauge Value: 0%");
+            gauge_value_clone.store(0, Ordering::SeqCst);
+            gauge.set_value(0);
+            gauge_status_label.set_label("Gauge Value: 0%");
         });
 
         // Slider Event Binding
-        let gauge_clone = self.gauge.clone();
-        let gauge_status_label_clone = self.gauge_status_label.clone();
         let gauge_value_clone = gauge_value.clone();
         self.slider.on_slider(move |event| {
             let value = event.get_value();
-            gauge_clone.set_value(value);
+            gauge.set_value(value);
             gauge_value_clone.store(value, Ordering::SeqCst);
-            gauge_status_label_clone.set_label(&format!("Gauge Value: {value}"));
+            gauge_status_label.set_label(&format!("Gauge Value: {value}"));
         });
 
-        // Timer for Gauge Pulse
-        let gauge_for_timer = self.gauge.clone();
-        let gauge_status_label_for_timer = self.gauge_status_label.clone();
         // Timer for Gauge Pulse Demo (simulate pulse by cycling value)
         let timer = Timer::new(&self.gauge); // Use any widget as owner; here use gauge
         timer.start(200, false); // 200ms interval, repeating
@@ -222,18 +218,17 @@ impl AdvancedTabControls {
             let mut pulse_value = gauge_value_for_timer.load(Ordering::SeqCst);
             pulse_value = (pulse_value + 5) % 105; // 0..100, step 5
             gauge_value_for_timer.store(pulse_value, Ordering::SeqCst);
-            gauge_for_timer.set_value(pulse_value);
-            gauge_status_label_for_timer.set_label(&format!("Gauge Value: {pulse_value}%"));
+            gauge.set_value(pulse_value);
+            gauge_status_label.set_label(&format!("Gauge Value: {pulse_value}%"));
         });
         self.gauge.on_destroy(move |_| {
             timer.stop();
         });
 
         // SpinCtrl Event Binding
-        let spin_ctrl_label_clone = self.spin_ctrl_label.clone();
         self.spin_ctrl.on_value_changed(move |event| {
             let value = event.get_value();
-            spin_ctrl_label_clone.set_label(&format!("Spin Value: {value}"));
+            spin_ctrl_label.set_label(&format!("Spin Value: {value}"));
             println!("SPINCTRL Event (Advanced Tab): ID: {}, Value: {}", event.base.get_id(), value);
         });
     }
@@ -288,31 +283,27 @@ fn add_dnd_demo(panel: &Panel, sizer: &BoxSizer) {
     target_panel.set_sizer(target_sizer, true);
 
     // Set up the drag source
-    source_panel.on_mouse_left_down({
-        let source_panel_ptr = source_panel.clone();
-        move |_| {
-            // Create the data object
-            let data = TextDataObject::new("Text dragged from wxDragon!");
+    // Widgets are Copy, so source_panel can be used directly
+    source_panel.on_mouse_left_down(move |_| {
+        // Create the data object
+        let data = TextDataObject::new("Text dragged from wxDragon!");
 
-            // Create the drop source
-            let drop_source = DropSource::new(&source_panel_ptr);
-            drop_source.set_data(&data);
+        // Create the drop source
+        let drop_source = DropSource::new(&source_panel);
+        drop_source.set_data(&data);
 
-            // Start the drag operation
-            let result = drop_source.do_drag_drop(true);
-            println!("Drag result: {result}");
-        }
+        // Start the drag operation
+        let result = drop_source.do_drag_drop(true);
+        println!("Drag result: {result}");
     });
 
     // Set up the text drop target using the builder pattern
+    // Widgets are Copy, so dropped_text can be used directly
     let _text_drop_target = TextDropTarget::builder(&target_panel)
-        .with_on_drop_text({
-            let dropped_text = dropped_text.clone();
-            move |text, x, y| {
-                println!("Text dropped at ({x}, {y}): {text}");
-                dropped_text.set_value(text);
-                true // Accept the drop
-            }
+        .with_on_drop_text(move |text, x, y| {
+            println!("Text dropped at ({x}, {y}): {text}");
+            dropped_text.set_value(text);
+            true // Accept the drop
         })
         .build();
 
@@ -358,27 +349,25 @@ fn add_dnd_demo(panel: &Panel, sizer: &BoxSizer) {
     file_target_panel.set_sizer(file_sizer, true);
 
     // Set up the file drop target using the builder pattern
+    // Widgets are Copy, so file_list can be used directly
     let _file_drop_target = FileDropTarget::builder(&file_target_panel)
-        .with_on_drop_files({
-            let file_list = file_list.clone();
-            move |files, x, y| {
-                println!("Files dropped at ({}, {}): {} files", x, y, files.len());
+        .with_on_drop_files(move |files, x, y| {
+            println!("Files dropped at ({}, {}): {} files", x, y, files.len());
 
-                // Clear the text field
-                file_list.set_value("");
+            // Clear the text field
+            file_list.set_value("");
 
-                // Add each file path to the text field
-                for file in files {
-                    let current_text = file_list.get_value();
-                    let new_text = if current_text.is_empty() {
-                        file
-                    } else {
-                        format!("{current_text}\n{file}")
-                    };
-                    file_list.set_value(&new_text);
-                }
-                true // Accept the drop
+            // Add each file path to the text field
+            for file in files {
+                let current_text = file_list.get_value();
+                let new_text = if current_text.is_empty() {
+                    file
+                } else {
+                    format!("{current_text}\n{file}")
+                };
+                file_list.set_value(&new_text);
             }
+            true // Accept the drop
         })
         .build();
 

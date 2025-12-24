@@ -160,50 +160,44 @@ impl TabOrderDemo {
     }
 
     fn bind_events(&self) {
+        // Widgets are Copy, so they can be used directly in closures
+        let status_text = self.status_text;
+
         // Focus events for all main controls to show tab order
-        let status_clone = self.status_text.clone();
         self.button1.on_set_focus(move |_| {
-            status_clone.set_label("Focus: Button 1");
+            status_text.set_label("Focus: Button 1");
         });
 
-        let status_clone = self.status_text.clone();
         self.button2.on_set_focus(move |_| {
-            status_clone.set_label("Focus: Button 2");
+            status_text.set_label("Focus: Button 2");
         });
 
-        let status_clone = self.status_text.clone();
         self.button3.on_set_focus(move |_| {
-            status_clone.set_label("Focus: Button 3");
+            status_text.set_label("Focus: Button 3");
         });
 
-        let status_clone = self.status_text.clone();
         self.text_ctrl1.on_set_focus(move |_| {
-            status_clone.set_label("Focus: Text Control 1");
+            status_text.set_label("Focus: Text Control 1");
         });
 
-        let status_clone = self.status_text.clone();
         self.text_ctrl2.on_set_focus(move |_| {
-            status_clone.set_label("Focus: Text Control 2");
+            status_text.set_label("Focus: Text Control 2");
         });
 
-        let status_clone = self.status_text.clone();
         self.checkbox.on_set_focus(move |_| {
-            status_clone.set_label("Focus: Checkbox");
+            status_text.set_label("Focus: Checkbox");
         });
 
-        let status_clone = self.status_text.clone();
         self.radio1.on_set_focus(move |_| {
-            status_clone.set_label("Focus: Radio Option 1");
+            status_text.set_label("Focus: Radio Option 1");
         });
 
-        let status_clone = self.status_text.clone();
         self.radio2.on_set_focus(move |_| {
-            status_clone.set_label("Focus: Radio Option 2");
+            status_text.set_label("Focus: Radio Option 2");
         });
 
-        let status_clone = self.status_text.clone();
         self.combo_box.on_set_focus(move |_| {
-            status_clone.set_label("Focus: Combo Box");
+            status_text.set_label("Focus: Combo Box");
         });
 
         // Tab order control buttons
@@ -211,91 +205,73 @@ impl TabOrderDemo {
     }
 
     fn setup_tab_order_controls(&self) {
-        // Reset to default order button
-        let status = self.status_text.clone();
+        // Widgets are Copy, so use them directly
+        let status_text = self.status_text;
+        let button1 = self.button1;
+        let button2 = self.button2;
+        let button3 = self.button3;
+        let text_ctrl1 = self.text_ctrl1;
+        let text_ctrl2 = self.text_ctrl2;
+        let checkbox = self.checkbox;
+        let radio1 = self.radio1;
+        let radio2 = self.radio2;
+        let combo_box = self.combo_box;
 
+        // Reset to default order button
         self.reset_order_btn.on_click(move |_| {
             // Reset to creation order (which should be the default tab order)
             // This demonstrates that the order can be restored
-            status.set_label("Status: Reset to default tab order (restart app to see effect)");
+            status_text.set_label("Status: Reset to default tab order (restart app to see effect)");
             println!("Resetting to default tab order - restart application to see the default order");
         });
 
         // Reverse order button
-        let button1 = self.button1.clone();
-        let button2 = self.button2.clone();
-        let button3 = self.button3.clone();
-        let text1 = self.text_ctrl1.clone();
-        let text2 = self.text_ctrl2.clone();
-        let checkbox = self.checkbox.clone();
-        let radio1 = self.radio1.clone();
-        let radio2 = self.radio2.clone();
-        let combo = self.combo_box.clone();
-        let status = self.status_text.clone();
-
         self.reverse_order_btn.on_click(move |_| {
             // Reverse the tab order: combo -> radio2 -> radio1 -> checkbox -> text2 -> text1 -> button3 -> button2 -> button1
-            combo.move_before_in_tab_order(&radio2);
+            combo_box.move_before_in_tab_order(&radio2);
             radio2.move_before_in_tab_order(&radio1);
             radio1.move_before_in_tab_order(&checkbox);
-            checkbox.move_before_in_tab_order(&text2);
-            text2.move_before_in_tab_order(&text1);
-            text1.move_before_in_tab_order(&button3);
+            checkbox.move_before_in_tab_order(&text_ctrl2);
+            text_ctrl2.move_before_in_tab_order(&text_ctrl1);
+            text_ctrl1.move_before_in_tab_order(&button3);
             button3.move_before_in_tab_order(&button2);
             button2.move_before_in_tab_order(&button1);
 
-            status.set_label("Status: Reversed tab order - try tabbing now!");
+            status_text.set_label("Status: Reversed tab order - try tabbing now!");
             println!("Reversed tab order");
         });
 
         // Custom order button
-        let button1 = self.button1.clone();
-        let button2 = self.button2.clone();
-        let button3 = self.button3.clone();
-        let text1 = self.text_ctrl1.clone();
-        let text2 = self.text_ctrl2.clone();
-        let checkbox = self.checkbox.clone();
-        let radio1 = self.radio1.clone();
-        let radio2 = self.radio2.clone();
-        let combo = self.combo_box.clone();
-        let status = self.status_text.clone();
-
         self.custom_order_btn.on_click(move |_| {
             // Custom order: text controls first, then buttons, then other controls
             // Order: text1 -> text2 -> button1 -> button2 -> button3 -> checkbox -> radio1 -> radio2 -> combo
-            text2.move_after_in_tab_order(&text1);
-            button1.move_after_in_tab_order(&text2);
+            text_ctrl2.move_after_in_tab_order(&text_ctrl1);
+            button1.move_after_in_tab_order(&text_ctrl2);
             button2.move_after_in_tab_order(&button1);
             button3.move_after_in_tab_order(&button2);
             checkbox.move_after_in_tab_order(&button3);
             radio1.move_after_in_tab_order(&checkbox);
             radio2.move_after_in_tab_order(&radio1);
-            combo.move_after_in_tab_order(&radio2);
+            combo_box.move_after_in_tab_order(&radio2);
 
-            status.set_label("Status: Custom tab order - Text controls first, then buttons!");
+            status_text.set_label("Status: Custom tab order - Text controls first, then buttons!");
             println!("Applied custom tab order");
         });
 
         // Test navigate function
-        let button1 = self.button1.clone();
-        let status = self.status_text.clone();
-
         self.test_navigate_btn.on_click(move |_| {
             // Set focus to button1 and then programmatically navigate
             button1.set_focus();
             if button1.navigate(true) {
-                status.set_label("Status: Programmatically navigated to next control");
+                status_text.set_label("Status: Programmatically navigated to next control");
                 println!("Successfully navigated to next control");
             } else {
-                status.set_label("Status: Navigation failed");
+                status_text.set_label("Status: Navigation failed");
                 println!("Navigation failed");
             }
         });
 
         // Test sibling navigation
-        let button1 = self.button1.clone();
-        let status = self.status_text.clone();
-
         self.button1.on_click(move |_| {
             let mut info = String::from("Button 1 clicked! ");
 
@@ -311,7 +287,7 @@ impl TabOrderDemo {
                 info.push_str("No previous sibling.");
             }
 
-            status.set_label(&format!("Status: {}", info));
+            status_text.set_label(&format!("Status: {}", info));
             println!("{}", info);
         });
     }

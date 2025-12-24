@@ -80,7 +80,7 @@ impl ToolBarEventData {
 
 /// Represents a wxToolBar control.
 /// Toolbars generate `EventType::MENU` events on their parent window when a tool is clicked.
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct ToolBar {
     window: Window, // Composition: ToolBar IS a Window (and Control)
 }
@@ -290,7 +290,7 @@ impl ToolBar {
         let tool_id = XmlResource::get_xrc_id(tool_name);
 
         if tool_id != -1 {
-            Some(crate::widgets::Tool::new(self.window, tool_id, tool_name.to_string()))
+            Some(crate::widgets::Tool::new(self.window, tool_id))
         } else {
             None
         }

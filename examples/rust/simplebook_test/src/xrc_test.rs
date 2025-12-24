@@ -24,7 +24,10 @@ pub fn run_xrc_test() {
 }
 
 fn setup_xrc_event_handlers(ui: &SimpleBookXrcUI) {
-    let simplebook = ui.demo_simplebook.clone();
+    // Widgets are Copy, so use them directly
+    let simplebook = ui.demo_simplebook;
+    let frame = ui.main_frame;
+    let statusbar = ui.main_statusbar;
 
     // Previous button handler
     ui.prev_button.on_click(move |_| {
@@ -34,22 +37,19 @@ fn setup_xrc_event_handlers(ui: &SimpleBookXrcUI) {
         }
     });
 
-    let simplebook2 = ui.demo_simplebook.clone();
     // Next button handler
     ui.next_button.on_click(move |_| {
-        let current = simplebook2.selection();
-        let page_count = simplebook2.get_page_count() as i32;
+        let current = simplebook.selection();
+        let page_count = simplebook.get_page_count() as i32;
         if current < page_count - 1 {
-            simplebook2.set_selection((current + 1) as usize);
+            simplebook.set_selection((current + 1) as usize);
         }
     });
 
-    let simplebook3 = ui.demo_simplebook.clone();
-    let frame = ui.main_frame.clone();
     // Info button handler
     ui.info_button.on_click(move |_| {
-        let current = simplebook3.selection();
-        let page_count = simplebook3.get_page_count();
+        let current = simplebook.selection();
+        let page_count = simplebook.get_page_count();
         let message = format!(
             "XRC SimpleBook Demo\n\nCurrent page: {} of {}\nTotal pages: {}\n\nThis SimpleBook was loaded from XRC!",
             current + 1,
@@ -64,7 +64,6 @@ fn setup_xrc_event_handlers(ui: &SimpleBookXrcUI) {
     });
 
     // Listen for page change events
-    let statusbar = ui.main_statusbar.clone();
     ui.demo_simplebook.on_page_changed(move |event| {
         if let (Some(old_page), Some(new_page)) = (event.get_old_selection(), event.get_selection()) {
             statusbar.set_status_text(

@@ -89,47 +89,44 @@ pub fn create_dataview_tree_tab(parent: &impl WxWidget) -> DataViewTreeTabContro
     dvc_tree.expand(&sub_cat_b1);
 
     // Add event handlers to test the fixes
-    dvc_tree.on_selection_changed({
-        let dvc_tree_clone = dvc_tree.clone();
-        move |event| {
-            println!("=== Selection changed event fired! ===");
+    // Widgets are Copy, so dvc_tree can be used directly in closures
+    dvc_tree.on_selection_changed(move |event| {
+        println!("=== Selection changed event fired! ===");
 
-            // Test get_item() from event - this should now work
-            if let Some(item) = event.get_item() {
-                println!("✓ Event item retrieved: {:?}", item);
-                let text = dvc_tree_clone.get_item_text(&item);
-                println!("✓ Event item text: '{}'", text);
+        // Test get_item() from event - this should now work
+        if let Some(item) = event.get_item() {
+            println!("✓ Event item retrieved: {:?}", item);
+            let text = dvc_tree.get_item_text(&item);
+            println!("✓ Event item text: '{}'", text);
 
-                // Now test get_selection() - this is what we're trying to fix
-                match dvc_tree_clone.get_selection() {
-                    Some(selected_item) => {
-                        println!("✓ Selection retrieved: {:?}", selected_item);
-                        let selected_text = dvc_tree_clone.get_item_text(&selected_item);
-                        println!("✓ Selected item text: '{}'", selected_text);
+            // Now test get_selection() - this is what we're trying to fix
+            match dvc_tree.get_selection() {
+                Some(selected_item) => {
+                    println!("✓ Selection retrieved: {:?}", selected_item);
+                    let selected_text = dvc_tree.get_item_text(&selected_item);
+                    println!("✓ Selected item text: '{}'", selected_text);
 
-                        // Check if they're the same by comparing their texts
-                        if text == selected_text {
-                            println!("✓ Event item and selection match!");
-                        } else {
-                            println!("✗ Event item and selection are different");
-                        }
-                    }
-                    None => {
-                        println!("✗ get_selection() returned None");
+                    // Check if they're the same by comparing their texts
+                    if text == selected_text {
+                        println!("✓ Event item and selection match!");
+                    } else {
+                        println!("✗ Event item and selection are different");
                     }
                 }
-            } else {
-                println!("✗ No item in event");
+                None => {
+                    println!("✗ get_selection() returned None");
+                }
             }
+        } else {
+            println!("✗ No item in event");
         }
     });
 
     // Add context menu handler using DataView-specific event
     // This provides item and column information directly
-    let dvc_tree_for_context = dvc_tree.clone();
     dvc_tree.on_item_context_menu(move |event| {
         if let Some(item) = event.get_item() {
-            let text = dvc_tree_for_context.get_item_text(&item);
+            let text = dvc_tree.get_item_text(&item);
             println!("Context menu requested on item: '{}'", text);
             if let Some(col) = event.get_column() {
                 println!("  Column: {}", col);
@@ -143,7 +140,7 @@ pub fn create_dataview_tree_tab(parent: &impl WxWidget) -> DataViewTreeTabContro
                 .append_item(5003, "Info", "")
                 .build();
 
-            dvc_tree_for_context.popup_menu(&mut menu, None);
+            dvc_tree.popup_menu(&mut menu, None);
         }
     });
 

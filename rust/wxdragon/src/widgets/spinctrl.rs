@@ -4,9 +4,6 @@ use crate::event::event_data::CommandEventData;
 use crate::event::{Event, EventType};
 use crate::geometry::{Point, Size};
 use crate::id::Id;
-use crate::implement_widget_traits_with_target;
-use crate::widget_builder;
-use crate::widget_style_enum;
 use crate::window::{Window, WxWidget};
 use std::ffi::CString;
 use std::os::raw::c_int;
@@ -30,7 +27,7 @@ widget_style_enum!(
 );
 
 /// Represents a wxSpinCtrl widget.
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct SpinCtrl {
     window: Window,
 }

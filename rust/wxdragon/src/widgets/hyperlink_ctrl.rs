@@ -6,9 +6,6 @@ use crate::color::Colour;
 use crate::event::{Event, EventType};
 use crate::geometry::{Point, Size};
 use crate::id::Id;
-use crate::implement_widget_traits_with_target;
-use crate::widget_builder;
-use crate::widget_style_enum;
 use crate::window::{Window, WxWidget};
 
 // --- Style enum using macro ---
@@ -66,7 +63,7 @@ impl HyperlinkCtrlEventData {
 }
 
 // --- HyperlinkCtrl --- //
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct HyperlinkCtrl {
     window: Window, // Embed the Window struct
 }

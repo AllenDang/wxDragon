@@ -4,9 +4,6 @@
 use crate::event::{Event, EventType};
 use crate::geometry::{Point, Size};
 use crate::id::Id;
-use crate::implement_widget_traits_with_target;
-use crate::widget_builder;
-use crate::widget_style_enum;
 use crate::widgets::imagelist::ImageList;
 use crate::window::{Window, WxWidget};
 use std::ffi::CString;
@@ -31,7 +28,7 @@ widget_style_enum!(
 );
 
 /// Represents a wxNotebook widget.
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct Notebook {
     window: Window,
 }

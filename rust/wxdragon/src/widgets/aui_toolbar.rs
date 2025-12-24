@@ -85,7 +85,7 @@ impl AuiToolBarEventData {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct AuiToolBar {
     window: Window,
     #[allow(dead_code)]

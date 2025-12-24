@@ -39,7 +39,7 @@ impl VirtualListItemRenderer for ListItemRenderer {
 
         // Set up button click handler ONCE during creation
         // Use find_window_by_id to get current item data at click time
-        let panel_for_click = panel.clone();
+        // Widgets are Copy, so panel can be used directly
         button.on_click(move |_event| {
             // Get current data from the panel's text widgets at click time
             let mut item_index = "Unknown".to_string();
@@ -47,7 +47,7 @@ impl VirtualListItemRenderer for ListItemRenderer {
             let mut item_description = "Unknown".to_string();
 
             // Extract index from button label (format: "Click me! (123)")
-            if let Some(button_window) = panel_for_click.find_window_by_id(BUTTON_ID)
+            if let Some(button_window) = panel.find_window_by_id(BUTTON_ID)
                 && let Some(button_widget) = button_window.as_widget::<Button>()
             {
                 let label = button_widget.get_label();
@@ -59,14 +59,14 @@ impl VirtualListItemRenderer for ListItemRenderer {
             }
 
             // Get current title
-            if let Some(title_window) = panel_for_click.find_window_by_id(TITLE_ID)
+            if let Some(title_window) = panel.find_window_by_id(TITLE_ID)
                 && let Some(title_widget) = title_window.as_widget::<StaticText>()
             {
                 item_title = title_widget.get_label();
             }
 
             // Get current description
-            if let Some(desc_window) = panel_for_click.find_window_by_id(DESCRIPTION_ID)
+            if let Some(desc_window) = panel.find_window_by_id(DESCRIPTION_ID)
                 && let Some(desc_widget) = desc_window.as_widget::<StaticText>()
             {
                 item_description = desc_widget.get_label();
@@ -161,7 +161,7 @@ impl VirtualListItemRenderer for HorizontalListItemRenderer {
         let button = Button::builder(&panel).with_id(BUTTON_ID).with_label("Click me!").build();
 
         // Set up button click handler ONCE during creation
-        let panel_for_click = panel.clone();
+        // Widgets are Copy, so panel can be used directly
         button.on_click(move |_event| {
             // Get current data from the panel's text widgets at click time
             let mut item_index = "Unknown".to_string();
@@ -169,7 +169,7 @@ impl VirtualListItemRenderer for HorizontalListItemRenderer {
             let mut item_description = "Unknown".to_string();
 
             // Extract index from button label (format: "Click me! (123)")
-            if let Some(button_window) = panel_for_click.find_window_by_id(BUTTON_ID)
+            if let Some(button_window) = panel.find_window_by_id(BUTTON_ID)
                 && let Some(button_widget) = button_window.as_widget::<Button>()
             {
                 let label = button_widget.get_label();
@@ -181,14 +181,14 @@ impl VirtualListItemRenderer for HorizontalListItemRenderer {
             }
 
             // Get current title
-            if let Some(title_window) = panel_for_click.find_window_by_id(TITLE_ID)
+            if let Some(title_window) = panel.find_window_by_id(TITLE_ID)
                 && let Some(title_widget) = title_window.as_widget::<StaticText>()
             {
                 item_title = title_widget.get_label();
             }
 
             // Get current description
-            if let Some(desc_window) = panel_for_click.find_window_by_id(DESCRIPTION_ID)
+            if let Some(desc_window) = panel.find_window_by_id(DESCRIPTION_ID)
                 && let Some(desc_widget) = desc_window.as_widget::<StaticText>()
             {
                 item_description = desc_widget.get_label();

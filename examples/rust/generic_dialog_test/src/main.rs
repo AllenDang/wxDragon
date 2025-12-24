@@ -12,11 +12,9 @@ fn main() {
         // Create a button to show the generic dialog
         let button = Button::builder(&frame).with_label("Show Generic Dialog").build();
 
-        // Clone frame for the event handler
-        let frame_clone = frame.clone();
         button.on_click(move |_| {
             // Create a generic dialog using the new builder
-            let dialog = Dialog::builder(&frame_clone, "My Generic Dialog")
+            let dialog = Dialog::builder(&frame, "My Generic Dialog")
                 .with_style(DialogStyle::DefaultDialogStyle | DialogStyle::ResizeBorder)
                 .with_size(300, 200)
                 .build();
@@ -30,10 +28,8 @@ fn main() {
 
             let ok_button = Button::builder(&panel).with_label("OK").build();
 
-            // Clone dialog for the OK button event handler
-            let dialog_clone = dialog.clone();
             ok_button.on_click(move |_| {
-                dialog_clone.end_modal(ID_OK);
+                dialog.end_modal(ID_OK);
             });
 
             dialog.on_destroy(move |_| {

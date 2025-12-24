@@ -18,7 +18,7 @@ widget_style_enum!(
 );
 
 /// Represents a wxStaticText control.
-#[derive(Clone)] // Allow cloning the wrapper
+#[derive(Clone, Copy)]
 pub struct StaticText {
     window: Window, // Composition: StaticText IS a Window
 }

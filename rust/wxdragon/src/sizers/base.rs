@@ -56,7 +56,7 @@ pub trait WxSizer {
 }
 
 /// Opaque wrapper for a base wxSizer pointer.
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct Sizer {
     pub(crate) ptr: *mut ffi::wxd_Sizer_t,
 }

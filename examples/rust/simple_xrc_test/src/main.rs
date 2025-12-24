@@ -72,10 +72,14 @@ fn main() {
 
         log::info!("✓ Loaded dialog.xrc");
 
-        let dialog_clone = dialog_ui.test_dialog.clone();
+        // Widgets are Copy, so copy them for use in closures
+        let dialog = dialog_ui.test_dialog;
+        let statusbar_copy = *statusbar;
+        let main_frame = frame_ui.main_frame;
+
         main_panel.on_destroy(move |_event| {
             log::debug!("Main panel is being destroyed");
-            dialog_clone.destroy();
+            dialog.destroy();
         });
 
         dialog_ui.test_dialog.on_destroy(move |_event| {
@@ -85,147 +89,121 @@ fn main() {
         // Frame automatically handles layout with toolbar/statusbar
 
         // Tools are now auto-generated fields from XRC
-        let up_tool = &frame_ui.m_tool_up;
-        let down_tool = &frame_ui.m_tool_down;
-        let help_tool = &frame_ui.m_tool_help;
+        let up_tool = frame_ui.m_tool_up;
+        let down_tool = frame_ui.m_tool_down;
+        let help_tool = frame_ui.m_tool_help;
 
         log::info!("✓ Using auto-generated XRC tool fields");
 
         // Bind events directly to auto-generated tool fields
-        let statusbar_for_up = statusbar.clone();
-        let up_tool_clone = up_tool.clone();
-        up_tool_clone.on_click(move |_event| {
+        up_tool.on_click(move |_event| {
             log::info!("Up tool clicked!");
-            statusbar_for_up.set_status_text("Up tool clicked", 0);
+            statusbar_copy.set_status_text("Up tool clicked", 0);
         });
 
-        let statusbar_for_down = statusbar.clone();
-        let down_tool_clone = down_tool.clone();
-        down_tool_clone.on_click(move |_event| {
+        down_tool.on_click(move |_event| {
             log::info!("Down tool clicked!");
-            statusbar_for_down.set_status_text("Down tool clicked", 0);
+            statusbar_copy.set_status_text("Down tool clicked", 0);
         });
 
-        let statusbar_for_help = statusbar.clone();
-        let help_tool_clone = help_tool.clone();
-        help_tool_clone.on_click(move |_event| {
+        help_tool.on_click(move |_event| {
             log::info!("Help tool clicked!");
-            statusbar_for_help.set_status_text("Help tool clicked", 0);
+            statusbar_copy.set_status_text("Help tool clicked", 0);
         });
 
         // 4. Handle menu items from auto-generated fields
-        let menu_new = &frame_ui.menu_new;
-        let menu_open = &frame_ui.menu_open;
-        let menu_exit = &frame_ui.menu_exit;
-        let menu_about = &frame_ui.menu_about;
+        let menu_new = frame_ui.menu_new;
+        let menu_open = frame_ui.menu_open;
+        let menu_exit = frame_ui.menu_exit;
+        let menu_about = frame_ui.menu_about;
 
         log::info!("✓ Using auto-generated XRC menu item fields");
 
         // Bind events to menu items
-        let statusbar_for_new = statusbar.clone();
-        let menu_new_clone = menu_new.clone();
-        menu_new_clone.on_click(move |_event| {
+        menu_new.on_click(move |_event| {
             log::info!("New menu item clicked!");
-            statusbar_for_new.set_status_text("New file created", 0);
+            statusbar_copy.set_status_text("New file created", 0);
         });
 
-        let statusbar_for_open = statusbar.clone();
-        let menu_open_clone = menu_open.clone();
-        menu_open_clone.on_click(move |_event| {
+        menu_open.on_click(move |_event| {
             log::info!("Open menu item clicked!");
-            statusbar_for_open.set_status_text("File opened", 0);
+            statusbar_copy.set_status_text("File opened", 0);
         });
 
-        let frame_clone_for_exit = frame_ui.main_frame.clone();
-        let menu_exit_clone = menu_exit.clone();
-        menu_exit_clone.on_click(move |_event| {
+        menu_exit.on_click(move |_event| {
             log::info!("Exit menu item clicked!");
-            frame_clone_for_exit.close(true);
+            main_frame.close(true);
         });
 
-        let statusbar_for_about = statusbar.clone();
-        let menu_about_clone = menu_about.clone();
-        menu_about_clone.on_click(move |_event| {
+        menu_about.on_click(move |_event| {
             log::info!("About menu item clicked!");
-            statusbar_for_about.set_status_text("About dialog would open", 0);
+            statusbar_copy.set_status_text("About dialog would open", 0);
         });
 
         // 5. Get widgets from the panel by name and bind events
-        let show_dialog_btn = &panel_ui.show_dialog_btn;
-        let action_btn = &panel_ui.action_btn;
-        let enable_check = &panel_ui.enable_check;
-        let option1_radio = &panel_ui.option1_radio;
-        let option2_radio = &panel_ui.option2_radio;
-        let choice_combo = &panel_ui.choice_combo;
-        let items_list = &panel_ui.items_list;
-        let input_text = &panel_ui.input_text;
-        let multiline_text = &panel_ui.multiline_text;
-        let search_ctrl = &panel_ui.search_ctrl;
-        let toggle_btn = &panel_ui.toggle_btn;
-        let value_slider = &panel_ui.value_slider;
-        let progress_gauge = &panel_ui.progress_gauge;
-        let number_spin = &panel_ui.number_spin;
-        let status_label = &panel_ui.status_label;
+        // Widgets are Copy, so copy them for use in closures
+        let show_dialog_btn = panel_ui.show_dialog_btn;
+        let action_btn = panel_ui.action_btn;
+        let enable_check = panel_ui.enable_check;
+        let option1_radio = panel_ui.option1_radio;
+        let option2_radio = panel_ui.option2_radio;
+        let choice_combo = panel_ui.choice_combo;
+        let items_list = panel_ui.items_list;
+        let input_text = panel_ui.input_text;
+        let multiline_text = panel_ui.multiline_text;
+        let search_ctrl = panel_ui.search_ctrl;
+        let toggle_btn = panel_ui.toggle_btn;
+        let value_slider = panel_ui.value_slider;
+        let progress_gauge = panel_ui.progress_gauge;
+        let number_spin = panel_ui.number_spin;
+        let status_label = panel_ui.status_label;
 
         // Bind button events
 
         // Show dialog button
-        let dialog_clone = dialog_ui.test_dialog.clone();
         show_dialog_btn.on_click(move |_event_data| {
             log::info!("Show dialog button clicked!");
-            let result = dialog_clone.show_modal();
+            let result = dialog.show_modal();
             log::info!("Dialog closed with result: {result}");
         });
 
         // Action button
-        let status_clone = status_label.clone();
-        let statusbar_clone = statusbar.clone();
         action_btn.on_click(move |_event_data| {
             log::info!("Action button clicked!");
-            status_clone.set_label("Action button was clicked!");
-            statusbar_clone.set_status_text("Action button clicked", 0);
+            status_label.set_label("Action button was clicked!");
+            statusbar_copy.set_status_text("Action button clicked", 0);
         });
 
         // Toggle button - fixed method name
-        let status_clone2 = status_label.clone();
-        let statusbar_clone2 = statusbar.clone();
         toggle_btn.on_toggle(move |event_data| {
             let is_pressed = event_data.is_checked().unwrap_or(false);
             let flag = if is_pressed { "ON" } else { "OFF" };
             log::info!("Toggle button: {flag}");
-            status_clone2.set_label(&format!("Toggle: {flag}"));
-            statusbar_clone2.set_status_text(&format!("Toggle: {flag}"), 0);
+            status_label.set_label(&format!("Toggle: {flag}"));
+            statusbar_copy.set_status_text(&format!("Toggle: {flag}"), 0);
         });
 
         // Checkbox
-        let status_clone3 = status_label.clone();
-        let statusbar_clone3 = statusbar.clone();
         enable_check.on_toggled(move |event_data| {
             let is_checked = event_data.is_checked();
             let flag = if is_checked { "CHECKED" } else { "UNCHECKED" };
             log::info!("Checkbox: {flag}");
             let flag = if is_checked { "YES" } else { "NO" };
-            status_clone3.set_label(&format!("Enabled: {flag}"));
+            status_label.set_label(&format!("Enabled: {flag}"));
             let flag = if is_checked { "Enabled" } else { "Disabled" };
-            statusbar_clone3.set_status_text(&format!("Features: {flag}"), 0);
+            statusbar_copy.set_status_text(&format!("Features: {flag}"), 0);
         });
 
         value_slider.set_range(0, 100);
         number_spin.set_range(0, 100);
         progress_gauge.set_range(100);
 
-        let value_slider_clone = value_slider.clone();
-        let progress_gauge_clone = progress_gauge.clone();
-        let number_spin_clone = number_spin.clone();
-        let status_label_clone = status_label.clone();
-        let statusbar_clone = statusbar.clone();
-
         let update_all = std::rc::Rc::new(move |value: i32| {
-            value_slider_clone.set_value(value);
-            progress_gauge_clone.set_value(value);
-            number_spin_clone.set_value(value);
-            status_label_clone.set_label(&format!("Value: {value}"));
-            statusbar_clone.set_status_text(&format!("Value: {value}"), 0);
+            value_slider.set_value(value);
+            progress_gauge.set_value(value);
+            number_spin.set_value(value);
+            status_label.set_label(&format!("Value: {value}"));
+            statusbar_copy.set_status_text(&format!("Value: {value}"), 0);
         });
 
         // Slider
@@ -245,62 +223,54 @@ fn main() {
         });
 
         // Text controls
-        let status_clone6 = status_label.clone();
         input_text.on_text_updated(move |_event_data| {
             log::info!("Input text updated");
-            status_clone6.set_label("Input text updated");
+            status_label.set_label("Input text updated");
         });
 
         // Search control
-        let status_clone7 = status_label.clone();
         search_ctrl.on_search_button_clicked(move |_event_data| {
             log::info!("Search button clicked");
-            status_clone7.set_label("Search performed");
+            status_label.set_label("Search performed");
         });
 
         // Radio buttons
-        let status_clone8 = status_label.clone();
         option1_radio.on_selected(move |_event_data| {
             log::info!("Option 1 selected");
-            status_clone8.set_label("Option 1 selected");
+            status_label.set_label("Option 1 selected");
         });
 
-        let status_clone9 = status_label.clone();
         option2_radio.on_selected(move |_event_data| {
             log::info!("Option 2 selected");
-            status_clone9.set_label("Option 2 selected");
+            status_label.set_label("Option 2 selected");
         });
 
         // Choice combo
-        let status_clone10 = status_label.clone();
         choice_combo.on_selection_changed(move |event_data| {
             let selection = event_data.get_selection().unwrap_or(0);
             log::info!("Choice selected: {selection}");
-            status_clone10.set_label(&format!("Choice: {selection}"));
+            status_label.set_label(&format!("Choice: {selection}"));
         });
 
         // List box
-        let status_clone11 = status_label.clone();
         items_list.on_selection_changed(move |event_data| {
             let selection = event_data.get_selection().unwrap_or(0);
             log::info!("List item selected: {selection}");
-            status_clone11.set_label(&format!("Item: {selection}"));
+            status_label.set_label(&format!("Item: {selection}"));
         });
 
         // Set up dialog button handlers
-        let dialog_ok = &dialog_ui.dialog_ok_btn;
-        let dialog_cancel = &dialog_ui.dialog_cancel_btn;
+        let dialog_ok = dialog_ui.dialog_ok_btn;
+        let dialog_cancel = dialog_ui.dialog_cancel_btn;
 
-        let _dialog_clone_ok = dialog_ui.test_dialog.clone();
         dialog_ok.on_click(move |_event_data| {
             log::info!("Dialog OK clicked");
-            _dialog_clone_ok.end_modal(ID_OK);
+            dialog.end_modal(ID_OK);
         });
 
-        let _dialog_clone_cancel = dialog_ui.test_dialog.clone();
         dialog_cancel.on_click(move |_event_data| {
             log::info!("Dialog Cancel clicked");
-            _dialog_clone_cancel.end_modal(ID_CANCEL);
+            dialog.end_modal(ID_CANCEL);
         });
 
         // Set some initial values to demonstrate the controls

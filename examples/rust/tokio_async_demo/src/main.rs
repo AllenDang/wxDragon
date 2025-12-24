@@ -129,7 +129,7 @@ async fn main() {
         let (sender, receiver) = tokio_mpsc::unbounded_channel::<AsyncMessage>();
 
         // Create our async message handler
-        let mut message_handler = AsyncMessageHandler::new(receiver, counter_text, status_text.clone());
+        let mut message_handler = AsyncMessageHandler::new(receiver, counter_text, status_text);
 
         // Use idle events for efficient async message processing
         // This is the recommended approach for wxDragon async integration

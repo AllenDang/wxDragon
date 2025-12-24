@@ -5,9 +5,6 @@ use crate::event::TextEvents;
 use crate::event::{Event, EventType};
 use crate::geometry::{Point, Size};
 use crate::id::Id;
-use crate::implement_widget_traits_with_target;
-use crate::widget_builder;
-use crate::widget_style_enum;
 use crate::window::{Window, WxWidget};
 use std::ffi::CString;
 use std::os::raw::c_char;
@@ -124,7 +121,7 @@ impl RichTextCtrlEventData {
 /// RichTextCtrl is a rich text editor that supports formatted text with different fonts,
 /// colors, styles, and other formatting options. It provides a comprehensive set of
 /// editing and formatting capabilities.
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct RichTextCtrl {
     window: Window,
 }

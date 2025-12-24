@@ -2,9 +2,6 @@ use crate::event::event_data::CommandEventData;
 use crate::event::{Event, EventType};
 use crate::geometry::{Point, Size};
 use crate::id::Id;
-use crate::implement_widget_traits_with_target;
-use crate::widget_builder;
-use crate::widget_style_enum;
 use crate::window::{Window, WxWidget};
 use std::ffi::{CStr, CString};
 use wxdragon_sys as ffi;
@@ -24,7 +21,7 @@ widget_style_enum!(
 );
 
 /// Represents a wxChoice control (dropdown list).
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct Choice {
     window: Window,
 }

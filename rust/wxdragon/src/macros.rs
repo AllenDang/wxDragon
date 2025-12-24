@@ -122,7 +122,9 @@ macro_rules! widget_builder {
 /// - WxWidget trait
 /// - Deref/DerefMut to Window
 /// - WxEvtHandler trait
-/// - Drop implementation with empty body (for child widgets)
+///
+/// Note: Drop is NOT implemented, as wxWidgets manages child window lifetimes.
+/// This allows widgets to implement Copy for convenient use in closures.
 ///
 /// # Parameters
 ///
@@ -165,12 +167,9 @@ macro_rules! implement_widget_traits {
             }
         }
 
-        impl Drop for $widget_name {
-            fn drop(&mut self) {
-                // Child windows are managed by their parent in wxWidgets,
-                // so no explicit cleanup is needed here.
-            }
-        }
+        // Note: Drop is intentionally NOT implemented for widgets.
+        // Child windows are managed by their parent in wxWidgets.
+        // This allows widgets to implement Copy for convenient use in closures.
     };
 }
 
@@ -180,10 +179,11 @@ macro_rules! implement_widget_traits {
 /// - WxWidget trait
 /// - Deref/DerefMut to the specified target type
 /// - WxEvtHandler trait
-/// - Drop implementation with empty body (for child widgets)
-/// - Clone trait (clones the target field; other fields must be Copy or have manual Clone)
 /// - MenuEvents trait (for context menus and menu handling)
 /// - WindowEvents trait (for standard window events)
+///
+/// Note: Drop is NOT implemented, as wxWidgets manages child window lifetimes.
+/// This allows widgets to implement Copy for convenient use in closures.
 ///
 /// # Parameters
 ///
@@ -238,12 +238,9 @@ macro_rules! implement_widget_traits_with_target {
             }
         }
 
-        impl Drop for $widget_name {
-            fn drop(&mut self) {
-                // Child windows are managed by their parent in wxWidgets,
-                // so no explicit cleanup is needed here.
-            }
-        }
+        // Note: Drop is intentionally NOT implemented for widgets.
+        // Child windows are managed by their parent in wxWidgets.
+        // This allows widgets to implement Copy for convenient use in closures.
 
         // Auto-implement common event traits that all Window-based widgets support
         impl $crate::event::MenuEvents for $widget_name {}

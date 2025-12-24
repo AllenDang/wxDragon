@@ -1,5 +1,4 @@
 use crate::dialogs::Dialog; // Use the Dialog from the parent module
-use crate::widget_style_enum;
 use crate::window::WxWidget; // Keep this
 use std::ffi::CString;
 use wxdragon_sys as ffi;

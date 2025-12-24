@@ -25,7 +25,7 @@ widget_style_enum!(
 
 /// Represents a wxGenericStaticBitmap widget, used to display a bitmap.
 /// This is a platform-independent implementation that properly handles scaling on all platforms.
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct GenericStaticBitmap {
     window: Window,
 }

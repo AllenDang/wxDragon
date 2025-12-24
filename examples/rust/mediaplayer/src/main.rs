@@ -81,10 +81,13 @@ impl MediaPlayerFrame {
         stop_button: &Button,
         open_button: &Button,
     ) {
-        // Play button event handler
-        let media_ctrl = player.media_ctrl.clone();
-        let statusbar = player.statusbar.clone();
+        // Widgets are Copy, so use them directly
+        let media_ctrl = player.media_ctrl;
+        let statusbar = player.statusbar;
+        let frame = player.frame;
+        let current_file = player.current_file.clone();
 
+        // Play button event handler
         play_button.on_click(move |_| {
             if media_ctrl.play() {
                 statusbar.set_status_text("Playing", 0);
@@ -94,9 +97,6 @@ impl MediaPlayerFrame {
         });
 
         // Pause button event handler
-        let media_ctrl = player.media_ctrl.clone();
-        let statusbar = player.statusbar.clone();
-
         pause_button.on_click(move |_| {
             if media_ctrl.pause() {
                 statusbar.set_status_text("Paused", 0);
@@ -106,9 +106,6 @@ impl MediaPlayerFrame {
         });
 
         // Stop button event handler
-        let media_ctrl = player.media_ctrl.clone();
-        let statusbar = player.statusbar.clone();
-
         stop_button.on_click(move |_| {
             if media_ctrl.stop() {
                 statusbar.set_status_text("Stopped", 0);
@@ -118,11 +115,6 @@ impl MediaPlayerFrame {
         });
 
         // Open button event handler
-        let media_ctrl = player.media_ctrl.clone();
-        let statusbar = player.statusbar.clone();
-        let frame = player.frame.clone();
-        let current_file = player.current_file.clone();
-
         open_button.on_click(move |_| {
             let file_dialog = FileDialog::builder(&frame)
                 .with_message("Open Media File")
@@ -153,9 +145,6 @@ impl MediaPlayerFrame {
         });
 
         // Media state event handlers
-        let media_ctrl = player.media_ctrl.clone();
-        let statusbar = player.statusbar.clone();
-
         media_ctrl.on_state_changed(move |event| {
             // Just handle media state directly using raw event data
             // This is a temporary workaround until MediaStateEvent is implemented

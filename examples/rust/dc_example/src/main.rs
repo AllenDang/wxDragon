@@ -9,12 +9,10 @@ impl DrawingPanel {
         let panel = PanelBuilder::new(parent).build();
         panel.set_background_style(BackgroundStyle::Paint);
 
-        let panel_clone = panel.clone();
-
-        // Register the paint handler with a move closure and cloned panel
+        // Register the paint handler with a move closure
         panel.on_paint(move |_event| {
             // Create a PaintDC when handling paint events
-            let dc = AutoBufferedPaintDC::new(&panel_clone);
+            let dc = AutoBufferedPaintDC::new(&panel);
 
             // Clear the DC with a white background
             dc.set_background(Colour::rgb(255, 255, 255));
@@ -48,13 +46,10 @@ impl DrawingPanel {
             dc.draw_ellipse(150, 120, 100, 60);
         });
 
-        // Make a separate clone for the SIZE event handler
-        let panel_clone_size = panel.clone();
-
         // Also handle SIZE events to refresh when the window size changes
         panel.on_size(move |_event| {
             // Force a repaint when window size changes
-            panel_clone_size.refresh(true, None);
+            panel.refresh(true, None);
         });
 
         Self { panel }

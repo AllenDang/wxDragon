@@ -16,7 +16,7 @@ widget_style_enum!(
     default_variant: Specified
 );
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct FlexGridSizer {
     raw_specific_ptr: *mut ffi::wxd_FlexGridSizer_t, // Specific pointer for FlexGridSizer FFI calls
     sizer_base: Sizer,                               // Base Sizer for common functionality and Deref

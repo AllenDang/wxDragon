@@ -3,7 +3,6 @@ use crate::geometry::{Point, Size};
 use crate::id::ID_ANY;
 use crate::id::Id;
 use crate::menus::MenuBar; // ADDED: Import MenuBar
-use crate::widget_style_enum;
 use crate::widgets::statusbar::StatusBar; // ADDED Import
 use crate::widgets::toolbar::{ToolBar, ToolBarStyle}; // Added ToolBarStyle
 use crate::window::{Window, WxWidget};
@@ -69,7 +68,7 @@ widget_style_enum!(
 /// Calling `.close()` on a frame initiates the closing process, which typically also
 /// leads to the frame's destruction by wxWidgets, unless the close event is vetoed.
 /// `.destroy()` provides a more direct way to ensure destruction.
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct Frame {
     window: Window, // Composition: Frame uses a Window internally
     // Store parent pointer to manage drop behavior

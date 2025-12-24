@@ -3,9 +3,6 @@
 use crate::event::{Event, EventType, WindowEvents};
 use crate::geometry::{Point, Size};
 use crate::id::Id;
-use crate::implement_widget_traits_with_target;
-use crate::widget_builder;
-use crate::widget_style_enum;
 use crate::widgets::imagelist::ImageList;
 use crate::widgets::item_data::{HasItemData, get_item_data, remove_item_data, store_item_data};
 use crate::window::{Window, WxWidget};
@@ -226,7 +223,7 @@ pub mod image_list_type {
 /// - List view (one column)
 /// - Report view (multiple columns with headers)
 /// - Icon view (large or small icons)
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct ListCtrl {
     window: Window,
 }
@@ -777,7 +774,7 @@ impl ListCtrl {
     /// This is automatically called during construction.
     fn setup_cleanup(&self) {
         // Create a clone for the closure
-        let list_ctrl_clone = self.clone();
+        let list_ctrl_clone = *self;
 
         // Bind to the DESTROY event for proper cleanup when the window is destroyed
         self.on_destroy(move |_event| {

@@ -1,5 +1,5 @@
+use crate::Bitmap;
 use crate::window::{Window, WxWidget};
-use crate::{Bitmap, widget_style_enum};
 use std::ffi::CString;
 use std::marker::PhantomData;
 use wxdragon_sys as ffi;
@@ -38,7 +38,7 @@ widget_style_enum!(
 /// Dialog instances are typically shown modally and should be destroyed after use.
 /// Call the `.destroy()` method (available via the `WxWidget` trait) when the dialog
 /// is no longer needed to ensure proper cleanup.
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct Dialog {
     window: Window, // Composition: Dialog uses a Window internally
     // Store parent pointer to manage drop behavior

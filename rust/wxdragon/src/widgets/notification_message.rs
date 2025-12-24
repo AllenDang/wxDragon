@@ -4,7 +4,6 @@
 // use crate::window::Window; // For parent type, though it's just a handle - Unused, removing
 // use crate::base::WxResult; // Will define locally for now
 use crate::event::{Event, EventType};
-use crate::widget_style_enum;
 use crate::window::WxWidget;
 use std::ffi::{CString, NulError};
 use std::os::raw::c_int;

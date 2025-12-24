@@ -5,9 +5,6 @@ use crate::event::{Event, EventType};
 use crate::font::Font;
 use crate::geometry::{Point, Size};
 use crate::id::Id;
-use crate::implement_widget_traits_with_target;
-use crate::widget_builder;
-use crate::widget_style_enum;
 use crate::window::{Window, WxWidget};
 use std::ffi::CString;
 use std::os::raw::c_char;
@@ -392,7 +389,7 @@ impl StyledTextCtrlEventData {
 ///
 /// StyledTextCtrl is a text editor control based on the Scintilla editing component.
 /// It provides syntax highlighting, code folding, and many advanced text editing features.
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct StyledTextCtrl {
     window: Window,
 }

@@ -37,15 +37,13 @@ impl From<ItemKind> for i32 {
 
 /// Represents a wxMenuItem.
 /// This can be either a wrapper around an existing menu item or loaded from XRC.
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct MenuItem {
     ptr: *mut ffi::wxd_MenuItem_t, // Non-owning pointer
     /// Reference to the parent window that will receive menu events
     parent_window: Window,
     /// The menu item's ID for event handling
     item_id: i32,
-    /// The menu item's XRC name for identification (if loaded from XRC)
-    item_name: Option<String>,
 }
 
 impl From<*mut ffi::wxd_MenuItem_t> for MenuItem {
@@ -75,30 +73,23 @@ impl MenuItem {
             ptr,
             parent_window,
             item_id,
-            item_name: None,
         }
     }
 
     /// Creates a MenuItem wrapper from XRC information.
     /// This is typically called by the XRC loading system.
     #[cfg(feature = "xrc")]
-    pub(crate) fn new(parent_window: Window, item_id: i32, item_name: String) -> Self {
+    pub(crate) fn new(parent_window: Window, item_id: i32) -> Self {
         Self {
             ptr: std::ptr::null_mut(), // Not used for XRC items
             parent_window,
             item_id,
-            item_name: Some(item_name),
         }
     }
 
     /// Gets the menu item's ID used for event handling.
     pub fn get_item_id(&self) -> i32 {
         self.item_id
-    }
-
-    /// Gets the menu item's XRC name.
-    pub fn get_item_name(&self) -> Option<&str> {
-        self.item_name.as_deref()
     }
 
     /// Binds a click event handler to this menu item.
@@ -122,7 +113,7 @@ impl MenuItem {
         let item_id = XmlResource::get_xrc_id(item_name);
 
         if item_id != -1 {
-            Some(MenuItem::new(*parent_window, item_id, item_name.to_string()))
+            Some(MenuItem::new(*parent_window, item_id))
         } else {
             None
         }

@@ -9,7 +9,7 @@ use wxdragon_sys as ffi;
 use super::base::Orientation;
 
 /// Represents a wxBoxSizer.
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct BoxSizer {
     sizer_base: Sizer,
 }

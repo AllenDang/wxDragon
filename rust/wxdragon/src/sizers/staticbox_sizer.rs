@@ -8,7 +8,7 @@ use crate::window::WxWidget;
 use wxdragon_sys as ffi;
 
 /// Represents the wxStaticBoxSizer.
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct StaticBoxSizer {
     raw_specific_ptr: *mut ffi::wxd_StaticBoxSizer_t, // Pointer to the specific wxStaticBoxSizer
     sizer_base: Sizer,                                // Base sizer functionality

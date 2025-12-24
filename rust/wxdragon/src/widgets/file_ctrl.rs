@@ -1,8 +1,5 @@
 use crate::event::{Event, EventType};
-use crate::implement_widget_traits_with_target;
 use crate::prelude::*;
-use crate::widget_builder;
-use crate::widget_style_enum;
 use crate::window::{Window, WxWidget};
 use std::ffi::{CStr, CString};
 use wxdragon_sys as ffi;
@@ -71,7 +68,7 @@ struct FileCtrlConfig {
     pub name: String,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct FileCtrl {
     window: Window, // Composition: FileCtrl IS a Window
 }

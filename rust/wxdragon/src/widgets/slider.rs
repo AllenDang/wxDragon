@@ -1,12 +1,12 @@
 //! Safe wrapper for wxSlider.
 
+use crate::CommandEventData;
+use crate::EventType;
 use crate::event::Event;
 use crate::geometry::{Point, Size};
 use crate::id::Id;
+use crate::implement_widget_local_event_handlers;
 use crate::window::{Window, WxWidget};
-use crate::{CommandEventData, implement_widget_traits_with_target};
-use crate::{EventType, widget_style_enum};
-use crate::{implement_widget_local_event_handlers, widget_builder};
 use std::os::raw::c_int;
 use wxdragon_sys as ffi;
 
@@ -27,7 +27,7 @@ widget_style_enum!(
 );
 
 /// Represents a wxSlider widget.
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct Slider {
     window: Window,
 }

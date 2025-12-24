@@ -5,10 +5,7 @@ use wxdragon_sys as ffi;
 use crate::Id;
 use crate::event::Event;
 use crate::geometry::{Point, Size};
-use crate::implement_widget_traits_with_target;
 use crate::utils::ArrayString;
-use crate::widget_builder;
-use crate::widget_style_enum;
 use crate::window::{Window, WxWidget};
 
 /// An editable listbox is a listbox with buttons to add, remove, and reorder items in the list.

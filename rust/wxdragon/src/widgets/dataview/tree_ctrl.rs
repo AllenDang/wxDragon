@@ -7,10 +7,7 @@ use crate::{
     // WxEvtHandler, // For event binding later
     Id,
     Point,
-    Size, // Colour removed (unused)
-    implement_widget_traits_with_target,
-    widget_builder,
-    widget_style_enum, // Corrected macro import and usage
+    Size, // Corrected macro import and usage
 };
 use std::ffi::{CStr, CString};
 // use std::rc::Rc; // Unused
@@ -72,7 +69,7 @@ widget_builder! {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct DataViewTreeCtrl {
     window: Window,
 }

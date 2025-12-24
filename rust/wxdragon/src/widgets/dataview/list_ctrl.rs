@@ -1,7 +1,6 @@
 //! DataViewListCtrl implementation.
 
 use crate::{Id, Point, Size, Window, WxWidget};
-use crate::{implement_widget_traits_with_target, widget_builder};
 use wxdragon_sys as ffi;
 
 use super::enums::DataViewColumnFlags;

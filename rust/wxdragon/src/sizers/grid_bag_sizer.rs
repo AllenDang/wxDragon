@@ -117,7 +117,7 @@ pub const DEFAULT_GB_SPAN: GBSpan = GBSpan { rowspan: 1, colspan: 1 };
 // --- GridBagSizer ---
 /// A sizer that can lay out items in a grid with items at specified cells,
 /// and with the option of row and/or column spanning.
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct GridBagSizer {
     raw_specific_ptr: *mut ffi::wxd_GridBagSizer_t, // Specific pointer for GridBagSizer FFI calls
     sizer_base: Sizer,                              // Base Sizer for common functionality and Deref

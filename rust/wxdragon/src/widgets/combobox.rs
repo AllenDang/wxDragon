@@ -15,7 +15,7 @@ pub const NOT_FOUND: i32 = -1;
 pub type RawComboBox = ffi::wxd_ComboBox_t;
 
 /// Represents a wxComboBox control (dropdown list + text entry).
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct ComboBox {
     window: Window,
 }

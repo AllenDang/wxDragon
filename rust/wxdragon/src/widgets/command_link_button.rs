@@ -5,7 +5,7 @@ use std::ffi::CString;
 use wxdragon_sys as ffi;
 
 /// Represents a wxCommandLinkButton.
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct CommandLinkButton {
     button: Button, // Composition: CommandLinkButton IS a Button
 }

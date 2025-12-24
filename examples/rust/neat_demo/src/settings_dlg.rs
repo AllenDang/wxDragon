@@ -48,13 +48,11 @@ pub fn settings_dlg(frame_clone: &dyn WxWidget) {
     // OK & Cancel buttons
     let ok_button = Button::builder(&panel).with_label("OK").build();
     let cancel_button = Button::builder(&panel).with_label("Cancel").with_id(ID_CANCEL).build();
-    let dialog_clone = dialog.clone();
     ok_button.on_click(move |_data| {
-        dialog_clone.end_modal(ID_OK);
+        dialog.end_modal(ID_OK);
     });
-    let dialog_clone2 = dialog.clone();
     cancel_button.on_click(move |_data| {
-        dialog_clone2.end_modal(ID_CANCEL);
+        dialog.end_modal(ID_CANCEL);
     });
 
     // Layout the panel content

@@ -118,7 +118,7 @@ pub fn process_callbacks() {
 /// })
 /// .unwrap();
 /// ```
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct App {
     #[cfg(target_os = "macos")]
     handle: *mut ffi::wxd_App_t,

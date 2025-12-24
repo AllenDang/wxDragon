@@ -10,12 +10,13 @@
 
 ## Why Choose wxDragon?
 
-🎯 **Native Look & Feel** - Your apps integrate perfectly with each operating system's design language  
-🚀 **Single Codebase** - Write once, run everywhere with true cross-platform compatibility  
-🛡️ **Memory Safe** - All the safety guarantees of Rust with the mature wxWidgets foundation  
-⚡ **High Performance** - Direct access to native GUI components with minimal overhead  
-🎨 **Rich Widget Set** - Comprehensive collection of native controls and layouts  
+🎯 **Native Look & Feel** - Your apps integrate perfectly with each operating system's design language
+🚀 **Single Codebase** - Write once, run everywhere with true cross-platform compatibility
+🛡️ **Memory Safe** - All the safety guarantees of Rust with the mature wxWidgets foundation
+⚡ **High Performance** - Direct access to native GUI components with minimal overhead
+🎨 **Rich Widget Set** - Comprehensive collection of native controls and layouts
 🔧 **Two Development Styles** - Choose between programmatic creation or visual XRC design
+✨ **Ergonomic API** - Widgets implement `Copy`, so no manual cloning needed for closures
 
 ## Screenshots
 
@@ -112,17 +113,15 @@ fn main() {
         let ui = MyUI::new(None);
 
         // Access widgets with full type safety
-        let button = &ui.hello_button;      // Button
-        let input = &ui.input_field;        // TextCtrl
-        let label = &ui.status_label;       // StaticText
-        let frame = &ui.main_frame;         // Frame
+        let button = ui.hello_button;      // Button
+        let input = ui.input_field;        // TextCtrl
+        let label = ui.status_label;       // StaticText
+        let frame = ui.main_frame;         // Frame
 
-        // Bind events with closures
-        let label_clone = label.clone();
-        let input_clone = input.clone();
+        // Bind events with closures - widgets are Copy, no cloning needed!
         button.on_click(move |_| {
-            let text = input_clone.get_value();
-            label_clone.set_label(&format!("You entered: {}", text));
+            let text = input.get_value();
+            label.set_label(&format!("You entered: {}", text));
         });
 
         frame.show(true);
@@ -136,6 +135,7 @@ fn main() {
 - **Type Safety** - Compile-time checking of widget names and types
 - **Clean Separation** - UI layout separate from application logic
 - **Professional Workflows** - Integrate with existing design tools
+- **Zero Boilerplate** - Widgets are `Copy`, use them directly in closures without `.clone()`
 
 ## Platform Support
 

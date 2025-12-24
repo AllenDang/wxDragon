@@ -342,7 +342,7 @@ impl LayoutBatch {
             // Store context
             state.store_item_context(&create_op.panel, create_op.index, create_op.data.as_ref());
 
-            created_panels.push((create_op.index, create_op.panel.clone()));
+            created_panels.push((create_op.index, create_op.panel));
         }
 
         // PHASE 2: Update existing panels (no layout yet)
@@ -353,7 +353,7 @@ impl LayoutBatch {
             // Update content
             item_renderer.update_item(&update_op.panel, update_op.index, update_op.data.as_ref());
 
-            updated_measurements.push((update_op.index, update_op.panel.clone()));
+            updated_measurements.push((update_op.index, update_op.panel));
         }
 
         // PHASE 3: Single layout pass for all modified panels
@@ -1133,7 +1133,7 @@ impl VirtualListState {
 
         for item_index in items_to_hide {
             if let Some(panel) = self.item_to_panel.remove(&item_index) {
-                batch.add_destroy_operation(panel.clone());
+                batch.add_destroy_operation(panel);
                 // Return panel to pool for reuse (will be done after batch execution)
                 self.item_pool.return_item(panel);
             }
@@ -1148,7 +1148,7 @@ impl VirtualListState {
                     .get_or_create_item(context.parent, || context.item_renderer.create_item(context.parent));
 
                 let item_data = context.data_source.get_item_data(*data_index);
-                batch.add_create_operation(*data_index, item_panel.clone(), item_data);
+                batch.add_create_operation(*data_index, item_panel, item_data);
 
                 // Track this panel for this data index
                 self.item_to_panel.insert(*data_index, item_panel);
@@ -1165,7 +1165,7 @@ impl VirtualListState {
                             self.viewport_size.height,
                         ),
                     };
-                    batch.add_update_operation(*data_index, panel.clone(), item_data, initial_size);
+                    batch.add_update_operation(*data_index, *panel, item_data, initial_size);
                 }
             }
         }
@@ -1216,7 +1216,7 @@ impl VirtualListState {
                     VirtualListLayoutMode::Horizontal => Point::new(item_start - context.scroll_position, 0),
                 };
 
-                position_batch.add_position_operation(panel.clone(), position, final_size);
+                position_batch.add_position_operation(*panel, position, final_size);
             }
         }
 
@@ -1317,8 +1317,9 @@ custom_widget!(
         }
 
         // Function to update scrollbar properties
-        let v_scrollbar_update = v_scrollbar.clone();
-        let h_scrollbar_update = h_scrollbar.clone();
+        // ScrollBar is Copy, so no need to clone
+        let v_scrollbar_update = v_scrollbar;
+        let h_scrollbar_update = h_scrollbar;
         let layout_mode_update = config.layout_mode;
         let state_update = config.state.clone();
         let update_scrollbars = move || {
@@ -1379,11 +1380,11 @@ custom_widget!(
         });
 
         // Set up resize event to update viewport and reposition scrollbars
-        let panel_resize = panel.clone();
+        let panel_resize = panel;
         let state_resize = config.state.clone();
         let layout_mode_resize = config.layout_mode;
-        let vscrollbar_resize = v_scrollbar.clone();
-        let hscrollbar_resize = h_scrollbar.clone();
+        let vscrollbar_resize = v_scrollbar;
+        let hscrollbar_resize = h_scrollbar;
         let update_scrollbars_resize = update_scrollbars.clone();
 
         panel.on_size(move |event| {
@@ -1434,9 +1435,9 @@ custom_widget!(
         });
 
         // Set up mouse wheel scrolling with proper wheel delta handling
-        let panel_scroll = panel.clone();
+        let panel_scroll = panel;
         let state_scroll = config.state.clone();
-        let panel_scroll_wheel = panel_scroll.clone();
+        let panel_scroll_wheel = panel_scroll;
         let state_scroll_wheel = state_scroll.clone();
         let update_scrollbars_wheel = update_scrollbars.clone();
 
@@ -1682,7 +1683,7 @@ custom_widget!(
 
         // Simplified scrollbar event handling - add full support for click/page/drag
         if let Some(ref vscrollbar) = v_scrollbar {
-            let panel_vscroll = panel.clone();
+            let panel_vscroll = panel;
             let state_vscroll = config.state.clone();
             let update_scrollbars_vscroll = update_scrollbars.clone();
 
@@ -1797,13 +1798,13 @@ custom_widget!(
             });
 
             // Also handle single-clicks on arrow/page areas and final position changes
-            let panel_vscroll_click = panel.clone();
+            let panel_vscroll_click = panel;
             let state_vscroll_click = config.state.clone();
             let update_scrollbars_vscroll_click = update_scrollbars.clone();
 
             // Helper: apply a relative vertical delta (positive = down, negative = up)
             let state_for_apply = state_vscroll_click.clone();
-            let panel_for_apply = panel_vscroll_click.clone();
+            let panel_for_apply = panel_vscroll_click;
             let update_for_apply = update_scrollbars_vscroll_click.clone();
             let apply_vertical_delta = move |delta: i32| {
                 let state = state_for_apply.clone();
@@ -1831,7 +1832,7 @@ custom_widget!(
             };
 
             let state_for_handle = state_vscroll_click.clone();
-            let panel_for_handle = panel_vscroll_click.clone();
+            let panel_for_handle = panel_vscroll_click;
             let update_for_handle = update_scrollbars_vscroll_click.clone();
             let handle_vertical_position = move |pos: i32| {
                 let state = state_for_handle.clone();
@@ -1951,7 +1952,7 @@ custom_widget!(
             {
                 // Top
                 let state_for_top = config.state.clone();
-                let panel_for_top = panel.clone();
+                let panel_for_top = panel;
                 let update_for_top = update_scrollbars.clone();
                 vscrollbar.on_scroll_top(move |_e| {
                     {
@@ -1972,7 +1973,7 @@ custom_widget!(
             {
                 // Bottom: compute end position robustly
                 let state_for_bottom = config.state.clone();
-                let panel_for_bottom = panel.clone();
+                let panel_for_bottom = panel;
                 let update_for_bottom = update_scrollbars.clone();
                 vscrollbar.on_scroll_bottom(move |_e| {
                     {
@@ -1998,7 +1999,7 @@ custom_widget!(
         }
 
         if let Some(ref hscrollbar) = h_scrollbar {
-            let panel_hscroll = panel.clone();
+            let panel_hscroll = panel;
             let state = config.state.clone();
             let update_scrollbars_hscroll = update_scrollbars.clone();
 
@@ -2076,13 +2077,13 @@ custom_widget!(
             });
 
             // Also handle single-clicks and page events for horizontal scrollbar
-            let panel_hscroll_click = panel.clone();
+            let panel_hscroll_click = panel;
             let state_hscroll_click = config.state.clone();
             let update_scrollbars_hscroll_click = update_scrollbars.clone();
 
             // Clone shared captures before moving into the handler to avoid moving originals
             let state_for_handle_h = state_hscroll_click.clone();
-            let panel_for_handle_h = panel_hscroll_click.clone();
+            let panel_for_handle_h = panel_hscroll_click;
             let update_for_handle_h = update_scrollbars_hscroll_click.clone();
 
             let handle_horizontal_position = move |pos: i32| {
@@ -2134,7 +2135,7 @@ custom_widget!(
             // Horizontal delta handler: moves scroll by a relative amount
             let apply_horizontal_delta = {
                 let state = state_hscroll_click.clone();
-                let panel = panel_hscroll_click.clone();
+                let panel = panel_hscroll_click;
                 let update_scrollbars = update_scrollbars_hscroll_click.clone();
                 move |delta: i32| {
                     // Re-entrancy guard for entire handler

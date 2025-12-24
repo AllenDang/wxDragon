@@ -1,6 +1,5 @@
 //! Enums for DataView components.
 
-use crate::widget_style_enum;
 use wxdragon_sys as ffi;
 
 // Define cell mode enum

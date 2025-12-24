@@ -11,77 +11,70 @@ pub struct TreeListCtrlTabControls {
 
 impl TreeListCtrlTabControls {
     pub fn bind_events(&self) {
-        let tree_list_ctrl_clone = self.tree_list_ctrl.clone();
-        let info_text_clone = self.info_text.clone();
-        let status_text_clone = self.status_text.clone();
+        // Widgets are Copy, so copy them for use in closures
+        let tree_list_ctrl = self.tree_list_ctrl;
+        let info_text = self.info_text;
+        let status_text = self.status_text;
 
         // Bind selection changed event
         self.tree_list_ctrl.on_selection_changed(move |event: TreeListCtrlEventData| {
             if let Some(item) = event.get_item() {
-                let name = tree_list_ctrl_clone.get_item_text(&item, 0);
-                let size = tree_list_ctrl_clone.get_item_text(&item, 1);
-                let type_str = tree_list_ctrl_clone.get_item_text(&item, 2);
-                let modified = tree_list_ctrl_clone.get_item_text(&item, 3);
+                let name = tree_list_ctrl.get_item_text(&item, 0);
+                let size = tree_list_ctrl.get_item_text(&item, 1);
+                let type_str = tree_list_ctrl.get_item_text(&item, 2);
+                let modified = tree_list_ctrl.get_item_text(&item, 3);
 
                 let info = format!(
                     "Selected Item:\nName: {}\nSize: {}\nType: {}\nModified: {}",
                     name, size, type_str, modified
                 );
-                info_text_clone.set_label(&info);
+                info_text.set_label(&info);
                 // Only update status if it's not already showing a checkbox state update
-                let current_status = status_text_clone.get_label();
+                let current_status = status_text.get_label();
                 if !current_status.contains("is now checked") && !current_status.contains("is now unchecked") {
-                    status_text_clone.set_label(&format!("Selected: {}", name));
+                    status_text.set_label(&format!("Selected: {}", name));
                 }
             }
         });
 
         // Bind checkbox events
-        let tree_list_ctrl_clone2 = self.tree_list_ctrl.clone();
-        let status_text_clone2 = self.status_text.clone();
-
         self.tree_list_ctrl.on_item_checked(move |event: TreeListCtrlEventData| {
             if let Some(item) = event.get_item() {
-                let name = tree_list_ctrl_clone2.get_item_text(&item, 0);
+                let name = tree_list_ctrl.get_item_text(&item, 0);
 
                 // Always use the actual current state from the widget, not the event
                 // because the event's is_checked() method can be unreliable
-                let current_state = tree_list_ctrl_clone2.get_checked_state(&item);
+                let current_state = tree_list_ctrl.get_checked_state(&item);
                 let state_text = match current_state {
                     CheckboxState::Checked => "checked",
                     CheckboxState::Unchecked => "unchecked",
                     CheckboxState::Undetermined => "undetermined",
                 };
-                status_text_clone2.set_label(&format!("Item '{}' is now {}", name, state_text));
+                status_text.set_label(&format!("Item '{}' is now {}", name, state_text));
             }
         });
 
         // Bind column sorted event
-        let tree_list_ctrl_clone3 = self.tree_list_ctrl.clone();
-        let status_text_clone3 = self.status_text.clone();
         self.tree_list_ctrl.on_column_sorted(move |event: TreeListCtrlEventData| {
             if let Some(column) = event.get_column() {
                 let column_names = ["Name", "Size", "Type", "Modified"];
                 let column_name = column_names.get(column as usize).unwrap_or(&"Unknown");
 
                 // Get current sort state
-                if let Some((_sort_col, ascending)) = tree_list_ctrl_clone3.get_sort_column() {
+                if let Some((_sort_col, ascending)) = tree_list_ctrl.get_sort_column() {
                     let direction = if ascending { "ascending" } else { "descending" };
-                    status_text_clone3.set_label(&format!("Sorting by {} ({}) - direction: {}", column_name, column, direction));
+                    status_text.set_label(&format!("Sorting by {} ({}) - direction: {}", column_name, column, direction));
                 } else {
-                    status_text_clone3.set_label(&format!("Column {} ({}) clicked for sorting", column_name, column));
+                    status_text.set_label(&format!("Column {} ({}) clicked for sorting", column_name, column));
                 }
             }
         });
 
         // Bind item activated (double-click) event
-        let tree_list_ctrl_clone4 = self.tree_list_ctrl.clone();
-        let info_text_clone2 = self.info_text.clone();
-
         self.tree_list_ctrl.on_item_activated(move |event: TreeListCtrlEventData| {
             if let Some(item) = event.get_item() {
-                let name = tree_list_ctrl_clone4.get_item_text(&item, 0);
-                info_text_clone2.set_label(&format!("Double-clicked on: {}", name));
+                let name = tree_list_ctrl.get_item_text(&item, 0);
+                info_text.set_label(&format!("Double-clicked on: {}", name));
             }
         });
     }

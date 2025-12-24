@@ -2,7 +2,6 @@
 
 use crate::{Id, WxWidget};
 // These macros are exported at the crate root
-use crate::{implement_widget_traits_with_target, widget_builder, widget_style_enum};
 use wxdragon_sys as ffi;
 
 use super::enums::DataViewColumnFlags;
@@ -59,7 +58,7 @@ widget_style_enum!(
 ///     .with_style(DataViewStyle::RowLines | DataViewStyle::VerticalRules)
 ///     .build();
 /// ```
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct DataViewCtrl {
     window: Window,
 }

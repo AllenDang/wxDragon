@@ -318,10 +318,10 @@ pub fn create_dataview_virtual_tab(parent: &impl WxWidget) -> DataViewVirtualTab
     });
 
     // Bind menu handlers once - they will read the current selection when invoked
+    // Widgets are Copy, so dvc can be used directly in closures
     let employees_for_modify = Rc::downgrade(&employees);
-    let dvc_for_modify = dvc.clone();
     dvc.bind_with_id_internal(EventType::MENU, 1001, move |_| {
-        if let Some(row_index) = dvc_for_modify.get_selected_row() {
+        if let Some(row_index) = dvc.get_selected_row() {
             let Some(employees) = employees_for_modify.upgrade() else {
                 log::warn!("Employee data has been released!");
                 return;
@@ -339,9 +339,8 @@ pub fn create_dataview_virtual_tab(parent: &impl WxWidget) -> DataViewVirtualTab
     });
 
     let employees_for_delete = Rc::downgrade(&employees);
-    let dvc_for_delete = dvc.clone();
     dvc.bind_with_id_internal(EventType::MENU, 1002, move |_| {
-        if let Some(row_index) = dvc_for_delete.get_selected_row() {
+        if let Some(row_index) = dvc.get_selected_row() {
             let Some(employees) = employees_for_delete.upgrade() else {
                 log::warn!("Employee data has been released!");
                 return;
@@ -360,7 +359,6 @@ pub fn create_dataview_virtual_tab(parent: &impl WxWidget) -> DataViewVirtualTab
 
     // Add context menu handler using DataView-specific event
     // This provides item and column information directly
-    let dvc_for_popup = dvc.clone();
     let employees_for_context = Rc::downgrade(&employees);
     dvc.on_item_context_menu(move |event| {
         // Get the row that was right-clicked
@@ -390,7 +388,7 @@ pub fn create_dataview_virtual_tab(parent: &impl WxWidget) -> DataViewVirtualTab
             .build();
 
         // Show the popup menu at current mouse position
-        dvc_for_popup.popup_menu(&mut context_menu, None);
+        dvc.popup_menu(&mut context_menu, None);
     });
 
     sizer.add(&dvc, 1, SizerFlag::All | SizerFlag::Expand, 10);

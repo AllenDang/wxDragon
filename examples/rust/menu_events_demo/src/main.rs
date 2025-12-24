@@ -94,8 +94,9 @@ impl MenuEventsApp {
     }
 
     fn setup_menu_events(&self) {
-        let status_bar = self.status_bar.clone();
+        let status_bar = self.status_bar;
         let menu_count = self.menu_open_count.clone();
+        let frame = self.frame;
 
         // Menu opened events with full functionality
         self.frame.on_menu_opened(move |event: MenuEventData| {
@@ -114,8 +115,6 @@ impl MenuEventsApp {
             log::trace!("📂 {}", event.format_for_logging());
         });
 
-        let status_bar_close = self.status_bar.clone();
-
         // Menu closed events
         self.frame.on_menu_closed(move |event: MenuEventData| {
             let menu_info = if event.is_popup() {
@@ -124,13 +123,10 @@ impl MenuEventsApp {
                 "Menu Status: Menu Bar Closed"
             };
 
-            status_bar_close.set_status_text(menu_info, 1);
+            status_bar.set_status_text(menu_info, 1);
 
             log::trace!("📁 {}", event.format_for_logging());
         });
-
-        // Re-enable other menu event handlers now that crash is fixed
-        let status_bar_highlight = self.status_bar.clone();
 
         // Menu highlight events (for status bar help text)
         self.frame.on_menu_highlighted(move |event: MenuEventData| {
@@ -146,13 +142,12 @@ impl MenuEventsApp {
                 _ => "Ready - Right-click for context menu",
             };
 
-            status_bar_highlight.set_status_text(help_text, 0);
+            status_bar.set_status_text(help_text, 0);
 
             log::trace!("✨ Menu Highlighted - ID: {}, Help: {}", event.get_id(), help_text);
         });
 
         // Traditional menu selection events
-        let frame_for_exit = self.frame.clone();
         self.frame.on_menu_selected(move |event: MenuEventData| {
             match event.get_id() {
                 ID_NEW => log::trace!("🆕 New document requested"),
@@ -160,7 +155,7 @@ impl MenuEventsApp {
                 ID_SAVE => log::trace!("💾 Save document requested"),
                 ID_EXIT => {
                     log::trace!("👋 Exit requested");
-                    frame_for_exit.close(true);
+                    frame.close(true);
                 }
                 ID_CUT => log::trace!("✂️ Cut requested"),
                 ID_COPY => log::trace!("📋 Copy requested"),
@@ -181,7 +176,6 @@ impl MenuEventsApp {
         let panel = Panel::builder(&self.frame).build();
 
         // Context menu event handling - now test the fixed FFI functions
-        let panel_clone = panel.clone();
         panel.on_context_menu(move |event: MenuEventData| {
             log::trace!("🖱️ Context menu event received!");
             log::trace!("   Event ID: {}", event.get_id());
@@ -205,7 +199,7 @@ impl MenuEventsApp {
                 .build();
 
             let pos = event.get_context_position();
-            panel_clone.popup_menu(&mut popup_menu, pos);
+            panel.popup_menu(&mut popup_menu, pos);
         });
 
         // Set the panel as the frame's main child
@@ -214,10 +208,10 @@ impl MenuEventsApp {
 
     fn setup_frame_events(&self) {
         // Handle frame close event
-        let frame_clone = self.frame.clone();
+        let frame = self.frame;
         self.frame.on_close(move |_| {
             log::trace!("🚪 Application closing...");
-            frame_clone.destroy();
+            frame.destroy();
         });
 
         // Track menu lifecycle for debugging
@@ -305,9 +299,8 @@ impl MenuEventsApp {
         sizer.add(&dataview, 0, flag, 0);
         sizer.add_stretch_spacer(1);
         self.frame.set_sizer(sizer, true);
-        let dataview_clone = dataview.clone();
         let demo_data_clone = demo_data.clone();
-        let frame_clone_for_dialog = self.frame.clone();
+        let frame = self.frame;
         dataview.on_item_context_menu(move |event: DataViewEvent| {
             log::trace!("🖱️ Context menu event received!");
             log::trace!("   Event ID: {}", event.get_id());
@@ -336,7 +329,6 @@ impl MenuEventsApp {
 
             // Handle popup menu selections locally so we can use the captured row
             let demo_for_handler = demo_data_clone.clone();
-            let frame_for_handler = frame_clone_for_dialog.clone();
             popup_menu.on_selected(move |menu_evt| {
                 let id = menu_evt.get_id();
                 if id == view_id {
@@ -346,7 +338,7 @@ impl MenuEventsApp {
                         let (n, age, city, status) = demo_for_handler[r];
                         let msg = format!("Name: {n}, Age: {age}, City: {city}, Status: {status}");
                         use MessageDialogStyle as MDS;
-                        MessageDialog::builder(&frame_for_handler, &msg, "Item Details")
+                        MessageDialog::builder(&frame, &msg, "Item Details")
                             .with_style(MDS::OK | MDS::IconInformation)
                             .build()
                             .show_modal();
@@ -357,8 +349,8 @@ impl MenuEventsApp {
                 }
             });
 
-            let pos = event.get_position().map(|p| dataview_clone.client_to_screen(p));
-            dataview_clone.popup_menu(&mut popup_menu, pos);
+            let pos = event.get_position().map(|p| dataview.client_to_screen(p));
+            dataview.popup_menu(&mut popup_menu, pos);
 
             // Clean up the popup menu after use to release rust closures attached to menu items
             popup_menu.destroy_menu();

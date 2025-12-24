@@ -51,18 +51,16 @@ custom_widget!(
         let timer = Rc::new(Timer::new(&panel));
 
         // 设置绘制事件
-        let panel_paint = panel.clone();
         let animation_data_paint = animation_data.clone();
         let config_paint = config.clone();
         panel.on_paint(move |event| {
             let animation = animation_data_paint.borrow();
-            AniFillButton::draw_custom_button(&panel_paint, &config_paint, animation.progress, animation.is_mouse_pressed);
+            AniFillButton::draw_custom_button(&panel, &config_paint, animation.progress, animation.is_mouse_pressed);
             event.skip(true);
         });
 
         // 设置鼠标进入事件
         let animation_data_enter = animation_data.clone();
-        let panel_enter = panel.clone();
         let timer_enter = timer.clone();
         panel.on_mouse_enter(move |event| {
             let mut animation = animation_data_enter.borrow_mut();
@@ -73,14 +71,13 @@ custom_widget!(
                 drop(animation);
 
                 timer_enter.start(16, false); // 60fps
-                panel_enter.refresh(false, None);
+                panel.refresh(false, None);
             }
             event.skip(true);
         });
 
         // 设置鼠标离开事件
         let animation_data_leave = animation_data.clone();
-        let panel_leave = panel.clone();
         let timer_leave = timer.clone();
         panel.on_mouse_leave(move |event| {
             let mut animation = animation_data_leave.borrow_mut();
@@ -98,35 +95,33 @@ custom_widget!(
                 drop(animation);
 
                 timer_leave.start(16, false); // 60fps
-                panel_leave.refresh(false, None);
+                panel.refresh(false, None);
             } else {
                 drop(animation);
-                panel_leave.refresh(false, None);
+                panel.refresh(false, None);
             }
             event.skip(true);
         });
 
         // 设置鼠标按下事件
         let animation_data_down = animation_data.clone();
-        let panel_down = panel.clone();
         panel.on_mouse_left_down(move |event| {
             {
                 let mut animation = animation_data_down.borrow_mut();
                 animation.is_mouse_pressed = true;
             }
-            panel_down.refresh(false, None);
+            panel.refresh(false, None);
             event.skip(true);
         });
 
         // 设置鼠标释放事件
         let animation_data_up = animation_data.clone();
-        let panel_up = panel.clone();
         panel.on_mouse_left_up(move |event| {
             {
                 let mut animation = animation_data_up.borrow_mut();
                 animation.is_mouse_pressed = false;
             }
-            panel_up.refresh(false, None);
+            panel.refresh(false, None);
             event.skip(true);
         });
 
@@ -137,7 +132,6 @@ custom_widget!(
         // 设置定时器事件
         let animation_data_timer = animation_data.clone();
         let config_timer = config.clone();
-        let panel_timer = panel.clone();
         let timer_clone = timer.clone();
         timer.on_tick(move |event| {
             let mut animation = animation_data_timer.borrow_mut();
@@ -159,7 +153,7 @@ custom_widget!(
                     AnimationState::Idle => 0.0,
                 };
 
-                panel_timer.refresh(false, None);
+                panel.refresh(false, None);
 
                 // 动画完成时停止
                 if progress_ratio >= 1.0 {

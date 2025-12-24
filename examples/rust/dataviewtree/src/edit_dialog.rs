@@ -78,18 +78,12 @@ impl NodeEditDialog {
         );
 
         // Wire default behaviors
-        {
-            let dlg_ok = dlg.clone();
-            ok_btn.on_click(move |_| {
-                dlg_ok.end_modal(ID_OK);
-            });
-        }
-        {
-            let dlg_cancel = dlg.clone();
-            cancel_btn.on_click(move |_| {
-                dlg_cancel.end_modal(ID_CANCEL);
-            });
-        }
+        ok_btn.on_click(move |_| {
+            dlg.end_modal(ID_OK);
+        });
+        cancel_btn.on_click(move |_| {
+            dlg.end_modal(ID_CANCEL);
+        });
 
         // Disable non-applicable fields for branch nodes
         if is_branch {

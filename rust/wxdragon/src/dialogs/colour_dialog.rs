@@ -5,7 +5,7 @@ use wxdragon_sys as ffi;
 
 /// Wrapper for wxColourDialog.
 /// A dialog for choosing a colour.
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct ColourDialog {
     dialog_base: Dialog,
 }

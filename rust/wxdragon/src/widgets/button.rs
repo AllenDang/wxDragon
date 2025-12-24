@@ -1,10 +1,7 @@
 use crate::bitmap::Bitmap;
 use crate::bitmap_bundle::BitmapBundle;
 use crate::event::button_events::ButtonEvents; // Added ButtonEvents import
-use crate::implement_widget_traits_with_target;
 use crate::prelude::*; // Use prelude
-use crate::widget_builder;
-use crate::widget_style_enum;
 // Make sure WxEvtHandler is imported
 use crate::window::{Window, WxWidget};
 use std::ffi::{CStr, CString};
@@ -23,7 +20,7 @@ pub enum ButtonBitmapPosition {
 }
 
 /// Represents a wxButton.
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct Button {
     window: Window, // Composition: Button IS a Window
     // Store parent pointer to manage drop behavior

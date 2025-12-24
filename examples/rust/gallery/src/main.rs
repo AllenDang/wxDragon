@@ -197,11 +197,11 @@ fn main() {
         // --- Bind Event Handlers ---
 
         // Menu event handler using the new API
-        let frame_clone_for_menu = frame.clone();
+        // Widgets are Copy, so frame can be used directly in closures
         frame.on_menu(move |event| match event.get_id() {
             id if id == ID_EXIT => {
                 log::info!("Menu/Toolbar: Exit clicked!");
-                frame_clone_for_menu.close(true);
+                frame.close(true);
             }
             id if id == ID_ABOUT => {
                 log::info!("Menu: About clicked!");
@@ -227,35 +227,32 @@ fn main() {
         });
 
         // Notebook page changed event using the new API
-        let notebook_clone_page_changed = notebook.clone();
-        let frame_clone_page_changed = frame.clone();
         notebook.on_page_changed(move |event_data| {
             let new_page_index = event_data.get_selection().unwrap_or(0);
             let old_page_index = event_data.get_old_selection().unwrap_or(0);
 
-            let new_page_text = notebook_clone_page_changed
+            let new_page_text = notebook
                 .get_page(new_page_index as usize)
                 .map_or_else(|| "<unknown page>".to_string(), |p| p.get_label().unwrap_or_default());
-            let old_page_text = notebook_clone_page_changed
+            let old_page_text = notebook
                 .get_page(old_page_index as usize)
                 .map_or_else(|| "<unknown page>".to_string(), |p| p.get_label().unwrap_or_default());
 
             log::info!(
                 "Notebook PageChanged: New={new_page_index}, Old={old_page_index}, NewLabel='{new_page_text}', OldLabel='{old_page_text}'"
             );
-            frame_clone_page_changed.set_status_text(&format!("Switched from tab '{old_page_text}' to '{new_page_text}'"), 0);
+            frame.set_status_text(&format!("Switched from tab '{old_page_text}' to '{new_page_text}'"), 0);
         });
 
         // Second notebook event binding for page changing
-        let notebook_clone_page_changing = notebook.clone();
         notebook.on_page_changed(move |event_data| {
             let new_page_index = event_data.get_selection().unwrap_or(0);
             let old_page_index = event_data.get_old_selection().unwrap_or(0);
 
-            let new_page_text = notebook_clone_page_changing
+            let new_page_text = notebook
                 .get_page(new_page_index as usize)
                 .map_or_else(|| "<unknown page>".to_string(), |p| p.get_label().unwrap_or_default());
-            let old_page_text = notebook_clone_page_changing
+            let old_page_text = notebook
                 .get_page(old_page_index as usize)
                 .map_or_else(|| "<unknown page>".to_string(), |p| p.get_label().unwrap_or_default());
 

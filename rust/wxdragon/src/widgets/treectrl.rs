@@ -70,9 +70,6 @@ use crate::event::{TreeEvents, WxEvtHandler};
 // Base for some events
 use crate::geometry::{Point, Size};
 use crate::id::Id;
-use crate::implement_widget_traits_with_target;
-use crate::widget_builder;
-use crate::widget_style_enum;
 use crate::widgets::imagelist::ImageList;
 use crate::widgets::item_data::{HasItemData, get_item_data, remove_item_data, store_item_data};
 use crate::window::{Window, WxWidget};
@@ -252,7 +249,7 @@ impl Drop for TreeIterationCookie {
 }
 
 /// Represents the wxTreeCtrl widget.
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct TreeCtrl {
     window: Window,
 }
@@ -420,7 +417,7 @@ impl TreeCtrl {
         use crate::event::EventType;
 
         // Create a clone for the closure
-        let tree_ctrl_clone = self.clone();
+        let tree_ctrl_clone = *self;
 
         // Bind to the DESTROY event for proper cleanup when the window is destroyed
         self.bind_internal(EventType::DESTROY, move |_event| {

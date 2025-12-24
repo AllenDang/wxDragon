@@ -43,50 +43,47 @@ pub struct TreeCtrlTabControls {
 
 impl TreeCtrlTabControls {
     pub fn bind_events(&self) {
-        // Clone references for use in event handlers
-        let tree_ctrl_clone = self.tree_ctrl.clone(); // Renamed for clarity
-        let info_text_clone = self.info_text.clone(); // Renamed for clarity
+        // Widgets are Copy, so copy them for use in closures
+        let tree_ctrl = self.tree_ctrl;
+        let info_text = self.info_text;
 
         // Bind selection changed event for tree control
         self.tree_ctrl.on_selection_changed(move |event_data| {
             if let Some(item_id) = event_data.get_item() {
                 // Get data from the selected item
-                if let Some(item_data) = tree_ctrl_clone.get_custom_data(&item_id) {
+                if let Some(item_data) = tree_ctrl.get_custom_data(&item_id) {
                     // Try to downcast to PersonData first
                     if let Some(person) = item_data.downcast_ref::<PersonData>() {
-                        info_text_clone.set_label(&person.to_display_string());
+                        info_text.set_label(&person.to_display_string());
                     }
                     // Try to downcast to ProjectData
                     else if let Some(project) = item_data.downcast_ref::<ProjectData>() {
-                        info_text_clone.set_label(&project.to_display_string());
+                        info_text.set_label(&project.to_display_string());
                     }
                     // Handle standard types
                     else if let Some(text) = item_data.downcast_ref::<String>() {
-                        info_text_clone.set_label(&format!("Text: {text}"));
+                        info_text.set_label(&format!("Text: {text}"));
                     } else if let Some(number) = item_data.downcast_ref::<i32>() {
-                        info_text_clone.set_label(&format!("Number: {number}"));
+                        info_text.set_label(&format!("Number: {number}"));
                     } else if item_data.downcast_ref::<()>().is_some() {
-                        info_text_clone.set_label("This item has empty data (unit type)");
+                        info_text.set_label("This item has empty data (unit type)");
                     } else {
                         // If we can't determine the type specifically, show a generic message
-                        info_text_clone.set_label("Item has data of an unknown type");
+                        info_text.set_label("Item has data of an unknown type");
                     }
                 } else {
-                    info_text_clone.set_label("Item has no associated data");
+                    info_text.set_label("Item has no associated data");
                 }
             }
         });
 
         // Bind item activation (double-click) event
-        let tree_ctrl_clone_activated = self.tree_ctrl.clone(); // Separate clone for this closure
-        let info_text_clone_activated = self.info_text.clone(); // Separate clone
-
         self.tree_ctrl.on_item_activated(move |event_data| {
             if let Some(item_id) = event_data.get_item() {
-                if tree_ctrl_clone_activated.has_custom_data(&item_id) {
-                    info_text_clone_activated.set_label("Double-clicked on item with custom data");
+                if tree_ctrl.has_custom_data(&item_id) {
+                    info_text.set_label("Double-clicked on item with custom data");
                 } else {
-                    info_text_clone_activated.set_label("Double-clicked on item with no data");
+                    info_text.set_label("Double-clicked on item with no data");
                 }
             }
         });

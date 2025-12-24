@@ -52,31 +52,28 @@ impl MainFrame {
         stc.set_styling(43, 1); // Style the first comment line
 
         // Set up event handlers
-        let stc_copy = stc.clone();
         stc.on_stc_zoom(move |_| {
-            println!("Zoom level changed to: {}", stc_copy.get_zoom());
+            println!("Zoom level changed to: {}", stc.get_zoom());
         });
 
-        let stc_copy2 = stc.clone();
         stc.on_stc_modified(move |_| {
-            let length = stc_copy2.get_length();
-            let lines = stc_copy2.get_line_count();
+            let length = stc.get_length();
+            let lines = stc.get_line_count();
             println!("Text modified - Length: {length}, Lines: {lines}");
         });
 
-        let stc_copy3 = stc.clone();
         stc.on_stc_margin_click(move |event| {
             let pos = event.get_position().unwrap_or(0);
-            let line = stc_copy3.line_from_position(pos);
+            let line = stc.line_from_position(pos);
             println!("Margin clicked at line: {line}");
 
             // Toggle marker on clicked line
-            let markers = stc_copy3.marker_get(line);
+            let markers = stc.marker_get(line);
             if markers & 1 != 0 {
-                stc_copy3.marker_delete(line, 0);
+                stc.marker_delete(line, 0);
                 println!("Removed marker from line {line}");
             } else {
-                stc_copy3.marker_add(line, 0);
+                stc.marker_add(line, 0);
                 println!("Added marker to line {line}");
             }
         });

@@ -5,9 +5,6 @@ use crate::event::TextEvents;
 use crate::event::{Event, EventType};
 use crate::geometry::{Point, Size};
 use crate::id::Id;
-use crate::implement_widget_traits_with_target;
-use crate::widget_builder;
-use crate::widget_style_enum;
 use crate::window::{Window, WxWidget};
 use std::ffi::CString;
 use std::os::raw::c_char;
@@ -76,7 +73,7 @@ impl TextCtrlEventData {
 }
 
 /// Represents a wxTextCtrl widget.
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct TextCtrl {
     window: Window,
 }

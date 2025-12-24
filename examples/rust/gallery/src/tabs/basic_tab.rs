@@ -395,6 +395,33 @@ pub fn create_basic_tab(notebook: &Notebook, _frame: &Frame) -> BasicTabControls
 // Add this method to bind all events for basic tab controls
 impl BasicTabControls {
     pub fn bind_events(&self) {
+        // Widgets are Copy, so copy them from &self for use in closures
+        let text_ctrl = self.text_ctrl;
+        let spin_button = self.spin_button;
+        let radio_status_label = self.radio_status_label;
+        let radio1 = self.radio1;
+        let radio2 = self.radio2;
+        let toggle_status_label = self.toggle_status_label;
+        let radio_box = self.radio_box;
+        let time_picker = self.time_picker;
+        let time_picker_label = self.time_picker_label;
+        let bitmap_combo_box = self.bitmap_combo_box;
+        let search_ctrl = self.search_ctrl;
+        let date_picker = self.date_picker;
+        let date_picker_label = self.date_picker_label;
+        let calendar_ctrl = self.calendar_ctrl;
+        let calendar_label = self.calendar_label;
+        let activity_indicator = self.activity_indicator;
+        let spinctrl_double = self.spinctrl_double;
+        let spinctrl_double_label = self.spinctrl_double_label;
+        let scroll_bar = self.scroll_bar;
+        let scrollbar_status_label = self.scrollbar_status_label;
+        let colour_label = self.colour_label;
+        let hyperlink_ctrl = self.hyperlink_ctrl;
+        let cmd_link_button = self.cmd_link_button;
+        let collapsible_pane = self.collapsible_pane;
+        let panel = self.panel;
+
         // BitmapButton click event
         self.bitmap_button.on_click(move |event| {
             println!("Bitmap Button clicked: {}", event.get_id());
@@ -420,82 +447,68 @@ impl BasicTabControls {
         // TextCtrl events
         self.text_ctrl.on_text_changed(move |_event| {
             // Example: log text changes if needed
-            // if let Some(text) = _event.get_string() {
-            //     println!("Text: {}", text);
-            // }
         });
 
         // TextCtrl Enter key event
-        let spin_button_clone_bind_events = self.spin_button.clone();
-        let text_ctrl_clone_bind_events = self.text_ctrl.clone();
         self.text_ctrl.on_text_enter(move |event| {
             if let Some(text) = event.get_string() {
                 println!("Text Enter (from bind_events): {text}");
                 if let Ok(num) = text.parse::<i32>() {
-                    let min = spin_button_clone_bind_events.min();
-                    let max = spin_button_clone_bind_events.max();
-                    spin_button_clone_bind_events.set_value(num.clamp(min, max));
+                    let min = spin_button.min();
+                    let max = spin_button.max();
+                    spin_button.set_value(num.clamp(min, max));
                 } else {
-                    text_ctrl_clone_bind_events.set_value(&spin_button_clone_bind_events.value().to_string());
+                    text_ctrl.set_value(&spin_button.value().to_string());
                 }
             }
         });
 
         // RadioButton events
-        let radio_status_label_clone1 = self.radio_status_label.clone();
-        let radio1_clone = self.radio1.clone();
         self.radio1.on_selected(move |event_data| {
-            let radio1_label_str = radio1_clone.get_label().unwrap_or_else(|| "<unknown>".to_string());
+            let radio1_label_str = radio1.get_label().unwrap_or_else(|| "<unknown>".to_string());
             println!(
                 "Radio Button Selected: ID {}, Label: {}",
                 event_data.get_id(),
                 radio1_label_str
             );
-            radio_status_label_clone1.set_label(&format!("Selected: {radio1_label_str}"));
+            radio_status_label.set_label(&format!("Selected: {radio1_label_str}"));
         });
 
-        let radio_status_label_clone2 = self.radio_status_label.clone();
-        let radio2_clone = self.radio2.clone();
         self.radio2.on_selected(move |event_data| {
-            let radio2_label_str = radio2_clone.get_label().unwrap_or_else(|| "<unknown>".to_string());
+            let radio2_label_str = radio2.get_label().unwrap_or_else(|| "<unknown>".to_string());
             println!(
                 "Radio Button Selected: ID {}, Label: {}",
                 event_data.get_id(),
                 radio2_label_str
             );
-            radio_status_label_clone2.set_label(&format!("Selected: {radio2_label_str}"));
+            radio_status_label.set_label(&format!("Selected: {radio2_label_str}"));
         });
 
         // ToggleButton Event Binding
-        let toggle_status_label_clone = self.toggle_status_label.clone();
         self.toggle_button.on_toggle(move |event| {
             let is_on = event.is_checked().unwrap_or(false);
-            toggle_status_label_clone.set_label(if is_on { "ON" } else { "OFF" });
+            toggle_status_label.set_label(if is_on { "ON" } else { "OFF" });
             println!("ToggleButton clicked, is_on: {is_on}");
         });
 
         // SpinButton Event Bindings
-        let text_ctrl_clone = self.text_ctrl.clone();
         self.spin_button.on_spin(move |event| {
             let value = event.get_int().unwrap_or(0);
-            text_ctrl_clone.set_value(&value.to_string());
+            text_ctrl.set_value(&value.to_string());
             println!("SpinButton changed to: {value}");
         });
 
         // RadioBox Event binding
-        let radio_box_clone = self.radio_box.clone();
         self.radio_box.on_selected(move |event| {
             let selection = event.get_selection().unwrap_or(0);
-            let selection_string = radio_box_clone.get_string(selection);
+            let selection_string = radio_box.get_string(selection);
             println!("RadioBox selected: {selection_string} ({selection})");
         });
 
         // TimePicker event
-        let time_picker_clone = self.time_picker.clone();
-        let time_picker_label_clone = self.time_picker_label.clone();
         self.time_picker.on_time_changed(move |_event| {
-            let selected_time = time_picker_clone.get_value();
-            time_picker_label_clone.set_label(&format!(
+            let selected_time = time_picker.get_value();
+            time_picker_label.set_label(&format!(
                 "{:02}:{:02}:{:02}",
                 selected_time.hour(),
                 selected_time.minute(),
@@ -505,15 +518,14 @@ impl BasicTabControls {
         });
 
         // BitmapComboBox Event
-        let bitmap_combo_box_clone = self.bitmap_combo_box.clone();
         self.bitmap_combo_box.on_selection_changed(move |event| {
             let selection_idx = event.get_selection().unwrap_or(0);
             let mut log_output = format!("BitmapComboBox selected item {selection_idx}");
 
-            let item_str = bitmap_combo_box_clone.get_string(selection_idx as u32);
+            let item_str = bitmap_combo_box.get_string(selection_idx as u32);
             log_output.push_str(&format!(", Selected Item [{selection_idx}]: '{item_str}'"));
 
-            if let Some(bitmap) = bitmap_combo_box_clone.get_item_bitmap(selection_idx as u32) {
+            if let Some(bitmap) = bitmap_combo_box.get_item_bitmap(selection_idx as u32) {
                 log_output.push_str(&format!(
                     ", Item has bitmap (w:{}, h:{})",
                     bitmap.get_width(),
@@ -527,10 +539,9 @@ impl BasicTabControls {
         });
 
         // SearchCtrl Event Handlers
-        let search_ctrl_debug_clone = self.search_ctrl.clone();
         self.search_ctrl.on_search_button_clicked(move |event| {
             let event_text = event.get_string().unwrap_or_default();
-            let widget_text = search_ctrl_debug_clone.get_value();
+            let widget_text = search_ctrl.get_value();
             println!(
                 "SEARCH_CTRL Event: Search Button Clicked! ID: {}, Event text: \"{}\", Widget text: \"{}\"",
                 event.get_id(),
@@ -539,10 +550,9 @@ impl BasicTabControls {
             );
         });
 
-        let search_ctrl_clone_cancel = self.search_ctrl.clone();
         self.search_ctrl.on_cancel_button_clicked(move |event| {
-            let value_before_clear = search_ctrl_clone_cancel.get_value();
-            search_ctrl_clone_cancel.set_value("");
+            let value_before_clear = search_ctrl.get_value();
+            search_ctrl.set_value("");
             println!(
                 "SEARCH_CTRL Event: Cancel Button Clicked! ID: {}, Value was: \"{}\"",
                 event.get_id(),
@@ -559,11 +569,9 @@ impl BasicTabControls {
         });
 
         // DatePicker event
-        let date_picker_clone = self.date_picker.clone();
-        let date_picker_label_clone = self.date_picker_label.clone();
         self.date_picker.on_date_changed(move |_event| {
-            let selected_date = date_picker_clone.get_value();
-            date_picker_label_clone.set_label(&format!(
+            let selected_date = date_picker.get_value();
+            date_picker_label.set_label(&format!(
                 "{:04}-{:02}-{:02}",
                 selected_date.year(),
                 selected_date.month(),
@@ -573,77 +581,66 @@ impl BasicTabControls {
         });
 
         // Calendar event
-        let calendar_ctrl_clone = self.calendar_ctrl.clone();
-        let calendar_label_clone = self.calendar_label.clone();
         self.calendar_ctrl.on_selection_changed(move |_event| {
-            if let Some(selected_date) = calendar_ctrl_clone.get_date() {
+            if let Some(selected_date) = calendar_ctrl.get_date() {
                 let date_str = format!(
                     "{:04}-{:02}-{:02}",
                     selected_date.year(),
                     selected_date.month(),
                     selected_date.day()
                 );
-                calendar_label_clone.set_label(&date_str);
+                calendar_label.set_label(&date_str);
                 println!("CALENDAR_SEL_CHANGED: Date: {date_str}");
             }
         });
 
         // Activity indicator controls
-        let activity_indicator_clone = self.activity_indicator.clone();
         self.activity_start_btn.on_click(move |_event| {
-            activity_indicator_clone.start();
+            activity_indicator.start();
             println!("Activity indicator started");
         });
 
-        let activity_indicator_clone_stop = self.activity_indicator.clone();
         self.activity_stop_btn.on_click(move |_event| {
-            activity_indicator_clone_stop.stop();
+            activity_indicator.stop();
             println!("Activity indicator stopped");
         });
 
         // SpinCtrlDouble event
-        let spinctrld_label_clone = self.spinctrl_double_label.clone();
-        let spinctrld_clone = self.spinctrl_double.clone();
         self.spinctrl_double.on_value_changed(move |_event| {
-            let current_value = spinctrld_clone.get_value();
-            spinctrld_label_clone.set_label(&format!("{current_value:.2}"));
+            let current_value = spinctrl_double.get_value();
+            spinctrl_double_label.set_label(&format!("{current_value:.2}"));
             println!("SpinCtrlDouble Value: {current_value:.2}");
         });
 
         // ScrollBar event
-        let scrollbar_status_label_clone = self.scrollbar_status_label.clone();
-        let scroll_bar_clone = self.scroll_bar.clone();
         self.scroll_bar.on_thumb_track(move |_event| {
-            let pos = scroll_bar_clone.thumb_position();
-            scrollbar_status_label_clone.set_label(&format!("{pos}"));
+            let pos = scroll_bar.thumb_position();
+            scrollbar_status_label.set_label(&format!("{pos}"));
             println!("Scroll Pos: {pos}");
         });
 
         // Colour picker event
-        let colour_label_clone = self.colour_label.clone();
         self.colour_picker.on_colour_changed(move |event| {
             let colour = event.get_colour();
             let label_text = format!("{colour:?}");
-            colour_label_clone.set_label(&label_text);
+            colour_label.set_label(&label_text);
             println!("ColourPicker changed: {colour:?}");
         });
 
         // Hyperlink event
-        let hyperlink_ctrl_clone = self.hyperlink_ctrl.clone();
         self.hyperlink_ctrl.on_clicked(move |_event| {
-            let url = hyperlink_ctrl_clone.get_url();
+            let url = hyperlink_ctrl.get_url();
             println!(
                 "HYPERLINK Clicked! URL: \"{}\", Visited: {}",
                 url,
-                hyperlink_ctrl_clone.get_visited(),
+                hyperlink_ctrl.get_visited(),
             );
         });
 
         // Command link button
-        let cmd_link_button_clone = self.cmd_link_button.clone();
         self.cmd_link_button.on_click(move |_event| {
             MessageDialog::builder(
-                &cmd_link_button_clone,
+                &cmd_link_button,
                 "CommandLinkButton was clicked!\n(Simulating opening system settings)",
                 "Command Link Action",
             )
@@ -653,16 +650,14 @@ impl BasicTabControls {
         });
 
         // CollapsiblePane event - trigger layout update when expanded/collapsed
-        let collapsible_pane_clone = self.collapsible_pane.clone();
-        let panel_clone = self.panel.clone();
         self.collapsible_pane.on_changed(move |_event| {
-            if collapsible_pane_clone.is_expanded() {
+            if collapsible_pane.is_expanded() {
                 println!("CollapsiblePane expanded!");
             } else {
                 println!("CollapsiblePane collapsed!");
             }
             // Update the layout to reposition other widgets
-            panel_clone.layout();
+            panel.layout();
         });
     }
 }

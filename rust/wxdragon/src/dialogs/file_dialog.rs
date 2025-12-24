@@ -1,7 +1,6 @@
 use crate::dialogs::Dialog;
 use crate::geometry::{Point, Size};
 use crate::utils::ArrayString;
-use crate::widget_style_enum;
 use crate::window::WxWidget;
 use std::ffi::{CStr, CString};
 use wxdragon_sys as ffi;

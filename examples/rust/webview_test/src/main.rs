@@ -94,31 +94,27 @@ fn main() {
         panel.set_sizer(sizer, true);
 
         // Event handling - Navigation
-        let wv = webview.clone();
         btn_back.on_click(move |_| {
-            if wv.can_go_back() {
-                wv.go_back();
+            if webview.can_go_back() {
+                webview.go_back();
             }
         });
 
-        let wv = webview.clone();
         btn_forward.on_click(move |_| {
-            if wv.can_go_forward() {
-                wv.go_forward();
+            if webview.can_go_forward() {
+                webview.go_forward();
             }
         });
 
-        let wv = webview.clone();
         btn_reload.on_click(move |_| {
-            wv.reload(WebViewReloadFlags::NoCache);
+            webview.reload(WebViewReloadFlags::NoCache);
         });
 
         // Zoom controls - using discrete zoom levels for IE compatibility
         // Note: get_zoom_factor()/set_zoom_factor() may not work on IE backend
-        let wv = webview.clone();
         btn_zoom_in.on_click(move |_| {
             // Use discrete zoom levels which work on all backends including IE
-            let current_zoom = wv.get_zoom();
+            let current_zoom = webview.get_zoom();
             let new_zoom = match current_zoom {
                 WebViewZoom::Tiny => WebViewZoom::Small,
                 WebViewZoom::Small => WebViewZoom::Medium,
@@ -126,13 +122,12 @@ fn main() {
                 WebViewZoom::Large => WebViewZoom::Largest,
                 WebViewZoom::Largest => WebViewZoom::Largest,
             };
-            wv.set_zoom(new_zoom);
-            println!("Zoom level: {:?} (backend: {:?})", wv.get_zoom(), backend);
+            webview.set_zoom(new_zoom);
+            println!("Zoom level: {:?} (backend: {:?})", webview.get_zoom(), backend);
         });
 
-        let wv = webview.clone();
         btn_zoom_out.on_click(move |_| {
-            let current_zoom = wv.get_zoom();
+            let current_zoom = webview.get_zoom();
             let new_zoom = match current_zoom {
                 WebViewZoom::Tiny => WebViewZoom::Tiny,
                 WebViewZoom::Small => WebViewZoom::Tiny,
@@ -140,39 +135,37 @@ fn main() {
                 WebViewZoom::Large => WebViewZoom::Medium,
                 WebViewZoom::Largest => WebViewZoom::Large,
             };
-            wv.set_zoom(new_zoom);
-            println!("Zoom level: {:?} (backend: {:?})", wv.get_zoom(), backend);
+            webview.set_zoom(new_zoom);
+            println!("Zoom level: {:?} (backend: {:?})", webview.get_zoom(), backend);
         });
 
         // Advanced script execution
-        let wv = webview.clone();
         btn_script.on_click(move |_| {
             // Get page title
-            if let Some(title) = wv.run_script("document.title") {
+            if let Some(title) = webview.run_script("document.title") {
                 println!("Page title: {}", title);
             }
 
             // Get page URL
-            if let Some(url) = wv.run_script("window.location.href") {
+            if let Some(url) = webview.run_script("window.location.href") {
                 println!("Page URL: {}", url);
             }
 
             // Get page text length
-            if let Some(len) = wv.run_script("document.body.innerText.length") {
+            if let Some(len) = webview.run_script("document.body.innerText.length") {
                 println!("Page text length: {} characters", len);
             }
 
             // Show current URL from API
-            println!("Current URL (API): {}", wv.get_current_url());
-            println!("Current title (API): {}", wv.get_current_title());
-            println!("User agent: {}", wv.get_user_agent());
+            println!("Current URL (API): {}", webview.get_current_url());
+            println!("Current title (API): {}", webview.get_current_title());
+            println!("User agent: {}", webview.get_user_agent());
         });
 
         // Dev tools toggle
-        let wv = webview.clone();
         btn_devtools.on_click(move |_| {
-            if wv.is_access_to_dev_tools_enabled() {
-                let opened = wv.show_dev_tools();
+            if webview.is_access_to_dev_tools_enabled() {
+                let opened = webview.show_dev_tools();
                 println!(
                     "Dev tools {}",
                     if opened { "opened" } else { "already open or not available" }
@@ -183,19 +176,17 @@ fn main() {
         });
 
         // Find in page
-        let wv = webview.clone();
         btn_find.on_click(move |_| {
             let flags = WebViewFindFlags::HIGHLIGHT_RESULT | WebViewFindFlags::WRAP;
-            let count = wv.find("test", flags);
+            let count = webview.find("test", flags);
             println!("Found {} occurrences of 'test'", if count >= 0 { count } else { 0 });
         });
 
         // WebView events
-        let wv = webview.clone();
         webview.on_loaded(move |_| {
-            println!("Page loaded! URL: {}", wv.get_current_url());
-            println!("Page title: {}", wv.get_current_title());
-            println!("Is busy: {}", wv.is_busy());
+            println!("Page loaded! URL: {}", webview.get_current_url());
+            println!("Page title: {}", webview.get_current_title());
+            println!("Is busy: {}", webview.is_busy());
         });
 
         webview.on_navigating(move |_| {

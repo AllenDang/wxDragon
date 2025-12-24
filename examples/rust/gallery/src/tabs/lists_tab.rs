@@ -363,11 +363,19 @@ pub fn create_lists_tab(notebook: &Notebook, _frame: &Frame) -> ListsTabControls
     });
 
     // --- Event Binding ---
+    // Widgets are Copy, so copy them for use in closures
+    let listbox_status = listbox_status_label;
+    let checklistbox_status = checklistbox_status_label;
+    let choice_status = choice_status_label;
+    let combo_status = combo_status_label;
+    let editable_listbox_status = editable_listbox_status_label;
+    let list_ctrl_status = list_ctrl_status_label;
+    let rearrangelist_status = rearrangelist_status_label;
+
     // ListBox Event Binding (Refactored)
-    let listbox_status_label_clone = listbox_status_label.clone();
     list_box.on_selection_changed(move |event_data| {
         if let Some(selection_str) = event_data.get_string() {
-            listbox_status_label_clone.set_label(&format!("List Selection: {selection_str}"));
+            listbox_status.set_label(&format!("List Selection: {selection_str}"));
         }
         if let Some(index) = event_data.get_selection() {
             println!(
@@ -389,47 +397,42 @@ pub fn create_lists_tab(notebook: &Notebook, _frame: &Frame) -> ListsTabControls
     });
 
     // CheckListBox Event Binding
-    let checklistbox_status_label_clone = checklistbox_status_label.clone();
-    let checklistbox_clone = checklistbox.clone();
     checklistbox.on_selected(move |event_data| {
         if let Some(index) = event_data.get_selection() {
-            let is_checked = checklistbox_clone.is_checked(index);
+            let is_checked = checklistbox.is_checked(index);
             let item_text = event_data.get_string().unwrap_or_else(|| "?".to_string());
-            checklistbox_status_label_clone.set_label(&format!(
+            checklistbox_status.set_label(&format!(
                 "CheckList Sel: {} ('{}' {})",
                 index,
                 item_text,
                 if is_checked { "Checked" } else { "Unchecked" }
             ));
         } else {
-            checklistbox_status_label_clone.set_label("CheckList Sel: None");
+            checklistbox_status.set_label("CheckList Sel: None");
         }
     });
 
     // Choice selection event (Refactored)
-    let choice_status_label_clone = choice_status_label.clone();
     choice_ctrl.on_selection_changed(move |event_data| {
         if let Some(selected_string) = event_data.get_string() {
-            choice_status_label_clone.set_label(&format!("Choice Selection: {selected_string}"));
+            choice_status.set_label(&format!("Choice Selection: {selected_string}"));
         } else {
-            choice_status_label_clone.set_label("Choice Selection: None");
+            choice_status.set_label("Choice Selection: None");
         }
     });
 
     // ComboBox events
-    let combo_status_label_clone = combo_status_label.clone();
     combo_box.on_selection_changed(move |event_data| {
         if let Some(selected_string) = event_data.get_string() {
-            combo_status_label_clone.set_label(&format!("Combo Selected: {selected_string}"));
+            combo_status.set_label(&format!("Combo Selected: {selected_string}"));
         } else {
-            combo_status_label_clone.set_label("Combo Selected: None");
+            combo_status.set_label("Combo Selected: None");
         }
     });
 
-    let combo_status_label_clone = combo_status_label.clone();
     combo_box.on_text_updated(move |event_data| {
         if let Some(current_text) = event_data.get_string() {
-            combo_status_label_clone.set_label(&format!("Combo Text: {current_text}"));
+            combo_status.set_label(&format!("Combo Text: {current_text}"));
         }
     });
 
@@ -440,120 +443,104 @@ pub fn create_lists_tab(notebook: &Notebook, _frame: &Frame) -> ListsTabControls
     });
 
     // EditableListBox events - basic selection event
-    let status_label_clone1 = editable_listbox_status_label.clone();
     editable_listbox.on_selection_changed(move |_event_data| {
         // Simple update without accessing complex methods
-        status_label_clone1.set_label("Item selected in EditableListBox");
+        editable_listbox_status.set_label("Item selected in EditableListBox");
     });
 
     // Bind event for when editing begins
-    let status_label_clone2 = editable_listbox_status_label.clone();
     editable_listbox.on_begin_label_edit(move |_event_data| {
-        status_label_clone2.set_label("Editing item...");
+        editable_listbox_status.set_label("Editing item...");
     });
 
     // Bind event for when editing ends
-    let status_label_clone3 = editable_listbox_status_label.clone();
     editable_listbox.on_end_label_edit(move |_event_data| {
-        status_label_clone3.set_label("Item edited");
+        editable_listbox_status.set_label("Item edited");
     });
 
     // Edit button
-    let list_ctrl_clone = list_ctrl.clone();
-    let list_ctrl_status_label_clone = list_ctrl_status_label.clone();
     edit_button.on_click(move |_| {
-        let selected_item = list_ctrl_clone.get_first_selected_item();
+        let selected_item = list_ctrl.get_first_selected_item();
         if selected_item >= 0 {
             // Start editing the label of the selected item
-            let text_ctrl = list_ctrl_clone.edit_label(selected_item as i64);
+            let text_ctrl = list_ctrl.edit_label(selected_item as i64);
             text_ctrl.set_value("New Label");
             // You can access the TextCtrl here if needed
-            list_ctrl_status_label_clone.set_label(&format!("Editing item {selected_item}"));
+            list_ctrl_status.set_label(&format!("Editing item {selected_item}"));
         } else {
-            list_ctrl_status_label_clone.set_label("Please select an item to edit");
+            list_ctrl_status.set_label("Please select an item to edit");
         }
     });
 
     // Bind button events
-    let list_ctrl_clone = list_ctrl.clone();
-    let list_ctrl_status_label_clone = list_ctrl_status_label.clone();
     add_button.on_click(move |_| {
         println!("Add Item button clicked");
-        let count = list_ctrl_clone.get_item_count();
+        let count = list_ctrl.get_item_count();
         let new_item_text = format!("P{:03}", count + 1);
-        let new_idx = list_ctrl_clone.insert_item(count as i64, &new_item_text, None);
-        list_ctrl_clone.set_item_text_by_column(new_idx as i64, 1, "New Description");
-        list_ctrl_clone.set_item_text_by_column(new_idx as i64, 2, "0");
-        list_ctrl_status_label_clone.set_label(&format!("Added new item {new_idx}"));
+        let new_idx = list_ctrl.insert_item(count as i64, &new_item_text, None);
+        list_ctrl.set_item_text_by_column(new_idx as i64, 1, "New Description");
+        list_ctrl.set_item_text_by_column(new_idx as i64, 2, "0");
+        list_ctrl_status.set_label(&format!("Added new item {new_idx}"));
     });
 
     // Remove button
-    let list_ctrl_clone = list_ctrl.clone();
-    let list_ctrl_status_label_clone = list_ctrl_status_label.clone();
     remove_button.on_click(move |_| {
-        let selected_item = list_ctrl_clone.get_first_selected_item();
+        let selected_item = list_ctrl.get_first_selected_item();
         if selected_item >= 0 {
             // Delete the selected item
-            if list_ctrl_clone.delete_item(selected_item as i64) {
-                list_ctrl_status_label_clone.set_label(&format!("Removed item {selected_item}"));
+            if list_ctrl.delete_item(selected_item as i64) {
+                list_ctrl_status.set_label(&format!("Removed item {selected_item}"));
             } else {
-                list_ctrl_status_label_clone.set_label(&format!("Failed to remove item {selected_item}"));
+                list_ctrl_status.set_label(&format!("Failed to remove item {selected_item}"));
             }
         } else {
-            list_ctrl_status_label_clone.set_label("Please select an item to remove");
+            list_ctrl_status.set_label("Please select an item to remove");
         }
     });
 
     // Select first button
-    let list_ctrl_clone = list_ctrl.clone();
-    let list_ctrl_status_label_clone = list_ctrl_status_label.clone();
     select_button.on_click(move |_| {
         // Ensure first item exists
-        if list_ctrl_clone.get_item_count() > 0 {
+        if list_ctrl.get_item_count() > 0 {
             // Select the first item
-            list_ctrl_clone.set_item_state(0, ListItemState::Selected, ListItemState::Selected);
+            list_ctrl.set_item_state(0, ListItemState::Selected, ListItemState::Selected);
             // Ensure it's visible
-            list_ctrl_clone.ensure_visible(0);
-            list_ctrl_status_label_clone.set_label("Selected first item");
+            list_ctrl.ensure_visible(0);
+            list_ctrl_status.set_label("Selected first item");
         } else {
-            list_ctrl_status_label_clone.set_label("List is empty");
+            list_ctrl_status.set_label("List is empty");
         }
     });
 
     // Bind events for item editing
-    let list_ctrl_status_label_clone = list_ctrl_status_label.clone();
     list_ctrl.on_begin_label_edit(move |_| {
-        list_ctrl_status_label_clone.set_label("Started editing label...");
+        list_ctrl_status.set_label("Started editing label...");
     });
 
-    let list_ctrl_status_label_clone = list_ctrl_status_label.clone();
     list_ctrl.on_end_label_edit(move |event_data| {
         // Check if edit was cancelled - note: we need to handle this correctly
         let cancelled = event_data.is_edit_cancelled().unwrap_or(true);
         if cancelled {
-            list_ctrl_status_label_clone.set_label("Label edit cancelled");
+            list_ctrl_status.set_label("Label edit cancelled");
         } else {
             let _item_index = event_data.get_item_index();
             let label = event_data.get_label().unwrap_or_else(|| String::from("<no label>"));
-            list_ctrl_status_label_clone.set_label(&format!("Label changed to: {label}"));
+            list_ctrl_status.set_label(&format!("Label changed to: {label}"));
         }
     });
 
     // Cleanup button handler
-    let list_ctrl_clone = list_ctrl.clone();
-    let list_ctrl_status_label_clone = list_ctrl_status_label.clone();
     cleanup_button.on_click(move |_| {
         println!("Cleanup button clicked - calling explicit cleanup");
-        list_ctrl_clone.cleanup_custom_data();
-        list_ctrl_status_label_clone.set_label("Manual cleanup completed");
+        list_ctrl.cleanup_custom_data();
+        list_ctrl_status.set_label("Manual cleanup completed");
     });
 
-    let list_ctrl_clone_populate = list_ctrl.clone();
     populate_button.on_click(move |_| {
         println!("Populate ListCtrl with more items button clicked");
         for i in 5..15 {
             let item_text = format!("Item {}", i + 1);
-            list_ctrl_clone_populate.insert_item(i as i64, &item_text, None);
+            list_ctrl.insert_item(i as i64, &item_text, None);
         }
     });
 
@@ -577,41 +564,14 @@ pub fn create_lists_tab(notebook: &Notebook, _frame: &Frame) -> ListsTabControls
         }
     }
 
-    // ComboBox events (Refactored)
-    let combo_status_label_selected = combo_status_label.clone();
-    combo_box.on_selection_changed(move |event_data| {
-        if let Some(selected_string) = event_data.get_string() {
-            combo_status_label_selected.set_label(&format!("Combo Selected: {selected_string}"));
-        } else {
-            combo_status_label_selected.set_label("Combo Selected: None");
-        }
-    });
-
-    let combo_status_label_text_changed = combo_status_label.clone();
-    combo_box.on_text_updated(move |event_data| {
-        if let Some(current_text) = event_data.get_string() {
-            combo_status_label_text_changed.set_label(&format!("Combo Text: {current_text}"));
-        }
-    });
-
-    combo_box.on_enter_pressed(move |event_data| {
-        if let Some(text_val) = event_data.get_string() {
-            println!("ComboBox Enter: {text_val}");
-        } else {
-            println!("ComboBox Enter: (no text in event data)");
-        }
-    });
+    // ComboBox events (Refactored) - already handled above with Copy widgets
 
     // RearrangeList Event Binding
-    let rearrangelist_status_label_clone = rearrangelist_status_label.clone();
-    let rearrangelist_clone = rearrangelist.clone();
     rearrangelist.on_selected(move |event_data| {
         if let Some(index) = event_data.get_selection() {
-            let is_checked = rearrangelist_clone.is_checked(index);
-            let item_text = rearrangelist_clone
-                .get_string(index)
-                .unwrap_or_else(|| "<unknown>".to_string());
-            rearrangelist_status_label_clone.set_label(&format!(
+            let is_checked = rearrangelist.is_checked(index);
+            let item_text = rearrangelist.get_string(index).unwrap_or_else(|| "<unknown>".to_string());
+            rearrangelist_status.set_label(&format!(
                 "Selected: {} ('{}' {})",
                 index,
                 item_text,
@@ -620,15 +580,11 @@ pub fn create_lists_tab(notebook: &Notebook, _frame: &Frame) -> ListsTabControls
         }
     });
 
-    let rearrangelist_status_label_clone = rearrangelist_status_label.clone();
-    let rearrangelist_clone = rearrangelist.clone();
     rearrangelist.on_toggled(move |event_data| {
         if let Some(index) = event_data.get_selection() {
-            let is_checked = rearrangelist_clone.is_checked(index);
-            let item_text = rearrangelist_clone
-                .get_string(index)
-                .unwrap_or_else(|| "<unknown>".to_string());
-            rearrangelist_status_label_clone.set_label(&format!(
+            let is_checked = rearrangelist.is_checked(index);
+            let item_text = rearrangelist.get_string(index).unwrap_or_else(|| "<unknown>".to_string());
+            rearrangelist_status.set_label(&format!(
                 "Toggled: {} ('{}' is now {})",
                 index,
                 item_text,
@@ -637,31 +593,25 @@ pub fn create_lists_tab(notebook: &Notebook, _frame: &Frame) -> ListsTabControls
         }
     });
 
-    let rearrangelist_status_label_clone = rearrangelist_status_label.clone();
-    let rearrangelist_clone = rearrangelist.clone();
     rearrangelist.on_rearranged(move |_| {
-        let order = rearrangelist_clone.get_current_order();
-        rearrangelist_status_label_clone.set_label(&format!("Rearranged: current order is {order:?}"));
+        let order = rearrangelist.get_current_order();
+        rearrangelist_status.set_label(&format!("Rearranged: current order is {order:?}"));
     });
 
     // Button event handlers for RearrangeList
-    let rearrangelist_clone = rearrangelist.clone();
-    let rearrangelist_status_label_clone = rearrangelist_status_label.clone();
     move_up_button.on_click(move |_| {
-        if rearrangelist_clone.move_current_up() {
-            rearrangelist_status_label_clone.set_label("Moved item up");
+        if rearrangelist.move_current_up() {
+            rearrangelist_status.set_label("Moved item up");
         } else {
-            rearrangelist_status_label_clone.set_label("Could not move item up");
+            rearrangelist_status.set_label("Could not move item up");
         }
     });
 
-    let rearrangelist_clone = rearrangelist.clone();
-    let rearrangelist_status_label_clone = rearrangelist_status_label.clone();
     move_down_button.on_click(move |_| {
-        if rearrangelist_clone.move_current_down() {
-            rearrangelist_status_label_clone.set_label("Moved item down");
+        if rearrangelist.move_current_down() {
+            rearrangelist_status.set_label("Moved item down");
         } else {
-            rearrangelist_status_label_clone.set_label("Could not move item down");
+            rearrangelist_status.set_label("Could not move item down");
         }
     });
 

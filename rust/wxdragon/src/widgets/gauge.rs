@@ -1,7 +1,4 @@
-use crate::implement_widget_traits_with_target;
 use crate::prelude::*;
-use crate::widget_builder;
-use crate::widget_style_enum;
 use crate::window::{Window, WxWidget};
 use std::os::raw::c_int;
 use wxdragon_sys as ffi;
@@ -22,7 +19,7 @@ widget_style_enum!(
 // Opaque pointer type from FFI
 pub type RawGauge = ffi::wxd_Gauge_t;
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct Gauge {
     window: Window, // Embed the generic Window
 }

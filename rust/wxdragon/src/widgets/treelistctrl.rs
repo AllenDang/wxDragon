@@ -75,9 +75,6 @@ use std::os::raw::c_char;
 use crate::event::{Event, EventType};
 use crate::geometry::{Point, Size};
 use crate::id::Id;
-use crate::implement_widget_traits_with_target;
-use crate::widget_builder;
-use crate::widget_style_enum;
 use crate::widgets::list_ctrl::ListColumnFormat;
 use crate::window::{Window, WxWidget};
 use wxdragon_sys as ffi;
@@ -222,7 +219,7 @@ impl TreeListCtrlEventData {
 /// TreeListCtrl combines tree functionality with list columns, allowing hierarchical data
 /// to be displayed with additional information in columns. It supports checkboxes for
 /// easy selection/deselection of items.
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct TreeListCtrl {
     window: Window,
 }

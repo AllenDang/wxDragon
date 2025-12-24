@@ -4,9 +4,6 @@
 use crate::event::ScrollEvents;
 use crate::geometry::{Point, Size};
 use crate::id::Id;
-use crate::implement_widget_traits_with_target;
-use crate::widget_builder;
-use crate::widget_style_enum;
 use crate::widgets::panel::Panel; // Inherits from Panel (used for Deref)
 use crate::window::WxWidget; // Used for builder parent type constraint
 use wxdragon_sys as ffi;

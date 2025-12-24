@@ -203,154 +203,134 @@ pub fn create_richtext_tab(notebook: &Notebook, _frame: &Frame) -> RichTextTabCo
 
 impl RichTextTabControls {
     pub fn bind_events(&self) {
+        // Widgets are Copy, so copy them for use in closures
+        let rich_text_ctrl = self.rich_text_ctrl;
+        let status_label = self.status_label;
+        let panel = self.panel;
+        let font_size_spin = self.font_size_spin;
+
         // Bold button
-        let rich_text_clone = self.rich_text_ctrl.clone();
-        let status_label_clone = self.status_label.clone();
         self.bold_btn.on_click(move |_event| {
-            let (from, to) = rich_text_clone.get_selection();
+            let (from, to) = rich_text_ctrl.get_selection();
             if from != to {
-                rich_text_clone.set_style_range(from, to, true, false, false);
-                status_label_clone.set_label("Applied bold formatting to selection");
+                rich_text_ctrl.set_style_range(from, to, true, false, false);
+                status_label.set_label("Applied bold formatting to selection");
                 log::info!("Applied bold to range {from}-{to}");
             } else {
-                status_label_clone.set_label("Please select text first");
+                status_label.set_label("Please select text first");
             }
         });
 
         // Italic button
-        let rich_text_clone = self.rich_text_ctrl.clone();
-        let status_label_clone = self.status_label.clone();
         self.italic_btn.on_click(move |_event| {
-            let (from, to) = rich_text_clone.get_selection();
+            let (from, to) = rich_text_ctrl.get_selection();
             if from != to {
-                rich_text_clone.set_style_range(from, to, false, true, false);
-                status_label_clone.set_label("Applied italic formatting to selection");
+                rich_text_ctrl.set_style_range(from, to, false, true, false);
+                status_label.set_label("Applied italic formatting to selection");
                 log::info!("Applied italic to range {from}-{to}");
             } else {
-                status_label_clone.set_label("Please select text first");
+                status_label.set_label("Please select text first");
             }
         });
 
         // Underline button
-        let rich_text_clone = self.rich_text_ctrl.clone();
-        let status_label_clone = self.status_label.clone();
         self.underline_btn.on_click(move |_event| {
-            let (from, to) = rich_text_clone.get_selection();
+            let (from, to) = rich_text_ctrl.get_selection();
             if from != to {
-                rich_text_clone.set_style_range(from, to, false, false, true);
-                status_label_clone.set_label("Applied underline formatting to selection");
+                rich_text_ctrl.set_style_range(from, to, false, false, true);
+                status_label.set_label("Applied underline formatting to selection");
                 log::info!("Applied underline to range {from}-{to}");
             } else {
-                status_label_clone.set_label("Please select text first");
+                status_label.set_label("Please select text first");
             }
         });
 
         // Font size spinner
-        let rich_text_clone = self.rich_text_ctrl.clone();
-        let status_label_clone = self.status_label.clone();
-        let font_size_spin_clone = self.font_size_spin.clone();
         self.font_size_spin.on_value_changed(move |_event| {
-            let size = font_size_spin_clone.value();
-            let (from, to) = rich_text_clone.get_selection();
+            let size = font_size_spin.value();
+            let (from, to) = rich_text_ctrl.get_selection();
             if from != to {
-                rich_text_clone.set_font_size(from, to, size);
-                status_label_clone.set_label(&format!("Changed font size to {size}pt"));
+                rich_text_ctrl.set_font_size(from, to, size);
+                status_label.set_label(&format!("Changed font size to {size}pt"));
                 log::info!("Applied font size {size} to range {from}-{to}");
             } else {
-                status_label_clone.set_label(&format!("Font size {size}pt - select text to apply"));
+                status_label.set_label(&format!("Font size {size}pt - select text to apply"));
             }
         });
 
         // Clear button
-        let rich_text_clone = self.rich_text_ctrl.clone();
-        let status_label_clone = self.status_label.clone();
         self.clear_btn.on_click(move |_event| {
-            rich_text_clone.clear();
-            status_label_clone.set_label("Cleared all content");
+            rich_text_ctrl.clear();
+            status_label.set_label("Cleared all content");
             log::info!("Cleared all content");
         });
 
         // Undo button
-        let rich_text_clone = self.rich_text_ctrl.clone();
-        let status_label_clone = self.status_label.clone();
         self.undo_btn.on_click(move |_event| {
-            if rich_text_clone.can_undo() {
-                rich_text_clone.undo();
-                status_label_clone.set_label("Undone last action");
+            if rich_text_ctrl.can_undo() {
+                rich_text_ctrl.undo();
+                status_label.set_label("Undone last action");
                 log::info!("Undone last action");
             } else {
-                status_label_clone.set_label("Nothing to undo");
+                status_label.set_label("Nothing to undo");
             }
         });
 
         // Redo button
-        let rich_text_clone = self.rich_text_ctrl.clone();
-        let status_label_clone = self.status_label.clone();
         self.redo_btn.on_click(move |_event| {
-            if rich_text_clone.can_redo() {
-                rich_text_clone.redo();
-                status_label_clone.set_label("Redone last action");
+            if rich_text_ctrl.can_redo() {
+                rich_text_ctrl.redo();
+                status_label.set_label("Redone last action");
                 log::info!("Redone last action");
             } else {
-                status_label_clone.set_label("Nothing to redo");
+                status_label.set_label("Nothing to redo");
             }
         });
 
         // Cut button
-        let rich_text_clone = self.rich_text_ctrl.clone();
-        let status_label_clone = self.status_label.clone();
         self.cut_btn.on_click(move |_event| {
-            let (from, to) = rich_text_clone.get_selection();
+            let (from, to) = rich_text_ctrl.get_selection();
             if from != to {
-                rich_text_clone.cut();
-                status_label_clone.set_label("Cut selection to clipboard");
+                rich_text_ctrl.cut();
+                status_label.set_label("Cut selection to clipboard");
                 log::info!("Cut selection to clipboard");
             } else {
-                status_label_clone.set_label("Nothing to cut");
+                status_label.set_label("Nothing to cut");
             }
         });
 
         // Copy button
-        let rich_text_clone = self.rich_text_ctrl.clone();
-        let status_label_clone = self.status_label.clone();
         self.copy_btn.on_click(move |_event| {
-            let (from, to) = rich_text_clone.get_selection();
+            let (from, to) = rich_text_ctrl.get_selection();
             if from != to {
-                rich_text_clone.copy();
-                status_label_clone.set_label("Copied selection to clipboard");
+                rich_text_ctrl.copy();
+                status_label.set_label("Copied selection to clipboard");
                 log::info!("Copied selection to clipboard");
             } else {
-                status_label_clone.set_label("Nothing to copy");
+                status_label.set_label("Nothing to copy");
             }
         });
 
         // Paste button
-        let rich_text_clone = self.rich_text_ctrl.clone();
-        let status_label_clone = self.status_label.clone();
         self.paste_btn.on_click(move |_event| {
             // Always try to paste - the control will handle it if clipboard is empty
-            rich_text_clone.paste();
-            status_label_clone.set_label("Pasted from clipboard");
+            rich_text_ctrl.paste();
+            status_label.set_label("Pasted from clipboard");
             log::info!("Pasted from clipboard");
         });
 
         // Select All button
-        let rich_text_clone = self.rich_text_ctrl.clone();
-        let status_label_clone = self.status_label.clone();
         self.select_all_btn.on_click(move |_event| {
-            let last_pos = rich_text_clone.get_last_position();
-            rich_text_clone.set_selection(0, last_pos);
-            status_label_clone.set_label("Selected all text");
+            let last_pos = rich_text_ctrl.get_last_position();
+            rich_text_ctrl.set_selection(0, last_pos);
+            status_label.set_label("Selected all text");
             log::info!("Selected all text");
         });
 
         // Save button - Use file dialog to save
-        let rich_text_clone = self.rich_text_ctrl.clone();
-        let status_label_clone = self.status_label.clone();
-        let panel_clone = self.panel.clone();
         self.save_btn.on_click(move |_event| {
             // Create a file save dialog
-            let save_dialog = FileDialog::builder(&panel_clone)
+            let save_dialog = FileDialog::builder(&panel)
                 .with_message("Save RichText Content")
                 .with_default_dir(".")
                 .with_default_file("document.rtf")
@@ -367,8 +347,8 @@ impl RichTextTabControls {
                         RichTextFileType::Text
                     };
 
-                    if rich_text_clone.save_file(&file_path, file_type) {
-                        status_label_clone.set_label(&format!(
+                    if rich_text_ctrl.save_file(&file_path, file_type) {
+                        status_label.set_label(&format!(
                             "Saved content to {}",
                             std::path::Path::new(&file_path)
                                 .file_name()
@@ -377,24 +357,21 @@ impl RichTextTabControls {
                         ));
                         log::info!("Successfully saved content to {file_path}");
                     } else {
-                        status_label_clone.set_label("Failed to save file");
+                        status_label.set_label("Failed to save file");
                         log::warn!("Failed to save content to file: {file_path}");
                     }
                 } else {
-                    status_label_clone.set_label("Failed to get file path");
+                    status_label.set_label("Failed to get file path");
                 }
             } else {
-                status_label_clone.set_label("Save operation cancelled");
+                status_label.set_label("Save operation cancelled");
             }
         });
 
         // Load button - Use file dialog to load
-        let rich_text_clone = self.rich_text_ctrl.clone();
-        let status_label_clone = self.status_label.clone();
-        let panel_clone = self.panel.clone();
         self.load_btn.on_click(move |_event| {
             // Create a file open dialog
-            let open_dialog = FileDialog::builder(&panel_clone)
+            let open_dialog = FileDialog::builder(&panel)
                 .with_message("Open Text File")
                 .with_default_dir(".")
                 .with_wildcard(
@@ -412,8 +389,8 @@ impl RichTextTabControls {
                         RichTextFileType::Text
                     };
 
-                    if rich_text_clone.load_file(&file_path, file_type) {
-                        status_label_clone.set_label(&format!(
+                    if rich_text_ctrl.load_file(&file_path, file_type) {
+                        status_label.set_label(&format!(
                             "Loaded content from {}",
                             std::path::Path::new(&file_path)
                                 .file_name()
@@ -422,130 +399,114 @@ impl RichTextTabControls {
                         ));
                         log::info!("Successfully loaded content from {file_path}");
                     } else {
-                        status_label_clone.set_label("Failed to load file");
+                        status_label.set_label("Failed to load file");
                         log::warn!("Failed to load content from file: {file_path}");
                     }
                 } else {
-                    status_label_clone.set_label("Failed to get file path");
+                    status_label.set_label("Failed to get file path");
                 }
             } else {
-                status_label_clone.set_label("Load operation cancelled");
+                status_label.set_label("Load operation cancelled");
             }
         });
 
         // Text Color button
-        let rich_text_clone = self.rich_text_ctrl.clone();
-        let status_label_clone = self.status_label.clone();
         self.text_color_btn.on_click(move |_event| {
-            let (from, to) = rich_text_clone.get_selection();
+            let (from, to) = rich_text_ctrl.get_selection();
             if from != to {
                 // Set selection to red color
                 let red_color = Colour::rgb(255, 0, 0);
-                rich_text_clone.set_text_color_selection(red_color);
-                status_label_clone.set_label("Changed text color to red");
+                rich_text_ctrl.set_text_color_selection(red_color);
+                status_label.set_label("Changed text color to red");
                 log::info!("Applied red text color to range {from}-{to}");
             } else {
-                status_label_clone.set_label("Please select text first");
+                status_label.set_label("Please select text first");
             }
         });
 
         // Background Color button
-        let rich_text_clone = self.rich_text_ctrl.clone();
-        let status_label_clone = self.status_label.clone();
         self.bg_color_btn.on_click(move |_event| {
-            let (from, to) = rich_text_clone.get_selection();
+            let (from, to) = rich_text_ctrl.get_selection();
             if from != to {
                 // Set selection to yellow background
                 let yellow_color = Colour::rgb(255, 255, 0);
-                rich_text_clone.set_background_color_selection(yellow_color);
-                status_label_clone.set_label("Changed background color to yellow");
+                rich_text_ctrl.set_background_color_selection(yellow_color);
+                status_label.set_label("Changed background color to yellow");
                 log::info!("Applied yellow background color to range {from}-{to}");
             } else {
-                status_label_clone.set_label("Please select text first");
+                status_label.set_label("Please select text first");
             }
         });
 
         // Reset Colors button
-        let rich_text_clone = self.rich_text_ctrl.clone();
-        let status_label_clone = self.status_label.clone();
         self.reset_color_btn.on_click(move |_event| {
-            let (from, to) = rich_text_clone.get_selection();
+            let (from, to) = rich_text_ctrl.get_selection();
             if from != to {
                 // Reset to default black text and white background
                 let black_color = Colour::rgb(0, 0, 0);
                 let white_color = Colour::rgb(255, 255, 255);
-                rich_text_clone.set_text_color_selection(black_color);
-                rich_text_clone.set_background_color_selection(white_color);
-                status_label_clone.set_label("Reset colors to default");
+                rich_text_ctrl.set_text_color_selection(black_color);
+                rich_text_ctrl.set_background_color_selection(white_color);
+                status_label.set_label("Reset colors to default");
                 log::info!("Reset colors to default for range {from}-{to}");
             } else {
-                status_label_clone.set_label("Please select text first");
+                status_label.set_label("Please select text first");
             }
         });
 
         // RichTextCtrl selection changed event
-        let status_label_clone = self.status_label.clone();
-        let rich_text_clone = self.rich_text_ctrl.clone();
         self.rich_text_ctrl.on_selection_changed(move |_event| {
-            let (from, to) = rich_text_clone.get_selection();
+            let (from, to) = rich_text_ctrl.get_selection();
             if from != to {
-                status_label_clone.set_label(&format!("Selection: {} characters ({from}-{to})", to - from));
+                status_label.set_label(&format!("Selection: {} characters ({from}-{to})", to - from));
             } else {
-                status_label_clone.set_label(&format!("Cursor at position {from}"));
+                status_label.set_label(&format!("Cursor at position {from}"));
             }
         });
 
         // Scrolling event handlers
 
         // Add Content button
-        let rich_text_clone = self.rich_text_ctrl.clone();
-        let status_label_clone = self.status_label.clone();
         self.add_content_btn.on_click(move |_event| {
-            let new_content = format!("\n\nAdded content at position {} - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.", rich_text_clone.get_last_position());
-            rich_text_clone.append_text(&new_content);
+            let new_content = format!("\n\nAdded content at position {} - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.", rich_text_ctrl.get_last_position());
+            rich_text_ctrl.append_text(&new_content);
 
-            // Demonstrate auto-scroll behavior 
-            if rich_text_clone.auto_scroll_if_at_end(100) {
-                status_label_clone.set_label("Added content and auto-scrolled to end");
+            // Demonstrate auto-scroll behavior
+            if rich_text_ctrl.auto_scroll_if_at_end(100) {
+                status_label.set_label("Added content and auto-scrolled to end");
             } else {
-                status_label_clone.set_label("Added content (no auto-scroll, user had scrolled away)");
+                status_label.set_label("Added content (no auto-scroll, user had scrolled away)");
             }
             log::info!("Added content and checked auto-scroll behavior");
         });
 
         // Scroll to End button
-        let rich_text_clone = self.rich_text_ctrl.clone();
-        let status_label_clone = self.status_label.clone();
         self.scroll_to_end_btn.on_click(move |_event| {
-            rich_text_clone.scroll_to_end();
-            let last_pos = rich_text_clone.get_last_position();
-            status_label_clone.set_label(&format!("Scrolled to end (position {last_pos})"));
+            rich_text_ctrl.scroll_to_end();
+            let last_pos = rich_text_ctrl.get_last_position();
+            status_label.set_label(&format!("Scrolled to end (position {last_pos})"));
             log::info!("Scrolled to end position {last_pos}");
         });
 
         // Scroll to Beginning button
-        let rich_text_clone = self.rich_text_ctrl.clone();
-        let status_label_clone = self.status_label.clone();
         self.scroll_to_beginning_btn.on_click(move |_event| {
-            rich_text_clone.scroll_to_beginning();
-            status_label_clone.set_label("Scrolled to beginning (position 0)");
+            rich_text_ctrl.scroll_to_beginning();
+            status_label.set_label("Scrolled to beginning (position 0)");
             log::info!("Scrolled to beginning");
         });
 
         // Check Visibility button
-        let rich_text_clone = self.rich_text_ctrl.clone();
-        let status_label_clone = self.status_label.clone();
         self.check_visibility_btn.on_click(move |_event| {
             let test_position = 1000;
-            let is_visible = rich_text_clone.is_position_visible(test_position);
-            let last_pos = rich_text_clone.get_last_position();
+            let is_visible = rich_text_ctrl.is_position_visible(test_position);
+            let last_pos = rich_text_ctrl.get_last_position();
 
             if last_pos < test_position {
-                status_label_clone.set_label(&format!("Position {test_position} doesn't exist (last position: {last_pos})"));
+                status_label.set_label(&format!("Position {test_position} doesn't exist (last position: {last_pos})"));
             } else if is_visible {
-                status_label_clone.set_label(&format!("Position {test_position} is visible on screen"));
+                status_label.set_label(&format!("Position {test_position} is visible on screen"));
             } else {
-                status_label_clone.set_label(&format!(
+                status_label.set_label(&format!(
                     "Position {test_position} is not visible - use scroll buttons to see it"
                 ));
             }
