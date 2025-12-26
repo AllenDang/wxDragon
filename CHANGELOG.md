@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.6
+
+### Enhancements
+
+- **Widget Copy Trait**: Implemented `Copy` trait for all widgets
+  - All widgets now implement `Copy`, eliminating the need to clone widgets before using them in closures
+  - Simplifies event handler code by allowing direct widget usage without explicit cloning
+
 ## 0.9.5
 
 ### New Features
