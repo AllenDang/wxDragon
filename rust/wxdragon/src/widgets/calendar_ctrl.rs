@@ -1,8 +1,8 @@
 use crate::datetime::DateTime;
-use crate::event::{Event, EventType};
+use crate::event::{Event, EventType, WxEvtHandler};
 use crate::geometry::{Point, Size};
 use crate::id::Id;
-use crate::window::{Window, WxWidget};
+use crate::window::{WindowHandle, WxWidget};
 use std::ptr;
 use wxdragon_sys as ffi;
 
@@ -24,9 +24,15 @@ widget_style_enum!(
 );
 
 /// Represents a `wxCalendarCtrl`.
+///
+/// CalendarCtrl uses `WindowHandle` internally for safe memory management.
+/// When the underlying window is destroyed (by calling `destroy()` or when
+/// its parent is destroyed), the handle becomes invalid and all operations
+/// become safe no-ops.
 #[derive(Clone, Copy)]
 pub struct CalendarCtrl {
-    window: Window,
+    /// Safe handle to the underlying wxCalendarCtrl - automatically invalidated on destroy
+    handle: WindowHandle,
 }
 
 impl CalendarCtrl {
@@ -50,27 +56,51 @@ impl CalendarCtrl {
             panic!("Failed to create CalendarCtrl widget");
         }
 
-        unsafe {
-            let window = Window::from_ptr(ptr as *mut ffi::wxd_Window_t);
-            CalendarCtrl { window }
+        // Create a WindowHandle which automatically registers for destroy events
+        CalendarCtrl {
+            handle: WindowHandle::new(ptr as *mut ffi::wxd_Window_t),
         }
     }
 
+    /// Helper to get raw calendar pointer, returns null if widget has been destroyed
+    #[inline]
+    fn calendar_ptr(&self) -> *mut ffi::wxd_CalendarCtrl_t {
+        self.handle
+            .get_ptr()
+            .map(|p| p as *mut ffi::wxd_CalendarCtrl_t)
+            .unwrap_or(std::ptr::null_mut())
+    }
+
     /// Sets the currently displayed date.
+    /// Returns false if the widget has been destroyed.
     pub fn set_date(&self, date: &DateTime) -> bool {
-        unsafe { ffi::wxd_CalendarCtrl_SetDate(self.window.as_ptr() as *mut _, date.as_const_ptr()) }
+        let ptr = self.calendar_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_CalendarCtrl_SetDate(ptr, date.as_const_ptr()) }
     }
 
     /// Gets the currently displayed date.
+    /// Returns None if the widget has been destroyed.
     pub fn get_date(&self) -> Option<DateTime> {
+        let ptr = self.calendar_ptr();
+        if ptr.is_null() {
+            return None;
+        }
         unsafe {
-            let raw_dt_ptr = ffi::wxd_CalendarCtrl_GetDate(self.window.as_ptr() as *mut _);
+            let raw_dt_ptr = ffi::wxd_CalendarCtrl_GetDate(ptr);
             if raw_dt_ptr.is_null() {
                 None
             } else {
                 Some(DateTime::from(raw_dt_ptr))
             }
         }
+    }
+
+    /// Returns the underlying WindowHandle for this calendar control.
+    pub fn window_handle(&self) -> WindowHandle {
+        self.handle
     }
 }
 
@@ -132,6 +162,27 @@ impl CalendarEventData {
     }
 }
 
+// Manual WxWidget implementation for CalendarCtrl (using WindowHandle)
+impl WxWidget for CalendarCtrl {
+    fn handle_ptr(&self) -> *mut ffi::wxd_Window_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut())
+    }
+
+    fn is_valid(&self) -> bool {
+        self.handle.is_valid()
+    }
+}
+
+// Implement WxEvtHandler for event binding
+impl WxEvtHandler for CalendarCtrl {
+    unsafe fn get_event_handler_ptr(&self) -> *mut ffi::wxd_EvtHandler_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut()) as *mut ffi::wxd_EvtHandler_t
+    }
+}
+
+// Implement common event traits that all Window-based widgets support
+impl crate::event::WindowEvents for CalendarCtrl {}
+
 // Use the implement_widget_local_event_handlers macro
 crate::implement_widget_local_event_handlers!(
     CalendarCtrl, CalendarEvent, CalendarEventData,
@@ -141,11 +192,28 @@ crate::implement_widget_local_event_handlers!(
     YearChanged => year_changed, EventType::CALENDAR_YEAR_CHANGED
 );
 
-// Add XRC Support - enables CalendarCtrl to be created from XRC-managed pointers
-impl_xrc_support!(CalendarCtrl, { window });
+// XRC Support - enables CalendarCtrl to be created from XRC-managed pointers
+#[cfg(feature = "xrc")]
+impl crate::xrc::XrcSupport for CalendarCtrl {
+    unsafe fn from_xrc_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        CalendarCtrl {
+            handle: WindowHandle::new(ptr),
+        }
+    }
+}
 
-// Widget casting support for CalendarCtrl
-impl_widget_cast!(CalendarCtrl, "wxCalendarCtrl", { window });
+// Enable widget casting for CalendarCtrl
+impl crate::window::FromWindowWithClassName for CalendarCtrl {
+    fn class_name() -> &'static str {
+        "wxCalendarCtrl"
+    }
+
+    unsafe fn from_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        CalendarCtrl {
+            handle: WindowHandle::new(ptr),
+        }
+    }
+}
 
 // Use the widget_builder macro for CalendarCtrl
 widget_builder!(
@@ -166,6 +234,3 @@ widget_builder!(
         )
     }
 );
-
-// Apply common trait implementations for this widget
-implement_widget_traits_with_target!(CalendarCtrl, window, Window);

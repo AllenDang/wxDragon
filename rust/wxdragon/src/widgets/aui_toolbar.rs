@@ -1,10 +1,9 @@
 use std::ffi::CString;
-use std::marker::PhantomData;
 use std::os::raw::{c_int, c_longlong};
 
-use crate::event::{Event, EventType};
+use crate::event::{Event, EventType, WxEvtHandler};
 use crate::prelude::*;
-use crate::window::Window;
+use crate::window::{WindowHandle, WxWidget};
 use wxdragon_sys as ffi;
 
 // Define style enum for AuiToolBar
@@ -85,20 +84,37 @@ impl AuiToolBarEventData {
     }
 }
 
+/// Represents a wxAuiToolBar.
+///
+/// AuiToolBar uses `WindowHandle` internally for safe memory management.
+/// When the underlying window is destroyed (by calling `destroy()` or when
+/// its parent is destroyed), the handle becomes invalid and all operations
+/// become safe no-ops.
+///
+/// # Example
+/// ```ignore
+/// let toolbar = AuiToolBar::builder(&frame).build();
+///
+/// // AuiToolBar is Copy - no clone needed for closures!
+/// toolbar.add_tool(1, "New", "Create new file", ItemKind::Normal);
+/// toolbar.realize();
+///
+/// // After parent destruction, toolbar operations are safe no-ops
+/// frame.destroy();
+/// assert!(!toolbar.is_valid());
+/// ```
 #[derive(Clone, Copy)]
 pub struct AuiToolBar {
-    window: Window,
-    #[allow(dead_code)]
-    parent_ptr: *mut ffi::wxd_Window_t,
-    _marker: PhantomData<()>,
+    /// Safe handle to the underlying wxAuiToolBar - automatically invalidated on destroy
+    handle: WindowHandle,
 }
 
 impl AuiToolBar {
-    fn from_ptr(ptr: *mut ffi::wxd_AuiToolBar_t, parent_ptr: *mut ffi::wxd_Window_t) -> Self {
+    /// Creates a new AuiToolBar from a raw pointer.
+    /// This is intended for internal use by the builder.
+    fn from_ptr(ptr: *mut ffi::wxd_AuiToolBar_t) -> Self {
         AuiToolBar {
-            window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
-            parent_ptr,
-            _marker: PhantomData,
+            handle: WindowHandle::new(ptr as *mut ffi::wxd_Window_t),
         }
     }
 
@@ -107,13 +123,27 @@ impl AuiToolBar {
         AuiToolBarBuilder::new(parent)
     }
 
-    /// Adds a tool to the toolbar
+    /// Helper to get raw toolbar pointer, returns null if widget has been destroyed
+    #[inline]
+    fn toolbar_ptr(&self) -> *mut ffi::wxd_AuiToolBar_t {
+        self.handle
+            .get_ptr()
+            .map(|p| p as *mut ffi::wxd_AuiToolBar_t)
+            .unwrap_or(std::ptr::null_mut())
+    }
+
+    /// Adds a tool to the toolbar.
+    /// No-op if the toolbar has been destroyed.
     pub fn add_tool(&self, tool_id: i32, label: &str, short_help_string: &str, kind: ItemKind) {
+        let ptr = self.toolbar_ptr();
+        if ptr.is_null() {
+            return;
+        }
         let c_label = CString::new(label).unwrap_or_default();
         let c_short_help = CString::new(short_help_string).unwrap_or_default();
         unsafe {
             ffi::wxd_AuiToolBar_AddTool(
-                self.window.handle_ptr() as *mut ffi::wxd_AuiToolBar_t,
+                ptr,
                 tool_id as c_int,
                 c_label.as_ptr(),
                 // Bitmaps are currently omitted in C API
@@ -123,107 +153,202 @@ impl AuiToolBar {
         }
     }
 
-    /// Adds a label to the toolbar
+    /// Adds a label to the toolbar.
+    /// No-op if the toolbar has been destroyed.
     pub fn add_label(&self, tool_id: i32, label: &str, width: i32) {
+        let ptr = self.toolbar_ptr();
+        if ptr.is_null() {
+            return;
+        }
         let c_label = CString::new(label).unwrap_or_default();
-        let ptr = self.window.handle_ptr() as *mut ffi::wxd_AuiToolBar_t;
         unsafe { ffi::wxd_AuiToolBar_AddLabel(ptr, tool_id as c_int, c_label.as_ptr(), width as c_int) };
     }
 
-    /// Adds a control to the toolbar
+    /// Adds a control to the toolbar.
+    /// No-op if the toolbar has been destroyed.
     pub fn add_control<C: WxWidget>(&self, control: &C, label: &str) {
+        let ptr = self.toolbar_ptr();
+        if ptr.is_null() {
+            return;
+        }
         let c_label = CString::new(label).unwrap_or_default();
-        let ptr = self.window.handle_ptr() as *mut ffi::wxd_AuiToolBar_t;
         unsafe { ffi::wxd_AuiToolBar_AddControl(ptr, control.handle_ptr() as *mut ffi::wxd_Control_t, c_label.as_ptr()) };
     }
 
-    /// Adds a separator to the toolbar
+    /// Adds a separator to the toolbar.
+    /// No-op if the toolbar has been destroyed.
     pub fn add_separator(&self) {
-        unsafe { ffi::wxd_AuiToolBar_AddSeparator(self.window.handle_ptr() as *mut ffi::wxd_AuiToolBar_t) };
+        let ptr = self.toolbar_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_AuiToolBar_AddSeparator(ptr) };
     }
 
-    /// Adds a spacer to the toolbar
+    /// Adds a spacer to the toolbar.
+    /// No-op if the toolbar has been destroyed.
     pub fn add_spacer(&self, pixels: i32) {
-        unsafe { ffi::wxd_AuiToolBar_AddSpacer(self.window.handle_ptr() as *mut ffi::wxd_AuiToolBar_t, pixels as c_int) };
+        let ptr = self.toolbar_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_AuiToolBar_AddSpacer(ptr, pixels as c_int) };
     }
 
-    /// Adds a stretch spacer to the toolbar
+    /// Adds a stretch spacer to the toolbar.
+    /// No-op if the toolbar has been destroyed.
     pub fn add_stretch_spacer(&self, proportion: i32) {
-        let ptr = self.window.handle_ptr() as *mut ffi::wxd_AuiToolBar_t;
+        let ptr = self.toolbar_ptr();
+        if ptr.is_null() {
+            return;
+        }
         unsafe { ffi::wxd_AuiToolBar_AddStretchSpacer(ptr, proportion as c_int) };
     }
 
-    /// Realizes the toolbar (finalizes the layout after adding tools)
+    /// Realizes the toolbar (finalizes the layout after adding tools).
+    /// No-op if the toolbar has been destroyed.
     pub fn realize(&self) {
-        unsafe { ffi::wxd_AuiToolBar_Realize(self.window.handle_ptr() as *mut ffi::wxd_AuiToolBar_t) };
+        let ptr = self.toolbar_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_AuiToolBar_Realize(ptr) };
     }
 
-    /// Sets the size of tool bitmaps
+    /// Sets the size of tool bitmaps.
+    /// No-op if the toolbar has been destroyed.
     pub fn set_tool_bitmap_size(&self, size: Size) {
-        unsafe { ffi::wxd_AuiToolBar_SetToolBitmapSize(self.window.handle_ptr() as *mut ffi::wxd_AuiToolBar_t, size.into()) };
+        let ptr = self.toolbar_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_AuiToolBar_SetToolBitmapSize(ptr, size.into()) };
     }
 
-    /// Gets the size of tool bitmaps
+    /// Gets the size of tool bitmaps.
+    /// Returns default Size if the toolbar has been destroyed.
     pub fn get_tool_bitmap_size(&self) -> Size {
-        let ffi_size = unsafe { ffi::wxd_AuiToolBar_GetToolBitmapSize(self.window.handle_ptr() as *mut ffi::wxd_AuiToolBar_t) };
+        let ptr = self.toolbar_ptr();
+        if ptr.is_null() {
+            return Size::default();
+        }
+        let ffi_size = unsafe { ffi::wxd_AuiToolBar_GetToolBitmapSize(ptr) };
         Size::from(ffi_size)
     }
 
-    /// Sets whether the overflow button is visible
+    /// Sets whether the overflow button is visible.
+    /// No-op if the toolbar has been destroyed.
     pub fn set_overflow_visible(&self, visible: bool) {
-        unsafe { ffi::wxd_AuiToolBar_SetOverflowVisible(self.window.handle_ptr() as *mut ffi::wxd_AuiToolBar_t, visible) };
+        let ptr = self.toolbar_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_AuiToolBar_SetOverflowVisible(ptr, visible) };
     }
 
-    /// Gets whether the overflow button is visible
+    /// Gets whether the overflow button is visible.
+    /// Returns false if the toolbar has been destroyed.
     pub fn get_overflow_visible(&self) -> bool {
-        unsafe { ffi::wxd_AuiToolBar_GetOverflowVisible(self.window.handle_ptr() as *mut ffi::wxd_AuiToolBar_t) }
+        let ptr = self.toolbar_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_AuiToolBar_GetOverflowVisible(ptr) }
     }
 
-    /// Sets whether the gripper is visible
+    /// Sets whether the gripper is visible.
+    /// No-op if the toolbar has been destroyed.
     pub fn set_gripper_visible(&self, visible: bool) {
-        unsafe { ffi::wxd_AuiToolBar_SetGripperVisible(self.window.handle_ptr() as *mut ffi::wxd_AuiToolBar_t, visible) };
+        let ptr = self.toolbar_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_AuiToolBar_SetGripperVisible(ptr, visible) };
     }
 
-    /// Gets whether the gripper is visible
+    /// Gets whether the gripper is visible.
+    /// Returns false if the toolbar has been destroyed.
     pub fn get_gripper_visible(&self) -> bool {
-        unsafe { ffi::wxd_AuiToolBar_GetGripperVisible(self.window.handle_ptr() as *mut ffi::wxd_AuiToolBar_t) }
+        let ptr = self.toolbar_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_AuiToolBar_GetGripperVisible(ptr) }
     }
 
-    /// Sets whether a tool has a dropdown
+    /// Sets whether a tool has a dropdown.
+    /// No-op if the toolbar has been destroyed.
     pub fn set_tool_drop_down(&self, tool_id: i32, dropdown: bool) {
-        let ptr = self.window.handle_ptr() as *mut ffi::wxd_AuiToolBar_t;
+        let ptr = self.toolbar_ptr();
+        if ptr.is_null() {
+            return;
+        }
         unsafe { ffi::wxd_AuiToolBar_SetToolDropDown(ptr, tool_id as c_int, dropdown) };
     }
 
-    /// Gets whether a tool has a dropdown
+    /// Gets whether a tool has a dropdown.
+    /// Returns false if the toolbar has been destroyed.
     pub fn get_tool_drop_down(&self, tool_id: i32) -> bool {
-        unsafe { ffi::wxd_AuiToolBar_GetToolDropDown(self.window.handle_ptr() as *mut ffi::wxd_AuiToolBar_t, tool_id as c_int) }
+        let ptr = self.toolbar_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_AuiToolBar_GetToolDropDown(ptr, tool_id as c_int) }
     }
 
-    /// Enables or disables a tool
+    /// Enables or disables a tool.
+    /// No-op if the toolbar has been destroyed.
     pub fn enable_tool(&self, tool_id: i32, enable: bool) {
-        let ptr = self.window.handle_ptr() as *mut ffi::wxd_AuiToolBar_t;
+        let ptr = self.toolbar_ptr();
+        if ptr.is_null() {
+            return;
+        }
         unsafe { ffi::wxd_AuiToolBar_EnableTool(ptr, tool_id as c_int, enable) };
     }
 
-    /// Gets whether a tool is enabled
+    /// Gets whether a tool is enabled.
+    /// Returns false if the toolbar has been destroyed.
     pub fn get_tool_enabled(&self, tool_id: i32) -> bool {
-        unsafe { ffi::wxd_AuiToolBar_GetToolEnabled(self.window.handle_ptr() as *mut ffi::wxd_AuiToolBar_t, tool_id as c_int) }
+        let ptr = self.toolbar_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_AuiToolBar_GetToolEnabled(ptr, tool_id as c_int) }
     }
 
-    /// Gets the number of tools
+    /// Gets the number of tools.
+    /// Returns 0 if the toolbar has been destroyed.
     pub fn get_tool_count(&self) -> i32 {
-        unsafe { ffi::wxd_AuiToolBar_GetToolCount(self.window.handle_ptr() as *mut ffi::wxd_AuiToolBar_t) as i32 }
+        let ptr = self.toolbar_ptr();
+        if ptr.is_null() {
+            return 0;
+        }
+        unsafe { ffi::wxd_AuiToolBar_GetToolCount(ptr) as i32 }
     }
 
-    /// Clears all tools
+    /// Clears all tools.
+    /// No-op if the toolbar has been destroyed.
     pub fn clear_tools(&self) {
-        unsafe { ffi::wxd_AuiToolBar_ClearTools(self.window.handle_ptr() as *mut ffi::wxd_AuiToolBar_t) };
+        let ptr = self.toolbar_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_AuiToolBar_ClearTools(ptr) };
     }
 
-    /// Deletes a tool
+    /// Deletes a tool.
+    /// Returns false if the toolbar has been destroyed.
     pub fn delete_tool(&self, tool_id: i32) -> bool {
-        unsafe { ffi::wxd_AuiToolBar_DeleteTool(self.window.handle_ptr() as *mut ffi::wxd_AuiToolBar_t, tool_id as c_int) }
+        let ptr = self.toolbar_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_AuiToolBar_DeleteTool(ptr, tool_id as c_int) }
+    }
+
+    /// Returns the underlying WindowHandle for this toolbar.
+    pub fn window_handle(&self) -> WindowHandle {
+        self.handle
     }
 }
 
@@ -246,14 +371,31 @@ widget_builder!(
         };
         if ptr.is_null() {
             panic!("Failed to create AuiToolBar: wxWidgets returned a null pointer.");
-        } else {
-            AuiToolBar::from_ptr(ptr, parent_ptr)
         }
+        AuiToolBar::from_ptr(ptr)
     }
 );
 
-// Implement all standard widget traits in one go
-implement_widget_traits_with_target!(AuiToolBar, window, Window);
+// Manual WxWidget implementation for AuiToolBar (using WindowHandle)
+impl WxWidget for AuiToolBar {
+    fn handle_ptr(&self) -> *mut ffi::wxd_Window_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut())
+    }
+
+    fn is_valid(&self) -> bool {
+        self.handle.is_valid()
+    }
+}
+
+// Implement WxEvtHandler for event binding
+impl WxEvtHandler for AuiToolBar {
+    unsafe fn get_event_handler_ptr(&self) -> *mut ffi::wxd_EvtHandler_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut()) as *mut ffi::wxd_EvtHandler_t
+    }
+}
+
+// Implement common event traits that all Window-based widgets support
+impl crate::event::WindowEvents for AuiToolBar {}
 
 // Use the implement_widget_local_event_handlers macro to implement event handling
 crate::implement_widget_local_event_handlers!(

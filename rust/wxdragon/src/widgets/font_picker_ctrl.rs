@@ -4,10 +4,13 @@
 use std::ffi::c_longlong;
 use wxdragon_sys as ffi;
 
-use crate::event::{Event, EventType};
+use crate::event::{Event, EventType, WxEvtHandler};
 use crate::font::Font;
 use crate::prelude::*;
-use crate::window::{Window, WxWidget};
+use crate::window::{WindowHandle, WxWidget};
+// Window is used by impl_xrc_support for backwards compatibility
+#[allow(unused_imports)]
+use crate::window::Window;
 
 // --- Style enum using macro ---
 widget_style_enum!(
@@ -53,9 +56,33 @@ impl FontChangedEventData {
 }
 
 // --- FontPickerCtrl ---
+
+/// Represents a wxFontPickerCtrl, which allows the user to select a font.
+///
+/// FontPickerCtrl uses `WindowHandle` internally for safe memory management.
+/// When the underlying window is destroyed (by calling `destroy()` or when
+/// its parent is destroyed), the handle becomes invalid and all operations
+/// become safe no-ops.
+///
+/// # Example
+/// ```ignore
+/// let picker = FontPickerCtrl::builder(&frame).build();
+///
+/// // FontPickerCtrl is Copy - no clone needed for closures!
+/// picker.bind_font_changed(move |_| {
+///     // Safe: if picker was destroyed, this is a no-op
+///     let font = picker.get_selected_font();
+///     println!("Selected font: {:?}", font);
+/// });
+///
+/// // After parent destruction, picker operations are safe no-ops
+/// frame.destroy();
+/// assert!(!picker.is_valid());
+/// ```
 #[derive(Clone, Copy)]
 pub struct FontPickerCtrl {
-    window: Window, // Embed Window
+    /// Safe handle to the underlying wxFontPickerCtrl - automatically invalidated on destroy
+    handle: WindowHandle,
 }
 
 impl FontPickerCtrl {
@@ -64,10 +91,23 @@ impl FontPickerCtrl {
         FontPickerCtrlBuilder::new(parent)
     }
 
+    /// Helper to get raw font picker pointer, returns null if widget has been destroyed
+    #[inline]
+    fn font_picker_ptr(&self) -> *mut ffi::wxd_FontPickerCtrl_t {
+        self.handle
+            .get_ptr()
+            .map(|p| p as *mut ffi::wxd_FontPickerCtrl_t)
+            .unwrap_or(std::ptr::null_mut())
+    }
+
     /// Gets the currently selected font.
-    /// Returns `None` if no font is selected or the font is invalid.
+    /// Returns `None` if no font is selected, the font is invalid, or the widget has been destroyed.
     pub fn get_selected_font(&self) -> Option<Font> {
-        let font_ptr = unsafe { ffi::wxd_FontPickerCtrl_GetSelectedFont(self.window.as_ptr() as *mut ffi::wxd_FontPickerCtrl_t) };
+        let ptr = self.font_picker_ptr();
+        if ptr.is_null() {
+            return None;
+        }
+        let font_ptr = unsafe { ffi::wxd_FontPickerCtrl_GetSelectedFont(ptr) };
         if font_ptr.is_null() {
             None
         } else {
@@ -77,10 +117,14 @@ impl FontPickerCtrl {
     }
 
     /// Sets the currently selected font.
+    /// No-op if the widget has been destroyed.
     pub fn set_selected_font(&self, font: &Font) {
+        let ptr = self.font_picker_ptr();
+        if ptr.is_null() {
+            return;
+        }
         // Create a new font to ensure proper ownership
         let font_copy = font.to_owned();
-        let ptr = self.window.as_ptr() as *mut ffi::wxd_FontPickerCtrl_t;
         // The C++ code makes a copy of the font, so we can just pass the pointer
         unsafe { ffi::wxd_FontPickerCtrl_SetSelectedFont(ptr, font_copy.as_ptr()) };
         // Intentionally leak the font as the C++ side now owns it
@@ -88,11 +132,11 @@ impl FontPickerCtrl {
     }
 
     /// Creates a FontPickerCtrl from a raw pointer.
-    /// # Safety
-    /// The pointer must be a valid `wxd_FontPickerCtrl_t`.
-    pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_FontPickerCtrl_t) -> Self {
-        FontPickerCtrl {
-            window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
+    /// This is intended for internal use by other widget wrappers.
+    #[allow(dead_code)]
+    pub(crate) fn from_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        Self {
+            handle: WindowHandle::new(ptr),
         }
     }
 }
@@ -125,14 +169,35 @@ widget_builder!(
         };
         if ptr.is_null() {
             panic!("Failed to create FontPickerCtrl: FFI returned null pointer.");
-        } else {
-            unsafe { FontPickerCtrl::from_ptr(ptr) }
+        }
+
+        // Create a WindowHandle which automatically registers for destroy events
+        FontPickerCtrl {
+            handle: WindowHandle::new(ptr as *mut ffi::wxd_Window_t),
         }
     }
 );
 
-// Use the implement_widget_traits_with_target macro to implement traits
-implement_widget_traits_with_target!(FontPickerCtrl, window, Window);
+// Manual WxWidget implementation for FontPickerCtrl (using WindowHandle)
+impl WxWidget for FontPickerCtrl {
+    fn handle_ptr(&self) -> *mut ffi::wxd_Window_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut())
+    }
+
+    fn is_valid(&self) -> bool {
+        self.handle.is_valid()
+    }
+}
+
+// Implement WxEvtHandler for event binding
+impl WxEvtHandler for FontPickerCtrl {
+    unsafe fn get_event_handler_ptr(&self) -> *mut ffi::wxd_EvtHandler_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut()) as *mut ffi::wxd_EvtHandler_t
+    }
+}
+
+// Implement common event traits that all Window-based widgets support
+impl crate::event::WindowEvents for FontPickerCtrl {}
 
 // Use the implement_widget_local_event_handlers macro to implement event handling
 crate::implement_widget_local_event_handlers!(
@@ -142,5 +207,25 @@ crate::implement_widget_local_event_handlers!(
     FontChanged => font_changed, EventType::FONT_PICKER_CHANGED
 );
 
-// Add XRC Support - enables FontPickerCtrl to be created from XRC-managed pointers
-impl_xrc_support!(FontPickerCtrl, { window });
+// XRC Support - enables FontPickerCtrl to be created from XRC-managed pointers
+#[cfg(feature = "xrc")]
+impl crate::xrc::XrcSupport for FontPickerCtrl {
+    unsafe fn from_xrc_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        FontPickerCtrl {
+            handle: WindowHandle::new(ptr),
+        }
+    }
+}
+
+// Enable widget casting for FontPickerCtrl
+impl crate::window::FromWindowWithClassName for FontPickerCtrl {
+    fn class_name() -> &'static str {
+        "wxFontPickerCtrl"
+    }
+
+    unsafe fn from_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        FontPickerCtrl {
+            handle: WindowHandle::new(ptr),
+        }
+    }
+}

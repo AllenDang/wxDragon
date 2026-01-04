@@ -1,7 +1,7 @@
-use crate::event::{Event, EventType};
+use crate::event::{Event, EventType, WxEvtHandler};
 use crate::geometry::{Point, Size};
 use crate::id::Id;
-use crate::window::{Window, WxWidget};
+use crate::window::{WindowHandle, WxWidget};
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
 use std::ptr;
@@ -56,9 +56,15 @@ struct RadioBoxConfig<'a> {
 }
 
 /// Represents a wxRadioBox control.
+///
+/// RadioBox uses `WindowHandle` internally for safe memory management.
+/// When the underlying window is destroyed (by calling `destroy()` or when
+/// its parent is destroyed), the handle becomes invalid and all operations
+/// become safe no-ops.
 #[derive(Clone, Copy)]
 pub struct RadioBox {
-    window: Window,
+    /// Safe handle to the underlying wxRadioBox - automatically invalidated on destroy
+    handle: WindowHandle,
 }
 
 impl RadioBox {
@@ -75,7 +81,7 @@ impl RadioBox {
     /// The caller must ensure the pointer is valid and represents a `wxRadioBox`.
     pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_RadioBox_t) -> Self {
         RadioBox {
-            window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
+            handle: WindowHandle::new(ptr as *mut ffi::wxd_Window_t),
         }
     }
 
@@ -110,52 +116,127 @@ impl RadioBox {
         unsafe { RadioBox::from_ptr(ptr) }
     }
 
+    /// Helper to get raw radiobox pointer, returns null if widget has been destroyed
+    #[inline]
+    fn radiobox_ptr(&self) -> *mut ffi::wxd_RadioBox_t {
+        self.handle
+            .get_ptr()
+            .map(|p| p as *mut ffi::wxd_RadioBox_t)
+            .unwrap_or(std::ptr::null_mut())
+    }
+
+    /// Gets the currently selected item index.
+    /// Returns -1 if the radiobox has been destroyed or no selection.
     pub fn get_selection(&self) -> i32 {
-        unsafe { ffi::wxd_RadioBox_GetSelection(self.as_ptr()) }
+        let ptr = self.radiobox_ptr();
+        if ptr.is_null() {
+            return -1;
+        }
+        unsafe { ffi::wxd_RadioBox_GetSelection(ptr) }
     }
 
+    /// Sets the selected item index.
+    /// No-op if the radiobox has been destroyed.
     pub fn set_selection(&self, n: i32) {
-        unsafe { ffi::wxd_RadioBox_SetSelection(self.as_ptr(), n) }
+        let ptr = self.radiobox_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_RadioBox_SetSelection(ptr, n) }
     }
 
+    /// Gets the label of the item at the given index.
+    /// Returns empty string if the radiobox has been destroyed or index is invalid.
     pub fn get_string(&self, n: i32) -> String {
-        let len = unsafe { ffi::wxd_RadioBox_GetString(self.as_ptr(), n, ptr::null_mut(), 0) };
+        let ptr = self.radiobox_ptr();
+        if ptr.is_null() {
+            return String::new();
+        }
+        let len = unsafe { ffi::wxd_RadioBox_GetString(ptr, n, ptr::null_mut(), 0) };
         if len <= 0 {
             return String::new();
         }
         let mut buffer = vec![0; len as usize + 1];
-        unsafe { ffi::wxd_RadioBox_GetString(self.as_ptr(), n, buffer.as_mut_ptr(), buffer.len()) };
+        unsafe { ffi::wxd_RadioBox_GetString(ptr, n, buffer.as_mut_ptr(), buffer.len()) };
         unsafe { CStr::from_ptr(buffer.as_ptr()).to_string_lossy().to_string() }
     }
 
+    /// Gets the number of items in the radiobox.
+    /// Returns 0 if the radiobox has been destroyed.
     pub fn get_count(&self) -> u32 {
-        unsafe { ffi::wxd_RadioBox_GetCount(self.as_ptr()) }
+        let ptr = self.radiobox_ptr();
+        if ptr.is_null() {
+            return 0;
+        }
+        unsafe { ffi::wxd_RadioBox_GetCount(ptr) }
     }
 
+    /// Enables or disables an individual item.
+    /// Returns false if the radiobox has been destroyed.
     pub fn enable_item(&self, n: i32, enable: bool) -> bool {
-        unsafe { ffi::wxd_RadioBox_EnableItem(self.as_ptr(), n, enable) }
+        let ptr = self.radiobox_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_RadioBox_EnableItem(ptr, n, enable) }
     }
 
+    /// Checks if an individual item is enabled.
+    /// Returns false if the radiobox has been destroyed.
     pub fn is_item_enabled(&self, n: i32) -> bool {
-        unsafe { ffi::wxd_RadioBox_IsItemEnabled(self.as_ptr(), n) }
+        let ptr = self.radiobox_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_RadioBox_IsItemEnabled(ptr, n) }
     }
 
+    /// Shows or hides an individual item.
+    /// Returns false if the radiobox has been destroyed.
     pub fn show_item(&self, n: i32, show: bool) -> bool {
-        unsafe { ffi::wxd_RadioBox_ShowItem(self.as_ptr(), n, show) }
+        let ptr = self.radiobox_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_RadioBox_ShowItem(ptr, n, show) }
     }
 
+    /// Checks if an individual item is shown.
+    /// Returns false if the radiobox has been destroyed.
     pub fn is_item_shown(&self, n: i32) -> bool {
-        unsafe { ffi::wxd_RadioBox_IsItemShown(self.as_ptr(), n) }
+        let ptr = self.radiobox_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_RadioBox_IsItemShown(ptr, n) }
     }
 
-    /// Returns the raw wxRadioBox pointer.
-    fn as_ptr(&self) -> *mut ffi::wxd_RadioBox_t {
-        self.window.as_ptr() as *mut _
+    /// Returns the underlying WindowHandle for this radiobox.
+    pub fn window_handle(&self) -> WindowHandle {
+        self.handle
     }
 }
 
-// Apply common trait implementations
-implement_widget_traits_with_target!(RadioBox, window, Window);
+// Manual WxWidget implementation for RadioBox (using WindowHandle)
+impl WxWidget for RadioBox {
+    fn handle_ptr(&self) -> *mut ffi::wxd_Window_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut())
+    }
+
+    fn is_valid(&self) -> bool {
+        self.handle.is_valid()
+    }
+}
+
+// Implement WxEvtHandler for event binding
+impl WxEvtHandler for RadioBox {
+    unsafe fn get_event_handler_ptr(&self) -> *mut ffi::wxd_EvtHandler_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut()) as *mut ffi::wxd_EvtHandler_t
+    }
+}
+
+// Implement common event traits that all Window-based widgets support
+impl crate::event::WindowEvents for RadioBox {}
 
 // Use the widget_builder macro for RadioBox
 widget_builder!(
@@ -204,8 +285,25 @@ crate::implement_widget_local_event_handlers!(
     Selected => selected, EventType::COMMAND_RADIOBOX_SELECTED
 );
 
-// Add XRC Support - enables RadioBox to be created from XRC-managed pointers
-impl_xrc_support!(RadioBox, { window });
+// XRC Support - enables RadioBox to be created from XRC-managed pointers
+#[cfg(feature = "xrc")]
+impl crate::xrc::XrcSupport for RadioBox {
+    unsafe fn from_xrc_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        RadioBox {
+            handle: WindowHandle::new(ptr),
+        }
+    }
+}
 
-// Widget casting support for RadioBox
-impl_widget_cast!(RadioBox, "wxRadioBox", { window });
+// Enable widget casting for RadioBox
+impl crate::window::FromWindowWithClassName for RadioBox {
+    fn class_name() -> &'static str {
+        "wxRadioBox"
+    }
+
+    unsafe fn from_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        RadioBox {
+            handle: WindowHandle::new(ptr),
+        }
+    }
+}

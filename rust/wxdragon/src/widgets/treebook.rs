@@ -1,10 +1,10 @@
 //!
 //! Safe wrapper for wxTreebook.
 
-use crate::event::{Event, EventType};
+use crate::event::{Event, EventType, WxEvtHandler};
 use crate::geometry::{Point, Size};
 use crate::id::Id;
-use crate::window::{Window, WxWidget};
+use crate::window::{WindowHandle, WxWidget};
 use std::ffi::CString;
 use wxdragon_sys as ffi;
 
@@ -79,9 +79,30 @@ impl TreebookEventData {
 }
 
 /// Represents a wxTreebook control.
+///
+/// Treebook uses `WindowHandle` internally for safe memory management.
+/// When the underlying window is destroyed (by calling `destroy()` or when
+/// its parent is destroyed), the handle becomes invalid and all operations
+/// become safe no-ops.
+///
+/// # Example
+/// ```ignore
+/// let treebook = Treebook::builder(&frame).build();
+///
+/// // Treebook is Copy - no clone needed for closures!
+/// treebook.bind_page_changed(move |_| {
+///     // Safe: if treebook was destroyed, this is a no-op
+///     let selection = treebook.get_selection();
+/// });
+///
+/// // After parent destruction, treebook operations are safe no-ops
+/// frame.destroy();
+/// assert!(!treebook.is_valid());
+/// ```
 #[derive(Clone, Copy)]
 pub struct Treebook {
-    window: Window,
+    /// Safe handle to the underlying wxTreebook - automatically invalidated on destroy
+    handle: WindowHandle,
 }
 
 impl Treebook {
@@ -90,13 +111,20 @@ impl Treebook {
         TreebookBuilder::new(parent)
     }
 
-    /// Creates a new Treebook wrapper from a raw pointer.
-    /// # Safety
-    /// The pointer must be a valid `wxd_Treebook_t` pointer.
+    // Internal constructor
     pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_Treebook_t) -> Self {
         Treebook {
-            window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
+            handle: WindowHandle::new(ptr as *mut ffi::wxd_Window_t),
         }
+    }
+
+    /// Helper to get raw treebook pointer, returns null if widget has been destroyed
+    #[inline]
+    fn treebook_ptr(&self) -> *mut ffi::wxd_Treebook_t {
+        self.handle
+            .get_ptr()
+            .map(|p| p as *mut ffi::wxd_Treebook_t)
+            .unwrap_or(std::ptr::null_mut())
     }
 
     /// Internal implementation used by the builder.
@@ -122,53 +150,86 @@ impl Treebook {
         unsafe { Treebook::from_ptr(ptr) }
     }
 
-    /// Returns the raw underlying treebook pointer.
-    fn as_ptr(&self) -> *mut ffi::wxd_Treebook_t {
-        self.window.as_ptr() as *mut ffi::wxd_Treebook_t
-    }
-
     /// Adds a new page to the treebook control.
+    /// Returns the index of the added page, or -1 on failure.
+    /// No-op if the treebook has been destroyed.
     pub fn add_page<W: WxWidget>(&self, page: &W, text: &str, select: bool, image_id: i32) -> i32 {
+        let ptr = self.treebook_ptr();
+        if ptr.is_null() {
+            return -1;
+        }
         let page_ptr = page.handle_ptr();
         let text_c = CString::new(text).unwrap_or_default();
-        unsafe { ffi::wxd_Treebook_AddPage(self.as_ptr(), page_ptr, text_c.as_ptr(), select as i32, image_id) }
+        unsafe { ffi::wxd_Treebook_AddPage(ptr, page_ptr, text_c.as_ptr(), select as i32, image_id) }
     }
 
     /// Adds a new sub-page to the last top-level page added to the treebook control.
+    /// Returns the index of the added page, or -1 on failure.
+    /// No-op if the treebook has been destroyed.
     pub fn add_sub_page<W: WxWidget>(&self, page: &W, text: &str, select: bool, image_id: i32) -> i32 {
+        let ptr = self.treebook_ptr();
+        if ptr.is_null() {
+            return -1;
+        }
         let page_ptr = page.handle_ptr();
         let text_c = CString::new(text).unwrap_or_default();
-        unsafe { ffi::wxd_Treebook_AddSubPage(self.as_ptr(), page_ptr, text_c.as_ptr(), select as i32, image_id) }
+        unsafe { ffi::wxd_Treebook_AddSubPage(ptr, page_ptr, text_c.as_ptr(), select as i32, image_id) }
     }
 
     /// Gets the number of pages in the treebook.
+    /// Returns 0 if the treebook has been destroyed.
     pub fn get_page_count(&self) -> i32 {
-        unsafe { ffi::wxd_Treebook_GetPageCount(self.as_ptr()) }
+        let ptr = self.treebook_ptr();
+        if ptr.is_null() {
+            return 0;
+        }
+        unsafe { ffi::wxd_Treebook_GetPageCount(ptr) }
     }
 
     /// Gets the currently selected page, or -1 if none is selected.
+    /// Returns -1 if the treebook has been destroyed.
     pub fn get_selection(&self) -> i32 {
-        unsafe { ffi::wxd_Treebook_GetSelection(self.as_ptr()) }
+        let ptr = self.treebook_ptr();
+        if ptr.is_null() {
+            return -1;
+        }
+        unsafe { ffi::wxd_Treebook_GetSelection(ptr) }
     }
 
     /// Sets the selection to the given page index.
+    /// Returns the index of the previously selected page.
+    /// Returns -1 if the treebook has been destroyed.
     pub fn set_selection(&self, n: usize) -> i32 {
-        unsafe { ffi::wxd_Treebook_SetSelection(self.as_ptr(), n) }
+        let ptr = self.treebook_ptr();
+        if ptr.is_null() {
+            return -1;
+        }
+        unsafe { ffi::wxd_Treebook_SetSelection(ptr, n) }
     }
 
     /// Sets the text for the given page.
+    /// No-op if the treebook has been destroyed.
     pub fn set_page_text(&self, n: usize, text: &str) {
+        let ptr = self.treebook_ptr();
+        if ptr.is_null() {
+            return;
+        }
         let text_c = CString::new(text).unwrap_or_default();
         unsafe {
-            ffi::wxd_Treebook_SetPageText(self.as_ptr(), n, text_c.as_ptr());
+            ffi::wxd_Treebook_SetPageText(ptr, n, text_c.as_ptr());
         }
     }
 
     /// Gets the text for the given page.
+    /// Returns empty string if the treebook has been destroyed.
     pub fn get_page_text(&self, n: usize) -> String {
+        let ptr = self.treebook_ptr();
+        if ptr.is_null() {
+            return String::new();
+        }
         unsafe {
             // First call to get the size needed
-            let needed_len_with_null = ffi::wxd_Treebook_GetPageText(self.as_ptr(), n, std::ptr::null_mut(), 0);
+            let needed_len_with_null = ffi::wxd_Treebook_GetPageText(ptr, n, std::ptr::null_mut(), 0);
             if needed_len_with_null <= 1 {
                 // 0 or 1 means error or empty string
                 return String::new();
@@ -178,8 +239,7 @@ impl Treebook {
             let mut buffer: Vec<u8> = Vec::with_capacity(buffer_size);
 
             // Second call to actually get the string
-            let copied_len_with_null =
-                ffi::wxd_Treebook_GetPageText(self.as_ptr(), n, buffer.as_mut_ptr() as *mut i8, buffer_size as i32);
+            let copied_len_with_null = ffi::wxd_Treebook_GetPageText(ptr, n, buffer.as_mut_ptr() as *mut i8, buffer_size as i32);
 
             if copied_len_with_null <= 0 {
                 // Check for error on second call
@@ -195,11 +255,34 @@ impl Treebook {
             String::from_utf8_lossy(&buffer).into_owned()
         }
     }
+
+    /// Returns the underlying WindowHandle for this treebook.
+    pub fn window_handle(&self) -> WindowHandle {
+        self.handle
+    }
     // TODO: Add other wxBookCtrlBase methods like GetPage, InsertPage, DeletePage etc.
 }
 
-// Apply common trait implementations for this widget
-implement_widget_traits_with_target!(Treebook, window, Window);
+// Manual WxWidget implementation for Treebook (using WindowHandle)
+impl WxWidget for Treebook {
+    fn handle_ptr(&self) -> *mut ffi::wxd_Window_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut())
+    }
+
+    fn is_valid(&self) -> bool {
+        self.handle.is_valid()
+    }
+}
+
+// Implement WxEvtHandler for event binding
+impl WxEvtHandler for Treebook {
+    unsafe fn get_event_handler_ptr(&self) -> *mut ffi::wxd_EvtHandler_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut()) as *mut ffi::wxd_EvtHandler_t
+    }
+}
+
+// Implement common event traits that all Window-based widgets support
+impl crate::event::WindowEvents for Treebook {}
 
 // Use the widget_builder macro for Treebook
 widget_builder!(
@@ -229,8 +312,25 @@ crate::implement_widget_local_event_handlers!(
     NodeCollapsed => node_collapsed, EventType::TREEBOOK_NODE_COLLAPSED
 );
 
-// Add XRC Support - enables Treebook to be created from XRC-managed pointers
-impl_xrc_support!(Treebook, { window });
+// XRC Support - enables Treebook to be created from XRC-managed pointers
+#[cfg(feature = "xrc")]
+impl crate::xrc::XrcSupport for Treebook {
+    unsafe fn from_xrc_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        Treebook {
+            handle: WindowHandle::new(ptr),
+        }
+    }
+}
 
-// Widget casting support for Treebook
-impl_widget_cast!(Treebook, "wxTreebook", { window });
+// Enable widget casting for Treebook
+impl crate::window::FromWindowWithClassName for Treebook {
+    fn class_name() -> &'static str {
+        "wxTreebook"
+    }
+
+    unsafe fn from_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        Treebook {
+            handle: WindowHandle::new(ptr),
+        }
+    }
+}

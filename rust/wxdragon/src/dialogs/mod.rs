@@ -1,5 +1,6 @@
 use crate::Bitmap;
-use crate::window::{Window, WxWidget};
+use crate::event::WxEvtHandler;
+use crate::window::{WindowHandle, WxWidget};
 use std::ffi::CString;
 use std::marker::PhantomData;
 use wxdragon_sys as ffi;
@@ -34,16 +35,18 @@ widget_style_enum!(
 // --- Dialog --- (Base struct for dialogs)
 /// Represents a wxDialog.
 ///
+/// Dialog uses `WindowHandle` internally for safe memory management.
+/// When the underlying window is destroyed, the handle becomes invalid and all operations
+/// become safe no-ops.
+///
 /// # Lifetime Management
 /// Dialog instances are typically shown modally and should be destroyed after use.
 /// Call the `.destroy()` method (available via the `WxWidget` trait) when the dialog
 /// is no longer needed to ensure proper cleanup.
 #[derive(Clone, Copy)]
 pub struct Dialog {
-    window: Window, // Composition: Dialog uses a Window internally
-    // Store parent pointer to manage drop behavior
-    #[allow(dead_code)]
-    parent_ptr: *mut ffi::wxd_Window_t,
+    /// Safe handle to the underlying wxDialog - automatically invalidated on destroy
+    handle: WindowHandle,
     _marker: PhantomData<()>,
 }
 
@@ -53,8 +56,7 @@ impl Dialog {
     /// The pointer must be a valid pointer to a wxDialog.
     pub unsafe fn from_ptr(ptr: *mut ffi::wxd_Dialog_t) -> Self {
         Dialog {
-            window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
-            parent_ptr: std::ptr::null_mut(),
+            handle: WindowHandle::new(ptr as *mut ffi::wxd_Window_t),
             _marker: PhantomData,
         }
     }
@@ -71,34 +73,62 @@ impl Dialog {
     /// - The dialog was properly initialized by wxWidgets XRC loading
     pub unsafe fn from_xrc_ptr(ptr: *mut ffi::wxd_Dialog_t) -> Self {
         Dialog {
-            window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
-            parent_ptr: std::ptr::null_mut(),
+            handle: WindowHandle::new(ptr as *mut ffi::wxd_Window_t),
             _marker: PhantomData,
         }
     }
 
+    /// Helper to get raw dialog pointer, returns null if dialog has been destroyed
+    #[inline]
+    fn dialog_ptr(&self) -> *mut ffi::wxd_Dialog_t {
+        self.handle
+            .get_ptr()
+            .map(|p| p as *mut ffi::wxd_Dialog_t)
+            .unwrap_or(std::ptr::null_mut())
+    }
+
+    /// Returns the underlying WindowHandle for this Dialog.
+    pub fn window_handle(&self) -> WindowHandle {
+        self.handle
+    }
+
+    /// Sets the icon for the dialog.
+    /// No-op if the dialog has been destroyed.
     pub fn set_icon(&self, bitmap: &Bitmap) {
-        let dlg = self.window.as_ptr() as *mut ffi::wxd_Dialog_t;
-        unsafe { ffi::wxd_Dialog_SetIcon(dlg, bitmap.as_const_ptr()) }
+        let ptr = self.dialog_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_Dialog_SetIcon(ptr, bitmap.as_const_ptr()) }
     }
 
     /// Shows the dialog modally.
     /// Returns an integer value which is usually one of the standard dialog return codes
     /// (e.g., ID_OK, ID_CANCEL, ID_YES, ID_NO).
+    /// Returns -1 if the dialog has been destroyed.
     pub fn show_modal(&self) -> i32 {
-        unsafe { ffi::wxd_Dialog_ShowModal(self.window.as_ptr() as *mut ffi::wxd_Dialog_t) }
+        let ptr = self.dialog_ptr();
+        if ptr.is_null() {
+            return -1;
+        }
+        unsafe { ffi::wxd_Dialog_ShowModal(ptr) }
     }
 
     /// Ends the modal dialog with the given return code.
     /// This method should be called from event handlers to close the dialog.
     /// The return code is what will be returned by show_modal().
+    /// No-op if the dialog has been destroyed.
     pub fn end_modal(&self, ret_code: i32) {
-        unsafe { ffi::wxd_Dialog_EndModal(self.window.as_ptr() as *mut ffi::wxd_Dialog_t, ret_code) }
+        let ptr = self.dialog_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_Dialog_EndModal(ptr, ret_code) }
     }
 
     /// Returns the raw underlying dialog pointer.
     pub fn as_ptr(&self) -> *mut ffi::wxd_Dialog_t {
-        self.window.as_ptr() as *mut ffi::wxd_Dialog_t
+        self.dialog_ptr()
     }
 
     /// Creates a new builder for a generic Dialog.
@@ -107,15 +137,37 @@ impl Dialog {
     }
 }
 
-// Apply common trait implementations for Dialog
-implement_widget_traits_with_target!(Dialog, window, Window);
+// Manual WxWidget implementation for Dialog (using WindowHandle)
+impl WxWidget for Dialog {
+    fn handle_ptr(&self) -> *mut ffi::wxd_Window_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut())
+    }
+
+    fn is_valid(&self) -> bool {
+        self.handle.is_valid()
+    }
+}
+
+// Implement WxEvtHandler for event binding
+impl WxEvtHandler for Dialog {
+    unsafe fn get_event_handler_ptr(&self) -> *mut ffi::wxd_EvtHandler_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut()) as *mut ffi::wxd_EvtHandler_t
+    }
+}
+
+// Implement common event traits that all Window-based widgets support
+impl crate::event::WindowEvents for Dialog {}
 
 // XRC Support - enables Dialog to be created from XRC-managed pointers
-impl_xrc_support!(Dialog, {
-    window,
-    parent_ptr: std::ptr::null_mut(),
-    _marker: PhantomData
-});
+#[cfg(feature = "xrc")]
+impl crate::xrc::XrcSupport for Dialog {
+    unsafe fn from_xrc_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        Dialog {
+            handle: WindowHandle::new(ptr),
+            _marker: PhantomData,
+        }
+    }
+}
 
 // Dialogs are windows
 // Remove: impl WindowMethods for Dialog {}

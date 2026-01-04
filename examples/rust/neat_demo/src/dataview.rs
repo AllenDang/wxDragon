@@ -7,7 +7,7 @@ use std::cell::RefCell;
 use std::rc::{Rc, Weak};
 use wxdragon::*;
 
-pub fn create_data_view_panel(parent: &Window, model: &CustomDataViewTreeModel, frame: &Frame) -> Panel {
+pub fn create_data_view_panel(parent: &dyn WxWidget, model: &CustomDataViewTreeModel, frame: &Frame) -> Panel {
     // Copy frame since Frame is Copy (thin pointer wrapper)
     let frame = *frame;
     // Create a panel for the parent

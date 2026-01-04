@@ -1,7 +1,7 @@
-use crate::event::{Event, EventType};
+use crate::event::{Event, EventType, WxEvtHandler};
 use crate::geometry::{Point, Size};
 use crate::id::Id;
-use crate::window::{Window, WxWidget};
+use crate::window::{WindowHandle, WxWidget};
 use wxdragon_sys as ffi;
 
 use std::ffi::CString;
@@ -51,9 +51,16 @@ impl SpinCtrlDoubleEventData {
 
 // --- SpinCtrlDouble --- //
 
+/// Represents a wxSpinCtrlDouble.
+///
+/// SpinCtrlDouble uses `WindowHandle` internally for safe memory management.
+/// When the underlying window is destroyed (by calling `destroy()` or when
+/// its parent is destroyed), the handle becomes invalid and all operations
+/// become safe no-ops.
 #[derive(Clone, Copy)]
 pub struct SpinCtrlDouble {
-    window: Window,
+    /// Safe handle to the underlying wxSpinCtrlDouble - automatically invalidated on destroy
+    handle: WindowHandle,
 }
 
 impl SpinCtrlDouble {
@@ -63,49 +70,118 @@ impl SpinCtrlDouble {
 
     pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_SpinCtrlDouble_t) -> Self {
         SpinCtrlDouble {
-            window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
+            handle: WindowHandle::new(ptr as *mut ffi::wxd_Window_t),
         }
     }
 
+    /// Helper to get raw spin control double pointer, returns null if widget has been destroyed
+    #[inline]
+    fn spin_ctrl_double_ptr(&self) -> *mut ffi::wxd_SpinCtrlDouble_t {
+        self.handle
+            .get_ptr()
+            .map(|p| p as *mut ffi::wxd_SpinCtrlDouble_t)
+            .unwrap_or(std::ptr::null_mut())
+    }
+
     /// Get the raw underlying spin control double pointer.
+    /// Returns null if the widget has been destroyed.
     pub fn as_ptr(&self) -> *mut ffi::wxd_SpinCtrlDouble_t {
-        self.window.handle_ptr() as *mut ffi::wxd_SpinCtrlDouble_t
+        self.spin_ctrl_double_ptr()
     }
 
+    /// Gets the current value.
+    /// Returns 0.0 if the widget has been destroyed.
     pub fn get_value(&self) -> f64 {
-        unsafe { ffi::wxd_SpinCtrlDouble_GetValue(self.as_ptr()) }
+        let ptr = self.spin_ctrl_double_ptr();
+        if ptr.is_null() {
+            return 0.0;
+        }
+        unsafe { ffi::wxd_SpinCtrlDouble_GetValue(ptr) }
     }
 
+    /// Sets the current value.
+    /// No-op if the widget has been destroyed.
     pub fn set_value(&self, value: f64) {
-        unsafe { ffi::wxd_SpinCtrlDouble_SetValue(self.as_ptr(), value) }
+        let ptr = self.spin_ctrl_double_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_SpinCtrlDouble_SetValue(ptr, value) }
     }
 
+    /// Sets the allowed range.
+    /// No-op if the widget has been destroyed.
     pub fn set_range(&self, min_val: f64, max_val: f64) {
-        unsafe { ffi::wxd_SpinCtrlDouble_SetRange(self.as_ptr(), min_val, max_val) }
+        let ptr = self.spin_ctrl_double_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_SpinCtrlDouble_SetRange(ptr, min_val, max_val) }
     }
 
+    /// Gets the minimum allowed value.
+    /// Returns 0.0 if the widget has been destroyed.
     pub fn get_min(&self) -> f64 {
-        unsafe { ffi::wxd_SpinCtrlDouble_GetMin(self.as_ptr()) }
+        let ptr = self.spin_ctrl_double_ptr();
+        if ptr.is_null() {
+            return 0.0;
+        }
+        unsafe { ffi::wxd_SpinCtrlDouble_GetMin(ptr) }
     }
 
+    /// Gets the maximum allowed value.
+    /// Returns 0.0 if the widget has been destroyed.
     pub fn get_max(&self) -> f64 {
-        unsafe { ffi::wxd_SpinCtrlDouble_GetMax(self.as_ptr()) }
+        let ptr = self.spin_ctrl_double_ptr();
+        if ptr.is_null() {
+            return 0.0;
+        }
+        unsafe { ffi::wxd_SpinCtrlDouble_GetMax(ptr) }
     }
 
+    /// Sets the increment value.
+    /// No-op if the widget has been destroyed.
     pub fn set_increment(&self, inc: f64) {
-        unsafe { ffi::wxd_SpinCtrlDouble_SetIncrements(self.as_ptr(), inc) }
+        let ptr = self.spin_ctrl_double_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_SpinCtrlDouble_SetIncrements(ptr, inc) }
     }
 
+    /// Gets the increment value.
+    /// Returns 0.0 if the widget has been destroyed.
     pub fn get_increment(&self) -> f64 {
-        unsafe { ffi::wxd_SpinCtrlDouble_GetIncrement(self.as_ptr()) }
+        let ptr = self.spin_ctrl_double_ptr();
+        if ptr.is_null() {
+            return 0.0;
+        }
+        unsafe { ffi::wxd_SpinCtrlDouble_GetIncrement(ptr) }
     }
 
+    /// Sets the number of digits after the decimal point.
+    /// No-op if the widget has been destroyed.
     pub fn set_digits(&self, digits: u32) {
-        unsafe { ffi::wxd_SpinCtrlDouble_SetDigits(self.as_ptr(), digits) }
+        let ptr = self.spin_ctrl_double_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_SpinCtrlDouble_SetDigits(ptr, digits) }
     }
 
+    /// Gets the number of digits after the decimal point.
+    /// Returns 0 if the widget has been destroyed.
     pub fn get_digits(&self) -> u32 {
-        unsafe { ffi::wxd_SpinCtrlDouble_GetDigits(self.as_ptr()) }
+        let ptr = self.spin_ctrl_double_ptr();
+        if ptr.is_null() {
+            return 0;
+        }
+        unsafe { ffi::wxd_SpinCtrlDouble_GetDigits(ptr) }
+    }
+
+    /// Returns the underlying WindowHandle for this spin control.
+    pub fn window_handle(&self) -> WindowHandle {
+        self.handle
     }
 }
 
@@ -118,8 +194,26 @@ crate::implement_widget_local_event_handlers!(
     Enter => enter, EventType::TEXT_ENTER
 );
 
-// Apply common trait implementations
-implement_widget_traits_with_target!(SpinCtrlDouble, window, Window);
+// Manual WxWidget implementation for SpinCtrlDouble (using WindowHandle)
+impl WxWidget for SpinCtrlDouble {
+    fn handle_ptr(&self) -> *mut ffi::wxd_Window_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut())
+    }
+
+    fn is_valid(&self) -> bool {
+        self.handle.is_valid()
+    }
+}
+
+// Implement WxEvtHandler for event binding
+impl WxEvtHandler for SpinCtrlDouble {
+    unsafe fn get_event_handler_ptr(&self) -> *mut ffi::wxd_EvtHandler_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut()) as *mut ffi::wxd_EvtHandler_t
+    }
+}
+
+// Implement common event traits that all Window-based widgets support
+impl crate::event::WindowEvents for SpinCtrlDouble {}
 
 // Use the widget_builder macro to generate the SpinCtrlDoubleBuilder implementation
 widget_builder!(
@@ -173,8 +267,25 @@ impl<'a> SpinCtrlDoubleBuilder<'a> {
     }
 }
 
-// Add XRC Support - enables SpinCtrlDouble to be created from XRC-managed pointers
-impl_xrc_support!(SpinCtrlDouble, { window });
+// XRC Support - enables SpinCtrlDouble to be created from XRC-managed pointers
+#[cfg(feature = "xrc")]
+impl crate::xrc::XrcSupport for SpinCtrlDouble {
+    unsafe fn from_xrc_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        SpinCtrlDouble {
+            handle: WindowHandle::new(ptr),
+        }
+    }
+}
 
-// Widget casting support for SpinCtrlDouble
-impl_widget_cast!(SpinCtrlDouble, "wxSpinCtrlDouble", { window });
+// Enable widget casting for SpinCtrlDouble
+impl crate::window::FromWindowWithClassName for SpinCtrlDouble {
+    fn class_name() -> &'static str {
+        "wxSpinCtrlDouble"
+    }
+
+    unsafe fn from_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        SpinCtrlDouble {
+            handle: WindowHandle::new(ptr),
+        }
+    }
+}

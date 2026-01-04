@@ -1,10 +1,10 @@
 //! Safe wrapper for wxComboBox.
 
 use crate::event::event_data::CommandEventData;
-use crate::event::{Event, EventType, TextEvents};
+use crate::event::{Event, EventType, TextEvents, WxEvtHandler};
 use crate::geometry::{Point, Size};
 use crate::id::Id;
-use crate::window::{Window, WxWidget};
+use crate::window::{WindowHandle, WxWidget};
 use std::ffi::{CStr, CString};
 use wxdragon_sys as ffi;
 
@@ -15,9 +15,14 @@ pub const NOT_FOUND: i32 = -1;
 pub type RawComboBox = ffi::wxd_ComboBox_t;
 
 /// Represents a wxComboBox control (dropdown list + text entry).
+///
+/// ComboBox uses `WindowHandle` internally for safe memory management.
+/// When the underlying window is destroyed (by calling `destroy()` or when
+/// its parent is destroyed), the handle becomes invalid and all operations
+/// become safe no-ops.
 #[derive(Clone, Copy)]
 pub struct ComboBox {
-    window: Window,
+    handle: WindowHandle,
 }
 
 impl ComboBox {
@@ -26,26 +31,50 @@ impl ComboBox {
         ComboBoxBuilder::new(parent)
     }
 
+    /// Helper to get raw combobox pointer, returns null if widget has been destroyed
+    #[inline]
+    fn combobox_ptr(&self) -> *mut RawComboBox {
+        self.handle
+            .get_ptr()
+            .map(|p| p as *mut RawComboBox)
+            .unwrap_or(std::ptr::null_mut())
+    }
+
     /// Appends an item to the combobox list.
+    /// No-op if the combobox has been destroyed.
     pub fn append(&self, item: &str) {
+        let ptr = self.combobox_ptr();
+        if ptr.is_null() {
+            return;
+        }
         let c_item = CString::new(item).expect("Invalid CString for ComboBox item");
         unsafe {
-            ffi::wxd_ComboBox_Append(self.window.as_ptr() as *mut _, c_item.as_ptr());
+            ffi::wxd_ComboBox_Append(ptr, c_item.as_ptr());
         }
     }
 
     /// Removes all items from the combobox list.
     /// Does not clear the text entry field value.
+    /// No-op if the combobox has been destroyed.
     pub fn clear(&self) {
+        let ptr = self.combobox_ptr();
+        if ptr.is_null() {
+            return;
+        }
         unsafe {
-            ffi::wxd_ComboBox_Clear(self.window.as_ptr() as *mut _);
+            ffi::wxd_ComboBox_Clear(ptr);
         }
     }
 
     /// Gets the index of the selected item in the list.
-    /// Returns `None` if no item is selected or if the text doesn't match an item.
+    /// Returns `None` if no item is selected or if the text doesn't match an item,
+    /// or if the combobox has been destroyed.
     pub fn get_selection(&self) -> Option<u32> {
-        let selection = unsafe { ffi::wxd_ComboBox_GetSelection(self.window.as_ptr() as *mut _) };
+        let ptr = self.combobox_ptr();
+        if ptr.is_null() {
+            return None;
+        }
+        let selection = unsafe { ffi::wxd_ComboBox_GetSelection(ptr) };
         if selection == NOT_FOUND {
             None
         } else {
@@ -54,9 +83,14 @@ impl ComboBox {
     }
 
     /// Gets the string selection from the combo box.
+    /// Returns `None` if the combobox has been destroyed or there is no selection.
     pub fn get_string_selection(&self) -> Option<String> {
+        let ptr = self.combobox_ptr();
+        if ptr.is_null() {
+            return None;
+        }
         unsafe {
-            let len = ffi::wxd_ComboBox_GetStringSelection(self.window.as_ptr() as *mut _, std::ptr::null_mut(), 0);
+            let len = ffi::wxd_ComboBox_GetStringSelection(ptr, std::ptr::null_mut(), 0);
 
             if len < 0 {
                 // Indicates an error or no selection
@@ -64,42 +98,60 @@ impl ComboBox {
             }
 
             let mut buf = vec![0; len as usize + 1];
-            ffi::wxd_ComboBox_GetStringSelection(self.window.as_ptr() as *mut _, buf.as_mut_ptr(), buf.len());
+            ffi::wxd_ComboBox_GetStringSelection(ptr, buf.as_mut_ptr(), buf.len());
             Some(CStr::from_ptr(buf.as_ptr()).to_string_lossy().to_string())
         }
     }
 
     /// Selects the item at the given index in the list.
     /// This also updates the text entry field to the selected string.
+    /// No-op if the combobox has been destroyed.
     pub fn set_selection(&self, index: u32) {
+        let ptr = self.combobox_ptr();
+        if ptr.is_null() {
+            return;
+        }
         unsafe {
-            ffi::wxd_ComboBox_SetSelection(self.window.as_ptr() as *mut _, index as i32);
+            ffi::wxd_ComboBox_SetSelection(ptr, index as i32);
         }
     }
 
     /// Gets the string at the specified index in the list.
-    /// Returns `None` if the index is out of bounds.
+    /// Returns `None` if the index is out of bounds or if the combobox has been destroyed.
     pub fn get_string(&self, index: u32) -> Option<String> {
+        let ptr = self.combobox_ptr();
+        if ptr.is_null() {
+            return None;
+        }
         unsafe {
-            let len = ffi::wxd_ComboBox_GetString(self.window.as_ptr() as *mut _, index as i32, std::ptr::null_mut(), 0);
+            let len = ffi::wxd_ComboBox_GetString(ptr, index as i32, std::ptr::null_mut(), 0);
             if len < 0 {
                 return None; // Error or invalid index
             }
             let mut buf = vec![0; len as usize + 1];
-            ffi::wxd_ComboBox_GetString(self.window.as_ptr() as *mut _, index as i32, buf.as_mut_ptr(), buf.len());
+            ffi::wxd_ComboBox_GetString(ptr, index as i32, buf.as_mut_ptr(), buf.len());
             Some(CStr::from_ptr(buf.as_ptr()).to_string_lossy().into_owned())
         }
     }
 
     /// Gets the number of items in the combobox list.
+    /// Returns 0 if the combobox has been destroyed.
     pub fn get_count(&self) -> u32 {
-        unsafe { ffi::wxd_ComboBox_GetCount(self.window.as_ptr() as *mut _) }
+        let ptr = self.combobox_ptr();
+        if ptr.is_null() {
+            return 0;
+        }
+        unsafe { ffi::wxd_ComboBox_GetCount(ptr) }
     }
 
     /// Gets the current text value from the text entry field.
+    /// Returns empty string if the combobox has been destroyed.
     pub fn get_value(&self) -> String {
+        let ptr = self.combobox_ptr();
+        if ptr.is_null() {
+            return String::new();
+        }
         unsafe {
-            let ptr = self.window.as_ptr() as *mut _;
             let mut buffer = [0; 256]; // Reasonable buffer size
             let len = ffi::wxd_ComboBox_GetValue(ptr, buffer.as_mut_ptr(), buffer.len());
 
@@ -124,46 +176,75 @@ impl ComboBox {
     }
 
     /// Sets the text value in the text entry field.
+    /// No-op if the combobox has been destroyed.
     pub fn set_value(&self, value: &str) {
+        let ptr = self.combobox_ptr();
+        if ptr.is_null() {
+            return;
+        }
         let c_value = CString::new(value).expect("Invalid CString for ComboBox value");
         unsafe {
-            ffi::wxd_ComboBox_SetValue(self.window.as_ptr() as *mut _, c_value.as_ptr());
+            ffi::wxd_ComboBox_SetValue(ptr, c_value.as_ptr());
         }
     }
 
     /// Gets the text selection range in the text entry field.
-    /// Returns (from, to) positions, or None if there's an error.
+    /// Returns (from, to) positions, or None if there's an error or the combobox has been destroyed.
     pub fn get_text_selection(&self) -> Option<(i64, i64)> {
+        let ptr = self.combobox_ptr();
+        if ptr.is_null() {
+            return None;
+        }
         let mut from: i64 = 0;
         let mut to: i64 = 0;
         unsafe {
-            ffi::wxd_ComboBox_GetTextSelection(self.window.as_ptr() as *mut _, &mut from, &mut to);
+            ffi::wxd_ComboBox_GetTextSelection(ptr, &mut from, &mut to);
         }
         Some((from, to))
     }
 
     /// Sets the text selection range in the text entry field.
+    /// No-op if the combobox has been destroyed.
     pub fn set_text_selection(&self, from: i64, to: i64) {
+        let ptr = self.combobox_ptr();
+        if ptr.is_null() {
+            return;
+        }
         unsafe {
-            ffi::wxd_ComboBox_SetTextSelection(self.window.as_ptr() as *mut _, from, to);
+            ffi::wxd_ComboBox_SetTextSelection(ptr, from, to);
         }
     }
 
     /// Gets the current insertion point (cursor position) in the text entry field.
+    /// Returns 0 if the combobox has been destroyed.
     pub fn get_insertion_point(&self) -> i64 {
-        unsafe { ffi::wxd_ComboBox_GetInsertionPoint(self.window.as_ptr() as *mut _) }
+        let ptr = self.combobox_ptr();
+        if ptr.is_null() {
+            return 0;
+        }
+        unsafe { ffi::wxd_ComboBox_GetInsertionPoint(ptr) }
     }
 
     /// Sets the insertion point (cursor position) in the text entry field.
+    /// No-op if the combobox has been destroyed.
     pub fn set_insertion_point(&self, pos: i64) {
+        let ptr = self.combobox_ptr();
+        if ptr.is_null() {
+            return;
+        }
         unsafe {
-            ffi::wxd_ComboBox_SetInsertionPoint(self.window.as_ptr() as *mut _, pos);
+            ffi::wxd_ComboBox_SetInsertionPoint(ptr, pos);
         }
     }
 
     /// Gets the last position in the text entry field.
+    /// Returns 0 if the combobox has been destroyed.
     pub fn get_last_position(&self) -> i64 {
-        unsafe { ffi::wxd_ComboBox_GetLastPosition(self.window.as_ptr() as *mut _) }
+        let ptr = self.combobox_ptr();
+        if ptr.is_null() {
+            return 0;
+        }
+        unsafe { ffi::wxd_ComboBox_GetLastPosition(ptr) }
     }
 }
 
@@ -208,17 +289,18 @@ widget_builder!(
 
             if ctrl_ptr.is_null() {
                 panic!("Failed to create ComboBox widget");
-            } else {
-                let window = Window::from_ptr(ctrl_ptr as *mut ffi::wxd_Window_t);
-                let combo = ComboBox { window };
-
-                // Append initial choices
-                for item in &slf.choices {
-                    combo.append(item);
-                }
-
-                combo
             }
+
+            let combo = ComboBox {
+                handle: WindowHandle::new(ctrl_ptr as *mut ffi::wxd_Window_t)
+            };
+
+            // Append initial choices
+            for item in &slf.choices {
+                combo.append(item);
+            }
+
+            combo
         }
     }
 );
@@ -232,8 +314,26 @@ impl<'a> ComboBoxBuilder<'a> {
     }
 }
 
-// --- Widget traits implementation using macro ---
-implement_widget_traits_with_target!(ComboBox, window, Window);
+// Manual WxWidget implementation for ComboBox (using WindowHandle)
+impl WxWidget for ComboBox {
+    fn handle_ptr(&self) -> *mut ffi::wxd_Window_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut())
+    }
+
+    fn is_valid(&self) -> bool {
+        self.handle.is_valid()
+    }
+}
+
+// Implement WxEvtHandler for event binding
+impl WxEvtHandler for ComboBox {
+    unsafe fn get_event_handler_ptr(&self) -> *mut ffi::wxd_EvtHandler_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut()) as *mut ffi::wxd_EvtHandler_t
+    }
+}
+
+// Implement common event traits that all Window-based widgets support
+impl crate::event::WindowEvents for ComboBox {}
 
 // --- ComboBox specific event enum ---
 /// Events specific to ComboBox controls
@@ -284,7 +384,24 @@ crate::implement_widget_local_event_handlers!(
 impl TextEvents for ComboBox {}
 
 // Add XRC Support - enables ComboBox to be created from XRC-managed pointers
-impl_xrc_support!(ComboBox, { window });
+#[cfg(feature = "xrc")]
+impl crate::xrc::XrcSupport for ComboBox {
+    unsafe fn from_xrc_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        ComboBox {
+            handle: WindowHandle::new(ptr),
+        }
+    }
+}
 
 // Widget casting support for ComboBox
-impl_widget_cast!(ComboBox, "wxComboBox", { window });
+impl crate::window::FromWindowWithClassName for ComboBox {
+    fn class_name() -> &'static str {
+        "wxComboBox"
+    }
+
+    unsafe fn from_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        ComboBox {
+            handle: WindowHandle::new(ptr),
+        }
+    }
+}

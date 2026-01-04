@@ -1,6 +1,7 @@
+use crate::event::WxEvtHandler;
 use crate::prelude::*;
 use crate::widgets::aui_mdi_parent_frame::AuiMdiParentFrame;
-use crate::window::Window;
+use crate::window::{WindowHandle, WxWidget};
 use std::ffi::CString;
 use std::marker::PhantomData;
 use wxdragon_sys as ffi;
@@ -16,9 +17,26 @@ widget_style_enum!(
     default_variant: Default
 );
 
+/// Represents a wxAuiMDIChildFrame.
+///
+/// AuiMdiChildFrame uses `WindowHandle` internally for safe memory management.
+/// When the underlying window is destroyed (by calling `destroy()` or when
+/// its parent is destroyed), the handle becomes invalid and all operations
+/// become safe no-ops.
+///
+/// # Example
+/// ```ignore
+/// let child_frame = AuiMdiChildFrame::builder(&parent_frame)
+///     .with_title("Child Window")
+///     .build();
+///
+/// // Child frame is Copy - no clone needed for closures!
+/// // After parent destruction, operations are safe no-ops
+/// ```
 #[derive(Clone, Copy)]
 pub struct AuiMdiChildFrame {
-    window: Window,
+    /// Safe handle to the underlying wxAuiMDIChildFrame - automatically invalidated on destroy
+    handle: WindowHandle,
     #[allow(dead_code)]
     parent_ptr: *mut ffi::wxd_AuiMDIParentFrame_t,
     _marker: PhantomData<()>,
@@ -27,7 +45,7 @@ pub struct AuiMdiChildFrame {
 impl AuiMdiChildFrame {
     fn from_ptr(ptr: *mut ffi::wxd_AuiMDIChildFrame_t, parent_ptr: *mut ffi::wxd_AuiMDIParentFrame_t) -> Self {
         AuiMdiChildFrame {
-            window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
+            handle: WindowHandle::new(ptr as *mut ffi::wxd_Window_t),
             parent_ptr,
             _marker: PhantomData,
         }
@@ -36,6 +54,21 @@ impl AuiMdiChildFrame {
     /// Creates a new builder for AuiMdiChildFrame
     pub fn builder<'a>(parent: &'a AuiMdiParentFrame) -> AuiMdiChildFrameBuilder<'a> {
         AuiMdiChildFrameBuilder::new(parent)
+    }
+
+    /// Helper to get raw child frame pointer, returns null if widget has been destroyed
+    #[inline]
+    #[allow(dead_code)]
+    fn child_frame_ptr(&self) -> *mut ffi::wxd_AuiMDIChildFrame_t {
+        self.handle
+            .get_ptr()
+            .map(|p| p as *mut ffi::wxd_AuiMDIChildFrame_t)
+            .unwrap_or(std::ptr::null_mut())
+    }
+
+    /// Returns the underlying WindowHandle for this child frame.
+    pub fn window_handle(&self) -> WindowHandle {
+        self.handle
     }
 }
 
@@ -127,5 +160,23 @@ impl<'a> AuiMdiChildFrameBuilder<'a> {
     }
 }
 
-// Implement all standard widget traits in one go
-implement_widget_traits_with_target!(AuiMdiChildFrame, window, Window);
+// Manual WxWidget implementation for AuiMdiChildFrame (using WindowHandle)
+impl WxWidget for AuiMdiChildFrame {
+    fn handle_ptr(&self) -> *mut ffi::wxd_Window_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut())
+    }
+
+    fn is_valid(&self) -> bool {
+        self.handle.is_valid()
+    }
+}
+
+// Implement WxEvtHandler for event binding
+impl WxEvtHandler for AuiMdiChildFrame {
+    unsafe fn get_event_handler_ptr(&self) -> *mut ffi::wxd_EvtHandler_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut()) as *mut ffi::wxd_EvtHandler_t
+    }
+}
+
+// Implement common event traits that all Window-based widgets support
+impl crate::event::WindowEvents for AuiMdiChildFrame {}

@@ -316,7 +316,7 @@ fn generate_xrc_struct(input: XrcMacroInput) -> syn::Result<proc_macro2::TokenSt
         let menu_item_name_lit = &menu_item_obj.name;
 
         quote! {
-            let #field_name = wxdragon::menus::MenuItem::from_xrc_name(&#root_field_name, #menu_item_name_lit)
+            let #field_name = wxdragon::menus::MenuItem::from_xrc_name(#root_field_name.window_handle(), #menu_item_name_lit)
                 .unwrap_or_else(|| panic!("Failed to find menu item: {}", #menu_item_name_lit));
         }
     });

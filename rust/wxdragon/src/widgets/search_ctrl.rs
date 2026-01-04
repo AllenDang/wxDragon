@@ -1,11 +1,15 @@
-use crate::event::{Event, EventType, TextEvents};
+use crate::event::{Event, EventType, TextEvents, WxEvtHandler};
 use crate::geometry::{Point, Size};
 use crate::id::Id;
-use crate::window::{Window, WxWidget};
+use crate::window::{WindowHandle, WxWidget};
+// Window is used by new_from_composition for backwards compatibility
+#[allow(unused_imports)]
+use crate::window::Window;
 use wxdragon_sys as ffi;
 
 use std::ffi::CString;
 use std::os::raw::{c_char, c_longlong};
+use std::ptr::null_mut;
 
 // --- Style enum using macro ---
 widget_style_enum!(
@@ -57,65 +61,160 @@ impl SearchCtrlEventData {
 
 // --- SearchCtrl --- //
 
+/// Represents a wxSearchCtrl widget.
+///
+/// SearchCtrl uses `WindowHandle` internally for safe memory management.
+/// When the underlying window is destroyed (by calling `destroy()` or when
+/// its parent is destroyed), the handle becomes invalid and all operations
+/// become safe no-ops.
+///
+/// # Example
+/// ```ignore
+/// let search = SearchCtrl::builder(&frame).value("Search...").build();
+///
+/// // SearchCtrl is Copy - no clone needed for closures!
+/// search.bind_search_button_clicked(move |_| {
+///     // Safe: if search was destroyed, this is a no-op
+///     let query = search.get_value();
+///     println!("Searching for: {}", query);
+/// });
+///
+/// // After parent destruction, search operations are safe no-ops
+/// frame.destroy();
+/// assert!(!search.is_valid());
+/// ```
 #[derive(Clone, Copy)]
 pub struct SearchCtrl {
-    window: Window,
+    /// Safe handle to the underlying wxSearchCtrl - automatically invalidated on destroy
+    handle: WindowHandle,
 }
 
 impl SearchCtrl {
+    /// Creates a new SearchCtrl builder.
     pub fn builder(parent: &dyn WxWidget) -> SearchCtrlBuilder<'_> {
         SearchCtrlBuilder::new(parent)
     }
 
-    pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_SearchCtrl_t) -> Self {
-        SearchCtrl {
-            window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
+    /// Creates a new SearchCtrl from a raw window pointer.
+    /// This is for backwards compatibility with widgets that compose SearchCtrl.
+    /// The parent_ptr parameter is ignored (kept for API compatibility).
+    #[allow(dead_code)]
+    pub(crate) fn new_from_composition(_window: Window, _parent_ptr: *mut ffi::wxd_Window_t) -> Self {
+        // Use the window's pointer to create a new WindowHandle
+        Self {
+            handle: WindowHandle::new(_window.as_ptr()),
         }
     }
 
-    /// Get the raw underlying search ctrl pointer.
-    pub fn as_ptr(&self) -> *mut ffi::wxd_SearchCtrl_t {
-        self.window.handle_ptr() as *mut ffi::wxd_SearchCtrl_t
+    /// Helper to get raw searchctrl pointer, returns null if widget has been destroyed
+    #[inline]
+    fn searchctrl_ptr(&self) -> *mut ffi::wxd_SearchCtrl_t {
+        self.handle
+            .get_ptr()
+            .map(|p| p as *mut ffi::wxd_SearchCtrl_t)
+            .unwrap_or(null_mut())
     }
 
+    /// Shows or hides the search button.
+    /// No-op if the control has been destroyed.
     pub fn show_search_button(&self, show: bool) {
-        unsafe { ffi::wxd_SearchCtrl_ShowSearchButton(self.as_ptr(), show) }
+        let ptr = self.searchctrl_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_SearchCtrl_ShowSearchButton(ptr, show) }
     }
 
+    /// Returns whether the search button is visible.
+    /// Returns false if the control has been destroyed.
     pub fn is_search_button_visible(&self) -> bool {
-        unsafe { ffi::wxd_SearchCtrl_IsSearchButtonVisible(self.as_ptr()) }
+        let ptr = self.searchctrl_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_SearchCtrl_IsSearchButtonVisible(ptr) }
     }
 
+    /// Shows or hides the cancel button.
+    /// No-op if the control has been destroyed.
     pub fn show_cancel_button(&self, show: bool) {
-        unsafe { ffi::wxd_SearchCtrl_ShowCancelButton(self.as_ptr(), show) }
+        let ptr = self.searchctrl_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_SearchCtrl_ShowCancelButton(ptr, show) }
     }
 
+    /// Returns whether the cancel button is visible.
+    /// Returns false if the control has been destroyed.
     pub fn is_cancel_button_visible(&self) -> bool {
-        unsafe { ffi::wxd_SearchCtrl_IsCancelButtonVisible(self.as_ptr()) }
+        let ptr = self.searchctrl_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_SearchCtrl_IsCancelButtonVisible(ptr) }
     }
 
+    /// Sets the text value of the control.
+    /// No-op if the control has been destroyed.
     pub fn set_value(&self, value: &str) {
+        let ptr = self.searchctrl_ptr();
+        if ptr.is_null() {
+            return;
+        }
         let c_value = CString::new(value).expect("CString::new failed for value");
-        unsafe { ffi::wxd_SearchCtrl_SetValue(self.as_ptr(), c_value.as_ptr()) }
+        unsafe { ffi::wxd_SearchCtrl_SetValue(ptr, c_value.as_ptr()) }
     }
 
+    /// Gets the current text value of the control.
+    /// Returns empty string if the control has been destroyed.
     pub fn get_value(&self) -> String {
+        let ptr = self.searchctrl_ptr();
+        if ptr.is_null() {
+            return String::new();
+        }
         // First call: get required UTF-8 byte length (excluding null terminator)
-        let len = unsafe { ffi::wxd_SearchCtrl_GetValue(self.as_ptr(), std::ptr::null_mut(), 0) };
+        let len = unsafe { ffi::wxd_SearchCtrl_GetValue(ptr, std::ptr::null_mut(), 0) };
         if len == 0 {
             return String::new();
         }
         // Allocate buffer with space for null terminator
         let mut vec_buffer: Vec<u8> = vec![0; len + 1];
         let p = vec_buffer.as_mut_ptr() as *mut c_char;
-        unsafe { ffi::wxd_SearchCtrl_GetValue(self.as_ptr(), p, vec_buffer.len()) };
+        unsafe { ffi::wxd_SearchCtrl_GetValue(ptr, p, vec_buffer.len()) };
         vec_buffer.pop(); // remove null terminator
         String::from_utf8(vec_buffer).unwrap_or_default()
     }
+
+    /// Returns the underlying WindowHandle for this searchctrl.
+    pub fn window_handle(&self) -> WindowHandle {
+        self.handle
+    }
 }
 
-// Apply common trait implementations
-implement_widget_traits_with_target!(SearchCtrl, window, Window);
+// Implement TextEvents trait for SearchCtrl
+impl TextEvents for SearchCtrl {}
+
+// Manual WxWidget implementation for SearchCtrl (using WindowHandle)
+impl WxWidget for SearchCtrl {
+    fn handle_ptr(&self) -> *mut ffi::wxd_Window_t {
+        self.handle.get_ptr().unwrap_or(null_mut())
+    }
+
+    fn is_valid(&self) -> bool {
+        self.handle.is_valid()
+    }
+}
+
+// Implement WxEvtHandler for event binding
+impl WxEvtHandler for SearchCtrl {
+    unsafe fn get_event_handler_ptr(&self) -> *mut ffi::wxd_EvtHandler_t {
+        self.handle.get_ptr().unwrap_or(null_mut()) as *mut ffi::wxd_EvtHandler_t
+    }
+}
+
+// Implement common event traits that all Window-based widgets support
+impl crate::event::WindowEvents for SearchCtrl {}
 
 // Use the widget_builder macro to generate the SearchCtrlBuilder implementation
 widget_builder!(
@@ -144,7 +243,9 @@ widget_builder!(
             panic!("Failed to create wxSearchCtrl");
         }
 
-        unsafe { SearchCtrl::from_ptr(raw_ptr) }
+        SearchCtrl {
+            handle: WindowHandle::new(raw_ptr as *mut ffi::wxd_Window_t),
+        }
     }
 );
 
@@ -157,11 +258,25 @@ crate::implement_widget_local_event_handlers!(
     CancelButtonClicked => cancel_button_clicked, EventType::COMMAND_SEARCHCTRL_CANCEL_BTN
 );
 
-// Implement standard WindowEvents and TextEvents traits
-impl TextEvents for SearchCtrl {}
-
-// Add XRC Support - enables SearchCtrl to be created from XRC-managed pointers
-impl_xrc_support!(SearchCtrl, { window });
+// XRC Support - enables SearchCtrl to be created from XRC-managed pointers
+#[cfg(feature = "xrc")]
+impl crate::xrc::XrcSupport for SearchCtrl {
+    unsafe fn from_xrc_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        SearchCtrl {
+            handle: WindowHandle::new(ptr),
+        }
+    }
+}
 
 // Widget casting support for SearchCtrl
-impl_widget_cast!(SearchCtrl, "wxSearchCtrl", { window });
+impl crate::window::FromWindowWithClassName for SearchCtrl {
+    fn class_name() -> &'static str {
+        "wxSearchCtrl"
+    }
+
+    unsafe fn from_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        SearchCtrl {
+            handle: WindowHandle::new(ptr),
+        }
+    }
+}

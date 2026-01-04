@@ -2,11 +2,11 @@
 
 use crate::CommandEventData;
 use crate::EventType;
-use crate::event::Event;
+use crate::event::{Event, WxEvtHandler};
 use crate::geometry::{Point, Size};
 use crate::id::Id;
 use crate::implement_widget_local_event_handlers;
-use crate::window::{Window, WxWidget};
+use crate::window::{WindowHandle, WxWidget};
 use std::os::raw::c_int;
 use wxdragon_sys as ffi;
 
@@ -27,9 +27,30 @@ widget_style_enum!(
 );
 
 /// Represents a wxSlider widget.
+///
+/// Slider uses `WindowHandle` internally for safe memory management.
+/// When the underlying window is destroyed (by calling `destroy()` or when
+/// its parent is destroyed), the handle becomes invalid and all operations
+/// become safe no-ops.
+///
+/// # Example
+/// ```ignore
+/// let slider = Slider::builder(&frame).min_value(0).max_value(100).build();
+///
+/// // Slider is Copy - no clone needed for closures!
+/// slider.bind_slider(move |_| {
+///     // Safe: if slider was destroyed, this is a no-op
+///     let value = slider.value();
+/// });
+///
+/// // After parent destruction, slider operations are safe no-ops
+/// frame.destroy();
+/// assert!(!slider.is_valid());
+/// ```
 #[derive(Clone, Copy)]
 pub struct Slider {
-    window: Window,
+    /// Safe handle to the underlying wxSlider - automatically invalidated on destroy
+    handle: WindowHandle,
 }
 
 impl Slider {
@@ -41,49 +62,107 @@ impl Slider {
     // Internal constructor
     pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_Slider_t) -> Self {
         Slider {
-            window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
+            handle: WindowHandle::new(ptr as *mut ffi::wxd_Window_t),
         }
     }
 
-    /// Returns the raw underlying slider pointer.
-    pub fn as_ptr(&self) -> *mut ffi::wxd_Slider_t {
-        self.window.handle_ptr() as *mut ffi::wxd_Slider_t
+    /// Helper to get raw slider pointer, returns null if widget has been destroyed
+    #[inline]
+    fn slider_ptr(&self) -> *mut ffi::wxd_Slider_t {
+        self.handle
+            .get_ptr()
+            .map(|p| p as *mut ffi::wxd_Slider_t)
+            .unwrap_or(std::ptr::null_mut())
     }
 
     // --- Methods specific to Slider ---
 
     /// Gets the current slider value.
+    /// Returns 0 if the slider has been destroyed.
     pub fn value(&self) -> i32 {
-        unsafe { ffi::wxd_Slider_GetValue(self.as_ptr()) }
+        let ptr = self.slider_ptr();
+        if ptr.is_null() {
+            return 0;
+        }
+        unsafe { ffi::wxd_Slider_GetValue(ptr) }
     }
 
     /// Sets the slider value.
+    /// No-op if the slider has been destroyed.
     pub fn set_value(&self, value: i32) {
-        unsafe { ffi::wxd_Slider_SetValue(self.as_ptr(), value) }
+        let ptr = self.slider_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_Slider_SetValue(ptr, value) }
     }
 
     /// Sets the slider range (minimum and maximum values).
+    /// No-op if the slider has been destroyed.
     pub fn set_range(&self, min_value: i32, max_value: i32) {
-        unsafe { ffi::wxd_Slider_SetRange(self.as_ptr(), min_value as c_int, max_value as c_int) };
+        let ptr = self.slider_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_Slider_SetRange(ptr, min_value as c_int, max_value as c_int) };
     }
 
     /// Gets the minimum slider value.
+    /// Returns 0 if the slider has been destroyed.
     pub fn min(&self) -> i32 {
-        unsafe { ffi::wxd_Slider_GetMin(self.as_ptr()) }
+        let ptr = self.slider_ptr();
+        if ptr.is_null() {
+            return 0;
+        }
+        unsafe { ffi::wxd_Slider_GetMin(ptr) }
     }
 
     /// Gets the maximum slider value.
+    /// Returns 0 if the slider has been destroyed.
     pub fn max(&self) -> i32 {
-        unsafe { ffi::wxd_Slider_GetMax(self.as_ptr()) }
+        let ptr = self.slider_ptr();
+        if ptr.is_null() {
+            return 0;
+        }
+        unsafe { ffi::wxd_Slider_GetMax(ptr) }
     }
 
+    /// Gets the current slider value.
+    /// Returns 0 if the slider has been destroyed.
     pub fn get_value(&self) -> i32 {
-        unsafe { ffi::wxd_Slider_GetValue(self.as_ptr()) }
+        let ptr = self.slider_ptr();
+        if ptr.is_null() {
+            return 0;
+        }
+        unsafe { ffi::wxd_Slider_GetValue(ptr) }
+    }
+
+    /// Returns the underlying WindowHandle for this slider.
+    pub fn window_handle(&self) -> WindowHandle {
+        self.handle
     }
 }
 
-// Apply common trait implementations
-implement_widget_traits_with_target!(Slider, window, Window);
+// Manual WxWidget implementation for Slider (using WindowHandle)
+impl WxWidget for Slider {
+    fn handle_ptr(&self) -> *mut ffi::wxd_Window_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut())
+    }
+
+    fn is_valid(&self) -> bool {
+        self.handle.is_valid()
+    }
+}
+
+// Implement WxEvtHandler for event binding
+impl WxEvtHandler for Slider {
+    unsafe fn get_event_handler_ptr(&self) -> *mut ffi::wxd_EvtHandler_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut()) as *mut ffi::wxd_EvtHandler_t
+    }
+}
+
+// Implement common event traits that all Window-based widgets support
+impl crate::event::WindowEvents for Slider {}
 
 // Use the widget_builder macro to generate the SliderBuilder implementation
 widget_builder!(
@@ -117,11 +196,28 @@ widget_builder!(
     }
 );
 
-// Add XRC Support - enables Slider to be created from XRC-managed pointers
-impl_xrc_support!(Slider, { window });
+// XRC Support - enables Slider to be created from XRC-managed pointers
+#[cfg(feature = "xrc")]
+impl crate::xrc::XrcSupport for Slider {
+    unsafe fn from_xrc_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        Slider {
+            handle: WindowHandle::new(ptr),
+        }
+    }
+}
 
-// Widget casting support for Slider
-impl_widget_cast!(Slider, "wxSlider", { window });
+// Enable widget casting for Slider
+impl crate::window::FromWindowWithClassName for Slider {
+    fn class_name() -> &'static str {
+        "wxSlider"
+    }
+
+    unsafe fn from_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        Slider {
+            handle: WindowHandle::new(ptr),
+        }
+    }
+}
 
 /// Events that can be emitted by a [`Slider`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

@@ -1,6 +1,7 @@
+use crate::event::WxEvtHandler;
 use crate::geometry::{Point, Size};
 use crate::id::Id;
-use crate::window::{Window, WxWidget};
+use crate::window::{WindowHandle, WxWidget};
 use wxdragon_sys as ffi;
 
 // Define a proper style enum for ActivityIndicator
@@ -13,11 +14,32 @@ widget_style_enum!(
     default_variant: Default
 );
 
+// Opaque pointer type from FFI
+pub type RawActivityIndicator = ffi::wxd_ActivityIndicator_t;
+
 /// Represents a `wxActivityIndicator`, an animated control that shows
 /// an animation to indicate a long-running process is occurring.
+///
+/// ActivityIndicator uses `WindowHandle` internally for safe memory management.
+/// When the underlying window is destroyed (by calling `destroy()` or when
+/// its parent is destroyed), the handle becomes invalid and all operations
+/// become safe no-ops.
+///
+/// # Example
+/// ```ignore
+/// let indicator = ActivityIndicator::builder(&frame).build();
+///
+/// // ActivityIndicator is Copy - no clone needed for closures!
+/// indicator.start();
+///
+/// // After parent destruction, indicator operations are safe no-ops
+/// frame.destroy();
+/// assert!(!indicator.is_valid());
+/// ```
 #[derive(Clone, Copy)]
 pub struct ActivityIndicator {
-    window: Window,
+    /// Safe handle to the underlying wxActivityIndicator - automatically invalidated on destroy
+    handle: WindowHandle,
 }
 
 impl ActivityIndicator {
@@ -26,60 +48,125 @@ impl ActivityIndicator {
         ActivityIndicatorBuilder::new(parent)
     }
 
-    /// Low-level constructor used by the builder.
-    fn new_impl(parent_ptr: *mut ffi::wxd_Window_t, id: Id, pos: Point, size: Size, style: i64) -> Self {
-        assert!(!parent_ptr.is_null(), "ActivityIndicator requires a parent");
-
-        let ptr = unsafe { ffi::wxd_ActivityIndicator_Create(parent_ptr, id, pos.x, pos.y, size.width, size.height, style) };
-
-        if ptr.is_null() {
-            panic!("Failed to create wxActivityIndicator");
-        }
-
-        unsafe {
-            let window = Window::from_ptr(ptr as *mut ffi::wxd_Window_t);
-            ActivityIndicator { window }
-        }
+    /// Helper to get raw activity indicator pointer, returns null if widget has been destroyed
+    #[inline]
+    fn activity_indicator_ptr(&self) -> *mut RawActivityIndicator {
+        self.handle
+            .get_ptr()
+            .map(|p| p as *mut RawActivityIndicator)
+            .unwrap_or(std::ptr::null_mut())
     }
 
     /// Start the animation.
+    /// No-op if the activity indicator has been destroyed.
     pub fn start(&self) {
-        unsafe { ffi::wxd_ActivityIndicator_Start(self.window.as_ptr() as *mut _) }
+        let ptr = self.activity_indicator_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_ActivityIndicator_Start(ptr) }
     }
 
     /// Stop the animation.
+    /// No-op if the activity indicator has been destroyed.
     pub fn stop(&self) {
-        unsafe { ffi::wxd_ActivityIndicator_Stop(self.window.as_ptr() as *mut _) }
+        let ptr = self.activity_indicator_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_ActivityIndicator_Stop(ptr) }
     }
 
     /// Check if the animation is currently running.
+    /// Returns false if the activity indicator has been destroyed.
     pub fn is_running(&self) -> bool {
-        unsafe { ffi::wxd_ActivityIndicator_IsRunning(self.window.as_ptr() as *mut _) }
+        let ptr = self.activity_indicator_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_ActivityIndicator_IsRunning(ptr) }
+    }
+
+    /// Creates an ActivityIndicator from a raw pointer.
+    /// # Safety
+    /// The pointer must be a valid `wxd_ActivityIndicator_t`.
+    pub(crate) unsafe fn from_ptr(ptr: *mut RawActivityIndicator) -> Self {
+        assert!(!ptr.is_null());
+        ActivityIndicator {
+            handle: WindowHandle::new(ptr as *mut ffi::wxd_Window_t),
+        }
+    }
+
+    /// Returns the underlying WindowHandle for this activity indicator.
+    pub fn window_handle(&self) -> WindowHandle {
+        self.handle
     }
 }
 
-// Use the widget_builder macro for ActivityIndicator
+// Manual WxWidget implementation for ActivityIndicator (using WindowHandle)
+impl WxWidget for ActivityIndicator {
+    fn handle_ptr(&self) -> *mut ffi::wxd_Window_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut())
+    }
+
+    fn is_valid(&self) -> bool {
+        self.handle.is_valid()
+    }
+}
+
+// Implement WxEvtHandler for event binding
+impl WxEvtHandler for ActivityIndicator {
+    unsafe fn get_event_handler_ptr(&self) -> *mut ffi::wxd_EvtHandler_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut()) as *mut ffi::wxd_EvtHandler_t
+    }
+}
+
+// Implement common event traits that all Window-based widgets support
+impl crate::event::WindowEvents for ActivityIndicator {}
+
+// Use the widget_builder macro to generate the ActivityIndicatorBuilder implementation
 widget_builder!(
     name: ActivityIndicator,
     parent_type: &'a dyn WxWidget,
     style_type: ActivityIndicatorStyle,
     fields: {},
     build_impl: |slf| {
-        ActivityIndicator::new_impl(
-            slf.parent.handle_ptr(),
-            slf.id,
-            slf.pos,
-            slf.size,
-            slf.style.bits(),
-        )
+        let parent_ptr = slf.parent.handle_ptr();
+        unsafe {
+            let ctrl_ptr = ffi::wxd_ActivityIndicator_Create(
+                parent_ptr,
+                slf.id,
+                slf.pos.x,
+                slf.pos.y,
+                slf.size.width,
+                slf.size.height,
+                slf.style.bits(),
+            );
+            assert!(!ctrl_ptr.is_null(), "wxd_ActivityIndicator_Create returned null");
+            ActivityIndicator::from_ptr(ctrl_ptr)
+        }
     }
 );
 
-// Apply common trait implementations for this widget
-implement_widget_traits_with_target!(ActivityIndicator, window, Window);
+// XRC Support - enables ActivityIndicator to be created from XRC-managed pointers
+#[cfg(feature = "xrc")]
+impl crate::xrc::XrcSupport for ActivityIndicator {
+    unsafe fn from_xrc_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        ActivityIndicator {
+            handle: WindowHandle::new(ptr),
+        }
+    }
+}
 
-// Add XRC Support - enables ActivityIndicator to be created from XRC-managed pointers
-impl_xrc_support!(ActivityIndicator, { window });
+// Enable widget casting for ActivityIndicator
+impl crate::window::FromWindowWithClassName for ActivityIndicator {
+    fn class_name() -> &'static str {
+        "wxActivityIndicator"
+    }
 
-// Widget casting support for ActivityIndicator
-impl_widget_cast!(ActivityIndicator, "wxActivityIndicator", { window });
+    unsafe fn from_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        ActivityIndicator {
+            handle: WindowHandle::new(ptr),
+        }
+    }
+}

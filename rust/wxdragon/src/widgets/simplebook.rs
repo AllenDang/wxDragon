@@ -1,10 +1,10 @@
 //!
 //! Safe wrapper for wxSimpleBook.
 
-use crate::event::{Event, EventType};
+use crate::event::{Event, EventType, WxEvtHandler};
 use crate::geometry::{Point, Size};
 use crate::id::Id;
-use crate::window::{Window, WxWidget};
+use crate::window::{Window, WindowHandle, WxWidget};
 use std::ffi::CString;
 use std::os::raw::c_int;
 use wxdragon_sys as ffi;
@@ -28,9 +28,15 @@ widget_style_enum!(
 /// wxSimpleBook is a book control without visual tabs. Pages are switched programmatically,
 /// not through visible tabs. This makes it ideal for wizard-like interfaces or when you
 /// want to control page navigation through other UI elements.
+///
+/// SimpleBook uses `WindowHandle` internally for safe memory management.
+/// When the underlying window is destroyed (by calling `destroy()` or when
+/// its parent is destroyed), the handle becomes invalid and all operations
+/// become safe no-ops.
 #[derive(Clone, Copy)]
 pub struct SimpleBook {
-    window: Window,
+    /// Safe handle to the underlying wxSimpleBook - automatically invalidated on destroy
+    handle: WindowHandle,
 }
 
 impl SimpleBook {
@@ -42,8 +48,17 @@ impl SimpleBook {
     // Internal constructor
     pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_SimpleBook_t) -> Self {
         SimpleBook {
-            window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
+            handle: WindowHandle::new(ptr as *mut ffi::wxd_Window_t),
         }
+    }
+
+    /// Helper to get raw simplebook pointer, returns null if widget has been destroyed
+    #[inline]
+    fn simplebook_ptr(&self) -> *mut ffi::wxd_SimpleBook_t {
+        self.handle
+            .get_ptr()
+            .map(|p| p as *mut ffi::wxd_SimpleBook_t)
+            .unwrap_or(std::ptr::null_mut())
     }
 
     /// Adds a new page to the simplebook.
@@ -55,24 +70,18 @@ impl SimpleBook {
     /// * `image_id` - Optional image index (ignored for SimpleBook as it has no tabs).
     ///
     /// Returns `true` if the page was added successfully.
+    /// Returns `false` if the simplebook has been destroyed.
     pub fn add_page<W: WxWidget>(&self, page: &W, text: &str, select: bool, image_id: Option<i32>) -> bool {
+        let ptr = self.simplebook_ptr();
+        if ptr.is_null() {
+            return false;
+        }
         let c_text = CString::new(text).expect("CString::new failed");
         unsafe {
             if let Some(id) = image_id {
-                ffi::wxd_SimpleBook_AddPageWithImageId(
-                    self.window.as_ptr() as *mut ffi::wxd_SimpleBook_t,
-                    page.handle_ptr(),
-                    c_text.as_ptr(),
-                    select,
-                    id as c_int,
-                )
+                ffi::wxd_SimpleBook_AddPageWithImageId(ptr, page.handle_ptr(), c_text.as_ptr(), select, id as c_int)
             } else {
-                ffi::wxd_SimpleBook_AddPage(
-                    self.window.as_ptr() as *mut ffi::wxd_SimpleBook_t,
-                    page.handle_ptr(),
-                    c_text.as_ptr(),
-                    select,
-                )
+                ffi::wxd_SimpleBook_AddPage(ptr, page.handle_ptr(), c_text.as_ptr(), select)
             }
         }
     }
@@ -87,71 +96,118 @@ impl SimpleBook {
     /// * `image_id` - Optional image index (ignored for SimpleBook as it has no tabs).
     ///
     /// Returns `true` if the page was inserted successfully.
+    /// Returns `false` if the simplebook has been destroyed.
     pub fn insert_page<W: WxWidget>(&self, index: usize, page: &W, text: &str, select: bool, image_id: Option<i32>) -> bool {
+        let ptr = self.simplebook_ptr();
+        if ptr.is_null() {
+            return false;
+        }
         let c_text = CString::new(text).expect("CString::new failed");
         unsafe {
             if let Some(id) = image_id {
-                ffi::wxd_SimpleBook_InsertPageWithImageId(
-                    self.window.as_ptr() as *mut ffi::wxd_SimpleBook_t,
-                    index,
-                    page.handle_ptr(),
-                    c_text.as_ptr(),
-                    select,
-                    id as c_int,
-                )
+                ffi::wxd_SimpleBook_InsertPageWithImageId(ptr, index, page.handle_ptr(), c_text.as_ptr(), select, id as c_int)
             } else {
-                ffi::wxd_SimpleBook_InsertPage(
-                    self.window.as_ptr() as *mut ffi::wxd_SimpleBook_t,
-                    index,
-                    page.handle_ptr(),
-                    c_text.as_ptr(),
-                    select,
-                )
+                ffi::wxd_SimpleBook_InsertPage(ptr, index, page.handle_ptr(), c_text.as_ptr(), select)
             }
         }
     }
 
     /// Gets the index of the currently selected page.
-    /// Returns `wxNOT_FOUND` (-1) if no page is selected.
+    /// Returns `wxNOT_FOUND` (-1) if no page is selected or if the simplebook has been destroyed.
     pub fn selection(&self) -> i32 {
-        unsafe { ffi::wxd_SimpleBook_GetSelection(self.window.as_ptr() as *mut ffi::wxd_SimpleBook_t) }
+        let ptr = self.simplebook_ptr();
+        if ptr.is_null() {
+            return -1;
+        }
+        unsafe { ffi::wxd_SimpleBook_GetSelection(ptr) }
     }
 
     /// Sets the selection to the given page index.
     /// Returns the index of the previously selected page.
+    /// Returns -1 if the simplebook has been destroyed.
     pub fn set_selection(&self, page: usize) -> i32 {
-        unsafe { ffi::wxd_SimpleBook_SetSelection(self.window.as_ptr() as *mut ffi::wxd_SimpleBook_t, page as c_int) }
+        let ptr = self.simplebook_ptr();
+        if ptr.is_null() {
+            return -1;
+        }
+        unsafe { ffi::wxd_SimpleBook_SetSelection(ptr, page as c_int) }
     }
 
     /// Changes the selection to the given page, returning the old selection.
     /// This function does not generate a `EVT_BOOKCTRL_PAGE_CHANGING` event.
+    /// Returns -1 if the simplebook has been destroyed.
     pub fn change_selection(&self, page: usize) -> i32 {
-        unsafe { ffi::wxd_SimpleBook_ChangeSelection(self.window.as_ptr() as *mut ffi::wxd_SimpleBook_t, page) }
+        let ptr = self.simplebook_ptr();
+        if ptr.is_null() {
+            return -1;
+        }
+        unsafe { ffi::wxd_SimpleBook_ChangeSelection(ptr, page) }
     }
 
     /// Gets the number of pages in the simplebook.
+    /// Returns 0 if the simplebook has been destroyed.
     pub fn get_page_count(&self) -> usize {
-        unsafe { ffi::wxd_SimpleBook_GetPageCount(self.window.as_ptr() as *mut ffi::wxd_SimpleBook_t) }
+        let ptr = self.simplebook_ptr();
+        if ptr.is_null() {
+            return 0;
+        }
+        unsafe { ffi::wxd_SimpleBook_GetPageCount(ptr) }
     }
 
     /// Returns the window at the given page position.
-    /// Returns `None` if the page index is out of bounds.
+    /// Returns `None` if the page index is out of bounds or if the simplebook has been destroyed.
     pub fn get_page(&self, index: usize) -> Option<Window> {
+        let ptr = self.simplebook_ptr();
+        if ptr.is_null() {
+            return None;
+        }
         unsafe {
-            let ptr = ffi::wxd_SimpleBook_GetPage(self.window.as_ptr() as *mut ffi::wxd_SimpleBook_t, index);
-            if ptr.is_null() { None } else { Some(Window::from_ptr(ptr)) }
+            let page_ptr = ffi::wxd_SimpleBook_GetPage(ptr, index);
+            if page_ptr.is_null() {
+                None
+            } else {
+                Some(Window::from_ptr(page_ptr))
+            }
         }
     }
 
     /// Removes the page at the given index.
     /// Returns `true` if the page was removed successfully.
+    /// Returns `false` if the simplebook has been destroyed.
     pub fn remove_page(&self, index: usize) -> bool {
-        unsafe { ffi::wxd_SimpleBook_RemovePage(self.window.as_ptr() as *mut ffi::wxd_SimpleBook_t, index) }
+        let ptr = self.simplebook_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_SimpleBook_RemovePage(ptr, index) }
+    }
+
+    /// Returns the underlying WindowHandle for this simplebook.
+    pub fn window_handle(&self) -> WindowHandle {
+        self.handle
     }
 }
 
-// Apply common trait implementations for SimpleBook
-implement_widget_traits_with_target!(SimpleBook, window, Window);
+// Manual WxWidget implementation for SimpleBook (using WindowHandle)
+impl WxWidget for SimpleBook {
+    fn handle_ptr(&self) -> *mut ffi::wxd_Window_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut())
+    }
+
+    fn is_valid(&self) -> bool {
+        self.handle.is_valid()
+    }
+}
+
+// Implement WxEvtHandler for event binding
+impl WxEvtHandler for SimpleBook {
+    unsafe fn get_event_handler_ptr(&self) -> *mut ffi::wxd_EvtHandler_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut()) as *mut ffi::wxd_EvtHandler_t
+    }
+}
+
+// Implement common event traits that all Window-based widgets support
+impl crate::event::WindowEvents for SimpleBook {}
 
 // Use the widget_builder macro to generate the SimpleBookBuilder implementation
 widget_builder!(
@@ -225,8 +281,25 @@ crate::implement_widget_local_event_handlers!(
     PageChanged => page_changed, EventType::NOTEBOOK_PAGE_CHANGED
 );
 
-// Add XRC Support - enables SimpleBook to be created from XRC-managed pointers
-impl_xrc_support!(SimpleBook, { window });
+// XRC Support - enables SimpleBook to be created from XRC-managed pointers
+#[cfg(feature = "xrc")]
+impl crate::xrc::XrcSupport for SimpleBook {
+    unsafe fn from_xrc_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        SimpleBook {
+            handle: WindowHandle::new(ptr),
+        }
+    }
+}
 
-// Widget casting support for SimpleBook
-impl_widget_cast!(SimpleBook, "wxSimplebook", { window });
+// Enable widget casting for SimpleBook
+impl crate::window::FromWindowWithClassName for SimpleBook {
+    fn class_name() -> &'static str {
+        "wxSimplebook"
+    }
+
+    unsafe fn from_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        SimpleBook {
+            handle: WindowHandle::new(ptr),
+        }
+    }
+}

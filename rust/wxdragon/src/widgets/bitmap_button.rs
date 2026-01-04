@@ -2,10 +2,11 @@
 //! Safe wrapper for wxBitmapButton.
 
 use crate::bitmap::Bitmap;
+use crate::event::WxEvtHandler;
 use crate::event::button_events::ButtonEvents;
 use crate::geometry::{Point, Size};
 use crate::id::Id;
-use crate::window::{Window, WxWidget};
+use crate::window::{WindowHandle, WxWidget};
 use std::ffi::CString;
 use std::os::raw::c_int;
 use wxdragon_sys as ffi;
@@ -29,8 +30,30 @@ widget_style_enum!(
 
 /// Represents a wxBitmapButton widget.
 /// This is a button that displays a bitmap instead of a text label.
+///
+/// BitmapButton uses `WindowHandle` internally for safe memory management.
+/// When the underlying window is destroyed (by calling `destroy()` or when
+/// its parent is destroyed), the handle becomes invalid and all operations
+/// become safe no-ops.
+///
+/// # Example
+/// ```ignore
+/// let button = BitmapButton::builder(&frame).bitmap(&my_bitmap).build();
+///
+/// // BitmapButton is Copy - no clone needed for closures!
+/// button.bind_click(move |_| {
+///     // Safe: if button was destroyed, this is a no-op
+///     println!("Clicked!");
+/// });
+///
+/// // After parent destruction, button operations are safe no-ops
+/// frame.destroy();
+/// assert!(!button.is_valid());
+/// ```
+#[derive(Clone, Copy)]
 pub struct BitmapButton {
-    window: Window, // Inherits basic window properties
+    /// Safe handle to the underlying wxBitmapButton - automatically invalidated on destroy
+    handle: WindowHandle,
 }
 
 // Implement ButtonEvents trait for BitmapButton
@@ -57,15 +80,6 @@ impl BitmapButton {
         BitmapButtonBuilder::new(parent)
     }
 
-    /// Creates a new BitmapButton wrapper from a raw pointer.
-    /// # Safety
-    /// The pointer must be a valid `wxd_BitmapButton_t` pointer.
-    pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_BitmapButton_t) -> Self {
-        BitmapButton {
-            window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
-        }
-    }
-
     /// Low-level constructor used by the builder.
     fn new_impl(config: BitmapButtonConfig) -> Self {
         let c_name = CString::new(config.name).unwrap_or_default();
@@ -87,9 +101,16 @@ impl BitmapButton {
             if ptr.is_null() {
                 panic!("Failed to create BitmapButton widget");
             } else {
-                BitmapButton::from_ptr(ptr)
+                BitmapButton {
+                    handle: WindowHandle::new(ptr as *mut ffi::wxd_Window_t),
+                }
             }
         }
+    }
+
+    /// Returns the underlying WindowHandle for this bitmap button.
+    pub fn window_handle(&self) -> WindowHandle {
+        self.handle
     }
 }
 
@@ -150,10 +171,46 @@ widget_builder!(
     }
 );
 
-implement_widget_traits_with_target!(BitmapButton, window, Window);
+// Manual WxWidget implementation for BitmapButton (using WindowHandle)
+impl WxWidget for BitmapButton {
+    fn handle_ptr(&self) -> *mut ffi::wxd_Window_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut())
+    }
 
-// Add XRC Support - enables BitmapButton to be created from XRC-managed pointers
-impl_xrc_support!(BitmapButton, { window });
+    fn is_valid(&self) -> bool {
+        self.handle.is_valid()
+    }
+}
 
-// Widget casting support for BitmapButton
-impl_widget_cast!(BitmapButton, "wxBitmapButton", { window });
+// Implement WxEvtHandler for event binding
+impl WxEvtHandler for BitmapButton {
+    unsafe fn get_event_handler_ptr(&self) -> *mut ffi::wxd_EvtHandler_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut()) as *mut ffi::wxd_EvtHandler_t
+    }
+}
+
+// Implement common event traits that all Window-based widgets support
+impl crate::event::WindowEvents for BitmapButton {}
+
+// XRC Support - enables BitmapButton to be created from XRC-managed pointers
+#[cfg(feature = "xrc")]
+impl crate::xrc::XrcSupport for BitmapButton {
+    unsafe fn from_xrc_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        BitmapButton {
+            handle: WindowHandle::new(ptr),
+        }
+    }
+}
+
+// Enable widget casting for BitmapButton
+impl crate::window::FromWindowWithClassName for BitmapButton {
+    fn class_name() -> &'static str {
+        "wxBitmapButton"
+    }
+
+    unsafe fn from_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        BitmapButton {
+            handle: WindowHandle::new(ptr),
+        }
+    }
+}

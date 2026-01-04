@@ -5,7 +5,10 @@ use crate::id::Id;
 use crate::menus::MenuBar; // ADDED: Import MenuBar
 use crate::widgets::statusbar::StatusBar; // ADDED Import
 use crate::widgets::toolbar::{ToolBar, ToolBarStyle}; // Added ToolBarStyle
-use crate::window::{Window, WxWidget};
+use crate::window::{WindowHandle, WxWidget};
+// Window is used by new_from_composition for backwards compatibility
+#[allow(unused_imports)]
+use crate::window::Window;
 use std::default::Default;
 use std::ffi::CString;
 use std::marker::PhantomData;
@@ -36,6 +39,11 @@ widget_style_enum!(
 
 /// Represents a wxFrame.
 ///
+/// Frame uses `WindowHandle` internally for safe memory management.
+/// When the underlying window is destroyed (by calling `destroy()` or when
+/// its parent is destroyed), the handle becomes invalid and all operations
+/// become safe no-ops.
+///
 /// # Lifetime Management
 /// The main application frame is typically created within the `wxdragon::main` closure
 /// and its lifetime is extended by calling `handle.preserve(frame.clone())`.
@@ -48,6 +56,7 @@ widget_style_enum!(
 /// and its associated resources (including event handlers and Rust closures)
 /// are properly deallocated.
 ///
+/// # Example
 /// ```no_run
 /// # use wxdragon::prelude::*;
 /// # wxdragon::main(|_app| {
@@ -70,7 +79,8 @@ widget_style_enum!(
 /// `.destroy()` provides a more direct way to ensure destruction.
 #[derive(Clone, Copy)]
 pub struct Frame {
-    window: Window, // Composition: Frame uses a Window internally
+    /// Safe handle to the underlying wxFrame - automatically invalidated on destroy
+    handle: WindowHandle,
     // Store parent pointer to manage drop behavior
     #[allow(dead_code)]
     parent_ptr: *mut ffi::wxd_Window_t,
@@ -166,7 +176,7 @@ impl FrameBuilder {
             panic!("Failed to create wxFrame: wxWidgets returned a null pointer.");
         } else {
             Frame {
-                window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
+                handle: WindowHandle::new(ptr as *mut ffi::wxd_Window_t),
                 parent_ptr: self.parent_ptr,
                 _marker: PhantomData,
             }
@@ -182,45 +192,96 @@ impl Frame {
         FrameBuilder::default()
     }
 
-    /// Return internal window
-    pub fn get_window(&self) -> Window {
-        self.window
+    /// Creates a new Frame from a raw window pointer.
+    /// This is for backwards compatibility with widgets that compose Frame.
+    /// The parent_ptr parameter is ignored (kept for API compatibility).
+    #[allow(dead_code)]
+    pub(crate) fn new_from_composition(_window: Window, _parent_ptr: *mut ffi::wxd_Window_t) -> Self {
+        // Use the window's pointer to create a new WindowHandle
+        Self {
+            handle: WindowHandle::new(_window.as_ptr()),
+            parent_ptr: _parent_ptr,
+            _marker: PhantomData,
+        }
+    }
+
+    /// Helper to get raw frame pointer, returns null if widget has been destroyed
+    #[inline]
+    fn frame_ptr(&self) -> *mut ffi::wxd_Frame_t {
+        self.handle
+            .get_ptr()
+            .map(|p| p as *mut ffi::wxd_Frame_t)
+            .unwrap_or(std::ptr::null_mut())
+    }
+
+    /// Return internal window handle
+    pub fn window_handle(&self) -> WindowHandle {
+        self.handle
     }
 
     /// Sets the frame's title.
+    /// No-op if the frame has been destroyed.
     pub fn set_title(&self, title: &str) {
+        let ptr = self.frame_ptr();
+        if ptr.is_null() {
+            return;
+        }
         let title_c = CString::new(title).expect("CString::new failed");
-        unsafe { ffi::wxd_Frame_SetTitle(self.window.as_ptr() as *mut ffi::wxd_Frame_t, title_c.as_ptr()) };
+        unsafe { ffi::wxd_Frame_SetTitle(ptr, title_c.as_ptr()) };
     }
 
     /// Centers the frame on the screen or parent. (wxWidgets `Centre` method)
+    /// No-op if the frame has been destroyed.
     pub fn centre(&self) {
-        unsafe { ffi::wxd_Frame_Centre(self.window.as_ptr() as *mut ffi::wxd_Frame_t, ffi::WXD_ALIGN_CENTRE as i32) };
+        let ptr = self.frame_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_Frame_Centre(ptr, ffi::WXD_ALIGN_CENTRE as i32) };
     }
 
     /// Centers the frame on the screen. (wxWidgets `CenterOnScreen` method)
+    /// No-op if the frame has been destroyed.
     pub fn center_on_screen(&self) {
-        unsafe { ffi::wxd_Frame_CenterOnScreen(self.window.as_ptr() as *mut ffi::wxd_Frame_t) }
+        let ptr = self.frame_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_Frame_CenterOnScreen(ptr) }
     }
 
     /// Shows the frame.
+    /// No-op if the frame has been destroyed.
     pub fn show(&self, show: bool) {
-        unsafe { ffi::wxd_Frame_Show(self.window.as_ptr() as *mut ffi::wxd_Frame_t, show) };
+        let ptr = self.frame_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_Frame_Show(ptr, show) };
     }
 
     /// Sets the menu bar for this frame.
     /// The frame takes ownership of the menu bar.
+    /// No-op if the frame has been destroyed.
     pub fn set_menu_bar(&self, menu_bar: MenuBar) {
+        let ptr = self.frame_ptr();
+        if ptr.is_null() {
+            return;
+        }
         let menu_bar_ptr = unsafe { menu_bar.as_ptr() };
         // Frame takes ownership of the menu bar pointer, but MenuBar doesn't implement Drop
         // so no need to forget it
-        unsafe { ffi::wxd_Frame_SetMenuBar(self.window.as_ptr() as *mut _, menu_bar_ptr) };
+        unsafe { ffi::wxd_Frame_SetMenuBar(ptr, menu_bar_ptr) };
     }
 
     /// Gets the menu bar for this frame.
-    /// Returns None if no menu bar is set.
+    /// Returns None if no menu bar is set or if the frame has been destroyed.
     pub fn get_menu_bar(&self) -> Option<MenuBar> {
-        let menu_bar_ptr = unsafe { ffi::wxd_Frame_GetMenuBar(self.window.as_ptr() as *mut ffi::wxd_Frame_t) };
+        let ptr = self.frame_ptr();
+        if ptr.is_null() {
+            return None;
+        }
+        let menu_bar_ptr = unsafe { ffi::wxd_Frame_GetMenuBar(ptr) };
         if menu_bar_ptr.is_null() {
             None
         } else {
@@ -229,25 +290,38 @@ impl Frame {
     }
 
     /// Closes the frame.
+    /// No-op if the frame has been destroyed.
     pub fn close(&self, force: bool) {
+        let ptr = self.frame_ptr();
+        if ptr.is_null() {
+            return;
+        }
         // false = don't force close, allow events like EVT_CLOSE_WINDOW
-        unsafe { ffi::wxd_Frame_Close(self.window.as_ptr() as *mut ffi::wxd_Frame_t, force) };
+        unsafe { ffi::wxd_Frame_Close(ptr, force) };
     }
 
     /// Sets the frame's status bar.
+    /// No-op if the frame has been destroyed.
     pub fn set_existing_status_bar(&self, status_bar: Option<&StatusBar>) {
+        let ptr = self.frame_ptr();
+        if ptr.is_null() {
+            return;
+        }
         let sb_ptr = status_bar.map_or(ptr::null_mut(), |sb| sb.as_ptr() as *mut _);
-        let ptr = self.window.as_ptr() as *mut ffi::wxd_Frame_t;
         unsafe { ffi::wxd_Frame_SetStatusBar(ptr, sb_ptr) };
     }
 
     /// Creates and assigns a toolbar to the frame.
-    /// Returns `Some(ToolBar)` if successful, `None` otherwise.
+    /// Returns `Some(ToolBar)` if successful, `None` otherwise or if the frame has been destroyed.
     pub fn create_tool_bar(&self, style: Option<ToolBarStyle>, id: Id) -> Option<ToolBar> {
+        let ptr = self.frame_ptr();
+        if ptr.is_null() {
+            return None;
+        }
         // Use ToolBarStyle default bits if None
         let style_bits = style.map(|s| s.bits()).unwrap_or(ToolBarStyle::default().bits());
 
-        let tb_ptr = unsafe { ffi::wxd_Frame_CreateToolBar(self.window.as_ptr() as *mut _, style_bits as ffi::wxd_Style_t, id) };
+        let tb_ptr = unsafe { ffi::wxd_Frame_CreateToolBar(ptr, style_bits as ffi::wxd_Style_t, id) };
         if tb_ptr.is_null() {
             None
         } else {
@@ -256,28 +330,40 @@ impl Frame {
     }
 
     /// Creates a status bar for the frame.
+    /// Returns empty StatusBar if the frame has been destroyed.
     pub fn create_status_bar(&self, number: i32, style: i64, id: Id, name: &str) -> StatusBar {
+        let ptr = self.frame_ptr();
+        if ptr.is_null() {
+            // Return a StatusBar with null pointer if frame is invalid
+            return unsafe { StatusBar::from_ptr(ptr::null_mut()) };
+        }
         unsafe {
             let name_c = CString::new(name).unwrap_or_default();
-            let statbar_ptr = ffi::wxd_Frame_CreateStatusBar(
-                self.window.as_ptr() as *mut ffi::wxd_Frame_t,
-                number as c_int,
-                style as ffi::wxd_Style_t,
-                id,
-                name_c.as_ptr(),
-            );
+            let statbar_ptr =
+                ffi::wxd_Frame_CreateStatusBar(ptr, number as c_int, style as ffi::wxd_Style_t, id, name_c.as_ptr());
             StatusBar::from_ptr(statbar_ptr)
         }
     }
 
-    // New safe wrapper methods for wxFrame
+    /// Sets the status text in the specified field.
+    /// No-op if the frame has been destroyed.
     pub fn set_status_text(&self, text: &str, number: i32) {
+        let ptr = self.frame_ptr();
+        if ptr.is_null() {
+            return;
+        }
         let c_text = CString::new(text).expect("CString::new for status text failed");
-        unsafe { ffi::wxd_Frame_SetStatusText(self.window.as_ptr() as *mut ffi::wxd_Frame_t, c_text.as_ptr(), number) }
+        unsafe { ffi::wxd_Frame_SetStatusText(ptr, c_text.as_ptr(), number) }
     }
 
+    /// Gets the frame's title.
+    /// Returns empty string if the frame has been destroyed.
     pub fn get_title(&self) -> String {
-        let c_title_ptr = unsafe { ffi::wxd_Frame_GetTitle(self.window.as_ptr() as *mut ffi::wxd_Frame_t) };
+        let ptr = self.frame_ptr();
+        if ptr.is_null() {
+            return String::new();
+        }
+        let c_title_ptr = unsafe { ffi::wxd_Frame_GetTitle(ptr) };
         if c_title_ptr.is_null() {
             return String::new(); // Should ideally not happen if C returns empty string for null frame
         }
@@ -289,26 +375,55 @@ impl Frame {
         }
     }
 
+    /// Iconizes or restores the frame.
+    /// No-op if the frame has been destroyed.
     pub fn iconize(&self, iconize: bool) {
-        unsafe { ffi::wxd_Frame_Iconize(self.window.as_ptr() as *mut ffi::wxd_Frame_t, iconize) }
+        let ptr = self.frame_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_Frame_Iconize(ptr, iconize) }
     }
 
+    /// Returns true if the frame is iconized.
+    /// Returns false if the frame has been destroyed.
     pub fn is_iconized(&self) -> bool {
-        unsafe { ffi::wxd_Frame_IsIconized(self.window.as_ptr() as *mut ffi::wxd_Frame_t) }
+        let ptr = self.frame_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_Frame_IsIconized(ptr) }
     }
 
+    /// Maximizes or restores the frame.
+    /// No-op if the frame has been destroyed.
     pub fn maximize(&self, maximize: bool) {
-        unsafe { ffi::wxd_Frame_Maximize(self.window.as_ptr() as *mut ffi::wxd_Frame_t, maximize) }
+        let ptr = self.frame_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_Frame_Maximize(ptr, maximize) }
     }
 
+    /// Returns true if the frame is maximized.
+    /// Returns false if the frame has been destroyed.
     pub fn is_maximized(&self) -> bool {
-        unsafe { ffi::wxd_Frame_IsMaximized(self.window.as_ptr() as *mut ffi::wxd_Frame_t) }
+        let ptr = self.frame_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_Frame_IsMaximized(ptr) }
     }
 
     /// Sets the frame's icon from a bitmap.
     /// The bitmap will be converted to an icon internally.
+    /// No-op if the frame has been destroyed.
     pub fn set_icon(&self, bitmap: &Bitmap) {
-        unsafe { ffi::wxd_Frame_SetIconFromBitmap(self.window.as_ptr() as *mut ffi::wxd_Frame_t, bitmap.as_const_ptr()) };
+        let ptr = self.frame_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_Frame_SetIconFromBitmap(ptr, bitmap.as_const_ptr()) };
     }
 }
 
@@ -355,14 +470,34 @@ impl Frame {
     }
 }
 
-implement_widget_traits_with_target!(Frame, window, Window);
+// Manual WxWidget implementation for Frame (using WindowHandle)
+impl WxWidget for Frame {
+    fn handle_ptr(&self) -> *mut ffi::wxd_Window_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut())
+    }
+
+    fn is_valid(&self) -> bool {
+        self.handle.is_valid()
+    }
+}
+
+// Implement WxEvtHandler for event binding
+impl crate::event::WxEvtHandler for Frame {
+    unsafe fn get_event_handler_ptr(&self) -> *mut ffi::wxd_EvtHandler_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut()) as *mut ffi::wxd_EvtHandler_t
+    }
+}
+
+// Implement common event traits that all Window-based widgets support
+impl crate::event::WindowEvents for Frame {}
+impl crate::event::MenuEvents for Frame {}
 
 // Manual XRC Support for Frame - complex structure needs custom handling
 #[cfg(feature = "xrc")]
 impl crate::xrc::XrcSupport for Frame {
     unsafe fn from_xrc_ptr(ptr: *mut wxdragon_sys::wxd_Window_t) -> Self {
         Frame {
-            window: unsafe { Window::from_ptr(ptr) },
+            handle: WindowHandle::new(ptr),
             parent_ptr: std::ptr::null_mut(),
             _marker: PhantomData,
         }
@@ -377,7 +512,7 @@ impl crate::window::FromWindowWithClassName for Frame {
 
     unsafe fn from_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
         Frame {
-            window: unsafe { Window::from_ptr(ptr) },
+            handle: WindowHandle::new(ptr),
             parent_ptr: std::ptr::null_mut(),
             _marker: PhantomData,
         }

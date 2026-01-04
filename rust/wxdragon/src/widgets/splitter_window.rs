@@ -4,13 +4,33 @@
 use crate::event::{Event, EventType, WindowEvents, WxEvtHandler};
 use crate::geometry::{Point, Size};
 use crate::id::Id;
-use crate::window::WxWidget;
+use crate::window::{WindowHandle, WxWidget};
 use std::os::raw::c_int;
 use wxdragon_sys as ffi;
 
 /// Represents a wxSplitterWindow widget.
-#[derive(Clone)]
-pub struct SplitterWindow(pub(crate) *mut ffi::wxd_SplitterWindow_t);
+///
+/// SplitterWindow uses `WindowHandle` internally for safe memory management.
+/// When the underlying window is destroyed (by calling `destroy()` or when
+/// its parent is destroyed), the handle becomes invalid and all operations
+/// become safe no-ops.
+///
+/// # Example
+/// ```ignore
+/// let splitter = SplitterWindow::builder(&frame).build();
+///
+/// // SplitterWindow is Copy - no clone needed for closures!
+/// splitter.split_vertically(&left_panel, &right_panel, 200);
+///
+/// // After parent destruction, splitter operations are safe no-ops
+/// frame.destroy();
+/// assert!(!splitter.is_valid());
+/// ```
+#[derive(Clone, Copy)]
+pub struct SplitterWindow {
+    /// Safe handle to the underlying wxSplitterWindow - automatically invalidated on destroy
+    handle: WindowHandle,
+}
 
 widget_style_enum!(
     name: SplitterWindowStyle,
@@ -89,7 +109,9 @@ widget_builder!(
         if splitter_ptr.is_null() {
             panic!("Failed to create SplitterWindow");
         }
-        unsafe { SplitterWindow::from_ptr(splitter_ptr) }
+        SplitterWindow {
+            handle: WindowHandle::new(splitter_ptr as *mut ffi::wxd_Window_t),
+        }
     }
 );
 
@@ -99,16 +121,24 @@ impl SplitterWindow {
         SplitterWindowBuilder::new(parent)
     }
 
-    // Internal constructor - Revert back to crate-public
-    // SAFETY: Caller must ensure ptr is a valid wxd_SplitterWindow_t
-    pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_SplitterWindow_t) -> Self {
-        SplitterWindow(ptr)
+    /// Helper to get raw splitter pointer, returns null if widget has been destroyed
+    #[inline]
+    fn splitter_ptr(&self) -> *mut ffi::wxd_SplitterWindow_t {
+        self.handle
+            .get_ptr()
+            .map(|p| p as *mut ffi::wxd_SplitterWindow_t)
+            .unwrap_or(std::ptr::null_mut())
     }
 
     /// Initializes the splitter to contain the given window.
     /// Should be called after creation if the splitter is not split initially.
+    /// No-op if the splitter has been destroyed.
     pub fn initialize<W: WxWidget>(&self, window: &W) {
-        unsafe { ffi::wxd_SplitterWindow_Initialize(self.0, window.handle_ptr()) };
+        let ptr = self.splitter_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_SplitterWindow_Initialize(ptr, window.handle_ptr()) };
     }
 
     /// Splits the window vertically, putting `window1` on the left and `window2` on the right.
@@ -118,10 +148,14 @@ impl SplitterWindow {
     /// * `window2` - The window for the right pane.
     /// * `sash_position` - The initial position of the sash. If 0 or negative, a default position is used.
     ///
-    /// Returns `true` on success.
+    /// Returns `true` on success, `false` if the splitter has been destroyed.
     pub fn split_vertically<W1: WxWidget, W2: WxWidget>(&self, window1: &W1, window2: &W2, sash_position: i32) -> bool {
+        let ptr = self.splitter_ptr();
+        if ptr.is_null() {
+            return false;
+        }
         unsafe {
-            ffi::wxd_SplitterWindow_SplitVertically(self.0, window1.handle_ptr(), window2.handle_ptr(), sash_position as c_int)
+            ffi::wxd_SplitterWindow_SplitVertically(ptr, window1.handle_ptr(), window2.handle_ptr(), sash_position as c_int)
         }
     }
 
@@ -132,58 +166,83 @@ impl SplitterWindow {
     /// * `window2` - The window for the bottom pane.
     /// * `sash_position` - The initial position of the sash. If 0 or negative, a default position is used.
     ///
-    /// Returns `true` on success.
+    /// Returns `true` on success, `false` if the splitter has been destroyed.
     pub fn split_horizontally<W1: WxWidget, W2: WxWidget>(&self, window1: &W1, window2: &W2, sash_position: i32) -> bool {
+        let ptr = self.splitter_ptr();
+        if ptr.is_null() {
+            return false;
+        }
         unsafe {
-            ffi::wxd_SplitterWindow_SplitHorizontally(self.0, window1.handle_ptr(), window2.handle_ptr(), sash_position as c_int)
+            ffi::wxd_SplitterWindow_SplitHorizontally(ptr, window1.handle_ptr(), window2.handle_ptr(), sash_position as c_int)
         }
     }
 
-    /// Unspltis the window.
+    /// Unsplits the window.
     ///
     /// # Arguments
     /// * `to_remove` - Optional window to remove. If `None`, the second (right/bottom) window is removed.
     ///
-    /// Returns `true` on success.
+    /// Returns `true` on success, `false` if the splitter has been destroyed.
     pub fn unsplit<W: WxWidget>(&self, to_remove: Option<&W>) -> bool {
+        let ptr = self.splitter_ptr();
+        if ptr.is_null() {
+            return false;
+        }
         let remove_ptr = to_remove.map_or(std::ptr::null_mut(), |w| w.handle_ptr());
-        unsafe { ffi::wxd_SplitterWindow_Unsplit(self.0, remove_ptr) }
+        unsafe { ffi::wxd_SplitterWindow_Unsplit(ptr, remove_ptr) }
     }
 
     /// Sets the sash position.
+    /// No-op if the splitter has been destroyed.
     pub fn set_sash_position(&self, position: i32, redraw: bool) {
-        unsafe { ffi::wxd_SplitterWindow_SetSashPosition(self.0, position as c_int, redraw) };
+        let ptr = self.splitter_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_SplitterWindow_SetSashPosition(ptr, position as c_int, redraw) };
     }
 
     /// Gets the current sash position.
+    /// Returns 0 if the splitter has been destroyed.
     pub fn sash_position(&self) -> i32 {
-        unsafe { ffi::wxd_SplitterWindow_GetSashPosition(self.0) }
+        let ptr = self.splitter_ptr();
+        if ptr.is_null() {
+            return 0;
+        }
+        unsafe { ffi::wxd_SplitterWindow_GetSashPosition(ptr) }
     }
 
     /// Sets the minimum pane size (applies to both panes).
+    /// No-op if the splitter has been destroyed.
     pub fn set_minimum_pane_size(&self, size: i32) {
-        unsafe { ffi::wxd_SplitterWindow_SetMinimumPaneSize(self.0, size as c_int) };
+        let ptr = self.splitter_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_SplitterWindow_SetMinimumPaneSize(ptr, size as c_int) };
+    }
+
+    /// Returns the underlying WindowHandle for this splitter window.
+    pub fn window_handle(&self) -> WindowHandle {
+        self.handle
     }
 }
 
-// Implement the core WxWidget trait
+// Manual WxWidget implementation for SplitterWindow (using WindowHandle)
 impl WxWidget for SplitterWindow {
     fn handle_ptr(&self) -> *mut ffi::wxd_Window_t {
-        self.0 as *mut ffi::wxd_Window_t
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut())
+    }
+
+    fn is_valid(&self) -> bool {
+        self.handle.is_valid()
     }
 }
 
-// Implement the event handling trait
+// Implement WxEvtHandler for event binding
 impl WxEvtHandler for SplitterWindow {
     unsafe fn get_event_handler_ptr(&self) -> *mut ffi::wxd_EvtHandler_t {
-        self.0 as *mut ffi::wxd_EvtHandler_t
-    }
-}
-
-// No explicit Drop implementation needed - child widget managed by parent
-impl Drop for SplitterWindow {
-    fn drop(&mut self) {
-        // Child widgets are typically managed by their parent in wxWidgets
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut()) as *mut ffi::wxd_EvtHandler_t
     }
 }
 
@@ -201,21 +260,25 @@ crate::implement_widget_local_event_handlers!(
 // Add WindowEvents implementation
 impl WindowEvents for SplitterWindow {}
 
-// Add XRC Support - enables SplitterWindow to be created from XRC-managed pointers
+// XRC Support - enables SplitterWindow to be created from XRC-managed pointers
 #[cfg(feature = "xrc")]
 impl crate::xrc::XrcSupport for SplitterWindow {
     unsafe fn from_xrc_ptr(ptr: *mut wxdragon_sys::wxd_Window_t) -> Self {
-        SplitterWindow(ptr as *mut ffi::wxd_SplitterWindow_t)
+        SplitterWindow {
+            handle: WindowHandle::new(ptr),
+        }
     }
 }
 
-// Manual widget casting support for SplitterWindow - tuple struct needs custom handling
+// Enable widget casting for SplitterWindow
 impl crate::window::FromWindowWithClassName for SplitterWindow {
     fn class_name() -> &'static str {
         "wxSplitterWindow"
     }
 
     unsafe fn from_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
-        SplitterWindow(ptr as *mut ffi::wxd_SplitterWindow_t)
+        SplitterWindow {
+            handle: WindowHandle::new(ptr),
+        }
     }
 }

@@ -1,10 +1,14 @@
 //!
 //! Safe wrapper for wxToggleButton.
 
+use crate::event::WxEvtHandler;
 use crate::event::button_events::ButtonEvents;
 use crate::geometry::{Point, Size};
 use crate::id::Id;
-use crate::window::{Window, WxWidget};
+use crate::window::{WindowHandle, WxWidget};
+// Window is used by XRC support for backwards compatibility
+#[allow(unused_imports)]
+use crate::window::Window;
 use std::ffi::{CStr, CString};
 use wxdragon_sys as ffi;
 
@@ -26,9 +30,30 @@ widget_style_enum!(
 );
 
 /// Represents a wxToggleButton control.
+///
+/// ToggleButton uses `WindowHandle` internally for safe memory management.
+/// When the underlying window is destroyed (by calling `destroy()` or when
+/// its parent is destroyed), the handle becomes invalid and all operations
+/// become safe no-ops.
+///
+/// # Example
+/// ```ignore
+/// let toggle = ToggleButton::builder(&frame).label("Toggle me").build();
+///
+/// // ToggleButton is Copy - no clone needed for closures!
+/// toggle.bind_click(move |_| {
+///     // Safe: if toggle was destroyed, this is a no-op
+///     toggle.set_value(!toggle.get_value());
+/// });
+///
+/// // After parent destruction, toggle operations are safe no-ops
+/// frame.destroy();
+/// assert!(!toggle.is_valid());
+/// ```
 #[derive(Clone, Copy)]
 pub struct ToggleButton {
-    window: Window,
+    /// Safe handle to the underlying wxToggleButton - automatically invalidated on destroy
+    handle: WindowHandle,
 }
 
 impl ToggleButton {
@@ -37,18 +62,19 @@ impl ToggleButton {
         ToggleButtonBuilder::new(parent)
     }
 
-    /// Creates a new ToggleButton wrapper from a raw pointer.
-    /// # Safety
-    /// The pointer must be a valid `wxd_ToggleButton_t` pointer.
-    pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_ToggleButton_t) -> Self {
-        ToggleButton {
-            window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
+    /// Creates a new ToggleButton from a raw pointer.
+    /// This is intended for internal use by other widget wrappers.
+    #[allow(dead_code)]
+    pub(crate) fn from_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        Self {
+            handle: WindowHandle::new(ptr),
         }
     }
 
-    /// Internal implementation used by the builder.
+    /// Creates a new ToggleButton (low-level constructor used by the builder)
     fn new_impl(parent_ptr: *mut ffi::wxd_Window_t, id: Id, label: &str, pos: Point, size: Size, style: i64) -> Self {
-        let c_label = CString::new(label).unwrap_or_default();
+        assert!(!parent_ptr.is_null(), "ToggleButton requires a parent");
+        let c_label = CString::new(label).expect("CString::new failed");
 
         let ptr = unsafe {
             ffi::wxd_ToggleButton_Create(
@@ -65,56 +91,103 @@ impl ToggleButton {
             panic!("Failed to create ToggleButton widget");
         }
 
-        unsafe { ToggleButton::from_ptr(ptr) }
+        // Create a WindowHandle which automatically registers for destroy events
+        ToggleButton {
+            handle: WindowHandle::new(ptr as *mut ffi::wxd_Window_t),
+        }
+    }
+
+    /// Helper to get raw toggle button pointer, returns null if widget has been destroyed
+    #[inline]
+    fn togglebutton_ptr(&self) -> *mut ffi::wxd_ToggleButton_t {
+        self.handle
+            .get_ptr()
+            .map(|p| p as *mut ffi::wxd_ToggleButton_t)
+            .unwrap_or(std::ptr::null_mut())
     }
 
     /// Gets the current state of the toggle button (true if pressed/down, false if not).
+    /// Returns false if the button has been destroyed.
     pub fn get_value(&self) -> bool {
-        unsafe { ffi::wxd_ToggleButton_GetValue(self.window.as_ptr() as *mut _) }
+        let ptr = self.togglebutton_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_ToggleButton_GetValue(ptr) }
     }
 
     /// Sets the state of the toggle button.
+    /// No-op if the button has been destroyed.
     pub fn set_value(&self, state: bool) {
-        unsafe { ffi::wxd_ToggleButton_SetValue(self.window.as_ptr() as *mut _, state) }
+        let ptr = self.togglebutton_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_ToggleButton_SetValue(ptr, state) }
     }
 
     /// Sets the button label.
+    /// No-op if the button has been destroyed.
     pub fn set_label(&self, label: &str) {
-        let c_label = CString::new(label).expect("Invalid CString for ToggleButton label");
+        let ptr = self.togglebutton_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        let c_label = CString::new(label).expect("CString::new failed");
         unsafe {
-            ffi::wxd_ToggleButton_SetLabel(self.window.as_ptr() as *mut _, c_label.as_ptr());
+            ffi::wxd_ToggleButton_SetLabel(ptr, c_label.as_ptr());
         }
     }
 
     /// Gets the button label.
+    /// Returns empty string if the button has been destroyed.
     pub fn get_label(&self) -> String {
-        let btn = self.window.as_ptr() as *mut _;
-        let mut buffer = [0; 1024];
-        let len_needed = unsafe { ffi::wxd_ToggleButton_GetLabel(btn, buffer.as_mut_ptr(), buffer.len()) };
-
-        if len_needed < 0 {
-            return String::new(); // Error
+        let ptr = self.togglebutton_ptr();
+        if ptr.is_null() {
+            return String::new();
         }
-
-        if len_needed < buffer.len() as i32 {
-            unsafe { CStr::from_ptr(buffer.as_ptr()).to_string_lossy().into_owned() }
-        } else {
-            let mut vec_buffer = vec![0; len_needed as usize + 1];
-            let len_copied = unsafe { ffi::wxd_ToggleButton_GetLabel(btn, vec_buffer.as_mut_ptr(), vec_buffer.len()) };
-            if len_copied == len_needed {
-                unsafe { CStr::from_ptr(vec_buffer.as_ptr()).to_string_lossy().into_owned() }
-            } else {
-                String::new() // Error on second call
-            }
+        let len = unsafe { ffi::wxd_ToggleButton_GetLabel(ptr, std::ptr::null_mut(), 0) };
+        if len <= 0 {
+            return String::new();
         }
+        let mut buf = vec![0; len as usize + 1];
+        unsafe { ffi::wxd_ToggleButton_GetLabel(ptr, buf.as_mut_ptr(), buf.len()) };
+        unsafe { CStr::from_ptr(buf.as_ptr()).to_string_lossy().into_owned() }
+    }
+
+    /// Returns the underlying WindowHandle for this toggle button.
+    pub fn window_handle(&self) -> WindowHandle {
+        self.handle
     }
 }
 
 // Implement ButtonEvents trait for ToggleButton
 impl ButtonEvents for ToggleButton {}
 
-// Apply common trait implementations for this widget
-implement_widget_traits_with_target!(ToggleButton, window, Window);
+// Manual WxWidget implementation for ToggleButton (using WindowHandle)
+impl WxWidget for ToggleButton {
+    fn handle_ptr(&self) -> *mut ffi::wxd_Window_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut())
+    }
+
+    fn is_valid(&self) -> bool {
+        self.handle.is_valid()
+    }
+}
+
+// Note: We don't implement Deref to Window because returning a reference
+// to a temporary Window is unsound. Users can access window methods through
+// the WxWidget trait methods directly.
+
+// Implement WxEvtHandler for event binding
+impl WxEvtHandler for ToggleButton {
+    unsafe fn get_event_handler_ptr(&self) -> *mut ffi::wxd_EvtHandler_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut()) as *mut ffi::wxd_EvtHandler_t
+    }
+}
+
+// Implement common event traits that all Window-based widgets support
+impl crate::event::WindowEvents for ToggleButton {}
 
 // Use the widget_builder macro for ToggleButton
 widget_builder!(
@@ -125,19 +198,37 @@ widget_builder!(
         label: String = String::new()
     },
     build_impl: |slf| {
+        let parent_ptr = slf.parent.handle_ptr();
         ToggleButton::new_impl(
-            slf.parent.handle_ptr(),
+            parent_ptr,
             slf.id,
             &slf.label,
             slf.pos,
             slf.size,
-            slf.style.bits()
+            slf.style.bits(),
         )
     }
 );
 
-// Add XRC Support - enables ToggleButton to be created from XRC-managed pointers
-impl_xrc_support!(ToggleButton, { window });
+// XRC Support - enables ToggleButton to be created from XRC-managed pointers
+#[cfg(feature = "xrc")]
+impl crate::xrc::XrcSupport for ToggleButton {
+    unsafe fn from_xrc_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        ToggleButton {
+            handle: WindowHandle::new(ptr),
+        }
+    }
+}
 
-// Widget casting support for ToggleButton
-impl_widget_cast!(ToggleButton, "wxToggleButton", { window });
+// Enable widget casting for ToggleButton
+impl crate::window::FromWindowWithClassName for ToggleButton {
+    fn class_name() -> &'static str {
+        "wxToggleButton"
+    }
+
+    unsafe fn from_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        ToggleButton {
+            handle: WindowHandle::new(ptr),
+        }
+    }
+}

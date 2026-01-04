@@ -1,6 +1,8 @@
 //! DataViewListCtrl implementation.
 
-use crate::{Id, Point, Size, Window, WxWidget};
+use crate::event::WxEvtHandler;
+use crate::window::{WindowHandle, WxWidget};
+use crate::{Id, Point, Size};
 use wxdragon_sys as ffi;
 
 use super::enums::DataViewColumnFlags;
@@ -13,8 +15,15 @@ use super::{
 ///
 /// DataViewListCtrl is a convenience wrapper around DataViewCtrl that simplifies
 /// the display of tabular data without requiring a custom model.
+///
+/// DataViewListCtrl uses `WindowHandle` internally for safe memory management.
+/// When the underlying window is destroyed (by calling `destroy()` or when
+/// its parent is destroyed), the handle becomes invalid and all operations
+/// become safe no-ops.
+#[derive(Clone, Copy)]
 pub struct DataViewListCtrl {
-    window: Window,
+    /// Safe handle to the underlying wxDataViewListCtrl - automatically invalidated on destroy
+    handle: WindowHandle,
 }
 
 impl DataViewListCtrl {
@@ -24,7 +33,7 @@ impl DataViewListCtrl {
     }
 
     fn new_impl(parent_ptr: *mut ffi::wxd_Window_t, id: i32, pos: Point, size: Size, style: i64) -> Self {
-        let handle = unsafe {
+        let ptr = unsafe {
             ffi::wxd_DataViewListCtrl_Create(
                 parent_ptr,
                 id as i64,
@@ -34,8 +43,24 @@ impl DataViewListCtrl {
             )
         };
 
-        let window = unsafe { Window::from_ptr(handle) };
-        Self { window }
+        if ptr.is_null() {
+            panic!("Failed to create DataViewListCtrl widget");
+        }
+
+        DataViewListCtrl {
+            handle: WindowHandle::new(ptr),
+        }
+    }
+
+    /// Helper to get raw window pointer, returns null if widget has been destroyed
+    #[inline]
+    fn dvlc_ptr(&self) -> *mut ffi::wxd_Window_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut())
+    }
+
+    /// Returns the underlying WindowHandle for this DataViewListCtrl.
+    pub fn window_handle(&self) -> WindowHandle {
+        self.handle
     }
 
     /// Appends a text column to this list control.
@@ -59,11 +84,13 @@ impl DataViewListCtrl {
         width: i32,
         flags: DataViewColumnFlags,
     ) -> bool {
+        let ptr = self.dvlc_ptr();
+        if ptr.is_null() {
+            return false;
+        }
         let renderer = DataViewTextRenderer::new(VariantType::String, DataViewCellMode::Inert, align);
         let column = DataViewColumn::new(label, &renderer, model_column, width, align, flags);
-
-        let ctrl_ptr = self.window.handle_ptr();
-        unsafe { ffi::wxd_DataViewCtrl_AppendColumn(ctrl_ptr, column.as_raw()) }
+        unsafe { ffi::wxd_DataViewCtrl_AppendColumn(ptr, column.as_raw()) }
     }
 
     /// Appends a toggle column to this list control.
@@ -87,11 +114,13 @@ impl DataViewListCtrl {
         width: i32,
         flags: DataViewColumnFlags,
     ) -> bool {
+        let ptr = self.dvlc_ptr();
+        if ptr.is_null() {
+            return false;
+        }
         let renderer = DataViewToggleRenderer::new(VariantType::Bool, DataViewCellMode::Activatable, align);
         let column = DataViewColumn::new(label, &renderer, model_column, width, align, flags);
-
-        let ctrl_ptr = self.window.handle_ptr();
-        unsafe { ffi::wxd_DataViewCtrl_AppendColumn(ctrl_ptr, column.as_raw()) }
+        unsafe { ffi::wxd_DataViewCtrl_AppendColumn(ptr, column.as_raw()) }
     }
 
     /// Appends a progress column to this list control.
@@ -107,11 +136,13 @@ impl DataViewListCtrl {
     ///
     /// `true` if the column was successfully appended, `false` otherwise.
     pub fn append_progress_column(&self, label: &str, model_column: usize, width: i32, flags: DataViewColumnFlags) -> bool {
+        let ptr = self.dvlc_ptr();
+        if ptr.is_null() {
+            return false;
+        }
         let renderer = DataViewProgressRenderer::new(VariantType::Int32, DataViewCellMode::Inert);
         let column = DataViewColumn::new(label, &renderer, model_column, width, DataViewAlign::Center, flags);
-
-        let ctrl_ptr = self.window.handle_ptr();
-        unsafe { ffi::wxd_DataViewCtrl_AppendColumn(ctrl_ptr, column.as_raw()) }
+        unsafe { ffi::wxd_DataViewCtrl_AppendColumn(ptr, column.as_raw()) }
     }
 
     /// Selects the specified row.
@@ -124,7 +155,11 @@ impl DataViewListCtrl {
     ///
     /// `true` if the row was successfully selected, `false` otherwise.
     pub fn select_row(&self, row: usize) -> bool {
-        unsafe { ffi::wxd_DataViewCtrl_SelectRow(self.window.handle_ptr(), row as i64) }
+        let ptr = self.dvlc_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_DataViewCtrl_SelectRow(ptr, row as i64) }
     }
 
     /// Gets the currently selected row.
@@ -133,17 +168,44 @@ impl DataViewListCtrl {
     ///
     /// An `Option` containing the index of the selected row, or `None` if no row is selected.
     pub fn get_selected_row(&self) -> Option<usize> {
-        let row = unsafe { ffi::wxd_DataViewCtrl_GetSelectedRow(self.window.handle_ptr()) };
+        let ptr = self.dvlc_ptr();
+        if ptr.is_null() {
+            return None;
+        }
+        let row = unsafe { ffi::wxd_DataViewCtrl_GetSelectedRow(ptr) };
         if row >= 0 { Some(row as usize) } else { None }
     }
 
     /// Deselects all currently selected items.
     pub fn unselect_all(&self) {
-        unsafe { ffi::wxd_DataViewCtrl_UnselectAll(self.window.handle_ptr()) }
+        let ptr = self.dvlc_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_DataViewCtrl_UnselectAll(ptr) }
     }
 }
 
-implement_widget_traits_with_target!(DataViewListCtrl, window, Window);
+// Manual WxWidget implementation for DataViewListCtrl (using WindowHandle)
+impl WxWidget for DataViewListCtrl {
+    fn handle_ptr(&self) -> *mut ffi::wxd_Window_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut())
+    }
+
+    fn is_valid(&self) -> bool {
+        self.handle.is_valid()
+    }
+}
+
+// Implement WxEvtHandler for event binding
+impl WxEvtHandler for DataViewListCtrl {
+    unsafe fn get_event_handler_ptr(&self) -> *mut ffi::wxd_EvtHandler_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut()) as *mut ffi::wxd_EvtHandler_t
+    }
+}
+
+// Implement common event traits that all Window-based widgets support
+impl crate::event::WindowEvents for DataViewListCtrl {}
 
 widget_builder!(
     name: DataViewListCtrl,

@@ -5,7 +5,7 @@ use crate::menus::Menu;
 #[cfg(feature = "xrc")]
 use crate::menus::MenuItem;
 #[cfg(feature = "xrc")]
-use crate::window::Window;
+use crate::window::WindowHandle;
 #[cfg(feature = "xrc")]
 use crate::xrc::XmlResource;
 use std::ffi::CString;
@@ -34,8 +34,8 @@ impl MenuBar {
     /// Gets a menu item by its XRC name from any menu in this menubar.
     /// Returns a MenuItem wrapper that can be used for event binding.
     #[cfg(feature = "xrc")]
-    pub fn get_item_by_name(&self, parent_window: &Window, item_name: &str) -> Option<MenuItem> {
-        MenuItem::from_xrc_name(parent_window, item_name)
+    pub fn get_item_by_name(&self, parent_handle: WindowHandle, item_name: &str) -> Option<MenuItem> {
+        MenuItem::from_xrc_name(parent_handle, item_name)
     }
 
     /// Special XRC loading method for menubars.

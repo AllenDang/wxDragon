@@ -2,10 +2,13 @@
 //! Safe wrapper for wxRichTextCtrl.
 
 use crate::event::TextEvents;
-use crate::event::{Event, EventType};
+use crate::event::{Event, EventType, WxEvtHandler};
 use crate::geometry::{Point, Size};
 use crate::id::Id;
-use crate::window::{Window, WxWidget};
+use crate::window::{WindowHandle, WxWidget};
+// Window is used by impl_xrc_support for backwards compatibility
+#[allow(unused_imports)]
+use crate::window::Window;
 use std::ffi::CString;
 use std::os::raw::c_char;
 use wxdragon_sys as ffi;
@@ -121,9 +124,30 @@ impl RichTextCtrlEventData {
 /// RichTextCtrl is a rich text editor that supports formatted text with different fonts,
 /// colors, styles, and other formatting options. It provides a comprehensive set of
 /// editing and formatting capabilities.
+///
+/// RichTextCtrl uses `WindowHandle` internally for safe memory management.
+/// When the underlying window is destroyed (by calling `destroy()` or when
+/// its parent is destroyed), the handle becomes invalid and all operations
+/// become safe no-ops.
+///
+/// # Example
+/// ```ignore
+/// let rtc = RichTextCtrl::builder(&frame).build();
+///
+/// // RichTextCtrl is Copy - no clone needed for closures!
+/// rtc.bind_text_changed(move |_| {
+///     // Safe: if rtc was destroyed, this is a no-op
+///     rtc.append_text("Changed!");
+/// });
+///
+/// // After parent destruction, rtc operations are safe no-ops
+/// frame.destroy();
+/// assert!(!rtc.is_valid());
+/// ```
 #[derive(Clone, Copy)]
 pub struct RichTextCtrl {
-    window: Window,
+    /// Safe handle to the underlying wxRichTextCtrl - automatically invalidated on destroy
+    handle: WindowHandle,
 }
 
 impl RichTextCtrl {
@@ -132,17 +156,18 @@ impl RichTextCtrl {
         RichTextCtrlBuilder::new(parent)
     }
 
-    /// Creates a new RichTextCtrl wrapper from a raw pointer.
-    /// # Safety
-    /// The pointer must be a valid `wxd_RichTextCtrl_t` pointer.
-    pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_RichTextCtrl_t) -> Self {
-        RichTextCtrl {
-            window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
+    /// Creates a new RichTextCtrl from a raw pointer.
+    /// This is intended for internal use by other widget wrappers.
+    #[allow(dead_code)]
+    pub(crate) fn from_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        Self {
+            handle: WindowHandle::new(ptr),
         }
     }
 
     /// Internal implementation used by the builder.
     fn new_impl(parent_ptr: *mut ffi::wxd_Window_t, id: Id, value: &str, pos: Point, size: Size, style: i64) -> Self {
+        assert!(!parent_ptr.is_null(), "RichTextCtrl requires a parent");
         let c_value = CString::new(value).unwrap_or_default();
 
         let ptr = unsafe {
@@ -160,26 +185,44 @@ impl RichTextCtrl {
             panic!("Failed to create RichTextCtrl widget");
         }
 
-        unsafe { RichTextCtrl::from_ptr(ptr) }
+        // Create a WindowHandle which automatically registers for destroy events
+        RichTextCtrl {
+            handle: WindowHandle::new(ptr as *mut ffi::wxd_Window_t),
+        }
+    }
+
+    /// Helper to get raw richtextctrl pointer, returns null if widget has been destroyed
+    #[inline]
+    fn richtextctrl_ptr(&self) -> *mut ffi::wxd_RichTextCtrl_t {
+        self.handle
+            .get_ptr()
+            .map(|p| p as *mut ffi::wxd_RichTextCtrl_t)
+            .unwrap_or(std::ptr::null_mut())
     }
 
     // --- Text Content Operations ---
 
     /// Sets the text value of the control.
+    /// No-op if the control has been destroyed.
     pub fn set_value(&self, value: &str) {
+        let ptr = self.richtextctrl_ptr();
+        if ptr.is_null() {
+            return;
+        }
         let c_value = CString::new(value).unwrap_or_default();
-        unsafe { ffi::wxd_RichTextCtrl_SetValue(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t, c_value.as_ptr()) };
+        unsafe { ffi::wxd_RichTextCtrl_SetValue(ptr, c_value.as_ptr()) };
     }
 
     /// Gets the current text value of the control.
+    /// Returns empty string if the control has been destroyed.
     pub fn get_value(&self) -> String {
+        let ptr = self.richtextctrl_ptr();
+        if ptr.is_null() {
+            return String::new();
+        }
         unsafe {
             let mut buffer: Vec<c_char> = vec![0; 1024];
-            let len = ffi::wxd_RichTextCtrl_GetValue(
-                self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t,
-                buffer.as_mut_ptr(),
-                buffer.len() as i32,
-            );
+            let len = ffi::wxd_RichTextCtrl_GetValue(ptr, buffer.as_mut_ptr(), buffer.len() as i32);
             if len >= 0 {
                 let byte_slice = std::slice::from_raw_parts(buffer.as_ptr() as *const u8, len as usize);
                 String::from_utf8_lossy(byte_slice).to_string()
@@ -190,40 +233,59 @@ impl RichTextCtrl {
     }
 
     /// Writes text at the current insertion point.
+    /// No-op if the control has been destroyed.
     pub fn write_text(&self, text: &str) {
+        let ptr = self.richtextctrl_ptr();
+        if ptr.is_null() {
+            return;
+        }
         let c_text = CString::new(text).unwrap_or_default();
-        unsafe { ffi::wxd_RichTextCtrl_WriteText(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t, c_text.as_ptr()) };
+        unsafe { ffi::wxd_RichTextCtrl_WriteText(ptr, c_text.as_ptr()) };
     }
 
     /// Appends text to the end of the control.
+    /// No-op if the control has been destroyed.
     pub fn append_text(&self, text: &str) {
+        let ptr = self.richtextctrl_ptr();
+        if ptr.is_null() {
+            return;
+        }
         let c_text = CString::new(text).unwrap_or_default();
-        unsafe { ffi::wxd_RichTextCtrl_AppendText(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t, c_text.as_ptr()) };
+        unsafe { ffi::wxd_RichTextCtrl_AppendText(ptr, c_text.as_ptr()) };
     }
 
     /// Clears all text in the control.
+    /// No-op if the control has been destroyed.
     pub fn clear(&self) {
-        unsafe { ffi::wxd_RichTextCtrl_Clear(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t) };
+        let ptr = self.richtextctrl_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_RichTextCtrl_Clear(ptr) };
     }
 
     /// Returns the length of the text.
+    /// Returns 0 if the control has been destroyed.
     pub fn get_length(&self) -> i32 {
-        unsafe { ffi::wxd_RichTextCtrl_GetLength(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t) }
+        let ptr = self.richtextctrl_ptr();
+        if ptr.is_null() {
+            return 0;
+        }
+        unsafe { ffi::wxd_RichTextCtrl_GetLength(ptr) }
     }
 
     // --- Text Range Operations ---
 
     /// Gets text in the specified range.
+    /// Returns empty string if the control has been destroyed.
     pub fn get_range(&self, from: i64, to: i64) -> String {
+        let ptr = self.richtextctrl_ptr();
+        if ptr.is_null() {
+            return String::new();
+        }
         unsafe {
             let mut buffer: Vec<c_char> = vec![0; 1024];
-            let len = ffi::wxd_RichTextCtrl_GetRange(
-                self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t,
-                from,
-                to,
-                buffer.as_mut_ptr(),
-                buffer.len() as i32,
-            );
+            let len = ffi::wxd_RichTextCtrl_GetRange(ptr, from, to, buffer.as_mut_ptr(), buffer.len() as i32);
             if len >= 0 {
                 let byte_slice = std::slice::from_raw_parts(buffer.as_ptr() as *const u8, len as usize);
                 String::from_utf8_lossy(byte_slice).to_string()
@@ -234,27 +296,38 @@ impl RichTextCtrl {
     }
 
     /// Sets the selection range.
+    /// No-op if the control has been destroyed.
     pub fn set_selection(&self, from: i64, to: i64) {
-        unsafe { ffi::wxd_RichTextCtrl_SetSelection(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t, from, to) };
+        let ptr = self.richtextctrl_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_RichTextCtrl_SetSelection(ptr, from, to) };
     }
 
     /// Gets the current selection range.
+    /// Returns (0, 0) if the control has been destroyed.
     pub fn get_selection(&self) -> (i64, i64) {
+        let ptr = self.richtextctrl_ptr();
+        if ptr.is_null() {
+            return (0, 0);
+        }
         let mut from = 0i64;
         let mut to = 0i64;
-        unsafe { ffi::wxd_RichTextCtrl_GetSelection(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t, &mut from, &mut to) };
+        unsafe { ffi::wxd_RichTextCtrl_GetSelection(ptr, &mut from, &mut to) };
         (from, to)
     }
 
     /// Gets the currently selected text.
+    /// Returns empty string if the control has been destroyed.
     pub fn get_selected_text(&self) -> String {
+        let ptr = self.richtextctrl_ptr();
+        if ptr.is_null() {
+            return String::new();
+        }
         unsafe {
             let mut buffer: Vec<c_char> = vec![0; 1024];
-            let len = ffi::wxd_RichTextCtrl_GetSelectedText(
-                self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t,
-                buffer.as_mut_ptr(),
-                buffer.len() as i32,
-            );
+            let len = ffi::wxd_RichTextCtrl_GetSelectedText(ptr, buffer.as_mut_ptr(), buffer.len() as i32);
             if len >= 0 {
                 let byte_slice = std::slice::from_raw_parts(buffer.as_ptr() as *const u8, len as usize);
                 String::from_utf8_lossy(byte_slice).to_string()
@@ -267,183 +340,358 @@ impl RichTextCtrl {
     // --- Editing Operations ---
 
     /// Cuts the selected text to the clipboard.
+    /// No-op if the control has been destroyed.
     pub fn cut(&self) {
-        unsafe { ffi::wxd_RichTextCtrl_Cut(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t) };
+        let ptr = self.richtextctrl_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_RichTextCtrl_Cut(ptr) };
     }
 
     /// Copies the selected text to the clipboard.
+    /// No-op if the control has been destroyed.
     pub fn copy(&self) {
-        unsafe { ffi::wxd_RichTextCtrl_Copy(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t) };
+        let ptr = self.richtextctrl_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_RichTextCtrl_Copy(ptr) };
     }
 
     /// Pastes text from the clipboard.
+    /// No-op if the control has been destroyed.
     pub fn paste(&self) {
-        unsafe { ffi::wxd_RichTextCtrl_Paste(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t) };
+        let ptr = self.richtextctrl_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_RichTextCtrl_Paste(ptr) };
     }
 
     /// Undoes the last operation.
+    /// No-op if the control has been destroyed.
     pub fn undo(&self) {
-        unsafe { ffi::wxd_RichTextCtrl_Undo(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t) };
+        let ptr = self.richtextctrl_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_RichTextCtrl_Undo(ptr) };
     }
 
     /// Redoes the last undone operation.
+    /// No-op if the control has been destroyed.
     pub fn redo(&self) {
-        unsafe { ffi::wxd_RichTextCtrl_Redo(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t) };
+        let ptr = self.richtextctrl_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_RichTextCtrl_Redo(ptr) };
     }
 
     /// Returns true if undo is available.
+    /// Returns false if the control has been destroyed.
     pub fn can_undo(&self) -> bool {
-        unsafe { ffi::wxd_RichTextCtrl_CanUndo(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t) }
+        let ptr = self.richtextctrl_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_RichTextCtrl_CanUndo(ptr) }
     }
 
     /// Returns true if redo is available.
+    /// Returns false if the control has been destroyed.
     pub fn can_redo(&self) -> bool {
-        unsafe { ffi::wxd_RichTextCtrl_CanRedo(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t) }
+        let ptr = self.richtextctrl_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_RichTextCtrl_CanRedo(ptr) }
     }
 
     // --- State Operations ---
 
     /// Makes the text control editable or read-only.
+    /// No-op if the control has been destroyed.
     pub fn set_editable(&self, editable: bool) {
-        unsafe { ffi::wxd_RichTextCtrl_SetEditable(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t, editable) };
+        let ptr = self.richtextctrl_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_RichTextCtrl_SetEditable(ptr, editable) };
     }
 
     /// Returns true if the control is editable.
+    /// Returns false if the control has been destroyed.
     pub fn is_editable(&self) -> bool {
-        unsafe { ffi::wxd_RichTextCtrl_IsEditable(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t) }
+        let ptr = self.richtextctrl_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_RichTextCtrl_IsEditable(ptr) }
     }
 
     /// Returns true if the control has been modified.
+    /// Returns false if the control has been destroyed.
     pub fn is_modified(&self) -> bool {
-        unsafe { ffi::wxd_RichTextCtrl_IsModified(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t) }
+        let ptr = self.richtextctrl_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_RichTextCtrl_IsModified(ptr) }
     }
 
     /// Marks the control as dirty (modified).
+    /// No-op if the control has been destroyed.
     pub fn mark_dirty(&self) {
-        unsafe { ffi::wxd_RichTextCtrl_MarkDirty(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t) };
+        let ptr = self.richtextctrl_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_RichTextCtrl_MarkDirty(ptr) };
     }
 
     /// Discards any edits and marks the control as unmodified.
+    /// No-op if the control has been destroyed.
     pub fn discard_edits(&self) {
-        unsafe { ffi::wxd_RichTextCtrl_DiscardEdits(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t) };
+        let ptr = self.richtextctrl_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_RichTextCtrl_DiscardEdits(ptr) };
     }
 
     // --- Position Operations ---
 
     /// Gets the insertion point of the control.
+    /// Returns 0 if the control has been destroyed.
     pub fn get_insertion_point(&self) -> i64 {
-        unsafe { ffi::wxd_RichTextCtrl_GetInsertionPoint(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t) }
+        let ptr = self.richtextctrl_ptr();
+        if ptr.is_null() {
+            return 0;
+        }
+        unsafe { ffi::wxd_RichTextCtrl_GetInsertionPoint(ptr) }
     }
 
     /// Sets the insertion point of the control.
+    /// No-op if the control has been destroyed.
     pub fn set_insertion_point(&self, pos: i64) {
-        unsafe { ffi::wxd_RichTextCtrl_SetInsertionPoint(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t, pos) };
+        let ptr = self.richtextctrl_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_RichTextCtrl_SetInsertionPoint(ptr, pos) };
     }
 
     /// Sets the insertion point to the end of the text.
+    /// No-op if the control has been destroyed.
     pub fn set_insertion_point_end(&self) {
-        unsafe { ffi::wxd_RichTextCtrl_SetInsertionPointEnd(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t) };
+        let ptr = self.richtextctrl_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_RichTextCtrl_SetInsertionPointEnd(ptr) };
     }
 
     /// Returns the last position in the control.
+    /// Returns 0 if the control has been destroyed.
     pub fn get_last_position(&self) -> i64 {
-        unsafe { ffi::wxd_RichTextCtrl_GetLastPosition(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t) }
+        let ptr = self.richtextctrl_ptr();
+        if ptr.is_null() {
+            return 0;
+        }
+        unsafe { ffi::wxd_RichTextCtrl_GetLastPosition(ptr) }
     }
 
     // --- File Operations ---
 
     /// Loads a file into the control.
+    /// Returns false if the control has been destroyed.
     pub fn load_file(&self, filename: &str, file_type: RichTextFileType) -> bool {
+        let ptr = self.richtextctrl_ptr();
+        if ptr.is_null() {
+            return false;
+        }
         let c_filename = CString::new(filename).unwrap_or_default();
-        let ptr = self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t;
         unsafe { ffi::wxd_RichTextCtrl_LoadFile(ptr, c_filename.as_ptr(), file_type.into()) }
     }
 
     /// Saves the content to a file.
+    /// Returns false if the control has been destroyed.
     pub fn save_file(&self, filename: &str, file_type: RichTextFileType) -> bool {
+        let ptr = self.richtextctrl_ptr();
+        if ptr.is_null() {
+            return false;
+        }
         let c_filename = CString::new(filename).unwrap_or_default();
-        let ptr = self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t;
         unsafe { ffi::wxd_RichTextCtrl_SaveFile(ptr, c_filename.as_ptr(), file_type.into()) }
     }
 
     // --- Style Operations ---
 
     /// Sets style for a range of text.
+    /// Returns false if the control has been destroyed.
     pub fn set_style_range(&self, start: i64, end: i64, bold: bool, italic: bool, underline: bool) -> bool {
-        let ptr = self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t;
+        let ptr = self.richtextctrl_ptr();
+        if ptr.is_null() {
+            return false;
+        }
         unsafe { ffi::wxd_RichTextCtrl_SetStyleRange(ptr, start, end, bold, italic, underline) }
     }
 
     /// Applies bold formatting to the selection.
+    /// Returns false if the control has been destroyed.
     pub fn apply_bold_to_selection(&self) -> bool {
-        unsafe { ffi::wxd_RichTextCtrl_ApplyBoldToSelection(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t) }
+        let ptr = self.richtextctrl_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_RichTextCtrl_ApplyBoldToSelection(ptr) }
     }
 
     /// Applies italic formatting to the selection.
+    /// Returns false if the control has been destroyed.
     pub fn apply_italic_to_selection(&self) -> bool {
-        unsafe { ffi::wxd_RichTextCtrl_ApplyItalicToSelection(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t) }
+        let ptr = self.richtextctrl_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_RichTextCtrl_ApplyItalicToSelection(ptr) }
     }
 
     /// Applies underline formatting to the selection.
+    /// Returns false if the control has been destroyed.
     pub fn apply_underline_to_selection(&self) -> bool {
-        unsafe { ffi::wxd_RichTextCtrl_ApplyUnderlineToSelection(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t) }
+        let ptr = self.richtextctrl_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_RichTextCtrl_ApplyUnderlineToSelection(ptr) }
     }
 
     /// Returns true if the selection is bold.
+    /// Returns false if the control has been destroyed.
     pub fn is_selection_bold(&self) -> bool {
-        unsafe { ffi::wxd_RichTextCtrl_IsSelectionBold(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t) }
+        let ptr = self.richtextctrl_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_RichTextCtrl_IsSelectionBold(ptr) }
     }
 
     /// Returns true if the selection is italic.
+    /// Returns false if the control has been destroyed.
     pub fn is_selection_italic(&self) -> bool {
-        unsafe { ffi::wxd_RichTextCtrl_IsSelectionItalics(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t) }
+        let ptr = self.richtextctrl_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_RichTextCtrl_IsSelectionItalics(ptr) }
     }
 
     /// Returns true if the selection is underlined.
+    /// Returns false if the control has been destroyed.
     pub fn is_selection_underlined(&self) -> bool {
-        unsafe { ffi::wxd_RichTextCtrl_IsSelectionUnderlined(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t) }
+        let ptr = self.richtextctrl_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_RichTextCtrl_IsSelectionUnderlined(ptr) }
     }
 
     // --- Font Operations ---
 
     /// Sets the font size for a range of text.
+    /// Returns false if the control has been destroyed.
     pub fn set_font_size(&self, start: i64, end: i64, size: i32) -> bool {
-        unsafe { ffi::wxd_RichTextCtrl_SetFontSize(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t, start, end, size) }
+        let ptr = self.richtextctrl_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_RichTextCtrl_SetFontSize(ptr, start, end, size) }
     }
 
     /// Sets the font size for the current selection.
+    /// Returns false if the control has been destroyed.
     pub fn set_font_size_selection(&self, size: i32) -> bool {
-        unsafe { ffi::wxd_RichTextCtrl_SetFontSizeSelection(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t, size) }
+        let ptr = self.richtextctrl_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_RichTextCtrl_SetFontSizeSelection(ptr, size) }
     }
 
     // --- Color Operations ---
 
     /// Sets text color for a range of text.
+    /// Returns false if the control has been destroyed.
     pub fn set_text_color(&self, start: i64, end: i64, color: crate::Colour) -> bool {
-        let ptr = self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t;
+        let ptr = self.richtextctrl_ptr();
+        if ptr.is_null() {
+            return false;
+        }
         unsafe { ffi::wxd_RichTextCtrl_SetTextColor(ptr, start, end, color.into()) }
     }
 
     /// Sets text color for the selection.
+    /// Returns false if the control has been destroyed.
     pub fn set_text_color_selection(&self, color: crate::Colour) -> bool {
-        unsafe { ffi::wxd_RichTextCtrl_SetTextColorSelection(self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t, color.into()) }
+        let ptr = self.richtextctrl_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_RichTextCtrl_SetTextColorSelection(ptr, color.into()) }
     }
 
     /// Sets background color for a range of text.
+    /// Returns false if the control has been destroyed.
     pub fn set_background_color(&self, start: i64, end: i64, color: crate::Colour) -> bool {
-        let ptr = self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t;
+        let ptr = self.richtextctrl_ptr();
+        if ptr.is_null() {
+            return false;
+        }
         unsafe { ffi::wxd_RichTextCtrl_SetBackgroundColor(ptr, start, end, color.into()) }
     }
 
     /// Sets background color for the selection.
+    /// Returns false if the control has been destroyed.
     pub fn set_background_color_selection(&self, color: crate::Colour) -> bool {
-        let ptr = self.window.as_ptr() as *mut ffi::wxd_RichTextCtrl_t;
+        let ptr = self.richtextctrl_ptr();
+        if ptr.is_null() {
+            return false;
+        }
         unsafe { ffi::wxd_RichTextCtrl_SetBackgroundColorSelection(ptr, color.into()) }
+    }
+
+    /// Returns the underlying WindowHandle for this control.
+    pub fn window_handle(&self) -> WindowHandle {
+        self.handle
     }
 }
 
-// Apply common trait implementations for this widget
-implement_widget_traits_with_target!(RichTextCtrl, window, Window);
+// Implement TextEvents trait for RichTextCtrl
+impl TextEvents for RichTextCtrl {}
+
+// Manual WxWidget implementation for RichTextCtrl (using WindowHandle)
+impl WxWidget for RichTextCtrl {
+    fn handle_ptr(&self) -> *mut ffi::wxd_Window_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut())
+    }
+
+    fn is_valid(&self) -> bool {
+        self.handle.is_valid()
+    }
+}
+
+// Implement WxEvtHandler for event binding
+impl WxEvtHandler for RichTextCtrl {
+    unsafe fn get_event_handler_ptr(&self) -> *mut ffi::wxd_EvtHandler_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut()) as *mut ffi::wxd_EvtHandler_t
+    }
+}
+
+// Implement common event traits that all Window-based widgets support
+impl crate::event::WindowEvents for RichTextCtrl {}
 
 // Implement scrolling functionality for RichTextCtrl
 impl crate::scrollable::WxScrollable for RichTextCtrl {}
@@ -488,8 +736,25 @@ crate::implement_widget_local_event_handlers!(
     SelectionChanged => selection_changed, EventType::RICHTEXT_SELECTION_CHANGED
 );
 
-// Implement standard events traits
-impl TextEvents for RichTextCtrl {}
-
 // XRC Support - enables RichTextCtrl to be created from XRC-managed pointers
-impl_xrc_support!(RichTextCtrl, { window });
+#[cfg(feature = "xrc")]
+impl crate::xrc::XrcSupport for RichTextCtrl {
+    unsafe fn from_xrc_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        RichTextCtrl {
+            handle: WindowHandle::new(ptr),
+        }
+    }
+}
+
+// Enable widget casting for RichTextCtrl
+impl crate::window::FromWindowWithClassName for RichTextCtrl {
+    fn class_name() -> &'static str {
+        "wxRichTextCtrl"
+    }
+
+    unsafe fn from_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        RichTextCtrl {
+            handle: WindowHandle::new(ptr),
+        }
+    }
+}

@@ -1,11 +1,10 @@
 //!
 //! Safe wrapper for wxScrolledWindow.
 
-use crate::event::ScrollEvents;
+use crate::event::{MenuEvents, ScrollEvents, WindowEvents, WxEvtHandler};
 use crate::geometry::{Point, Size};
 use crate::id::Id;
-use crate::widgets::panel::Panel; // Inherits from Panel (used for Deref)
-use crate::window::WxWidget; // Used for builder parent type constraint
+use crate::window::{WindowHandle, WxWidget};
 use wxdragon_sys as ffi;
 
 // --- Style enum using macro ---
@@ -33,8 +32,30 @@ pub struct ScrollBarConfig {
 
 /// Represents a wxScrolledWindow widget.
 /// A window that can scroll its contents.
+///
+/// ScrolledWindow uses `WindowHandle` internally for safe memory management.
+/// When the underlying window is destroyed (by calling `destroy()` or when
+/// its parent is destroyed), the handle becomes invalid and all operations
+/// become safe no-ops.
+///
+/// # Example
+/// ```ignore
+/// let scrolled = ScrolledWindow::builder(&frame).build();
+///
+/// // ScrolledWindow is Copy - no clone needed for closures!
+/// scrolled.bind_event(move |_| {
+///     // Safe: if scrolled was destroyed, this is a no-op
+///     scrolled.set_scroll_rate(10, 10);
+/// });
+///
+/// // After parent destruction, scrolled operations are safe no-ops
+/// frame.destroy();
+/// assert!(!scrolled.is_valid());
+/// ```
+#[derive(Clone, Copy)]
 pub struct ScrolledWindow {
-    panel: Panel, // Composition: ScrolledWindow "is a" Panel
+    /// Safe handle to the underlying wxScrolledWindow - automatically invalidated on destroy
+    handle: WindowHandle,
 }
 
 impl ScrolledWindow {
@@ -46,27 +67,54 @@ impl ScrolledWindow {
     /// Creates a new ScrolledWindow wrapper from a raw pointer.
     /// # Safety
     /// The pointer must be a valid `wxd_ScrolledWindow_t` pointer.
+    /// Ownership is typically managed by the parent window in wxWidgets.
     pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_ScrolledWindow_t) -> Self {
+        assert!(!ptr.is_null());
         ScrolledWindow {
-            panel: unsafe { Panel::from_ptr(ptr as *mut ffi::wxd_Panel_t) },
+            handle: WindowHandle::new(ptr as *mut ffi::wxd_Window_t),
         }
     }
 
     /// Returns the raw underlying scrolled window pointer.
     pub fn as_ptr(&self) -> *mut ffi::wxd_ScrolledWindow_t {
-        self.panel.as_ptr() as *mut ffi::wxd_ScrolledWindow_t
+        self.handle
+            .get_ptr()
+            .map(|p| p as *mut ffi::wxd_ScrolledWindow_t)
+            .unwrap_or(std::ptr::null_mut())
+    }
+
+    /// Helper to get raw scrolled window pointer, returns null if widget has been destroyed
+    #[inline]
+    fn scrolled_window_ptr(&self) -> *mut ffi::wxd_ScrolledWindow_t {
+        self.handle
+            .get_ptr()
+            .map(|p| p as *mut ffi::wxd_ScrolledWindow_t)
+            .unwrap_or(std::ptr::null_mut())
+    }
+
+    /// Returns the underlying WindowHandle for this scrolled window.
+    pub fn window_handle(&self) -> WindowHandle {
+        self.handle
     }
 
     /// Sets the scroll rate (pixels per scroll unit).
     pub fn set_scroll_rate(&self, x_step: i32, y_step: i32) {
-        unsafe { ffi::wxd_ScrolledWindow_SetScrollRate(self.as_ptr(), x_step, y_step) }
+        let ptr = self.scrolled_window_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_ScrolledWindow_SetScrollRate(ptr, x_step, y_step) }
     }
 
     /// Sets up the scrollbars.
     pub fn set_scrollbars(&self, config: ScrollBarConfig) {
+        let ptr = self.scrolled_window_ptr();
+        if ptr.is_null() {
+            return;
+        }
         unsafe {
             ffi::wxd_ScrolledWindow_SetScrollbars(
-                self.as_ptr(),
+                ptr,
                 config.pixels_per_unit_x,
                 config.pixels_per_unit_y,
                 config.no_units_x,
@@ -80,39 +128,78 @@ impl ScrolledWindow {
 
     /// Enables or disables scrolling for the specified orientation(s).
     pub fn enable_scrolling(&self, x_scrolling: bool, y_scrolling: bool) {
-        unsafe { ffi::wxd_ScrolledWindow_EnableScrolling(self.as_ptr(), x_scrolling, y_scrolling) }
+        let ptr = self.scrolled_window_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_ScrolledWindow_EnableScrolling(ptr, x_scrolling, y_scrolling) }
     }
 
     /// Scrolls the window to the given position (in scroll units).
     pub fn scroll_coords(&self, x: i32, y: i32) {
-        unsafe { ffi::wxd_ScrolledWindow_Scroll_Coord(self.as_ptr(), x, y) }
+        let ptr = self.scrolled_window_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_ScrolledWindow_Scroll_Coord(ptr, x, y) }
     }
 
     /// Scrolls the window to the given position (in scroll units).
     pub fn scroll_point(&self, pt: Point) {
+        let ptr = self.scrolled_window_ptr();
+        if ptr.is_null() {
+            return;
+        }
         let c_pt = ffi::wxd_Point { x: pt.x, y: pt.y };
-        unsafe { ffi::wxd_ScrolledWindow_Scroll_Point(self.as_ptr(), c_pt) }
+        unsafe { ffi::wxd_ScrolledWindow_Scroll_Point(ptr, c_pt) }
     }
 
     /// Gets the size of the scrollable virtual area in pixels.
     pub fn get_virtual_size(&self) -> Size {
+        let ptr = self.scrolled_window_ptr();
+        if ptr.is_null() {
+            return Size { width: 0, height: 0 };
+        }
         let mut w: i32 = 0;
         let mut h: i32 = 0;
-        unsafe { ffi::wxd_ScrolledWindow_GetVirtualSize(self.as_ptr(), &mut w, &mut h) };
+        unsafe { ffi::wxd_ScrolledWindow_GetVirtualSize(ptr, &mut w, &mut h) };
         Size { width: w, height: h }
     }
 
     /// Gets the number of pixels per scroll unit.
     pub fn get_scroll_pixels_per_unit(&self) -> (i32, i32) {
+        let ptr = self.scrolled_window_ptr();
+        if ptr.is_null() {
+            return (0, 0);
+        }
         let mut x_unit: i32 = 0;
         let mut y_unit: i32 = 0;
-        unsafe { ffi::wxd_ScrolledWindow_GetScrollPixelsPerUnit(self.as_ptr(), &mut x_unit, &mut y_unit) };
+        unsafe { ffi::wxd_ScrolledWindow_GetScrollPixelsPerUnit(ptr, &mut x_unit, &mut y_unit) };
         (x_unit, y_unit)
     }
 }
 
-// Apply common trait implementations
-implement_widget_traits_with_target!(ScrolledWindow, panel, Panel);
+// Manual WxWidget implementation for ScrolledWindow (using WindowHandle)
+impl WxWidget for ScrolledWindow {
+    fn handle_ptr(&self) -> *mut ffi::wxd_Window_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut())
+    }
+
+    fn is_valid(&self) -> bool {
+        self.handle.is_valid()
+    }
+}
+
+// Implement WxEvtHandler for event binding
+impl WxEvtHandler for ScrolledWindow {
+    unsafe fn get_event_handler_ptr(&self) -> *mut ffi::wxd_EvtHandler_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut()) as *mut ffi::wxd_EvtHandler_t
+    }
+}
+
+// Implement common event traits that all Window-based widgets support
+impl WindowEvents for ScrolledWindow {}
+impl MenuEvents for ScrolledWindow {}
 
 // Implement scrolling functionality for ScrolledWindow
 impl crate::scrollable::WxScrollable for ScrolledWindow {}
@@ -124,11 +211,7 @@ widget_builder!(
     style_type: ScrolledWindowStyle,
     fields: {},
     build_impl: |slf| {
-        if slf.parent.handle_ptr().is_null() {
-            panic!("Cannot create ScrolledWindow with a null parent");
-        }
-
-        let ptr = unsafe {
+        let scrolled_window_ptr = unsafe {
             ffi::wxd_ScrolledWindow_Create(
                 slf.parent.handle_ptr(),
                 slf.id,
@@ -138,11 +221,11 @@ widget_builder!(
             )
         };
 
-        if ptr.is_null() {
-            panic!("Failed to create wxScrolledWindow");
+        if scrolled_window_ptr.is_null() {
+            panic!("Failed to create ScrolledWindow: FFI returned null pointer.");
         }
 
-        unsafe { ScrolledWindow::from_ptr(ptr) }
+        unsafe { ScrolledWindow::from_ptr(scrolled_window_ptr) }
     }
 );
 
@@ -151,14 +234,14 @@ impl ScrollEvents for ScrolledWindow {}
 // Add XRC Support - enables ScrolledWindow to be created from XRC-managed pointers
 #[cfg(feature = "xrc")]
 impl crate::xrc::XrcSupport for ScrolledWindow {
-    unsafe fn from_xrc_ptr(ptr: *mut wxdragon_sys::wxd_Window_t) -> Self {
+    unsafe fn from_xrc_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
         ScrolledWindow {
-            panel: unsafe { Panel::from_ptr(ptr as *mut ffi::wxd_Panel_t) },
+            handle: WindowHandle::new(ptr),
         }
     }
 }
 
-// Manual widget casting support for ScrolledWindow - composition structure needs custom handling
+// Widget casting support for ScrolledWindow
 impl crate::window::FromWindowWithClassName for ScrolledWindow {
     fn class_name() -> &'static str {
         "wxScrolledWindow"
@@ -166,7 +249,7 @@ impl crate::window::FromWindowWithClassName for ScrolledWindow {
 
     unsafe fn from_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
         ScrolledWindow {
-            panel: unsafe { Panel::from_ptr(ptr as *mut ffi::wxd_Panel_t) },
+            handle: WindowHandle::new(ptr),
         }
     }
 }

@@ -1,11 +1,11 @@
 //!
 //! Safe wrapper for wxNotebook.
 
-use crate::event::{Event, EventType};
+use crate::event::{Event, EventType, WxEvtHandler};
 use crate::geometry::{Point, Size};
 use crate::id::Id;
 use crate::widgets::imagelist::ImageList;
-use crate::window::{Window, WxWidget};
+use crate::window::{Window, WindowHandle, WxWidget};
 use std::ffi::CString;
 use std::os::raw::c_int;
 use wxdragon_sys as ffi;
@@ -28,9 +28,30 @@ widget_style_enum!(
 );
 
 /// Represents a wxNotebook widget.
+///
+/// Notebook uses `WindowHandle` internally for safe memory management.
+/// When the underlying window is destroyed (by calling `destroy()` or when
+/// its parent is destroyed), the handle becomes invalid and all operations
+/// become safe no-ops.
+///
+/// # Example
+/// ```ignore
+/// let notebook = Notebook::builder(&frame).build();
+///
+/// // Notebook is Copy - no clone needed for closures!
+/// notebook.bind_page_changed(move |_| {
+///     // Safe: if notebook was destroyed, this is a no-op
+///     let selection = notebook.selection();
+/// });
+///
+/// // After parent destruction, notebook operations are safe no-ops
+/// frame.destroy();
+/// assert!(!notebook.is_valid());
+/// ```
 #[derive(Clone, Copy)]
 pub struct Notebook {
-    window: Window,
+    /// Safe handle to the underlying wxNotebook - automatically invalidated on destroy
+    handle: WindowHandle,
 }
 
 impl Notebook {
@@ -42,8 +63,17 @@ impl Notebook {
     // Internal constructor
     pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_Notebook_t) -> Self {
         Notebook {
-            window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
+            handle: WindowHandle::new(ptr as *mut ffi::wxd_Window_t),
         }
+    }
+
+    /// Helper to get raw notebook pointer, returns null if widget has been destroyed
+    #[inline]
+    fn notebook_ptr(&self) -> *mut ffi::wxd_Notebook_t {
+        self.handle
+            .get_ptr()
+            .map(|p| p as *mut ffi::wxd_Notebook_t)
+            .unwrap_or(std::ptr::null_mut())
     }
 
     /// Adds a new page to the notebook.
@@ -55,24 +85,18 @@ impl Notebook {
     /// * `image_id` - Optional image index for the page's tab.
     ///
     /// Returns `true` if the page was added successfully.
+    /// No-op if the notebook has been destroyed.
     pub fn add_page<W: WxWidget>(&self, page: &W, text: &str, select: bool, image_id: Option<i32>) -> bool {
+        let ptr = self.notebook_ptr();
+        if ptr.is_null() {
+            return false;
+        }
         let c_text = CString::new(text).expect("CString::new failed");
         unsafe {
             if let Some(id) = image_id {
-                ffi::wxd_Notebook_AddPageWithImageId(
-                    self.window.as_ptr() as *mut ffi::wxd_Notebook_t,
-                    page.handle_ptr(),
-                    c_text.as_ptr(),
-                    select,
-                    id as c_int,
-                )
+                ffi::wxd_Notebook_AddPageWithImageId(ptr, page.handle_ptr(), c_text.as_ptr(), select, id as c_int)
             } else {
-                ffi::wxd_Notebook_AddPage(
-                    self.window.as_ptr() as *mut ffi::wxd_Notebook_t,
-                    page.handle_ptr(),
-                    c_text.as_ptr(),
-                    select,
-                )
+                ffi::wxd_Notebook_AddPage(ptr, page.handle_ptr(), c_text.as_ptr(), select)
             }
         }
     }
@@ -87,62 +111,83 @@ impl Notebook {
     /// * `image_id` - Optional image index for the page's tab.
     ///
     /// Returns `true` if the page was inserted successfully.
+    /// No-op if the notebook has been destroyed.
     pub fn insert_page<W: WxWidget>(&self, index: usize, page: &W, text: &str, select: bool, image_id: Option<i32>) -> bool {
+        let ptr = self.notebook_ptr();
+        if ptr.is_null() {
+            return false;
+        }
         let c_text = CString::new(text).expect("CString::new failed");
         unsafe {
             if let Some(id) = image_id {
-                ffi::wxd_Notebook_InsertPageWithImageId(
-                    self.window.as_ptr() as *mut ffi::wxd_Notebook_t,
-                    index,
-                    page.handle_ptr(),
-                    c_text.as_ptr(),
-                    select,
-                    id as c_int,
-                )
+                ffi::wxd_Notebook_InsertPageWithImageId(ptr, index, page.handle_ptr(), c_text.as_ptr(), select, id as c_int)
             } else {
-                ffi::wxd_Notebook_InsertPage(
-                    self.window.as_ptr() as *mut ffi::wxd_Notebook_t,
-                    index,
-                    page.handle_ptr(),
-                    c_text.as_ptr(),
-                    select,
-                )
+                ffi::wxd_Notebook_InsertPage(ptr, index, page.handle_ptr(), c_text.as_ptr(), select)
             }
         }
     }
 
     /// Gets the index of the currently selected page.
-    /// Returns `wxNOT_FOUND` (-1) if no page is selected.
+    /// Returns `wxNOT_FOUND` (-1) if no page is selected or if the notebook has been destroyed.
     pub fn selection(&self) -> i32 {
-        unsafe { ffi::wxd_Notebook_GetSelection(self.window.as_ptr() as *mut ffi::wxd_Notebook_t) }
+        let ptr = self.notebook_ptr();
+        if ptr.is_null() {
+            return ffi::WXD_NOT_FOUND as i32;
+        }
+        unsafe { ffi::wxd_Notebook_GetSelection(ptr) }
     }
 
     /// Sets the selection to the given page index.
     /// Returns the index of the previously selected page.
+    /// Returns -1 if the notebook has been destroyed.
     pub fn set_selection(&self, page: usize) -> i32 {
-        unsafe { ffi::wxd_Notebook_SetSelection(self.window.as_ptr() as *mut ffi::wxd_Notebook_t, page as c_int) }
+        let ptr = self.notebook_ptr();
+        if ptr.is_null() {
+            return -1;
+        }
+        unsafe { ffi::wxd_Notebook_SetSelection(ptr, page as c_int) }
     }
 
     /// Changes the selection to the given page, returning the old selection.
     /// This function does not generate a `EVT_NOTEBOOK_PAGE_CHANGING` event.
+    /// Returns -1 if the notebook has been destroyed.
     pub fn change_selection(&self, page: usize) -> i32 {
-        unsafe { ffi::wxd_Notebook_ChangeSelection(self.window.as_ptr() as *mut ffi::wxd_Notebook_t, page) }
+        let ptr = self.notebook_ptr();
+        if ptr.is_null() {
+            return -1;
+        }
+        unsafe { ffi::wxd_Notebook_ChangeSelection(ptr, page) }
     }
 
     /// Advances the selection, optionally wrapping to the beginning/end.
+    /// No-op if the notebook has been destroyed.
     pub fn advance_selection(&self, forward: bool) {
-        unsafe { ffi::wxd_Notebook_AdvanceSelection(self.window.as_ptr() as *mut ffi::wxd_Notebook_t, forward) }
+        let ptr = self.notebook_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_Notebook_AdvanceSelection(ptr, forward) }
     }
 
     /// Sets the amount of space around the icon and label in a tab.
+    /// No-op if the notebook has been destroyed.
     pub fn set_padding(&self, padding: Size) {
-        unsafe { ffi::wxd_Notebook_SetPadding(self.window.as_ptr() as *mut ffi::wxd_Notebook_t, padding.into()) }
+        let ptr = self.notebook_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_Notebook_SetPadding(ptr, padding.into()) }
     }
 
     /// Sets the image list for the notebook.
     /// The notebook takes ownership of the image list.
+    /// No-op if the notebook has been destroyed.
     pub fn set_image_list(&self, image_list: ImageList) {
-        unsafe { ffi::wxd_Notebook_SetImageList(self.window.as_ptr() as *mut ffi::wxd_Notebook_t, image_list.as_ptr()) };
+        let ptr = self.notebook_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_Notebook_SetImageList(ptr, image_list.as_ptr()) };
         // wxNotebook takes ownership of the ImageList, so we forget it in Rust
         // to prevent a double free.
         std::mem::forget(image_list);
@@ -150,38 +195,84 @@ impl Notebook {
 
     /// Gets the image list associated with the notebook.
     /// The notebook owns the image list, so the caller should not delete it.
+    /// Returns None if the notebook has been destroyed.
     pub fn get_image_list(&self) -> Option<ImageList> {
-        let ptr = unsafe { ffi::wxd_Notebook_GetImageList(self.window.as_ptr() as *mut ffi::wxd_Notebook_t) };
+        let ptr = self.notebook_ptr();
         if ptr.is_null() {
+            return None;
+        }
+        let img_ptr = unsafe { ffi::wxd_Notebook_GetImageList(ptr) };
+        if img_ptr.is_null() {
             None
         } else {
-            Some(unsafe { ImageList::from_ptr_unowned(ptr) })
+            Some(unsafe { ImageList::from_ptr_unowned(img_ptr) })
         }
     }
 
     /// Gets the number of pages in the notebook.
+    /// Returns 0 if the notebook has been destroyed.
     pub fn get_page_count(&self) -> usize {
-        unsafe { ffi::wxd_Notebook_GetPageCount(self.window.as_ptr() as *mut ffi::wxd_Notebook_t) }
+        let ptr = self.notebook_ptr();
+        if ptr.is_null() {
+            return 0;
+        }
+        unsafe { ffi::wxd_Notebook_GetPageCount(ptr) }
     }
 
     /// Returns the window at the given page position.
-    /// Returns `None` if the page index is out of bounds.
+    /// Returns `None` if the page index is out of bounds or if the notebook has been destroyed.
     pub fn get_page(&self, index: usize) -> Option<Window> {
+        let ptr = self.notebook_ptr();
+        if ptr.is_null() {
+            return None;
+        }
         unsafe {
-            let ptr = ffi::wxd_Notebook_GetPage(self.window.as_ptr() as *mut ffi::wxd_Notebook_t, index);
-            if ptr.is_null() { None } else { Some(Window::from_ptr(ptr)) }
+            let page_ptr = ffi::wxd_Notebook_GetPage(ptr, index);
+            if page_ptr.is_null() {
+                None
+            } else {
+                Some(Window::from_ptr(page_ptr))
+            }
         }
     }
 
     /// Removes the page at the given index.
     /// Returns `true` if the page was removed successfully.
+    /// Returns false if the notebook has been destroyed.
     pub fn remove_page(&self, index: usize) -> bool {
-        unsafe { ffi::wxd_Notebook_RemovePage(self.window.as_ptr() as *mut ffi::wxd_Notebook_t, index) }
+        let ptr = self.notebook_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_Notebook_RemovePage(ptr, index) }
+    }
+
+    /// Returns the underlying WindowHandle for this notebook.
+    pub fn window_handle(&self) -> WindowHandle {
+        self.handle
     }
 }
 
-// Apply common trait implementations for Notebook
-implement_widget_traits_with_target!(Notebook, window, Window);
+// Manual WxWidget implementation for Notebook (using WindowHandle)
+impl WxWidget for Notebook {
+    fn handle_ptr(&self) -> *mut ffi::wxd_Window_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut())
+    }
+
+    fn is_valid(&self) -> bool {
+        self.handle.is_valid()
+    }
+}
+
+// Implement WxEvtHandler for event binding
+impl WxEvtHandler for Notebook {
+    unsafe fn get_event_handler_ptr(&self) -> *mut ffi::wxd_EvtHandler_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut()) as *mut ffi::wxd_EvtHandler_t
+    }
+}
+
+// Implement common event traits that all Window-based widgets support
+impl crate::event::WindowEvents for Notebook {}
 
 // Use the widget_builder macro to generate the NotebookBuilder implementation
 widget_builder!(
@@ -253,8 +344,25 @@ crate::implement_widget_local_event_handlers!(
     PageChanged => page_changed, EventType::NOTEBOOK_PAGE_CHANGED
 );
 
-// Add XRC Support - enables Notebook to be created from XRC-managed pointers
-impl_xrc_support!(Notebook, { window });
+// XRC Support - enables Notebook to be created from XRC-managed pointers
+#[cfg(feature = "xrc")]
+impl crate::xrc::XrcSupport for Notebook {
+    unsafe fn from_xrc_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        Notebook {
+            handle: WindowHandle::new(ptr),
+        }
+    }
+}
 
-// Widget casting support for Notebook
-impl_widget_cast!(Notebook, "wxNotebook", { window });
+// Enable widget casting for Notebook
+impl crate::window::FromWindowWithClassName for Notebook {
+    fn class_name() -> &'static str {
+        "wxNotebook"
+    }
+
+    unsafe fn from_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        Notebook {
+            handle: WindowHandle::new(ptr),
+        }
+    }
+}

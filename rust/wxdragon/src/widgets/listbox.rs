@@ -2,10 +2,10 @@
 
 use crate::Menu;
 use crate::event::event_data::CommandEventData;
-use crate::event::{Event, EventType};
+use crate::event::{Event, EventType, WxEvtHandler};
 use crate::geometry::{Point, Size};
 use crate::id::Id;
-use crate::window::{Window, WxWidget};
+use crate::window::{WindowHandle, WxWidget};
 use std::ffi::{CStr, CString};
 use wxdragon_sys as ffi;
 
@@ -32,9 +32,14 @@ widget_style_enum!(
 pub type RawListBox = ffi::wxd_ListBox_t;
 
 /// Represents a wxListBox control.
+///
+/// ListBox uses `WindowHandle` internally for safe memory management.
+/// When the underlying window is destroyed (by calling `destroy()` or when
+/// its parent is destroyed), the handle becomes invalid and all operations
+/// become safe no-ops.
 #[derive(Clone, Copy)]
 pub struct ListBox {
-    window: Window,
+    handle: WindowHandle,
 }
 
 impl ListBox {
@@ -43,26 +48,49 @@ impl ListBox {
         ListBoxBuilder::new(parent)
     }
 
+    /// Helper to get raw listbox pointer, returns null if widget has been destroyed
+    #[inline]
+    fn listbox_ptr(&self) -> *mut RawListBox {
+        self.handle
+            .get_ptr()
+            .map(|p| p as *mut RawListBox)
+            .unwrap_or(std::ptr::null_mut())
+    }
+
     /// Appends an item to the list box.
+    /// No-op if the listbox has been destroyed.
     pub fn append(&self, item: &str) {
+        let ptr = self.listbox_ptr();
+        if ptr.is_null() {
+            return;
+        }
         let c_item = CString::new(item).expect("Invalid CString for ListBox item");
         unsafe {
-            ffi::wxd_ListBox_Append(self.window.as_ptr() as *mut RawListBox, c_item.as_ptr());
+            ffi::wxd_ListBox_Append(ptr, c_item.as_ptr());
         }
     }
 
     /// Removes all items from the list box.
+    /// No-op if the listbox has been destroyed.
     pub fn clear(&self) {
+        let ptr = self.listbox_ptr();
+        if ptr.is_null() {
+            return;
+        }
         unsafe {
-            ffi::wxd_ListBox_Clear(self.window.as_ptr() as *mut RawListBox);
+            ffi::wxd_ListBox_Clear(ptr);
         }
     }
 
     /// Gets the index of the currently selected item.
-    /// Returns `None` if no item is selected (matches `NOT_FOUND`).
+    /// Returns `None` if no item is selected (matches `NOT_FOUND`) or if the listbox has been destroyed.
     /// Note: For multi-selection list boxes, this returns the *first* selected item.
     pub fn get_selection(&self) -> Option<u32> {
-        let selection = unsafe { ffi::wxd_ListBox_GetSelection(self.window.as_ptr() as *mut RawListBox) };
+        let ptr = self.listbox_ptr();
+        if ptr.is_null() {
+            return None;
+        }
+        let selection = unsafe { ffi::wxd_ListBox_GetSelection(ptr) };
         if selection == NOT_FOUND {
             None
         } else {
@@ -71,9 +99,12 @@ impl ListBox {
     }
 
     /// Gets the string value of the currently selected item.
-    /// Returns `None` if no item is selected.
+    /// Returns `None` if no item is selected or if the listbox has been destroyed.
     pub fn get_string_selection(&self) -> Option<String> {
-        let ptr = self.window.as_ptr() as *mut RawListBox;
+        let ptr = self.listbox_ptr();
+        if ptr.is_null() {
+            return None;
+        }
         // Allocate a buffer first, like in Event::get_string
         let mut buffer = [0; 1024];
         let len = unsafe { ffi::wxd_ListBox_GetStringSelection(ptr, buffer.as_mut_ptr(), buffer.len()) };
@@ -95,13 +126,23 @@ impl ListBox {
     /// Selects or deselects an item at the given index.
     /// For single-selection list boxes, `select = true` selects the item.
     /// For multi-selection list boxes, `select = true` toggles the selection.
+    /// No-op if the listbox has been destroyed.
     pub fn set_selection(&self, index: u32, select: bool) {
-        unsafe { ffi::wxd_ListBox_SetSelection(self.window.as_ptr() as *mut RawListBox, index as i32, select) };
+        let ptr = self.listbox_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_ListBox_SetSelection(ptr, index as i32, select) };
     }
 
     /// Selects an item by its string value.
     /// If the string is not found, no selection is made.
+    /// No-op if the listbox has been destroyed.
     pub fn set_string_selection(&self, item: &str, select: bool) {
+        let ptr = self.listbox_ptr();
+        if ptr.is_null() {
+            return;
+        }
         // Create a CString, handling null bytes gracefully
         let c_item = match CString::new(item) {
             Ok(s) => s,
@@ -111,13 +152,16 @@ impl ListBox {
                 CString::new(filtered).unwrap_or_else(|_| CString::new("").unwrap())
             }
         };
-        unsafe { ffi::wxd_ListBox_SetStringSelection(self.window.as_ptr() as *mut RawListBox, c_item.as_ptr(), select) };
+        unsafe { ffi::wxd_ListBox_SetStringSelection(ptr, c_item.as_ptr(), select) };
     }
 
     /// Gets the string at the specified index.
-    /// Returns `None` if the index is out of bounds.
+    /// Returns `None` if the index is out of bounds or if the listbox has been destroyed.
     pub fn get_string(&self, index: u32) -> Option<String> {
-        let ptr = self.window.as_ptr() as *mut RawListBox;
+        let ptr = self.listbox_ptr();
+        if ptr.is_null() {
+            return None;
+        }
         // Allocate buffer first
         let mut buffer = [0; 1024];
         let len = unsafe { ffi::wxd_ListBox_GetString(ptr, index as i32, buffer.as_mut_ptr(), buffer.len()) };
@@ -135,14 +179,24 @@ impl ListBox {
     }
 
     /// Gets the number of items in the list box.
+    /// Returns 0 if the listbox has been destroyed.
     pub fn get_count(&self) -> u32 {
-        unsafe { ffi::wxd_ListBox_GetCount(self.window.as_ptr() as *mut RawListBox) }
+        let ptr = self.listbox_ptr();
+        if ptr.is_null() {
+            return 0;
+        }
+        unsafe { ffi::wxd_ListBox_GetCount(ptr) }
     }
 
     /// Deletes the item at the specified index.
+    /// No-op if the listbox has been destroyed.
     pub fn delete(&self, index: u32) {
+        let ptr = self.listbox_ptr();
+        if ptr.is_null() {
+            return;
+        }
         unsafe {
-            ffi::wxd_ListBox_Delete(self.window.as_ptr() as *mut RawListBox, index as i32);
+            ffi::wxd_ListBox_Delete(ptr, index as i32);
         }
     }
 
@@ -152,7 +206,7 @@ impl ListBox {
     pub(crate) unsafe fn from_ptr(ptr: *mut RawListBox) -> Self {
         assert!(!ptr.is_null());
         ListBox {
-            window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
+            handle: WindowHandle::new(ptr as *mut ffi::wxd_Window_t),
         }
     }
 
@@ -160,9 +214,14 @@ impl ListBox {
     /// If `pos` is `None`, the menu is popped up at the current cursor position.
     /// # Returns
     /// `true` if the menu was popped up successfully, `false` otherwise.
+    /// Returns `false` if the listbox has been destroyed.
     pub fn popup_menu(&self, menu: &mut Menu, pos: Option<Point>) -> bool {
+        let ptr = self.listbox_ptr();
+        if ptr.is_null() {
+            return false;
+        }
         let pos = pos.unwrap_or_else(|| Point::new(-1, -1));
-        unsafe { ffi::wxd_ListBox_PopupMenu(self.window.as_ptr() as *mut RawListBox, menu.as_mut_ptr(), pos.into()) }
+        unsafe { ffi::wxd_ListBox_PopupMenu(ptr, menu.as_mut_ptr(), pos.into()) }
     }
 }
 
@@ -203,8 +262,26 @@ widget_builder!(
     }
 );
 
-// Apply common trait implementations for ListBox
-implement_widget_traits_with_target!(ListBox, window, Window);
+// Manual WxWidget implementation for ListBox (using WindowHandle)
+impl WxWidget for ListBox {
+    fn handle_ptr(&self) -> *mut ffi::wxd_Window_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut())
+    }
+
+    fn is_valid(&self) -> bool {
+        self.handle.is_valid()
+    }
+}
+
+// Implement WxEvtHandler for event binding
+impl WxEvtHandler for ListBox {
+    unsafe fn get_event_handler_ptr(&self) -> *mut ffi::wxd_EvtHandler_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut()) as *mut ffi::wxd_EvtHandler_t
+    }
+}
+
+// Implement common event traits that all Window-based widgets support
+impl crate::event::WindowEvents for ListBox {}
 
 // --- ListBox specific event enum ---
 /// Events specific to ListBox controls
@@ -255,7 +332,24 @@ crate::implement_widget_local_event_handlers!(
 );
 
 // Add XRC Support - enables ListBox to be created from XRC-managed pointers
-impl_xrc_support!(ListBox, { window });
+#[cfg(feature = "xrc")]
+impl crate::xrc::XrcSupport for ListBox {
+    unsafe fn from_xrc_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        ListBox {
+            handle: WindowHandle::new(ptr),
+        }
+    }
+}
 
 // Widget casting support for ListBox
-impl_widget_cast!(ListBox, "wxListBox", { window });
+impl crate::window::FromWindowWithClassName for ListBox {
+    fn class_name() -> &'static str {
+        "wxListBox"
+    }
+
+    unsafe fn from_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        ListBox {
+            handle: WindowHandle::new(ptr),
+        }
+    }
+}

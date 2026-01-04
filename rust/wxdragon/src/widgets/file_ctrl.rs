@@ -1,6 +1,9 @@
-use crate::event::{Event, EventType};
+use crate::event::{Event, EventType, WxEvtHandler};
 use crate::prelude::*;
-use crate::window::{Window, WxWidget};
+use crate::window::{WindowHandle, WxWidget};
+// Window is used by impl_xrc_support for backwards compatibility
+#[allow(unused_imports)]
+use crate::window::Window;
 use std::ffi::{CStr, CString};
 use wxdragon_sys as ffi;
 
@@ -68,18 +71,51 @@ struct FileCtrlConfig {
     pub name: String,
 }
 
+/// Represents a wxFileCtrl.
+///
+/// FileCtrl uses `WindowHandle` internally for safe memory management.
+/// When the underlying window is destroyed (by calling `destroy()` or when
+/// its parent is destroyed), the handle becomes invalid and all operations
+/// become safe no-ops.
+///
+/// # Example
+/// ```ignore
+/// let file_ctrl = FileCtrl::builder(&frame).build();
+///
+/// // FileCtrl is Copy - no clone needed for closures!
+/// file_ctrl.bind_file_selection_changed(move |_| {
+///     // Safe: if file_ctrl was destroyed, this is a no-op
+///     if let Some(path) = file_ctrl.get_path() {
+///         println!("Selected: {}", path);
+///     }
+/// });
+///
+/// // After parent destruction, file_ctrl operations are safe no-ops
+/// frame.destroy();
+/// assert!(!file_ctrl.is_valid());
+/// ```
 #[derive(Clone, Copy)]
 pub struct FileCtrl {
-    window: Window, // Composition: FileCtrl IS a Window
+    /// Safe handle to the underlying wxFileCtrl - automatically invalidated on destroy
+    handle: WindowHandle,
 }
 
 impl FileCtrl {
+    /// Creates a new `FileCtrlBuilder` for constructing a file control.
     pub fn builder(parent: &dyn WxWidget) -> FileCtrlBuilder<'_> {
         FileCtrlBuilder::new(parent)
     }
 
-    // Create a new FileCtrl from a window and parent pointer
-    // This is intended for internal use
+    /// Creates a new FileCtrl from a raw pointer.
+    /// This is intended for internal use by other widget wrappers.
+    #[allow(dead_code)]
+    pub(crate) fn from_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        Self {
+            handle: WindowHandle::new(ptr),
+        }
+    }
+
+    /// Creates a new FileCtrl (low-level constructor used by the builder)
     fn new_impl(config: FileCtrlConfig) -> Self {
         assert!(!config.parent_ptr.is_null(), "FileCtrl requires a parent");
         let c_default_dir = CString::new(config.default_directory).expect("CString::new failed for default_directory");
@@ -105,16 +141,36 @@ impl FileCtrl {
         if raw_ptr.is_null() {
             panic!("Failed to create wxFileCtrl via FFI");
         }
-        // Cast the concrete FileCtrl pointer to the base Window pointer for the wrapper
-        let window = unsafe { Window::from_ptr(raw_ptr as *mut ffi::wxd_Window_t) };
-        FileCtrl { window }
+
+        // Create a WindowHandle which automatically registers for destroy events
+        FileCtrl {
+            handle: WindowHandle::new(raw_ptr as *mut ffi::wxd_Window_t),
+        }
+    }
+
+    /// Helper to get raw file control pointer, returns null if widget has been destroyed
+    #[inline]
+    fn file_ctrl_ptr(&self) -> *mut ffi::wxd_FileCtrl_t {
+        self.handle
+            .get_ptr()
+            .map(|p| p as *mut ffi::wxd_FileCtrl_t)
+            .unwrap_or(std::ptr::null_mut())
+    }
+
+    /// Returns the underlying WindowHandle for this file control.
+    pub fn window_handle(&self) -> WindowHandle {
+        self.handle
     }
 }
 
 impl FileCtrl {
-    /// Get the currently selected path in the FileCtrl
+    /// Get the currently selected path in the FileCtrl.
+    /// Returns None if the file control has been destroyed or no path is selected.
     pub fn get_path(&self) -> Option<String> {
-        let ptr = self.window.as_ptr() as *mut ffi::wxd_FileCtrl_t;
+        let ptr = self.file_ctrl_ptr();
+        if ptr.is_null() {
+            return None;
+        }
         let len = unsafe { ffi::wxd_FileCtrl_GetPath(ptr, std::ptr::null_mut(), 0) };
         if len == 0 {
             return None; // No path selected or error
@@ -152,8 +208,30 @@ widget_builder!(
     }
 );
 
-// Use the implement_widget_traits_with_target macro to implement traits
-implement_widget_traits_with_target!(FileCtrl, window, Window);
+// Manual WxWidget implementation for FileCtrl (using WindowHandle)
+impl WxWidget for FileCtrl {
+    fn handle_ptr(&self) -> *mut ffi::wxd_Window_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut())
+    }
+
+    fn is_valid(&self) -> bool {
+        self.handle.is_valid()
+    }
+}
+
+// Note: We don't implement Deref to Window because returning a reference
+// to a temporary Window is unsound. Users can access window methods through
+// the WxWidget trait methods directly.
+
+// Implement WxEvtHandler for event binding
+impl WxEvtHandler for FileCtrl {
+    unsafe fn get_event_handler_ptr(&self) -> *mut ffi::wxd_EvtHandler_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut()) as *mut ffi::wxd_EvtHandler_t
+    }
+}
+
+// Implement common event traits that all Window-based widgets support
+impl crate::event::WindowEvents for FileCtrl {}
 
 // Implement event handlers for FileCtrl
 crate::implement_widget_local_event_handlers!(
@@ -165,5 +243,25 @@ crate::implement_widget_local_event_handlers!(
     FileActivated => file_activated, EventType::LIST_ITEM_ACTIVATED
 );
 
-// Add XRC Support - enables FileCtrl to be created from XRC-managed pointers
-impl_xrc_support!(FileCtrl, { window });
+// XRC Support - enables FileCtrl to be created from XRC-managed pointers
+#[cfg(feature = "xrc")]
+impl crate::xrc::XrcSupport for FileCtrl {
+    unsafe fn from_xrc_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        FileCtrl {
+            handle: WindowHandle::new(ptr),
+        }
+    }
+}
+
+// Enable widget casting for FileCtrl
+impl crate::window::FromWindowWithClassName for FileCtrl {
+    fn class_name() -> &'static str {
+        "wxFileCtrl"
+    }
+
+    unsafe fn from_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        FileCtrl {
+            handle: WindowHandle::new(ptr),
+        }
+    }
+}

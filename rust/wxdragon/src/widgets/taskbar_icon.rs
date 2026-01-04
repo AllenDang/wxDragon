@@ -312,6 +312,9 @@ impl WxEvtHandler for TaskBarIcon {
     }
 }
 
+// Implement common event traits that all Window-based widgets support
+impl crate::event::WindowEvents for TaskBarIcon {}
+
 // Add menu event handling to TaskBarIcon
 impl TaskBarIcon {
     /// Bind a handler to menu events from the TaskBarIcon's popup menu

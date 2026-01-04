@@ -3,10 +3,13 @@ use std::os::raw::c_longlong;
 use wxdragon_sys as ffi;
 
 use crate::color::Colour;
-use crate::event::{Event, EventType};
+use crate::event::{Event, EventType, WxEvtHandler};
 use crate::geometry::{Point, Size};
 use crate::id::Id;
-use crate::window::{Window, WxWidget};
+use crate::window::{WindowHandle, WxWidget};
+// Window is used by event data for backwards compatibility
+#[allow(unused_imports)]
+use crate::window::Window;
 
 // --- Style enum using macro ---
 widget_style_enum!(
@@ -63,9 +66,16 @@ impl HyperlinkCtrlEventData {
 }
 
 // --- HyperlinkCtrl --- //
+/// Represents a wxHyperlinkCtrl.
+///
+/// HyperlinkCtrl uses `WindowHandle` internally for safe memory management.
+/// When the underlying window is destroyed (by calling `destroy()` or when
+/// its parent is destroyed), the handle becomes invalid and all operations
+/// become safe no-ops.
 #[derive(Clone, Copy)]
 pub struct HyperlinkCtrl {
-    window: Window, // Embed the Window struct
+    /// Safe handle to the underlying wxHyperlinkCtrl - automatically invalidated on destroy
+    handle: WindowHandle,
 }
 
 impl HyperlinkCtrl {
@@ -74,9 +84,22 @@ impl HyperlinkCtrl {
         HyperlinkCtrlBuilder::new(parent)
     }
 
+    /// Helper to get raw hyperlink pointer, returns null if widget has been destroyed
+    #[inline]
+    fn hyperlink_ptr(&self) -> *mut ffi::wxd_HyperlinkCtrl_t {
+        self.handle
+            .get_ptr()
+            .map(|p| p as *mut ffi::wxd_HyperlinkCtrl_t)
+            .unwrap_or(std::ptr::null_mut())
+    }
+
     /// Gets the URL associated with the hyperlink.
+    /// Returns empty string if the hyperlink has been destroyed.
     pub fn get_url(&self) -> String {
-        let ptr = self.window.as_ptr() as *mut ffi::wxd_HyperlinkCtrl_t;
+        let ptr = self.hyperlink_ptr();
+        if ptr.is_null() {
+            return String::new();
+        }
         let len = unsafe { ffi::wxd_HyperlinkCtrl_GetURL(ptr, std::ptr::null_mut(), 0) };
         if len <= 0 {
             return String::new();
@@ -87,67 +110,97 @@ impl HyperlinkCtrl {
     }
 
     /// Sets the URL associated with the hyperlink.
+    /// No-op if the hyperlink has been destroyed.
     pub fn set_url(&self, url: &str) {
+        let ptr = self.hyperlink_ptr();
+        if ptr.is_null() {
+            return;
+        }
         let c_url = CString::new(url).expect("CString::new failed for url");
-        unsafe { ffi::wxd_HyperlinkCtrl_SetURL(self.window.as_ptr() as *mut ffi::wxd_HyperlinkCtrl_t, c_url.as_ptr()) }
+        unsafe { ffi::wxd_HyperlinkCtrl_SetURL(ptr, c_url.as_ptr()) }
     }
 
     /// Returns whether the hyperlink has been visited.
+    /// Returns false if the hyperlink has been destroyed.
     pub fn get_visited(&self) -> bool {
-        unsafe { ffi::wxd_HyperlinkCtrl_GetVisited(self.window.as_ptr() as *mut ffi::wxd_HyperlinkCtrl_t) }
+        let ptr = self.hyperlink_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_HyperlinkCtrl_GetVisited(ptr) }
     }
 
     /// Sets whether the hyperlink has been visited.
+    /// No-op if the hyperlink has been destroyed.
     pub fn set_visited(&self, visited: bool) {
-        unsafe { ffi::wxd_HyperlinkCtrl_SetVisited(self.window.as_ptr() as *mut ffi::wxd_HyperlinkCtrl_t, visited) }
+        let ptr = self.hyperlink_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_HyperlinkCtrl_SetVisited(ptr, visited) }
     }
 
     /// Gets the colour used when the mouse hovers over the hyperlink.
+    /// Returns black if the hyperlink has been destroyed.
     pub fn get_hover_colour(&self) -> Colour {
-        let val = unsafe { ffi::wxd_HyperlinkCtrl_GetHoverColour(self.window.as_ptr() as *mut ffi::wxd_HyperlinkCtrl_t) };
+        let ptr = self.hyperlink_ptr();
+        if ptr.is_null() {
+            return Colour::rgb(0, 0, 0);
+        }
+        let val = unsafe { ffi::wxd_HyperlinkCtrl_GetHoverColour(ptr) };
         Colour::from_u32(val as u32)
     }
 
     /// Sets the colour used when the mouse hovers over the hyperlink.
+    /// No-op if the hyperlink has been destroyed.
     pub fn set_hover_colour(&self, colour: Colour) {
-        unsafe {
-            ffi::wxd_HyperlinkCtrl_SetHoverColour(
-                self.window.as_ptr() as *mut ffi::wxd_HyperlinkCtrl_t,
-                colour.as_u32() as std::os::raw::c_ulong,
-            )
+        let ptr = self.hyperlink_ptr();
+        if ptr.is_null() {
+            return;
         }
+        unsafe { ffi::wxd_HyperlinkCtrl_SetHoverColour(ptr, colour.as_u32() as std::os::raw::c_ulong) }
     }
 
     /// Gets the normal colour of the hyperlink.
+    /// Returns black if the hyperlink has been destroyed.
     pub fn get_normal_colour(&self) -> Colour {
-        let val = unsafe { ffi::wxd_HyperlinkCtrl_GetNormalColour(self.window.as_ptr() as *mut ffi::wxd_HyperlinkCtrl_t) };
+        let ptr = self.hyperlink_ptr();
+        if ptr.is_null() {
+            return Colour::rgb(0, 0, 0);
+        }
+        let val = unsafe { ffi::wxd_HyperlinkCtrl_GetNormalColour(ptr) };
         Colour::from_u32(val as u32)
     }
 
     /// Sets the normal colour of the hyperlink.
+    /// No-op if the hyperlink has been destroyed.
     pub fn set_normal_colour(&self, colour: Colour) {
-        unsafe {
-            ffi::wxd_HyperlinkCtrl_SetNormalColour(
-                self.window.as_ptr() as *mut ffi::wxd_HyperlinkCtrl_t,
-                colour.as_u32() as std::os::raw::c_ulong,
-            )
+        let ptr = self.hyperlink_ptr();
+        if ptr.is_null() {
+            return;
         }
+        unsafe { ffi::wxd_HyperlinkCtrl_SetNormalColour(ptr, colour.as_u32() as std::os::raw::c_ulong) }
     }
 
     /// Gets the colour of the visited hyperlink.
+    /// Returns black if the hyperlink has been destroyed.
     pub fn get_visited_colour(&self) -> Colour {
-        let val = unsafe { ffi::wxd_HyperlinkCtrl_GetVisitedColour(self.window.as_ptr() as *mut ffi::wxd_HyperlinkCtrl_t) };
+        let ptr = self.hyperlink_ptr();
+        if ptr.is_null() {
+            return Colour::rgb(0, 0, 0);
+        }
+        let val = unsafe { ffi::wxd_HyperlinkCtrl_GetVisitedColour(ptr) };
         Colour::from_u32(val as u32)
     }
 
     /// Sets the colour of the visited hyperlink.
+    /// No-op if the hyperlink has been destroyed.
     pub fn set_visited_colour(&self, colour: Colour) {
-        unsafe {
-            ffi::wxd_HyperlinkCtrl_SetVisitedColour(
-                self.window.as_ptr() as *mut ffi::wxd_HyperlinkCtrl_t,
-                colour.as_u32() as std::os::raw::c_ulong,
-            )
+        let ptr = self.hyperlink_ptr();
+        if ptr.is_null() {
+            return;
         }
+        unsafe { ffi::wxd_HyperlinkCtrl_SetVisitedColour(ptr, colour.as_u32() as std::os::raw::c_ulong) }
     }
 
     /// Creates a HyperlinkCtrl from a raw pointer.
@@ -155,10 +208,36 @@ impl HyperlinkCtrl {
     /// The pointer must be a valid `wxd_HyperlinkCtrl_t`.
     pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_HyperlinkCtrl_t) -> Self {
         HyperlinkCtrl {
-            window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
+            handle: WindowHandle::new(ptr as *mut ffi::wxd_Window_t),
         }
     }
+
+    /// Returns the underlying WindowHandle for this hyperlink control.
+    pub fn window_handle(&self) -> WindowHandle {
+        self.handle
+    }
 }
+
+// Manual WxWidget implementation for HyperlinkCtrl (using WindowHandle)
+impl WxWidget for HyperlinkCtrl {
+    fn handle_ptr(&self) -> *mut ffi::wxd_Window_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut())
+    }
+
+    fn is_valid(&self) -> bool {
+        self.handle.is_valid()
+    }
+}
+
+// Implement WxEvtHandler for event binding
+impl WxEvtHandler for HyperlinkCtrl {
+    unsafe fn get_event_handler_ptr(&self) -> *mut ffi::wxd_EvtHandler_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut()) as *mut ffi::wxd_EvtHandler_t
+    }
+}
+
+// Implement common event traits that all Window-based widgets support
+impl crate::event::WindowEvents for HyperlinkCtrl {}
 
 // Implement event handlers for HyperlinkCtrl
 crate::implement_widget_local_event_handlers!(
@@ -168,8 +247,15 @@ crate::implement_widget_local_event_handlers!(
     Clicked => clicked, EventType::COMMAND_HYPERLINK
 );
 
-// Add XRC Support - enables HyperlinkCtrl to be created from XRC-managed pointers
-impl_xrc_support!(HyperlinkCtrl, { window });
+// XRC Support - enables HyperlinkCtrl to be created from XRC-managed pointers
+#[cfg(feature = "xrc")]
+impl crate::xrc::XrcSupport for HyperlinkCtrl {
+    unsafe fn from_xrc_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        HyperlinkCtrl {
+            handle: WindowHandle::new(ptr),
+        }
+    }
+}
 
 // Use the widget_builder macro to generate the HyperlinkCtrlBuilder implementation
 widget_builder!(
@@ -199,9 +285,21 @@ widget_builder!(
         if raw_ptr.is_null() {
             panic!("Failed to create wxHyperlinkCtrl");
         }
-        unsafe { HyperlinkCtrl::from_ptr(raw_ptr) }
+        HyperlinkCtrl {
+            handle: WindowHandle::new(raw_ptr as *mut ffi::wxd_Window_t),
+        }
     }
 );
 
-// Apply common trait implementations for HyperlinkCtrl
-implement_widget_traits_with_target!(HyperlinkCtrl, window, Window);
+// Enable widget casting for HyperlinkCtrl
+impl crate::window::FromWindowWithClassName for HyperlinkCtrl {
+    fn class_name() -> &'static str {
+        "wxHyperlinkCtrl"
+    }
+
+    unsafe fn from_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        HyperlinkCtrl {
+            handle: WindowHandle::new(ptr),
+        }
+    }
+}

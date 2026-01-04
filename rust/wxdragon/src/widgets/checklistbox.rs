@@ -1,9 +1,9 @@
 // ! Safe wrapper for wxCheckListBox.
 
-use crate::event::{Event, EventType};
+use crate::event::{Event, EventType, WxEvtHandler};
 use crate::geometry::{Point, Size};
 use crate::id::Id;
-use crate::window::{Window, WxWidget};
+use crate::window::{WindowHandle, WxWidget};
 use std::ffi::{CStr, CString};
 use wxdragon_sys as ffi;
 
@@ -64,9 +64,30 @@ impl CheckListBoxEventData {
 }
 
 /// Represents a wxCheckListBox control, which combines a ListBox with checkboxes.
+///
+/// CheckListBox uses `WindowHandle` internally for safe memory management.
+/// When the underlying window is destroyed (by calling `destroy()` or when
+/// its parent is destroyed), the handle becomes invalid and all operations
+/// become safe no-ops.
+///
+/// # Example
+/// ```ignore
+/// let checklist = CheckListBox::builder(&frame).build();
+///
+/// // CheckListBox is Copy - no clone needed for closures!
+/// checklist.bind_toggled(move |_| {
+///     // Safe: if checklist was destroyed, this is a no-op
+///     checklist.append("New item");
+/// });
+///
+/// // After parent destruction, checklist operations are safe no-ops
+/// frame.destroy();
+/// assert!(!checklist.is_valid());
+/// ```
 #[derive(Clone, Copy)]
 pub struct CheckListBox {
-    window: Window,
+    /// Safe handle to the underlying wxCheckListBox - automatically invalidated on destroy
+    handle: WindowHandle,
 }
 
 impl CheckListBox {
@@ -75,32 +96,58 @@ impl CheckListBox {
         CheckListBoxBuilder::new(parent)
     }
 
+    /// Helper to get raw checklistbox pointer, returns null if widget has been destroyed
+    #[inline]
+    fn checklistbox_ptr(&self) -> *mut ffi::wxd_CheckListBox_t {
+        self.handle
+            .get_ptr()
+            .map(|p| p as *mut ffi::wxd_CheckListBox_t)
+            .unwrap_or(std::ptr::null_mut())
+    }
+
     /// Appends an item to the list box.
+    /// No-op if the checklistbox has been destroyed.
     pub fn append(&self, item: &str) {
+        let ptr = self.checklistbox_ptr();
+        if ptr.is_null() {
+            return;
+        }
         let c_item = CString::new(item).expect("Invalid CString for CheckListBox item");
         unsafe {
-            ffi::wxd_CheckListBox_Append(self.window.as_ptr() as *mut _, c_item.as_ptr());
+            ffi::wxd_CheckListBox_Append(ptr, c_item.as_ptr());
         }
     }
 
     /// Removes all items from the list box.
+    /// No-op if the checklistbox has been destroyed.
     pub fn clear(&self) {
+        let ptr = self.checklistbox_ptr();
+        if ptr.is_null() {
+            return;
+        }
         unsafe {
-            ffi::wxd_CheckListBox_Clear(self.window.as_ptr() as *mut _);
+            ffi::wxd_CheckListBox_Clear(ptr);
         }
     }
 
     /// Gets the index of the currently selected item.
-    /// Returns `None` if no item is selected (matches `NOT_FOUND`).
+    /// Returns `None` if no item is selected (matches `NOT_FOUND`) or if destroyed.
     pub fn get_selection(&self) -> Option<u32> {
-        let selection = unsafe { ffi::wxd_CheckListBox_GetSelection(self.window.as_ptr() as *mut _) };
+        let ptr = self.checklistbox_ptr();
+        if ptr.is_null() {
+            return None;
+        }
+        let selection = unsafe { ffi::wxd_CheckListBox_GetSelection(ptr) };
         if selection == -1 { None } else { Some(selection as u32) }
     }
 
     /// Gets the string value of the currently selected item.
-    /// Returns `None` if no item is selected.
+    /// Returns `None` if no item is selected or if destroyed.
     pub fn get_string_selection(&self) -> Option<String> {
-        let ptr = self.window.as_ptr() as *mut _;
+        let ptr = self.checklistbox_ptr();
+        if ptr.is_null() {
+            return None;
+        }
         let len = unsafe { ffi::wxd_CheckListBox_GetStringSelection(ptr, std::ptr::null_mut(), 0) };
 
         if len < 0 {
@@ -113,14 +160,22 @@ impl CheckListBox {
     }
 
     /// Selects or deselects an item at the given index.
+    /// No-op if the checklistbox has been destroyed.
     pub fn set_selection(&self, index: u32, select: bool) {
-        unsafe { ffi::wxd_CheckListBox_SetSelection(self.window.as_ptr() as *mut _, index as i32, select) };
+        let ptr = self.checklistbox_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_CheckListBox_SetSelection(ptr, index as i32, select) };
     }
 
     /// Gets the string at the specified index.
-    /// Returns `None` if the index is out of bounds.
+    /// Returns `None` if the index is out of bounds or if destroyed.
     pub fn get_string(&self, index: usize) -> Option<String> {
-        let ptr = self.window.as_ptr() as *mut _;
+        let ptr = self.checklistbox_ptr();
+        if ptr.is_null() {
+            return None;
+        }
         let len = unsafe { ffi::wxd_CheckListBox_GetString(ptr, index, std::ptr::null_mut(), 0) };
 
         if len < 0 {
@@ -133,22 +188,61 @@ impl CheckListBox {
     }
 
     /// Gets the number of items in the list box.
+    /// Returns 0 if the checklistbox has been destroyed.
     pub fn get_count(&self) -> u32 {
-        unsafe { ffi::wxd_CheckListBox_GetCount(self.window.as_ptr() as *mut _) }
+        let ptr = self.checklistbox_ptr();
+        if ptr.is_null() {
+            return 0;
+        }
+        unsafe { ffi::wxd_CheckListBox_GetCount(ptr) }
     }
 
     /// Checks if the item at the given index is checked.
-    /// Returns `false` if the index is out of bounds.
+    /// Returns `false` if the index is out of bounds or if destroyed.
     pub fn is_checked(&self, index: u32) -> bool {
-        unsafe { ffi::wxd_CheckListBox_IsChecked(self.window.as_ptr() as *mut _, index) }
+        let ptr = self.checklistbox_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_CheckListBox_IsChecked(ptr, index) }
     }
 
     /// Sets the checked state of the item at the given index.
-    /// Does nothing if the index is out of bounds.
+    /// Does nothing if the index is out of bounds or if destroyed.
     pub fn check(&self, index: u32, check: bool) {
-        unsafe { ffi::wxd_CheckListBox_Check(self.window.as_ptr() as *mut _, index, check) }
+        let ptr = self.checklistbox_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_CheckListBox_Check(ptr, index, check) }
+    }
+
+    /// Returns the underlying WindowHandle for this checklistbox.
+    pub fn window_handle(&self) -> WindowHandle {
+        self.handle
     }
 }
+
+// Manual WxWidget implementation for CheckListBox (using WindowHandle)
+impl WxWidget for CheckListBox {
+    fn handle_ptr(&self) -> *mut ffi::wxd_Window_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut())
+    }
+
+    fn is_valid(&self) -> bool {
+        self.handle.is_valid()
+    }
+}
+
+// Implement WxEvtHandler for event binding
+impl WxEvtHandler for CheckListBox {
+    unsafe fn get_event_handler_ptr(&self) -> *mut ffi::wxd_EvtHandler_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut()) as *mut ffi::wxd_EvtHandler_t
+    }
+}
+
+// Implement common event traits that all Window-based widgets support
+impl crate::event::WindowEvents for CheckListBox {}
 
 // Implement event handlers for CheckListBox
 crate::implement_widget_local_event_handlers!(
@@ -160,11 +254,28 @@ crate::implement_widget_local_event_handlers!(
     DoubleClicked => double_clicked, EventType::COMMAND_LISTBOX_DOUBLECLICKED
 );
 
-// Add XRC Support - enables CheckListBox to be created from XRC-managed pointers
-impl_xrc_support!(CheckListBox, { window });
+// XRC Support - enables CheckListBox to be created from XRC-managed pointers
+#[cfg(feature = "xrc")]
+impl crate::xrc::XrcSupport for CheckListBox {
+    unsafe fn from_xrc_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        CheckListBox {
+            handle: WindowHandle::new(ptr),
+        }
+    }
+}
 
-// Widget casting support for CheckListBox
-impl_widget_cast!(CheckListBox, "wxCheckListBox", { window });
+// Enable widget casting for CheckListBox
+impl crate::window::FromWindowWithClassName for CheckListBox {
+    fn class_name() -> &'static str {
+        "wxCheckListBox"
+    }
+
+    unsafe fn from_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        CheckListBox {
+            handle: WindowHandle::new(ptr),
+        }
+    }
+}
 
 widget_builder!(
     name: CheckListBox,
@@ -193,8 +304,9 @@ widget_builder!(
             panic!("Failed to create CheckListBox widget");
         }
 
+        // Create a WindowHandle which automatically registers for destroy events
         let clbox = CheckListBox {
-            window: unsafe { Window::from_ptr(ctrl_ptr as *mut ffi::wxd_Window_t) },
+            handle: WindowHandle::new(ctrl_ptr as *mut ffi::wxd_Window_t),
         };
 
         // Append initial choices
@@ -205,5 +317,3 @@ widget_builder!(
         clbox
     }
 );
-
-implement_widget_traits_with_target!(CheckListBox, window, Window);

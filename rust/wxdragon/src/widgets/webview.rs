@@ -1,8 +1,12 @@
 //! Safe wrapper for wxWebView.
 
+use crate::event::WxEvtHandler;
 use crate::geometry::{Point, Size};
 use crate::id::Id;
-use crate::window::{Window, WxWidget};
+use crate::window::{WindowHandle, WxWidget};
+// Window is used by new_from_composition for backwards compatibility
+#[allow(unused_imports)]
+use crate::window::Window;
 use std::ffi::CString;
 use std::os::raw::c_char;
 use wxdragon_sys as ffi;
@@ -155,15 +159,56 @@ impl std::fmt::Display for WebViewBackend {
 }
 
 /// Represents a wxWebView widget.
+///
+/// WebView uses `WindowHandle` internally for safe memory management.
+/// When the underlying window is destroyed (by calling `destroy()` or when
+/// its parent is destroyed), the handle becomes invalid and all operations
+/// become safe no-ops.
+///
+/// # Example
+/// ```ignore
+/// let webview = WebView::builder(&frame).url("https://example.com").build();
+///
+/// // WebView is Copy - no clone needed for closures!
+/// webview.bind_loaded(move |_| {
+///     // Safe: if webview was destroyed, this is a no-op
+///     webview.load_url("https://rust-lang.org");
+/// });
+///
+/// // After parent destruction, webview operations are safe no-ops
+/// frame.destroy();
+/// assert!(!webview.is_valid());
+/// ```
 #[derive(Clone, Copy)]
 pub struct WebView {
-    window: Window,
+    /// Safe handle to the underlying wxWebView - automatically invalidated on destroy
+    handle: WindowHandle,
 }
 
 impl WebView {
     /// Creates a new WebView builder.
     pub fn builder(parent: &dyn WxWidget) -> WebViewBuilder<'_> {
         WebViewBuilder::new(parent)
+    }
+
+    /// Creates a new WebView from a raw pointer.
+    /// This is intended for internal use by other widget wrappers.
+    #[allow(dead_code)]
+    pub(crate) fn from_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        Self {
+            handle: WindowHandle::new(ptr),
+        }
+    }
+
+    /// Creates a new WebView from a raw window pointer.
+    /// This is for backwards compatibility with widgets that compose WebView.
+    /// The parent_ptr parameter is ignored (kept for API compatibility).
+    #[allow(dead_code)]
+    pub(crate) fn new_from_composition(_window: Window, _parent_ptr: *mut ffi::wxd_Window_t) -> Self {
+        // Use the window's pointer to create a new WindowHandle
+        Self {
+            handle: WindowHandle::new(_window.as_ptr()),
+        }
     }
 
     /// Creates a new WebView (low-level constructor used by the builder)
@@ -178,6 +223,7 @@ impl WebView {
         name: Option<&str>,
         backend: Option<&str>,
     ) -> Self {
+        assert!(!parent_ptr.is_null(), "WebView requires a parent");
         let c_url = url.map(|s| CString::new(s).unwrap_or_default());
         let c_name = name.map(|s| CString::new(s).unwrap_or_default());
         let c_backend = backend.map(|s| CString::new(s).unwrap_or_default());
@@ -207,56 +253,126 @@ impl WebView {
         // Note: Zoom operations on IE backend are disabled in the C++ layer
         // to avoid assertion failures. All zoom-related calls become no-ops on IE.
 
+        // Create a WindowHandle which automatically registers for destroy events
         WebView {
-            window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
+            handle: WindowHandle::new(ptr as *mut ffi::wxd_Window_t),
         }
+    }
+
+    /// Helper to get raw webview pointer, returns null if widget has been destroyed
+    #[inline]
+    fn webview_ptr(&self) -> *mut ffi::wxd_WebView_t {
+        self.handle
+            .get_ptr()
+            .map(|p| p as *mut ffi::wxd_WebView_t)
+            .unwrap_or(std::ptr::null_mut())
     }
 
     // --- Navigation ---
 
+    /// Loads the specified URL.
+    /// No-op if the webview has been destroyed.
     pub fn load_url(&self, url: &str) {
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return;
+        }
         let c_url = CString::new(url).unwrap_or_default();
-        unsafe { ffi::wxd_WebView_LoadURL(self.as_ptr(), c_url.as_ptr()) };
+        unsafe { ffi::wxd_WebView_LoadURL(ptr, c_url.as_ptr()) };
     }
 
+    /// Reloads the current page.
+    /// No-op if the webview has been destroyed.
     pub fn reload(&self, flags: WebViewReloadFlags) {
-        unsafe { ffi::wxd_WebView_Reload(self.as_ptr(), flags.into()) };
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_WebView_Reload(ptr, flags.into()) };
     }
 
+    /// Stops the current page loading.
+    /// No-op if the webview has been destroyed.
     pub fn stop(&self) {
-        unsafe { ffi::wxd_WebView_Stop(self.as_ptr()) };
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_WebView_Stop(ptr) };
     }
 
+    /// Returns whether the webview can navigate back.
+    /// Returns false if the webview has been destroyed.
     pub fn can_go_back(&self) -> bool {
-        unsafe { ffi::wxd_WebView_CanGoBack(self.as_ptr()) }
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_WebView_CanGoBack(ptr) }
     }
 
+    /// Returns whether the webview can navigate forward.
+    /// Returns false if the webview has been destroyed.
     pub fn can_go_forward(&self) -> bool {
-        unsafe { ffi::wxd_WebView_CanGoForward(self.as_ptr()) }
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_WebView_CanGoForward(ptr) }
     }
 
+    /// Navigates back in the history.
+    /// No-op if the webview has been destroyed.
     pub fn go_back(&self) {
-        unsafe { ffi::wxd_WebView_GoBack(self.as_ptr()) };
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_WebView_GoBack(ptr) };
     }
 
+    /// Navigates forward in the history.
+    /// No-op if the webview has been destroyed.
     pub fn go_forward(&self) {
-        unsafe { ffi::wxd_WebView_GoForward(self.as_ptr()) };
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_WebView_GoForward(ptr) };
     }
 
+    /// Clears the navigation history.
+    /// No-op if the webview has been destroyed.
     pub fn clear_history(&self) {
-        unsafe { ffi::wxd_WebView_ClearHistory(self.as_ptr()) };
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_WebView_ClearHistory(ptr) };
     }
 
     // --- State ---
 
+    /// Returns whether the webview is currently busy loading a page.
+    /// Returns false if the webview has been destroyed.
     pub fn is_busy(&self) -> bool {
-        unsafe { ffi::wxd_WebView_IsBusy(self.as_ptr()) }
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_WebView_IsBusy(ptr) }
     }
 
+    /// Returns the current URL.
+    /// Returns empty string if the webview has been destroyed.
     pub fn get_current_url(&self) -> String {
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return String::new();
+        }
         unsafe {
             let mut buffer: Vec<c_char> = vec![0; 2048];
-            let len = ffi::wxd_WebView_GetCurrentURL(self.as_ptr(), buffer.as_mut_ptr(), buffer.len() as i32);
+            let len = ffi::wxd_WebView_GetCurrentURL(ptr, buffer.as_mut_ptr(), buffer.len() as i32);
             if len >= 0 {
                 let byte_slice = std::slice::from_raw_parts(buffer.as_ptr() as *const u8, len as usize);
                 String::from_utf8_lossy(byte_slice).to_string()
@@ -266,10 +382,16 @@ impl WebView {
         }
     }
 
+    /// Returns the current page title.
+    /// Returns empty string if the webview has been destroyed.
     pub fn get_current_title(&self) -> String {
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return String::new();
+        }
         unsafe {
             let mut buffer: Vec<c_char> = vec![0; 1024];
-            let len = ffi::wxd_WebView_GetCurrentTitle(self.as_ptr(), buffer.as_mut_ptr(), buffer.len() as i32);
+            let len = ffi::wxd_WebView_GetCurrentTitle(ptr, buffer.as_mut_ptr(), buffer.len() as i32);
             if len >= 0 {
                 let byte_slice = std::slice::from_raw_parts(buffer.as_ptr() as *const u8, len as usize);
                 String::from_utf8_lossy(byte_slice).to_string()
@@ -279,12 +401,18 @@ impl WebView {
         }
     }
 
+    /// Returns the page source (HTML).
+    /// Returns empty string if the webview has been destroyed.
     pub fn get_page_source(&self) -> String {
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return String::new();
+        }
         // Page source can be large, use dynamic buffer resizing
         unsafe {
             // First call with moderate buffer to get the size
             let mut buffer: Vec<c_char> = vec![0; 1024 * 64]; // 64KB initial buffer
-            let len = ffi::wxd_WebView_GetPageSource(self.as_ptr(), buffer.as_mut_ptr(), buffer.len() as i32);
+            let len = ffi::wxd_WebView_GetPageSource(ptr, buffer.as_mut_ptr(), buffer.len() as i32);
 
             if len < 0 {
                 return String::new(); // Error
@@ -294,7 +422,7 @@ impl WebView {
             if len >= buffer.len() as i32 {
                 // Allocate larger buffer and retry
                 buffer = vec![0; len as usize + 1];
-                let len2 = ffi::wxd_WebView_GetPageSource(self.as_ptr(), buffer.as_mut_ptr(), buffer.len() as i32);
+                let len2 = ffi::wxd_WebView_GetPageSource(ptr, buffer.as_mut_ptr(), buffer.len() as i32);
                 if len2 < 0 {
                     return String::new(); // Error on second call
                 }
@@ -306,12 +434,18 @@ impl WebView {
         }
     }
 
+    /// Returns the page text content (without HTML tags).
+    /// Returns empty string if the webview has been destroyed.
     pub fn get_page_text(&self) -> String {
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return String::new();
+        }
         // Page text can be large, use dynamic buffer resizing
         unsafe {
             // First call with moderate buffer to get the size
             let mut buffer: Vec<c_char> = vec![0; 1024 * 64]; // 64KB initial buffer
-            let len = ffi::wxd_WebView_GetPageText(self.as_ptr(), buffer.as_mut_ptr(), buffer.len() as i32);
+            let len = ffi::wxd_WebView_GetPageText(ptr, buffer.as_mut_ptr(), buffer.len() as i32);
 
             if len < 0 {
                 return String::new(); // Error
@@ -321,7 +455,7 @@ impl WebView {
             if len >= buffer.len() as i32 {
                 // Allocate larger buffer and retry
                 buffer = vec![0; len as usize + 1];
-                let len2 = ffi::wxd_WebView_GetPageText(self.as_ptr(), buffer.as_mut_ptr(), buffer.len() as i32);
+                let len2 = ffi::wxd_WebView_GetPageText(ptr, buffer.as_mut_ptr(), buffer.len() as i32);
                 if len2 < 0 {
                     return String::new(); // Error on second call
                 }
@@ -335,12 +469,24 @@ impl WebView {
 
     // --- Zoom ---
 
+    /// Returns whether the zoom type can be set.
+    /// Returns false if the webview has been destroyed.
     pub fn can_set_zoom_type(&self, zoom_type: WebViewZoomType) -> bool {
-        unsafe { ffi::wxd_WebView_CanSetZoomType(self.as_ptr(), zoom_type.into()) }
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_WebView_CanSetZoomType(ptr, zoom_type.into()) }
     }
 
+    /// Returns the current zoom level.
+    /// Returns Medium if the webview has been destroyed.
     pub fn get_zoom(&self) -> WebViewZoom {
-        let val = unsafe { ffi::wxd_WebView_GetZoom(self.as_ptr()) };
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return WebViewZoom::Medium;
+        }
+        let val = unsafe { ffi::wxd_WebView_GetZoom(ptr) };
         match val {
             0 => WebViewZoom::Tiny,
             1 => WebViewZoom::Small,
@@ -351,8 +497,14 @@ impl WebView {
         }
     }
 
+    /// Returns the current zoom type.
+    /// Returns Layout if the webview has been destroyed.
     pub fn get_zoom_type(&self) -> WebViewZoomType {
-        let val = unsafe { ffi::wxd_WebView_GetZoomType(self.as_ptr()) };
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return WebViewZoomType::Layout;
+        }
+        let val = unsafe { ffi::wxd_WebView_GetZoomType(ptr) };
         match val {
             0 => WebViewZoomType::Layout,
             1 => WebViewZoomType::Text,
@@ -360,21 +512,39 @@ impl WebView {
         }
     }
 
+    /// Sets the zoom level.
+    /// No-op if the webview has been destroyed.
     pub fn set_zoom(&self, zoom: WebViewZoom) {
-        unsafe { ffi::wxd_WebView_SetZoom(self.as_ptr(), zoom.into()) };
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_WebView_SetZoom(ptr, zoom.into()) };
     }
 
+    /// Sets the zoom type.
+    /// No-op if the webview has been destroyed.
     pub fn set_zoom_type(&self, zoom_type: WebViewZoomType) {
-        unsafe { ffi::wxd_WebView_SetZoomType(self.as_ptr(), zoom_type.into()) };
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_WebView_SetZoomType(ptr, zoom_type.into()) };
     }
 
     // --- Scripting ---
 
+    /// Runs JavaScript code and returns the result.
+    /// Returns None if the webview has been destroyed or if there was an error.
     pub fn run_script(&self, javascript: &str) -> Option<String> {
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return None;
+        }
         let c_script = CString::new(javascript).unwrap_or_default();
         unsafe {
             let mut buffer: Vec<c_char> = vec![0; 4096];
-            let len = ffi::wxd_WebView_RunScript(self.as_ptr(), c_script.as_ptr(), buffer.as_mut_ptr(), buffer.len() as i32);
+            let len = ffi::wxd_WebView_RunScript(ptr, c_script.as_ptr(), buffer.as_mut_ptr(), buffer.len() as i32);
 
             if len < 0 {
                 return None; // Error
@@ -384,7 +554,7 @@ impl WebView {
             if len >= buffer.len() as i32 {
                 // Allocate larger buffer and retry
                 buffer = vec![0; len as usize + 1];
-                let len2 = ffi::wxd_WebView_RunScript(self.as_ptr(), c_script.as_ptr(), buffer.as_mut_ptr(), buffer.len() as i32);
+                let len2 = ffi::wxd_WebView_RunScript(ptr, c_script.as_ptr(), buffer.as_mut_ptr(), buffer.len() as i32);
                 if len2 < 0 {
                     return None; // Error on second call
                 }
@@ -398,64 +568,148 @@ impl WebView {
 
     // --- Clipboard ---
 
+    /// Returns whether the webview can cut.
+    /// Returns false if the webview has been destroyed.
     pub fn can_cut(&self) -> bool {
-        unsafe { ffi::wxd_WebView_CanCut(self.as_ptr()) }
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_WebView_CanCut(ptr) }
     }
 
+    /// Returns whether the webview can copy.
+    /// Returns false if the webview has been destroyed.
     pub fn can_copy(&self) -> bool {
-        unsafe { ffi::wxd_WebView_CanCopy(self.as_ptr()) }
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_WebView_CanCopy(ptr) }
     }
 
+    /// Returns whether the webview can paste.
+    /// Returns false if the webview has been destroyed.
     pub fn can_paste(&self) -> bool {
-        unsafe { ffi::wxd_WebView_CanPaste(self.as_ptr()) }
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_WebView_CanPaste(ptr) }
     }
 
+    /// Cuts the selected content.
+    /// No-op if the webview has been destroyed.
     pub fn cut(&self) {
-        unsafe { ffi::wxd_WebView_Cut(self.as_ptr()) };
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_WebView_Cut(ptr) };
     }
 
+    /// Copies the selected content.
+    /// No-op if the webview has been destroyed.
     pub fn copy(&self) {
-        unsafe { ffi::wxd_WebView_Copy(self.as_ptr()) };
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_WebView_Copy(ptr) };
     }
 
+    /// Pastes content from clipboard.
+    /// No-op if the webview has been destroyed.
     pub fn paste(&self) {
-        unsafe { ffi::wxd_WebView_Paste(self.as_ptr()) };
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_WebView_Paste(ptr) };
     }
 
+    /// Returns whether the webview can undo.
+    /// Returns false if the webview has been destroyed.
     pub fn can_undo(&self) -> bool {
-        unsafe { ffi::wxd_WebView_CanUndo(self.as_ptr()) }
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_WebView_CanUndo(ptr) }
     }
 
+    /// Returns whether the webview can redo.
+    /// Returns false if the webview has been destroyed.
     pub fn can_redo(&self) -> bool {
-        unsafe { ffi::wxd_WebView_CanRedo(self.as_ptr()) }
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_WebView_CanRedo(ptr) }
     }
 
+    /// Undoes the last action.
+    /// No-op if the webview has been destroyed.
     pub fn undo(&self) {
-        unsafe { ffi::wxd_WebView_Undo(self.as_ptr()) };
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_WebView_Undo(ptr) };
     }
 
+    /// Redoes the last undone action.
+    /// No-op if the webview has been destroyed.
     pub fn redo(&self) {
-        unsafe { ffi::wxd_WebView_Redo(self.as_ptr()) };
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_WebView_Redo(ptr) };
     }
 
     // --- Selection ---
 
+    /// Selects all content.
+    /// No-op if the webview has been destroyed.
     pub fn select_all(&self) {
-        unsafe { ffi::wxd_WebView_SelectAll(self.as_ptr()) };
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_WebView_SelectAll(ptr) };
     }
 
+    /// Returns whether there is a selection.
+    /// Returns false if the webview has been destroyed.
     pub fn has_selection(&self) -> bool {
-        unsafe { ffi::wxd_WebView_HasSelection(self.as_ptr()) }
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_WebView_HasSelection(ptr) }
     }
 
+    /// Deletes the current selection.
+    /// No-op if the webview has been destroyed.
     pub fn delete_selection(&self) {
-        unsafe { ffi::wxd_WebView_DeleteSelection(self.as_ptr()) };
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_WebView_DeleteSelection(ptr) };
     }
 
+    /// Returns the selected text.
+    /// Returns empty string if the webview has been destroyed.
     pub fn get_selected_text(&self) -> String {
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return String::new();
+        }
         unsafe {
             let mut buffer: Vec<c_char> = vec![0; 4096];
-            let len = ffi::wxd_WebView_GetSelectedText(self.as_ptr(), buffer.as_mut_ptr(), buffer.len() as i32);
+            let len = ffi::wxd_WebView_GetSelectedText(ptr, buffer.as_mut_ptr(), buffer.len() as i32);
             if len >= 0 {
                 let byte_slice = std::slice::from_raw_parts(buffer.as_ptr() as *const u8, len as usize);
                 String::from_utf8_lossy(byte_slice).to_string()
@@ -465,10 +719,16 @@ impl WebView {
         }
     }
 
+    /// Returns the selected HTML source.
+    /// Returns empty string if the webview has been destroyed.
     pub fn get_selected_source(&self) -> String {
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return String::new();
+        }
         unsafe {
             let mut buffer: Vec<c_char> = vec![0; 4096];
-            let len = ffi::wxd_WebView_GetSelectedSource(self.as_ptr(), buffer.as_mut_ptr(), buffer.len() as i32);
+            let len = ffi::wxd_WebView_GetSelectedSource(ptr, buffer.as_mut_ptr(), buffer.len() as i32);
             if len >= 0 {
                 let byte_slice = std::slice::from_raw_parts(buffer.as_ptr() as *const u8, len as usize);
                 String::from_utf8_lossy(byte_slice).to_string()
@@ -478,98 +738,206 @@ impl WebView {
         }
     }
 
+    /// Clears the current selection.
+    /// No-op if the webview has been destroyed.
     pub fn clear_selection(&self) {
-        unsafe { ffi::wxd_WebView_ClearSelection(self.as_ptr()) };
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_WebView_ClearSelection(ptr) };
     }
 
     // --- Editing ---
 
+    /// Returns whether the webview is editable.
+    /// Returns false if the webview has been destroyed.
     pub fn is_editable(&self) -> bool {
-        unsafe { ffi::wxd_WebView_IsEditable(self.as_ptr()) }
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_WebView_IsEditable(ptr) }
     }
 
+    /// Sets whether the webview is editable.
+    /// No-op if the webview has been destroyed.
     pub fn set_editable(&self, enable: bool) {
-        unsafe { ffi::wxd_WebView_SetEditable(self.as_ptr(), enable) };
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_WebView_SetEditable(ptr, enable) };
     }
 
     // --- Printing ---
 
+    /// Opens the print dialog.
+    /// No-op if the webview has been destroyed.
     pub fn print(&self) {
-        unsafe { ffi::wxd_WebView_Print(self.as_ptr()) };
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_WebView_Print(ptr) };
     }
 
     // --- Context Menu & Dev Tools ---
 
+    /// Enables or disables the context menu.
+    /// No-op if the webview has been destroyed.
     pub fn enable_context_menu(&self, enable: bool) {
-        unsafe { ffi::wxd_WebView_EnableContextMenu(self.as_ptr(), enable) };
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_WebView_EnableContextMenu(ptr, enable) };
     }
 
+    /// Returns whether the context menu is enabled.
+    /// Returns false if the webview has been destroyed.
     pub fn is_context_menu_enabled(&self) -> bool {
-        unsafe { ffi::wxd_WebView_IsContextMenuEnabled(self.as_ptr()) }
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_WebView_IsContextMenuEnabled(ptr) }
     }
 
+    /// Enables or disables access to developer tools.
+    /// No-op if the webview has been destroyed.
     pub fn enable_access_to_dev_tools(&self, enable: bool) {
-        unsafe { ffi::wxd_WebView_EnableAccessToDevTools(self.as_ptr(), enable) };
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_WebView_EnableAccessToDevTools(ptr, enable) };
     }
 
+    /// Returns whether access to developer tools is enabled.
+    /// Returns false if the webview has been destroyed.
     pub fn is_access_to_dev_tools_enabled(&self) -> bool {
-        unsafe { ffi::wxd_WebView_IsAccessToDevToolsEnabled(self.as_ptr()) }
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_WebView_IsAccessToDevToolsEnabled(ptr) }
     }
 
+    /// Shows the developer tools.
+    /// Returns false if the webview has been destroyed or if showing failed.
     pub fn show_dev_tools(&self) -> bool {
-        unsafe { ffi::wxd_WebView_ShowDevTools(self.as_ptr()) }
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_WebView_ShowDevTools(ptr) }
     }
 
+    /// Enables or disables browser accelerator keys.
+    /// No-op if the webview has been destroyed.
     pub fn enable_browser_accelerator_keys(&self, enable: bool) {
-        unsafe { ffi::wxd_WebView_EnableBrowserAcceleratorKeys(self.as_ptr(), enable) };
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_WebView_EnableBrowserAcceleratorKeys(ptr, enable) };
     }
 
+    /// Returns whether browser accelerator keys are enabled.
+    /// Returns false if the webview has been destroyed.
     pub fn are_browser_accelerator_keys_enabled(&self) -> bool {
-        unsafe { ffi::wxd_WebView_AreBrowserAcceleratorKeysEnabled(self.as_ptr()) }
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_WebView_AreBrowserAcceleratorKeysEnabled(ptr) }
     }
 
     // --- Zoom Factor ---
 
+    /// Returns the current zoom factor.
+    /// Returns 1.0 if the webview has been destroyed.
     pub fn get_zoom_factor(&self) -> f32 {
-        unsafe { ffi::wxd_WebView_GetZoomFactor(self.as_ptr()) }
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return 1.0;
+        }
+        unsafe { ffi::wxd_WebView_GetZoomFactor(ptr) }
     }
 
+    /// Sets the zoom factor.
+    /// No-op if the webview has been destroyed.
     pub fn set_zoom_factor(&self, zoom: f32) {
-        unsafe { ffi::wxd_WebView_SetZoomFactor(self.as_ptr(), zoom) };
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_WebView_SetZoomFactor(ptr, zoom) };
     }
 
     // --- Page Loading ---
 
+    /// Sets the page content from HTML string.
+    /// No-op if the webview has been destroyed.
     pub fn set_page(&self, html: &str, base_url: &str) {
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return;
+        }
         let c_html = CString::new(html).unwrap_or_default();
         let c_base_url = CString::new(base_url).unwrap_or_default();
         unsafe {
-            ffi::wxd_WebView_SetPage(self.as_ptr(), c_html.as_ptr(), c_base_url.as_ptr());
+            ffi::wxd_WebView_SetPage(ptr, c_html.as_ptr(), c_base_url.as_ptr());
         }
     }
 
+    /// Finds text in the page.
+    /// Returns 0 if the webview has been destroyed.
     pub fn find(&self, text: &str, flags: WebViewFindFlags) -> i64 {
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return 0;
+        }
         let c_text = CString::new(text).unwrap_or_default();
-        unsafe { ffi::wxd_WebView_Find(self.as_ptr(), c_text.as_ptr(), flags.bits()) as i64 }
+        unsafe { ffi::wxd_WebView_Find(ptr, c_text.as_ptr(), flags.bits()) as i64 }
     }
 
     // --- History ---
 
+    /// Enables or disables history.
+    /// No-op if the webview has been destroyed.
     pub fn enable_history(&self, enable: bool) {
-        unsafe { ffi::wxd_WebView_EnableHistory(self.as_ptr(), enable) };
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_WebView_EnableHistory(ptr, enable) };
     }
 
     // --- Configuration ---
 
+    /// Sets the user agent string.
+    /// Returns false if the webview has been destroyed.
     pub fn set_user_agent(&self, user_agent: &str) -> bool {
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return false;
+        }
         let c_user_agent = CString::new(user_agent).unwrap_or_default();
-        unsafe { ffi::wxd_WebView_SetUserAgent(self.as_ptr(), c_user_agent.as_ptr()) }
+        unsafe { ffi::wxd_WebView_SetUserAgent(ptr, c_user_agent.as_ptr()) }
     }
 
+    /// Returns the user agent string.
+    /// Returns empty string if the webview has been destroyed.
     pub fn get_user_agent(&self) -> String {
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return String::new();
+        }
         unsafe {
             let mut buffer: Vec<c_char> = vec![0; 1024];
-            let len = ffi::wxd_WebView_GetUserAgent(self.as_ptr(), buffer.as_mut_ptr(), buffer.len() as i32);
+            let len = ffi::wxd_WebView_GetUserAgent(ptr, buffer.as_mut_ptr(), buffer.len() as i32);
 
             if len < 0 {
                 return String::new(); // Error
@@ -579,7 +947,7 @@ impl WebView {
             if len >= buffer.len() as i32 {
                 // Allocate larger buffer and retry
                 buffer = vec![0; len as usize + 1];
-                let len2 = ffi::wxd_WebView_GetUserAgent(self.as_ptr(), buffer.as_mut_ptr(), buffer.len() as i32);
+                let len2 = ffi::wxd_WebView_GetUserAgent(ptr, buffer.as_mut_ptr(), buffer.len() as i32);
                 if len2 < 0 {
                     return String::new(); // Error on second call
                 }
@@ -591,42 +959,84 @@ impl WebView {
         }
     }
 
+    /// Sets the proxy configuration.
+    /// Returns false if the webview has been destroyed.
     pub fn set_proxy(&self, proxy: &str) -> bool {
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return false;
+        }
         let c_proxy = CString::new(proxy).unwrap_or_default();
-        unsafe { ffi::wxd_WebView_SetProxy(self.as_ptr(), c_proxy.as_ptr()) }
+        unsafe { ffi::wxd_WebView_SetProxy(ptr, c_proxy.as_ptr()) }
     }
 
     // --- Advanced Scripting ---
 
+    /// Adds a script message handler.
+    /// Returns false if the webview has been destroyed.
     pub fn add_script_message_handler(&self, name: &str) -> bool {
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return false;
+        }
         let c_name = CString::new(name).unwrap_or_default();
-        unsafe { ffi::wxd_WebView_AddScriptMessageHandler(self.as_ptr(), c_name.as_ptr()) }
+        unsafe { ffi::wxd_WebView_AddScriptMessageHandler(ptr, c_name.as_ptr()) }
     }
 
+    /// Removes a script message handler.
+    /// Returns false if the webview has been destroyed.
     pub fn remove_script_message_handler(&self, name: &str) -> bool {
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return false;
+        }
         let c_name = CString::new(name).unwrap_or_default();
-        unsafe { ffi::wxd_WebView_RemoveScriptMessageHandler(self.as_ptr(), c_name.as_ptr()) }
+        unsafe { ffi::wxd_WebView_RemoveScriptMessageHandler(ptr, c_name.as_ptr()) }
     }
 
+    /// Adds a user script to be injected into pages.
+    /// Returns false if the webview has been destroyed.
     pub fn add_user_script(&self, javascript: &str, injection_time: WebViewUserScriptInjectionTime) -> bool {
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return false;
+        }
         let c_javascript = CString::new(javascript).unwrap_or_default();
-        unsafe { ffi::wxd_WebView_AddUserScript(self.as_ptr(), c_javascript.as_ptr(), injection_time as i32) }
+        unsafe { ffi::wxd_WebView_AddUserScript(ptr, c_javascript.as_ptr(), injection_time as i32) }
     }
 
+    /// Removes all user scripts.
+    /// No-op if the webview has been destroyed.
     pub fn remove_all_user_scripts(&self) {
-        unsafe { ffi::wxd_WebView_RemoveAllUserScripts(self.as_ptr()) };
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_WebView_RemoveAllUserScripts(ptr) };
     }
 
     // --- Native Backend ---
 
+    /// Returns a pointer to the native backend.
+    /// Returns null if the webview has been destroyed.
     pub fn get_native_backend(&self) -> *mut std::os::raw::c_void {
-        unsafe { ffi::wxd_WebView_GetNativeBackend(self.as_ptr()) }
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return std::ptr::null_mut();
+        }
+        unsafe { ffi::wxd_WebView_GetNativeBackend(ptr) }
     }
 
+    /// Returns the backend name.
+    /// Returns empty string if the webview has been destroyed.
     pub fn get_backend(&self) -> String {
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return String::new();
+        }
         unsafe {
             let mut buffer: Vec<c_char> = vec![0; 256];
-            let len = ffi::wxd_WebView_GetBackend(self.as_ptr(), buffer.as_mut_ptr(), buffer.len() as i32);
+            let len = ffi::wxd_WebView_GetBackend(ptr, buffer.as_mut_ptr(), buffer.len() as i32);
 
             if len < 0 {
                 return String::new();
@@ -635,7 +1045,7 @@ impl WebView {
             // Check if we need a larger buffer
             if len >= buffer.len() as i32 {
                 buffer = vec![0; len as usize + 1];
-                ffi::wxd_WebView_GetBackend(self.as_ptr(), buffer.as_mut_ptr(), buffer.len() as i32);
+                ffi::wxd_WebView_GetBackend(ptr, buffer.as_mut_ptr(), buffer.len() as i32);
             }
 
             let byte_slice = std::slice::from_raw_parts(buffer.as_ptr() as *const u8, len as usize);
@@ -664,11 +1074,45 @@ impl WebView {
         unsafe { ffi::wxd_WebView_IsBackendAvailable(c_backend.as_ptr()) }
     }
 
-    fn as_ptr(&self) -> *mut ffi::wxd_WebView_t {
-        self.window.as_ptr() as *mut ffi::wxd_WebView_t
+    /// Returns the underlying WindowHandle for this webview.
+    pub fn window_handle(&self) -> WindowHandle {
+        self.handle
     }
 }
 
+// Implement WebViewEvents trait for WebView
+#[cfg(feature = "webview")]
+use crate::event::WebViewEvents;
+
+#[cfg(feature = "webview")]
+impl WebViewEvents for WebView {}
+
+// Manual WxWidget implementation for WebView (using WindowHandle)
+impl WxWidget for WebView {
+    fn handle_ptr(&self) -> *mut ffi::wxd_Window_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut())
+    }
+
+    fn is_valid(&self) -> bool {
+        self.handle.is_valid()
+    }
+}
+
+// Note: We don't implement Deref to Window because returning a reference
+// to a temporary Window is unsound. Users can access window methods through
+// the WxWidget trait methods directly.
+
+// Implement WxEvtHandler for event binding
+impl WxEvtHandler for WebView {
+    unsafe fn get_event_handler_ptr(&self) -> *mut ffi::wxd_EvtHandler_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut()) as *mut ffi::wxd_EvtHandler_t
+    }
+}
+
+// Implement common event traits that all Window-based widgets support
+impl crate::event::WindowEvents for WebView {}
+
+// Use the widget_builder macro to generate the WebViewBuilder implementation
 widget_builder!(
     name: WebView,
     parent_type: &'a dyn WxWidget,
@@ -693,11 +1137,20 @@ widget_builder!(
     }
 );
 
-implement_widget_traits_with_target!(WebView, window, Window);
+// XRC Support - enables WebView to be created from XRC-managed pointers
+#[cfg(feature = "xrc")]
+impl crate::xrc::XrcSupport for WebView {
+    unsafe fn from_xrc_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        WebView {
+            handle: WindowHandle::new(ptr),
+        }
+    }
+}
 
 // Note: WebView doesn't have XRC support in wxWidgets, so we don't provide it either
 // Users should create WebView programmatically using the builder pattern
 
+// Define the WebViewStyle enum using the widget_style_enum macro
 widget_style_enum!(
     name: WebViewStyle,
     doc: "Style flags for `WebView`.",
@@ -707,12 +1160,15 @@ widget_style_enum!(
     default_variant: Default
 );
 
-impl_widget_cast!(WebView, "wxWebView", { window });
+// Enable widget casting for WebView
+impl crate::window::FromWindowWithClassName for WebView {
+    fn class_name() -> &'static str {
+        "wxWebView"
+    }
 
-// Import WebView event types
-#[cfg(feature = "webview")]
-use crate::event::WebViewEvents;
-
-// Implement WebViewEvents trait for WebView
-#[cfg(feature = "webview")]
-impl WebViewEvents for WebView {}
+    unsafe fn from_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        WebView {
+            handle: WindowHandle::new(ptr),
+        }
+    }
+}

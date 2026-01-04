@@ -1,9 +1,12 @@
 //! Safe wrapper for wxRearrangeList.
 
-use crate::event::{Event, EventType};
+use crate::event::{Event, EventType, WxEvtHandler};
 use crate::geometry::{Point, Size};
 use crate::id::Id;
-use crate::window::{Window, WxWidget};
+use crate::window::{WindowHandle, WxWidget};
+// Window is used by XRC support for backwards compatibility
+#[allow(unused_imports)]
+use crate::window::Window;
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
 use wxdragon_sys as ffi;
@@ -64,9 +67,32 @@ impl RearrangeListEventData {
 }
 
 /// Represents a wxRearrangeList control, which allows reordering and checking/unchecking items.
+///
+/// RearrangeList uses `WindowHandle` internally for safe memory management.
+/// When the underlying window is destroyed (by calling `destroy()` or when
+/// its parent is destroyed), the handle becomes invalid and all operations
+/// become safe no-ops.
+///
+/// # Example
+/// ```ignore
+/// let list = RearrangeList::builder(&frame).items(vec!["Item 1".to_string()]).build();
+///
+/// // RearrangeList is Copy - no clone needed for closures!
+/// list.bind_selected(move |_| {
+///     // Safe: if list was destroyed, this is a no-op
+///     if let Some(sel) = list.get_selection() {
+///         println!("Selected: {}", sel);
+///     }
+/// });
+///
+/// // After parent destruction, list operations are safe no-ops
+/// frame.destroy();
+/// assert!(!list.is_valid());
+/// ```
 #[derive(Clone, Copy)]
 pub struct RearrangeList {
-    window: Window,
+    /// Safe handle to the underlying wxRearrangeList - automatically invalidated on destroy
+    handle: WindowHandle,
 }
 
 impl RearrangeList {
@@ -75,12 +101,26 @@ impl RearrangeList {
         RearrangeListBuilder::new(parent)
     }
 
+    /// Helper to get raw rearrangelist pointer, returns null if widget has been destroyed
+    #[inline]
+    fn rearrangelist_ptr(&self) -> *mut ffi::wxd_RearrangeList_t {
+        self.handle
+            .get_ptr()
+            .map(|p| p as *mut ffi::wxd_RearrangeList_t)
+            .unwrap_or(std::ptr::null_mut())
+    }
+
     /// Gets the current order of items in the list.
+    /// Returns empty vector if the widget has been destroyed.
     ///
     /// The returned vector contains values that represent both the order and checked state of items:
     /// - Positive values (n) represent checked items at the original position n.
     /// - Negative values (~n) represent unchecked items at the original position n.
     pub fn get_current_order(&self) -> Vec<i32> {
+        let ptr = self.rearrangelist_ptr();
+        if ptr.is_null() {
+            return Vec::new();
+        }
         unsafe {
             let count = self.get_count() as usize;
 
@@ -88,54 +128,86 @@ impl RearrangeList {
             let mut buffer: Vec<i32> = vec![0; count];
 
             // Call the C API to fill the buffer
-            ffi::wxd_RearrangeList_GetCurrentOrder(self.window.as_ptr() as *mut _, buffer.as_mut_ptr(), count as i32);
+            ffi::wxd_RearrangeList_GetCurrentOrder(ptr, buffer.as_mut_ptr(), count as i32);
 
             buffer
         }
     }
 
     /// Move the currently selected item one position up.
+    /// Returns false if the widget has been destroyed.
     ///
     /// Returns true if the item was moved, false if it couldn't be moved
     /// (e.g., if it's already at the top).
     pub fn move_current_up(&self) -> bool {
-        unsafe { ffi::wxd_RearrangeList_MoveCurrentUp(self.window.as_ptr() as *mut _) }
+        let ptr = self.rearrangelist_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_RearrangeList_MoveCurrentUp(ptr) }
     }
 
     /// Move the currently selected item one position down.
+    /// Returns false if the widget has been destroyed.
     ///
     /// Returns true if the item was moved, false if it couldn't be moved
     /// (e.g., if it's already at the bottom).
     pub fn move_current_down(&self) -> bool {
-        unsafe { ffi::wxd_RearrangeList_MoveCurrentDown(self.window.as_ptr() as *mut _) }
+        let ptr = self.rearrangelist_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_RearrangeList_MoveCurrentDown(ptr) }
     }
 
     /// Check if the currently selected item can be moved up.
+    /// Returns false if the widget has been destroyed.
     pub fn can_move_current_up(&self) -> bool {
-        unsafe { ffi::wxd_RearrangeList_CanMoveCurrentUp(self.window.as_ptr() as *mut _) }
+        let ptr = self.rearrangelist_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_RearrangeList_CanMoveCurrentUp(ptr) }
     }
 
     /// Check if the currently selected item can be moved down.
+    /// Returns false if the widget has been destroyed.
     pub fn can_move_current_down(&self) -> bool {
-        unsafe { ffi::wxd_RearrangeList_CanMoveCurrentDown(self.window.as_ptr() as *mut _) }
+        let ptr = self.rearrangelist_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_RearrangeList_CanMoveCurrentDown(ptr) }
     }
 
     /// Gets the index of the currently selected item.
-    /// Returns `None` if no item is selected.
+    /// Returns `None` if no item is selected or if the widget has been destroyed.
     pub fn get_selection(&self) -> Option<u32> {
-        let selection = unsafe { ffi::wxd_RearrangeList_GetSelection(self.window.as_ptr() as *mut _) };
+        let ptr = self.rearrangelist_ptr();
+        if ptr.is_null() {
+            return None;
+        }
+        let selection = unsafe { ffi::wxd_RearrangeList_GetSelection(ptr) };
         if selection == -1 { None } else { Some(selection as u32) }
     }
 
     /// Sets the selection to the item at the given index.
+    /// No-op if the widget has been destroyed.
     pub fn set_selection(&self, index: u32, select: bool) {
-        unsafe { ffi::wxd_RearrangeList_SetSelection(self.window.as_ptr() as *mut _, index as i32, select) };
+        let ptr = self.rearrangelist_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_RearrangeList_SetSelection(ptr, index as i32, select) };
     }
 
     /// Gets the string at the specified index.
-    /// Returns `None` if the index is out of bounds.
+    /// Returns `None` if the index is out of bounds or if the widget has been destroyed.
     pub fn get_string(&self, index: u32) -> Option<String> {
-        let ptr = self.window.as_ptr() as *mut _;
+        let ptr = self.rearrangelist_ptr();
+        if ptr.is_null() {
+            return None;
+        }
         let mut buffer = [0; 1024];
         let len_needed = unsafe { ffi::wxd_RearrangeList_GetString(ptr, index as i32, buffer.as_mut_ptr(), buffer.len()) };
 
@@ -158,28 +230,61 @@ impl RearrangeList {
     }
 
     /// Gets the number of items in the list.
+    /// Returns 0 if the widget has been destroyed.
     pub fn get_count(&self) -> u32 {
-        unsafe { ffi::wxd_RearrangeList_GetCount(self.window.as_ptr() as *mut _) }
+        let ptr = self.rearrangelist_ptr();
+        if ptr.is_null() {
+            return 0;
+        }
+        unsafe { ffi::wxd_RearrangeList_GetCount(ptr) }
     }
 
     /// Checks or unchecks an item at the given index.
+    /// No-op if the widget has been destroyed.
     pub fn check(&self, index: u32, check: bool) {
+        let ptr = self.rearrangelist_ptr();
+        if ptr.is_null() {
+            return;
+        }
         unsafe {
-            // Cast the *mut wxd_Window_t to *mut wxd_RearrangeList_t for the FFI call
-            let list_ptr = self.window.0 as *mut ffi::wxd_RearrangeList_t;
             ffi::wxd_RearrangeList_Check(
-                list_ptr, index, // FFI function now takes u32 (unsigned int in C++)
+                ptr, index, // FFI function now takes u32 (unsigned int in C++)
                 check,
             );
-            // No pointer update needed as the control is not recreated.
         }
     }
 
     /// Checks if the item at the given index is currently checked.
+    /// Returns false if the widget has been destroyed.
     pub fn is_checked(&self, index: u32) -> bool {
-        unsafe { ffi::wxd_RearrangeList_IsChecked(self.window.as_ptr() as *mut _, index as i32) }
+        let ptr = self.rearrangelist_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_RearrangeList_IsChecked(ptr, index as i32) }
     }
 }
+
+// Manual WxWidget implementation for RearrangeList (using WindowHandle)
+impl WxWidget for RearrangeList {
+    fn handle_ptr(&self) -> *mut ffi::wxd_Window_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut())
+    }
+
+    fn is_valid(&self) -> bool {
+        self.handle.is_valid()
+    }
+}
+
+// Implement WxEvtHandler for event binding
+impl WxEvtHandler for RearrangeList {
+    unsafe fn get_event_handler_ptr(&self) -> *mut ffi::wxd_EvtHandler_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut()) as *mut ffi::wxd_EvtHandler_t
+    }
+}
+
+// Implement common event traits that all Window-based widgets support
+impl crate::event::WindowEvents for RearrangeList {}
 
 // Implement event handlers for RearrangeList
 crate::implement_widget_local_event_handlers!(
@@ -241,12 +346,17 @@ widget_builder!(
         }
 
         RearrangeList {
-            window: unsafe { Window::from_ptr(ctrl_ptr as *mut ffi::wxd_Window_t) },
+            handle: WindowHandle::new(ctrl_ptr as *mut ffi::wxd_Window_t),
         }
     }
 );
 
-implement_widget_traits_with_target!(RearrangeList, window, Window);
-
-// Add XRC Support - enables RearrangeList to be created from XRC-managed pointers
-impl_xrc_support!(RearrangeList, { window });
+// XRC Support - enables RearrangeList to be created from XRC-managed pointers
+#[cfg(feature = "xrc")]
+impl crate::xrc::XrcSupport for RearrangeList {
+    unsafe fn from_xrc_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        RearrangeList {
+            handle: WindowHandle::new(ptr),
+        }
+    }
+}

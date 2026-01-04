@@ -1,11 +1,14 @@
 //! wxListCtrl wrapper
 
-use crate::event::{Event, EventType, WindowEvents};
+use crate::event::{Event, EventType, WxEvtHandler};
 use crate::geometry::{Point, Size};
 use crate::id::Id;
 use crate::widgets::imagelist::ImageList;
 use crate::widgets::item_data::{HasItemData, get_item_data, remove_item_data, store_item_data};
-use crate::window::{Window, WxWidget};
+use crate::window::{WindowHandle, WxWidget};
+// Window is used by macros and internal compatibility
+#[allow(unused_imports)]
+use crate::window::Window;
 use std::any::Any;
 use std::ffi::{CStr, CString};
 use std::os::raw::{c_int, c_longlong};
@@ -219,13 +222,38 @@ pub mod image_list_type {
 
 /// A control for displaying and manipulating multiple items
 ///
+/// ListCtrl uses `WindowHandle` internally for safe memory management.
+/// When the underlying window is destroyed (by calling `destroy()` or when
+/// its parent is destroyed), the handle becomes invalid and all operations
+/// become safe no-ops.
+///
 /// The ListCtrl can display items in various formats including:
 /// - List view (one column)
 /// - Report view (multiple columns with headers)
 /// - Icon view (large or small icons)
+///
+/// # Example
+/// ```ignore
+/// let list_ctrl = ListCtrl::builder(&frame)
+///     .with_style(ListCtrlStyle::Report)
+///     .build();
+///
+/// // ListCtrl is Copy - no clone needed for closures!
+/// list_ctrl.on_item_selected(move |event| {
+///     // Safe: if list_ctrl was destroyed, this is a no-op
+///     let index = event.get_item_index();
+///     let text = list_ctrl.get_item_text(index as i64, 0);
+///     println!("Selected: {}", text);
+/// });
+///
+/// // After parent destruction, list_ctrl operations are safe no-ops
+/// frame.destroy();
+/// assert!(!list_ctrl.is_valid());
+/// ```
 #[derive(Clone, Copy)]
 pub struct ListCtrl {
-    window: Window,
+    /// Safe handle to the underlying wxListCtrl - automatically invalidated on destroy
+    handle: WindowHandle,
 }
 
 impl ListCtrl {
@@ -244,68 +272,101 @@ impl ListCtrl {
             panic!("Failed to create ListCtrl: FFI returned null pointer.");
         }
 
-        unsafe { Self::from_ptr(ptr) }
-    }
-
-    /// Creates a ListCtrl from a raw pointer.
-    ///
-    /// # Safety
-    /// The pointer must be a valid wxd_ListCtrl_t pointer.
-    unsafe fn from_ptr(ptr: *mut ffi::wxd_ListCtrl_t) -> Self {
+        // Create a WindowHandle which automatically registers for destroy events
         ListCtrl {
-            window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
+            handle: WindowHandle::new(ptr as *mut ffi::wxd_Window_t),
         }
     }
 
-    /// Returns the ListCtrl pointer from the window pointer.
+    /// Creates a new ListCtrl from a raw pointer.
+    /// This is intended for internal use by other widget wrappers.
+    #[allow(dead_code)]
+    pub(crate) fn from_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        Self {
+            handle: WindowHandle::new(ptr),
+        }
+    }
+
+    /// Helper to get raw list_ctrl pointer, returns null if widget has been destroyed
     #[inline]
-    fn as_list_ctrl_ptr(&self) -> *mut ffi::wxd_ListCtrl_t {
-        self.handle_ptr() as *mut ffi::wxd_ListCtrl_t
+    fn listctrl_ptr(&self) -> *mut ffi::wxd_ListCtrl_t {
+        self.handle
+            .get_ptr()
+            .map(|p| p as *mut ffi::wxd_ListCtrl_t)
+            .unwrap_or(std::ptr::null_mut())
+    }
+
+    /// Returns the underlying WindowHandle for this list control.
+    pub fn window_handle(&self) -> WindowHandle {
+        self.handle
     }
 
     /// Inserts a column at the specified position.
+    /// Returns -1 if the list control has been destroyed.
     pub fn insert_column(&self, col: i64, heading: &str, format: ListColumnFormat, width: i32) -> i32 {
-        let c_heading = CString::new(heading).unwrap_or_default();
-        unsafe {
-            ffi::wxd_ListCtrl_InsertColumn(
-                self.as_list_ctrl_ptr(),
-                col as c_longlong,
-                c_heading.as_ptr(),
-                format as c_int,
-                width,
-            )
+        let ptr = self.listctrl_ptr();
+        if ptr.is_null() {
+            return -1;
         }
+        let c_heading = CString::new(heading).unwrap_or_default();
+        unsafe { ffi::wxd_ListCtrl_InsertColumn(ptr, col as c_longlong, c_heading.as_ptr(), format as c_int, width) }
     }
 
     /// Sets the width of the specified column.
+    /// No-op (returns false) if the list control has been destroyed.
     pub fn set_column_width(&self, col: i64, width: i32) -> bool {
-        unsafe { ffi::wxd_ListCtrl_SetColumnWidth(self.as_list_ctrl_ptr(), col as c_longlong, width) }
+        let ptr = self.listctrl_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_ListCtrl_SetColumnWidth(ptr, col as c_longlong, width) }
     }
 
     /// Gets the width of the specified column.
+    /// Returns 0 if the list control has been destroyed.
     pub fn get_column_width(&self, col: i64) -> i32 {
-        unsafe { ffi::wxd_ListCtrl_GetColumnWidth(self.as_list_ctrl_ptr(), col as c_longlong) }
+        let ptr = self.listctrl_ptr();
+        if ptr.is_null() {
+            return 0;
+        }
+        unsafe { ffi::wxd_ListCtrl_GetColumnWidth(ptr, col as c_longlong) }
     }
 
     /// Gets the number of columns in the list control.
+    /// Returns 0 if the list control has been destroyed.
     pub fn get_column_count(&self) -> i32 {
-        unsafe { ffi::wxd_ListCtrl_GetColumnCount(self.as_list_ctrl_ptr()) }
+        let ptr = self.listctrl_ptr();
+        if ptr.is_null() {
+            return 0;
+        }
+        unsafe { ffi::wxd_ListCtrl_GetColumnCount(ptr) }
     }
 
     /// Inserts a simple item (label only) at the specified index.
+    /// Returns -1 if the list control has been destroyed.
     pub fn insert_item(&self, index: i64, label: &str, image_index: Option<i32>) -> i32 {
+        let ptr = self.listctrl_ptr();
+        if ptr.is_null() {
+            return -1;
+        }
         let c_label = CString::new(label).unwrap_or_default();
         let img_idx = image_index.unwrap_or(-1); // Use -1 if no image is specified
-        unsafe { ffi::wxd_ListCtrl_InsertItemWithImage(self.as_list_ctrl_ptr(), index as c_longlong, c_label.as_ptr(), img_idx) }
+        unsafe { ffi::wxd_ListCtrl_InsertItemWithImage(ptr, index as c_longlong, c_label.as_ptr(), img_idx) }
     }
 
     /// Sets the text of an item (label in column 0).
+    /// No-op if the list control has been destroyed.
     pub fn set_item_text(&self, index: i64, text: &str) {
+        let ptr = self.listctrl_ptr();
+        if ptr.is_null() {
+            return;
+        }
         let c_text = CString::new(text).unwrap_or_default();
-        unsafe { ffi::wxd_ListCtrl_SetItemText(self.as_list_ctrl_ptr(), index as c_longlong, c_text.as_ptr()) }
+        unsafe { ffi::wxd_ListCtrl_SetItemText(ptr, index as c_longlong, c_text.as_ptr()) }
     }
 
     /// Sets the text of an item in the specified column.
+    /// No-op if the list control has been destroyed.
     ///
     /// # Arguments
     /// * `index` - The index of the item.
@@ -322,6 +383,11 @@ impl ListCtrl {
     /// list_ctrl.set_item_text_by_column(0, 1, "Column 1 text");
     /// ```
     pub fn set_item_text_by_column(&self, index: i64, col: i32, text: &str) {
+        let ptr = self.listctrl_ptr();
+        if ptr.is_null() {
+            return;
+        }
+
         if col == 0 {
             // Use the standard method for column 0
             self.set_item_text(index, text);
@@ -339,7 +405,7 @@ impl ListCtrl {
 
         unsafe {
             ffi::wxd_ListCtrl_SetItem(
-                self.as_list_ctrl_ptr(),
+                ptr,
                 index as c_longlong,
                 col as c_int,
                 c_text.as_ptr(),
@@ -354,16 +420,20 @@ impl ListCtrl {
     }
 
     /// Gets the text of an item in the specified column.
+    /// Returns empty string if the list control has been destroyed.
     pub fn get_item_text(&self, index: i64, col: i32) -> String {
+        let ptr = self.listctrl_ptr();
+        if ptr.is_null() {
+            return String::new();
+        }
         unsafe {
-            let needed_len =
-                ffi::wxd_ListCtrl_GetItemText(self.as_list_ctrl_ptr(), index as c_longlong, col, std::ptr::null_mut(), 0);
+            let needed_len = ffi::wxd_ListCtrl_GetItemText(ptr, index as c_longlong, col, std::ptr::null_mut(), 0);
             if needed_len <= 0 {
                 return String::new();
             }
             let mut buffer: Vec<u8> = Vec::with_capacity(needed_len as usize);
             let actual_len = ffi::wxd_ListCtrl_GetItemText(
-                self.as_list_ctrl_ptr(),
+                ptr,
                 index as c_longlong,
                 col,
                 buffer.as_mut_ptr() as *mut i8,
@@ -378,11 +448,17 @@ impl ListCtrl {
     }
 
     /// Gets the number of items in the list control.
+    /// Returns 0 if the list control has been destroyed.
     pub fn get_item_count(&self) -> i32 {
-        unsafe { ffi::wxd_ListCtrl_GetItemCount(self.as_list_ctrl_ptr()) }
+        let ptr = self.listctrl_ptr();
+        if ptr.is_null() {
+            return 0;
+        }
+        unsafe { ffi::wxd_ListCtrl_GetItemCount(ptr) }
     }
 
     /// Sets the state of an item using the ListItemState enum.
+    /// No-op (returns false) if the list control has been destroyed.
     ///
     /// # Arguments
     /// * `item` - The index of the item.
@@ -402,9 +478,13 @@ impl ListCtrl {
     /// list_ctrl.set_item_state(0, ListItemState::default(), ListItemState::Selected);
     /// ```
     pub fn set_item_state(&self, item: i64, state: ListItemState, state_mask: ListItemState) -> bool {
+        let ptr = self.listctrl_ptr();
+        if ptr.is_null() {
+            return false;
+        }
         unsafe {
             ffi::wxd_ListCtrl_SetItemState(
-                self.as_list_ctrl_ptr(),
+                ptr,
                 item as c_longlong,
                 state.bits() as c_longlong,
                 state_mask.bits() as c_longlong,
@@ -413,6 +493,7 @@ impl ListCtrl {
     }
 
     /// Gets the state of an item using the ListItemState enum.
+    /// Returns false if the list control has been destroyed.
     ///
     /// # Arguments
     /// * `item` - The index of the item.
@@ -432,30 +513,32 @@ impl ListCtrl {
     /// let is_selected = list_ctrl.get_item_state(0, ListItemState::Selected);
     /// ```
     pub fn get_item_state(&self, item: i64, state_mask: ListItemState) -> bool {
-        let state = unsafe {
-            ffi::wxd_ListCtrl_GetItemState(self.as_list_ctrl_ptr(), item as c_longlong, state_mask.bits() as c_longlong)
-        };
+        let ptr = self.listctrl_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        let state = unsafe { ffi::wxd_ListCtrl_GetItemState(ptr, item as c_longlong, state_mask.bits() as c_longlong) };
         state != 0
     }
 
     /// Gets the next item based on geometry and state.
+    /// Returns -1 if the list control has been destroyed.
     pub fn get_next_item(&self, item: i64, geometry: ListNextItemFlag, state: ListItemState) -> i32 {
-        unsafe {
-            ffi::wxd_ListCtrl_GetNextItem(
-                self.as_list_ctrl_ptr(),
-                item as c_longlong,
-                geometry as c_int,
-                state.bits() as c_int,
-            )
+        let ptr = self.listctrl_ptr();
+        if ptr.is_null() {
+            return -1;
         }
+        unsafe { ffi::wxd_ListCtrl_GetNextItem(ptr, item as c_longlong, geometry as c_int, state.bits() as c_int) }
     }
 
     /// Gets the first selected item in the list control.
+    /// Returns -1 if the list control has been destroyed.
     pub fn get_first_selected_item(&self) -> i32 {
         self.get_next_item(-1, ListNextItemFlag::All, ListItemState::Selected)
     }
 
     /// Sets the image for a specific item.
+    /// No-op (returns false) if the list control has been destroyed.
     ///
     /// # Arguments
     /// * `item_index` - The 0-based index of the item.
@@ -464,58 +547,92 @@ impl ListCtrl {
     /// # Returns
     /// `true` if successful, `false` otherwise.
     pub fn set_item_image(&self, item_index: i64, image_index: i32) -> bool {
-        unsafe { ffi::wxd_ListCtrl_SetItemImageIndex(self.as_list_ctrl_ptr(), item_index as c_longlong, image_index) }
+        let ptr = self.listctrl_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_ListCtrl_SetItemImageIndex(ptr, item_index as c_longlong, image_index) }
     }
 
     /// Deletes the specified item.
+    /// No-op (returns false) if the list control has been destroyed.
     pub fn delete_item(&self, item: i64) -> bool {
-        unsafe { ffi::wxd_ListCtrl_DeleteItem(self.as_list_ctrl_ptr(), item as c_longlong) }
+        let ptr = self.listctrl_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_ListCtrl_DeleteItem(ptr, item as c_longlong) }
     }
 
     /// Deletes all items from the list control.
+    /// No-op (returns false) if the list control has been destroyed.
     pub fn delete_all_items(&self) -> bool {
-        unsafe { ffi::wxd_ListCtrl_DeleteAllItems(self.as_list_ctrl_ptr()) }
+        let ptr = self.listctrl_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_ListCtrl_DeleteAllItems(ptr) }
     }
 
     /// Deletes all items and columns from the list control.
+    /// No-op (returns false) if the list control has been destroyed.
     pub fn clear_all(&self) -> bool {
-        unsafe { ffi::wxd_ListCtrl_ClearAll(self.as_list_ctrl_ptr()) }
+        let ptr = self.listctrl_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_ListCtrl_ClearAll(ptr) }
     }
 
     /// Gets the number of selected items.
+    /// Returns 0 if the list control has been destroyed.
     pub fn get_selected_item_count(&self) -> i32 {
-        unsafe { ffi::wxd_ListCtrl_GetSelectedItemCount(self.as_list_ctrl_ptr()) }
+        let ptr = self.listctrl_ptr();
+        if ptr.is_null() {
+            return 0;
+        }
+        unsafe { ffi::wxd_ListCtrl_GetSelectedItemCount(ptr) }
     }
 
     /// Ensures that the specified item is visible.
+    /// No-op (returns false) if the list control has been destroyed.
     pub fn ensure_visible(&self, item: i64) -> bool {
-        unsafe { ffi::wxd_ListCtrl_EnsureVisible(self.as_list_ctrl_ptr(), item as c_longlong) }
+        let ptr = self.listctrl_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_ListCtrl_EnsureVisible(ptr, item as c_longlong) }
     }
 
     /// Determines which item, if any, is at the specified point.
     /// Returns a tuple (item_index, flags, subitem_index).
+    /// Returns (-1, 0, 0) if the list control has been destroyed.
     pub fn hit_test(&self, point: Point) -> (i32, i32, i32) {
+        let ptr = self.listctrl_ptr();
+        if ptr.is_null() {
+            return (-1, 0, 0);
+        }
         let mut flags: i32 = 0;
         let mut subitem: c_longlong = 0;
-        let item = unsafe {
-            ffi::wxd_ListCtrl_HitTest(
-                self.as_list_ctrl_ptr(),
-                point.into(),
-                &mut flags as *mut i32,
-                &mut subitem as *mut c_longlong,
-            )
-        };
+        let item =
+            unsafe { ffi::wxd_ListCtrl_HitTest(ptr, point.into(), &mut flags as *mut i32, &mut subitem as *mut c_longlong) };
         (item, flags, subitem as i32)
     }
 
     /// Starts editing the label of the specified item.
+    /// Panics if the list control has been destroyed or editing fails.
     ///
     /// # Returns
     /// Returns the TextCtrl that will be used to edit the label.
     /// The caller does not own this TextCtrl; it will be deleted automatically
     /// when editing is finished.
     pub fn edit_label(&self, item: i64) -> crate::widgets::textctrl::TextCtrl {
-        let ptr = unsafe { ffi::wxd_ListCtrl_EditLabel(self.as_list_ctrl_ptr(), item as c_longlong) };
+        let listctrl_ptr = self.listctrl_ptr();
+        if listctrl_ptr.is_null() {
+            panic!("Cannot edit label: ListCtrl has been destroyed");
+        }
+
+        let ptr = unsafe { ffi::wxd_ListCtrl_EditLabel(listctrl_ptr, item as c_longlong) };
 
         if ptr.is_null() {
             panic!("Failed to start editing item label: FFI returned null pointer.");
@@ -527,27 +644,47 @@ impl ListCtrl {
     // --- Item Appearance Methods ---
 
     /// Sets the background color of an item.
+    /// No-op if the list control has been destroyed.
     pub fn set_item_background_colour(&self, item: i64, colour: &crate::color::Colour) {
-        unsafe { ffi::wxd_ListCtrl_SetItemBackgroundColour(self.as_list_ctrl_ptr(), item as c_longlong, (*colour).into()) }
+        let ptr = self.listctrl_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_ListCtrl_SetItemBackgroundColour(ptr, item as c_longlong, (*colour).into()) }
     }
 
     /// Sets the text color of an item.
+    /// No-op if the list control has been destroyed.
     pub fn set_item_text_colour(&self, item: i64, colour: &crate::color::Colour) {
-        unsafe { ffi::wxd_ListCtrl_SetItemTextColour(self.as_list_ctrl_ptr(), item as c_longlong, (*colour).into()) }
+        let ptr = self.listctrl_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_ListCtrl_SetItemTextColour(ptr, item as c_longlong, (*colour).into()) }
     }
 
     /// Gets the background color of an item.
+    /// Returns white if the list control has been destroyed.
     pub fn get_item_background_colour(&self, item: i64) -> crate::color::Colour {
+        let ptr = self.listctrl_ptr();
+        if ptr.is_null() {
+            return crate::color::Colour::new(255, 255, 255, 255);
+        }
         unsafe {
-            let c_colour = ffi::wxd_ListCtrl_GetItemBackgroundColour(self.as_list_ctrl_ptr(), item as c_longlong);
+            let c_colour = ffi::wxd_ListCtrl_GetItemBackgroundColour(ptr, item as c_longlong);
             crate::color::Colour::from(c_colour)
         }
     }
 
     /// Gets the text color of an item.
+    /// Returns black if the list control has been destroyed.
     pub fn get_item_text_colour(&self, item: i64) -> crate::color::Colour {
+        let ptr = self.listctrl_ptr();
+        if ptr.is_null() {
+            return crate::color::Colour::new(0, 0, 0, 255);
+        }
         unsafe {
-            let c_colour = ffi::wxd_ListCtrl_GetItemTextColour(self.as_list_ctrl_ptr(), item as c_longlong);
+            let c_colour = ffi::wxd_ListCtrl_GetItemTextColour(ptr, item as c_longlong);
             crate::color::Colour::from(c_colour)
         }
     }
@@ -555,84 +692,122 @@ impl ListCtrl {
     // --- Column Management Methods ---
 
     /// Sets the custom order of columns.
+    /// No-op (returns false) if the list control has been destroyed.
     ///
     /// By default, the columns in a list control appear in order of their indices (0, 1, 2, ...).
     /// This method allows you to set a custom visual order for the columns.
     pub fn set_columns_order(&self, orders: &[i32]) -> bool {
-        unsafe {
-            ffi::wxd_ListCtrl_SetColumnsOrder(self.as_list_ctrl_ptr(), orders.len() as c_int, orders.as_ptr() as *mut c_int)
+        let ptr = self.listctrl_ptr();
+        if ptr.is_null() {
+            return false;
         }
+        unsafe { ffi::wxd_ListCtrl_SetColumnsOrder(ptr, orders.len() as c_int, orders.as_ptr() as *mut c_int) }
     }
 
     /// Gets the custom order of all columns.
+    /// Returns empty vector if the list control has been destroyed.
     ///
     /// Returns a vector of column indices in their current display order.
     pub fn get_columns_order(&self) -> Vec<i32> {
+        let ptr = self.listctrl_ptr();
+        if ptr.is_null() {
+            return Vec::new();
+        }
         unsafe {
             let mut count: c_int = 0;
-            let ptr = ffi::wxd_ListCtrl_GetColumnsOrder(self.as_list_ctrl_ptr(), &mut count as *mut c_int);
+            let result_ptr = ffi::wxd_ListCtrl_GetColumnsOrder(ptr, &mut count as *mut c_int);
 
-            if ptr.is_null() || count <= 0 {
+            if result_ptr.is_null() || count <= 0 {
                 return Vec::new();
             }
 
             let mut result = Vec::with_capacity(count as usize);
             for i in 0..count {
-                result.push(*ptr.offset(i as isize));
+                result.push(*result_ptr.offset(i as isize));
             }
 
             // Free the memory allocated by the C function
-            ffi::wxd_free_int_array(ptr);
+            ffi::wxd_free_int_array(result_ptr);
 
             result
         }
     }
 
     /// Gets the position in which the given column is currently displayed.
+    /// Returns -1 if the list control has been destroyed or an error occurred.
     ///
     /// Returns the position where the column is currently shown, or -1 if an error occurred.
     pub fn get_column_order(&self, col: i32) -> i32 {
-        unsafe { ffi::wxd_ListCtrl_GetColumnOrder(self.as_list_ctrl_ptr(), col) }
+        let ptr = self.listctrl_ptr();
+        if ptr.is_null() {
+            return -1;
+        }
+        unsafe { ffi::wxd_ListCtrl_GetColumnOrder(ptr, col) }
     }
 
     /// Gets the column index at the given display position.
+    /// Returns -1 if the list control has been destroyed or an error occurred.
     ///
     /// Returns the index of the column which is shown at the specified position, or -1 if an error occurred.
     pub fn get_column_index_from_order(&self, pos: i32) -> i32 {
-        unsafe { ffi::wxd_ListCtrl_GetColumnIndexFromOrder(self.as_list_ctrl_ptr(), pos) }
+        let ptr = self.listctrl_ptr();
+        if ptr.is_null() {
+            return -1;
+        }
+        unsafe { ffi::wxd_ListCtrl_GetColumnIndexFromOrder(ptr, pos) }
     }
 
     // --- Virtual List Support Methods ---
 
     /// Sets the number of items in a virtual list control.
+    /// No-op if the list control has been destroyed.
     ///
     /// Must be used with a list control created with the `ListCtrlStyle::Virtual` style.
     pub fn set_item_count(&self, count: i64) {
-        unsafe { ffi::wxd_ListCtrl_SetItemCount(self.as_list_ctrl_ptr(), count as c_longlong) }
+        let ptr = self.listctrl_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_ListCtrl_SetItemCount(ptr, count as c_longlong) }
     }
 
     /// Refreshes a single item in a virtual list control.
+    /// No-op if the list control has been destroyed.
     pub fn refresh_item(&self, item: i64) {
-        unsafe { ffi::wxd_ListCtrl_RefreshItem(self.as_list_ctrl_ptr(), item as c_longlong) }
+        let ptr = self.listctrl_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_ListCtrl_RefreshItem(ptr, item as c_longlong) }
     }
 
     /// Refreshes a range of items in a virtual list control.
+    /// No-op if the list control has been destroyed.
     pub fn refresh_items(&self, item_from: i64, item_to: i64) {
-        unsafe { ffi::wxd_ListCtrl_RefreshItems(self.as_list_ctrl_ptr(), item_from as c_longlong, item_to as c_longlong) }
+        let ptr = self.listctrl_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_ListCtrl_RefreshItems(ptr, item_from as c_longlong, item_to as c_longlong) }
     }
 
     // --- ImageList Methods ---
 
     /// Sets the image list for the control.
     /// The ListCtrl takes ownership of the ImageList.
+    /// No-op if the list control has been destroyed.
     ///
     /// # Arguments
     /// * `image_list` - The ImageList to set.
     /// * `list_type` - Which image list to set (e.g., `image_list_type::NORMAL`, `image_list_type::SMALL`).
     pub fn set_image_list(&self, image_list: ImageList, list_type: i32) {
+        let ptr = self.listctrl_ptr();
+        if ptr.is_null() {
+            return;
+        }
         unsafe {
             ffi::wxd_ListCtrl_SetImageList(
-                self.as_list_ctrl_ptr(),
+                ptr,
                 image_list.as_ptr(), // Pass the raw pointer
                 list_type,
             );
@@ -643,6 +818,7 @@ impl ListCtrl {
 
     /// Gets the image list associated with the control.
     /// The ListCtrl owns the ImageList, so the caller should not delete it.
+    /// Returns None if the list control has been destroyed.
     ///
     /// # Arguments
     /// * `list_type` - Which image list to get (e.g., `image_list_type::NORMAL`, `image_list_type::SMALL`).
@@ -650,12 +826,16 @@ impl ListCtrl {
     /// # Returns
     /// An Option containing the ImageList if it exists, otherwise None.
     pub fn get_image_list(&self, list_type: i32) -> Option<ImageList> {
-        let ptr = unsafe { ffi::wxd_ListCtrl_GetImageList(self.as_list_ctrl_ptr(), list_type) };
+        let ptr = self.listctrl_ptr();
         if ptr.is_null() {
+            return None;
+        }
+        let img_ptr = unsafe { ffi::wxd_ListCtrl_GetImageList(ptr, list_type) };
+        if img_ptr.is_null() {
             None
         } else {
             // The ImageList is owned by wxWidgets, so create an unowned wrapper
-            Some(unsafe { ImageList::from_ptr_unowned(ptr) })
+            Some(unsafe { ImageList::from_ptr_unowned(img_ptr) })
         }
     }
 }
@@ -663,10 +843,15 @@ impl ListCtrl {
 // Implement the HasItemData trait for ListCtrl
 impl HasItemData for ListCtrl {
     fn set_custom_data<T: Any + Send + Sync + 'static>(&self, item_id: impl Into<u64>, data: T) -> u64 {
+        let ptr = self.listctrl_ptr();
+        if ptr.is_null() {
+            return 0;
+        }
+
         let item_index = item_id.into() as i64;
 
         // First check if there's already data associated with this item
-        let existing_data_id = unsafe { ffi::wxd_ListCtrl_GetItemData(self.as_list_ctrl_ptr(), item_index as c_longlong) as u64 };
+        let existing_data_id = unsafe { ffi::wxd_ListCtrl_GetItemData(ptr, item_index as c_longlong) as u64 };
 
         // If we have existing data, remove it from the registry
         if existing_data_id != 0 {
@@ -677,8 +862,7 @@ impl HasItemData for ListCtrl {
         let data_id = store_item_data(data);
 
         // Store the ID as an integer in the list item using the native set_item_data
-        let result =
-            unsafe { ffi::wxd_ListCtrl_SetItemData(self.as_list_ctrl_ptr(), item_index as c_longlong, data_id as c_longlong) };
+        let result = unsafe { ffi::wxd_ListCtrl_SetItemData(ptr, item_index as c_longlong, data_id as c_longlong) };
 
         // If setting failed, remove the data from the registry and return 0
         if !result {
@@ -690,10 +874,15 @@ impl HasItemData for ListCtrl {
     }
 
     fn get_custom_data(&self, item_id: impl Into<u64>) -> Option<Arc<dyn Any + Send + Sync>> {
+        let ptr = self.listctrl_ptr();
+        if ptr.is_null() {
+            return None;
+        }
+
         let item_index = item_id.into() as i64;
 
         // Get the data ID using the native get_item_data
-        let data_id = unsafe { ffi::wxd_ListCtrl_GetItemData(self.as_list_ctrl_ptr(), item_index as c_longlong) as u64 };
+        let data_id = unsafe { ffi::wxd_ListCtrl_GetItemData(ptr, item_index as c_longlong) as u64 };
 
         if data_id == 0 {
             return None;
@@ -704,20 +893,30 @@ impl HasItemData for ListCtrl {
     }
 
     fn has_custom_data(&self, item_id: impl Into<u64>) -> bool {
+        let ptr = self.listctrl_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+
         let item_index = item_id.into() as i64;
 
         // Get the data ID using the native get_item_data
-        let data_id = unsafe { ffi::wxd_ListCtrl_GetItemData(self.as_list_ctrl_ptr(), item_index as c_longlong) as u64 };
+        let data_id = unsafe { ffi::wxd_ListCtrl_GetItemData(ptr, item_index as c_longlong) as u64 };
 
         // If the ID is non-zero and exists in the registry, there is custom data
         data_id != 0 && get_item_data(data_id).is_some()
     }
 
     fn clear_custom_data(&self, item_id: impl Into<u64>) -> bool {
+        let ptr = self.listctrl_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+
         let item_index = item_id.into() as i64;
 
         // Get the data ID using the native get_item_data
-        let data_id = unsafe { ffi::wxd_ListCtrl_GetItemData(self.as_list_ctrl_ptr(), item_index as c_longlong) as u64 };
+        let data_id = unsafe { ffi::wxd_ListCtrl_GetItemData(ptr, item_index as c_longlong) as u64 };
 
         // Only attempt to remove data if there's actually data to remove
         if data_id != 0 {
@@ -726,7 +925,7 @@ impl HasItemData for ListCtrl {
         }
 
         // Clear the data in the list item by setting it to 0
-        unsafe { ffi::wxd_ListCtrl_SetItemData(self.as_list_ctrl_ptr(), item_index as c_longlong, 0) }
+        unsafe { ffi::wxd_ListCtrl_SetItemData(ptr, item_index as c_longlong, 0) }
     }
 
     fn cleanup_all_custom_data(&self) {
@@ -740,8 +939,23 @@ impl HasItemData for ListCtrl {
     }
 }
 
-// Implement common widget traits
-implement_widget_traits_with_target!(ListCtrl, window, Window);
+// Manual WxWidget implementation for ListCtrl (using WindowHandle)
+impl WxWidget for ListCtrl {
+    fn handle_ptr(&self) -> *mut ffi::wxd_Window_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut())
+    }
+
+    fn is_valid(&self) -> bool {
+        self.handle.is_valid()
+    }
+}
+
+// Implement WxEvtHandler for event binding
+impl WxEvtHandler for ListCtrl {
+    unsafe fn get_event_handler_ptr(&self) -> *mut ffi::wxd_EvtHandler_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut()) as *mut ffi::wxd_EvtHandler_t
+    }
+}
 
 // Implement scrolling functionality for ListCtrl
 impl crate::scrollable::WxScrollable for ListCtrl {}
@@ -773,11 +987,13 @@ impl ListCtrl {
     /// Sets up the ListCtrl to clean up all custom data when it's destroyed.
     /// This is automatically called during construction.
     fn setup_cleanup(&self) {
+        use crate::event::EventType;
+
         // Create a clone for the closure
         let list_ctrl_clone = *self;
 
         // Bind to the DESTROY event for proper cleanup when the window is destroyed
-        self.on_destroy(move |_event| {
+        self.bind_internal(EventType::DESTROY, move |_event| {
             // Clean up all custom data when the control is destroyed
             list_ctrl_clone.cleanup_all_custom_data();
         });
@@ -814,8 +1030,25 @@ crate::implement_widget_local_event_handlers!(
     ItemMiddleClick => item_middle_click, EventType::LIST_ITEM_MIDDLE_CLICK
 );
 
-// Add XRC Support - enables ListCtrl to be created from XRC-managed pointers
-impl_xrc_support!(ListCtrl, { window });
+// XRC Support - enables ListCtrl to be created from XRC-managed pointers
+#[cfg(feature = "xrc")]
+impl crate::xrc::XrcSupport for ListCtrl {
+    unsafe fn from_xrc_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        ListCtrl {
+            handle: WindowHandle::new(ptr),
+        }
+    }
+}
 
 // Widget casting support for ListCtrl
-impl_widget_cast!(ListCtrl, "wxListCtrl", { window });
+impl crate::window::FromWindowWithClassName for ListCtrl {
+    fn class_name() -> &'static str {
+        "wxListCtrl"
+    }
+
+    unsafe fn from_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        ListCtrl {
+            handle: WindowHandle::new(ptr),
+        }
+    }
+}

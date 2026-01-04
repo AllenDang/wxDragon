@@ -3,7 +3,7 @@
 use crate::id::Id;
 use crate::menus::menuitem::{ItemKind, MenuItem};
 #[cfg(feature = "xrc")]
-use crate::window::Window;
+use crate::window::WindowHandle;
 #[cfg(feature = "xrc")]
 use crate::xrc::XmlResource;
 use crate::{CommandEventData, Event, EventType};
@@ -199,8 +199,8 @@ impl Menu {
     /// Gets a menu item by its XRC name.
     /// Returns a MenuItem wrapper that can be used for event binding.
     #[cfg(feature = "xrc")]
-    pub fn get_item_by_name(&self, parent_window: &Window, item_name: &str) -> Option<MenuItem> {
-        MenuItem::from_xrc_name(parent_window, item_name)
+    pub fn get_item_by_name(&self, parent_handle: WindowHandle, item_name: &str) -> Option<MenuItem> {
+        MenuItem::from_xrc_name(parent_handle, item_name)
     }
 
     /// Special XRC loading method for menus.

@@ -6,12 +6,8 @@ use wxdragon_sys as ffi; // Corrected path: crate::bitmap instead of crate::widg
 /// Represents a wxImageList.
 ///
 /// This struct is a wrapper around the wxWidgets ImageList object.
-/// For now, it primarily serves to provide a typed wrapper for the raw pointer.
-///
-/// TODO:
-/// - Implement a `new()` constructor that calls an FFI function like `wxd_ImageList_new()`.
-/// - Implement a `Drop` trait to call `wxd_ImageList_Destroy()` for owned instances.
-/// - Implement methods to add images (e.g., `add(&self, bitmap: &Bitmap) -> i32`).
+/// It provides owned and unowned variants - owned instances are destroyed on Drop,
+/// while unowned instances (obtained from controls) are managed by wxWidgets.
 #[derive(Debug)]
 pub struct ImageList {
     pub(crate) ptr: *mut ffi::wxd_ImageList_t,

@@ -1,10 +1,13 @@
 //! Safe wrapper for wxSpinCtrl.
 
 use crate::event::event_data::CommandEventData;
-use crate::event::{Event, EventType};
+use crate::event::{Event, EventType, WxEvtHandler};
 use crate::geometry::{Point, Size};
 use crate::id::Id;
-use crate::window::{Window, WxWidget};
+use crate::window::{WindowHandle, WxWidget};
+// Window is used by impl_xrc_support for backwards compatibility
+#[allow(unused_imports)]
+use crate::window::Window;
 use std::ffi::CString;
 use std::os::raw::c_int;
 use wxdragon_sys as ffi;
@@ -27,9 +30,31 @@ widget_style_enum!(
 );
 
 /// Represents a wxSpinCtrl widget.
+///
+/// SpinCtrl uses `WindowHandle` internally for safe memory management.
+/// When the underlying window is destroyed (by calling `destroy()` or when
+/// its parent is destroyed), the handle becomes invalid and all operations
+/// become safe no-ops.
+///
+/// # Example
+/// ```ignore
+/// let spinctrl = SpinCtrl::builder(&frame).with_range(0, 100).build();
+///
+/// // SpinCtrl is Copy - no clone needed for closures!
+/// spinctrl.bind_value_changed(move |_| {
+///     // Safe: if spinctrl was destroyed, this is a no-op
+///     let value = spinctrl.value();
+///     println!("Value: {}", value);
+/// });
+///
+/// // After parent destruction, spinctrl operations are safe no-ops
+/// frame.destroy();
+/// assert!(!spinctrl.is_valid());
+/// ```
 #[derive(Clone, Copy)]
 pub struct SpinCtrl {
-    window: Window,
+    /// Safe handle to the underlying wxSpinCtrl - automatically invalidated on destroy
+    handle: WindowHandle,
 }
 
 impl SpinCtrl {
@@ -38,43 +63,79 @@ impl SpinCtrl {
         SpinCtrlBuilder::new(parent)
     }
 
-    // Internal constructor
-    pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_SpinCtrl_t) -> Self {
-        SpinCtrl {
-            window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
+    /// Creates a new SpinCtrl from a raw pointer.
+    /// This is intended for internal use by other widget wrappers.
+    #[allow(dead_code)]
+    pub(crate) fn from_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        Self {
+            handle: WindowHandle::new(ptr),
         }
     }
 
-    /// Returns the raw underlying spin control pointer.
-    pub fn as_ptr(&self) -> *mut ffi::wxd_SpinCtrl_t {
-        self.window.handle_ptr() as *mut ffi::wxd_SpinCtrl_t
+    /// Helper to get raw spinctrl pointer, returns null if widget has been destroyed
+    #[inline]
+    fn spinctrl_ptr(&self) -> *mut ffi::wxd_SpinCtrl_t {
+        self.handle
+            .get_ptr()
+            .map(|p| p as *mut ffi::wxd_SpinCtrl_t)
+            .unwrap_or(std::ptr::null_mut())
     }
 
     // --- Methods specific to SpinCtrl ---
 
     /// Gets the current value.
+    /// Returns 0 if the spinctrl has been destroyed.
     pub fn value(&self) -> i32 {
-        unsafe { ffi::wxd_SpinCtrl_GetValue(self.as_ptr()) }
+        let ptr = self.spinctrl_ptr();
+        if ptr.is_null() {
+            return 0;
+        }
+        unsafe { ffi::wxd_SpinCtrl_GetValue(ptr) }
     }
 
     /// Sets the value.
+    /// No-op if the spinctrl has been destroyed.
     pub fn set_value(&self, value: i32) {
-        unsafe { ffi::wxd_SpinCtrl_SetValue(self.as_ptr(), value as c_int) };
+        let ptr = self.spinctrl_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_SpinCtrl_SetValue(ptr, value as c_int) };
     }
 
     /// Sets the allowed range.
+    /// No-op if the spinctrl has been destroyed.
     pub fn set_range(&self, min_val: i32, max_val: i32) {
-        unsafe { ffi::wxd_SpinCtrl_SetRange(self.as_ptr(), min_val as c_int, max_val as c_int) };
+        let ptr = self.spinctrl_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_SpinCtrl_SetRange(ptr, min_val as c_int, max_val as c_int) };
     }
 
     /// Gets the minimum allowed value.
+    /// Returns 0 if the spinctrl has been destroyed.
     pub fn min(&self) -> i32 {
-        unsafe { ffi::wxd_SpinCtrl_GetMin(self.as_ptr()) }
+        let ptr = self.spinctrl_ptr();
+        if ptr.is_null() {
+            return 0;
+        }
+        unsafe { ffi::wxd_SpinCtrl_GetMin(ptr) }
     }
 
     /// Gets the maximum allowed value.
+    /// Returns 0 if the spinctrl has been destroyed.
     pub fn max(&self) -> i32 {
-        unsafe { ffi::wxd_SpinCtrl_GetMax(self.as_ptr()) }
+        let ptr = self.spinctrl_ptr();
+        if ptr.is_null() {
+            return 0;
+        }
+        unsafe { ffi::wxd_SpinCtrl_GetMax(ptr) }
+    }
+
+    /// Returns the underlying WindowHandle for this spinctrl.
+    pub fn window_handle(&self) -> WindowHandle {
+        self.handle
     }
 }
 
@@ -118,8 +179,26 @@ crate::implement_widget_local_event_handlers!(
     ValueChanged => value_changed, EventType::SPINCTRL
 );
 
-// Apply common trait implementations
-implement_widget_traits_with_target!(SpinCtrl, window, Window);
+// Manual WxWidget implementation for SpinCtrl (using WindowHandle)
+impl WxWidget for SpinCtrl {
+    fn handle_ptr(&self) -> *mut ffi::wxd_Window_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut())
+    }
+
+    fn is_valid(&self) -> bool {
+        self.handle.is_valid()
+    }
+}
+
+// Implement WxEvtHandler for event binding
+impl WxEvtHandler for SpinCtrl {
+    unsafe fn get_event_handler_ptr(&self) -> *mut ffi::wxd_EvtHandler_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut()) as *mut ffi::wxd_EvtHandler_t
+    }
+}
+
+// Implement common event traits that all Window-based widgets support
+impl crate::event::WindowEvents for SpinCtrl {}
 
 // Use the widget_builder macro to generate the SpinCtrlBuilder implementation
 widget_builder!(
@@ -158,7 +237,10 @@ widget_builder!(
             panic!("Failed to create SpinCtrl");
         }
 
-        unsafe { SpinCtrl::from_ptr(spin_ctrl_ptr) }
+        // Create a WindowHandle which automatically registers for destroy events
+        SpinCtrl {
+            handle: WindowHandle::new(spin_ctrl_ptr as *mut ffi::wxd_Window_t),
+        }
     }
 );
 
@@ -172,8 +254,25 @@ impl<'a> SpinCtrlBuilder<'a> {
     }
 }
 
-// Add XRC Support - enables SpinCtrl to be created from XRC-managed pointers
-impl_xrc_support!(SpinCtrl, { window });
+// XRC Support - enables SpinCtrl to be created from XRC-managed pointers
+#[cfg(feature = "xrc")]
+impl crate::xrc::XrcSupport for SpinCtrl {
+    unsafe fn from_xrc_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        SpinCtrl {
+            handle: WindowHandle::new(ptr),
+        }
+    }
+}
 
-// Widget casting support for SpinCtrl
-impl_widget_cast!(SpinCtrl, "wxSpinCtrl", { window });
+// Enable widget casting for SpinCtrl
+impl crate::window::FromWindowWithClassName for SpinCtrl {
+    fn class_name() -> &'static str {
+        "wxSpinCtrl"
+    }
+
+    unsafe fn from_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        SpinCtrl {
+            handle: WindowHandle::new(ptr),
+        }
+    }
+}

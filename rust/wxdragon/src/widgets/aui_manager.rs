@@ -1,9 +1,76 @@
 use crate::event::{Event, EventType, WxEvtHandler};
-use crate::prelude::*;
-use crate::window::Window;
+use crate::window::{Window, WindowHandle, WxWidget};
+use std::cell::RefCell;
+use std::collections::HashMap;
 use std::ffi::{CStr, CString};
 use std::marker::PhantomData;
+use std::sync::atomic::{AtomicU64, Ordering};
 use wxdragon_sys as ffi;
+
+// ============================================================================
+// AuiManagerHandle: Safe, Copy-able handle to wxWidgets AuiManager
+// ============================================================================
+
+/// Counter for generating unique AuiManager handle IDs
+static NEXT_AUI_HANDLE_ID: AtomicU64 = AtomicU64::new(1);
+
+thread_local! {
+    /// Maps handle IDs to raw AuiManager pointers
+    static AUI_MANAGER_REGISTRY: RefCell<HashMap<u64, *mut ffi::wxd_AuiManager_t>> =
+        RefCell::new(HashMap::new());
+}
+
+/// A safe, Copy-able handle to a wxAuiManager.
+///
+/// Unlike raw pointers, `AuiManagerHandle` tracks the manager's lifecycle
+/// through its managed window. When the managed window is destroyed, the handle
+/// becomes invalid.
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+struct AuiManagerHandle(u64);
+
+impl AuiManagerHandle {
+    /// Creates a new handle for an AuiManager pointer.
+    ///
+    /// # Safety
+    /// The caller must ensure `ptr` points to a valid wxAuiManager.
+    fn new(ptr: *mut ffi::wxd_AuiManager_t) -> Self {
+        if ptr.is_null() {
+            return AuiManagerHandle(0); // Invalid handle for null pointers
+        }
+
+        let handle_id = NEXT_AUI_HANDLE_ID.fetch_add(1, Ordering::SeqCst);
+
+        // Register the manager pointer
+        AUI_MANAGER_REGISTRY.with(|r| r.borrow_mut().insert(handle_id, ptr));
+
+        AuiManagerHandle(handle_id)
+    }
+
+    /// Get the raw pointer if the manager is still valid, `None` if destroyed.
+    #[inline]
+    fn get_ptr(&self) -> Option<*mut ffi::wxd_AuiManager_t> {
+        if self.0 == 0 {
+            return None;
+        }
+        AUI_MANAGER_REGISTRY.with(|r| r.borrow().get(&self.0).copied())
+    }
+
+    /// Check if the underlying manager is still valid (not destroyed).
+    #[inline]
+    fn is_valid(&self) -> bool {
+        self.get_ptr().is_some()
+    }
+
+    /// Internal: Remove handle from registry (called when manager should be invalidated)
+    fn invalidate(&self) {
+        if self.0 == 0 {
+            return;
+        }
+        AUI_MANAGER_REGISTRY.with(|r| {
+            r.borrow_mut().remove(&self.0);
+        });
+    }
+}
 
 /// Direction for docking panes in an AuiManager
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
@@ -302,6 +369,7 @@ impl Drop for PaneInfo {
 /// Builder for AuiManager that ensures it's always attached to a window
 pub struct AuiManagerBuilder<'a> {
     parent_ptr: *mut ffi::wxd_Window_t,
+    parent_handle: WindowHandle,
     _marker: PhantomData<&'a ()>,
 }
 
@@ -313,15 +381,25 @@ impl<'a> AuiManagerBuilder<'a> {
             panic!("Failed to create AuiManager");
         }
 
+        // Create the handle for the manager
+        let handle = AuiManagerHandle::new(ptr);
+
         let mgr = AuiManager {
-            ptr,
-            _marker: PhantomData,
+            handle,
+            managed_window: self.parent_handle,
         };
 
         // Immediately set the managed window to ensure proper lifecycle management
         unsafe {
-            ffi::wxd_AuiManager_SetManagedWindow(mgr.ptr, self.parent_ptr);
+            ffi::wxd_AuiManager_SetManagedWindow(ptr, self.parent_ptr);
         }
+
+        // Set up a destroy handler on the managed window to invalidate this manager
+        let handle_copy = handle;
+        let parent = unsafe { Window::from_ptr(self.parent_ptr) };
+        parent.bind_internal(EventType::DESTROY, move |_event| {
+            handle_copy.invalidate();
+        });
 
         mgr
     }
@@ -332,106 +410,178 @@ impl<'a> AuiManagerBuilder<'a> {
 /// The AuiManager is responsible for managing the layout of windows within a frame.
 /// It allows windows to be "docked" into different regions of the frame and provides
 /// a draggable, floating interface for rearranging windows.
-#[derive(Debug)]
+///
+/// AuiManager uses a handle-based pattern for memory safety. When the managed window
+/// is destroyed, the handle becomes invalid and all operations become safe no-ops.
+///
+/// # Example
+/// ```ignore
+/// let frame = Frame::builder().build();
+/// let manager = AuiManager::builder(&frame).build();
+///
+/// // AuiManager is Copy - no clone needed for closures!
+/// manager.on_pane_close(move |_| {
+///     // Safe: if frame was destroyed, this is a no-op
+///     manager.update();
+/// });
+///
+/// // After frame destruction, manager operations are safe no-ops
+/// frame.destroy();
+/// assert!(!manager.is_valid());
+/// ```
+#[derive(Clone, Copy)]
 pub struct AuiManager {
-    ptr: *mut ffi::wxd_AuiManager_t,
-    _marker: PhantomData<()>,
-}
-
-// Implement WxEvtHandler for AuiManager to allow event binding
-impl WxEvtHandler for AuiManager {
-    unsafe fn get_event_handler_ptr(&self) -> *mut ffi::wxd_EvtHandler_t {
-        self.ptr as *mut ffi::wxd_EvtHandler_t
-    }
+    /// Safe handle to the underlying wxAuiManager - automatically invalidated when managed window is destroyed
+    handle: AuiManagerHandle,
+    /// Handle to the managed window - used to track lifecycle
+    managed_window: WindowHandle,
 }
 
 impl AuiManager {
     /// Create a new AuiManager builder, which requires a parent window to build
     pub fn builder(parent: &impl WxWidget) -> AuiManagerBuilder<'_> {
+        let parent_ptr = parent.handle_ptr();
+        // Try to look up existing handle, or create a new one if needed
+        let parent_handle = WindowHandle::from_ptr(parent_ptr).unwrap_or_else(|| WindowHandle::new(parent_ptr));
+
         AuiManagerBuilder {
-            parent_ptr: parent.handle_ptr(),
+            parent_ptr,
+            parent_handle,
             _marker: PhantomData,
         }
     }
 
+    /// Helper to get raw AuiManager pointer, returns null if manager has been destroyed
+    #[inline]
+    fn manager_ptr(&self) -> *mut ffi::wxd_AuiManager_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut())
+    }
+
+    /// Check if the AuiManager is still valid (managed window not destroyed)
+    pub fn is_valid(&self) -> bool {
+        self.handle.is_valid() && self.managed_window.is_valid()
+    }
+
     /// Set the window that this AuiManager will manage
+    /// No-op if the manager has been destroyed.
     pub fn set_managed_window(&self, window: &impl WxWidget) {
+        let ptr = self.manager_ptr();
+        if ptr.is_null() {
+            return;
+        }
         unsafe {
-            ffi::wxd_AuiManager_SetManagedWindow(self.ptr, window.handle_ptr());
+            ffi::wxd_AuiManager_SetManagedWindow(ptr, window.handle_ptr());
         }
     }
 
     /// Get the window that this AuiManager is managing
+    /// Returns None if the manager has been destroyed.
     pub fn get_managed_window(&self) -> Option<Window> {
-        let ptr = unsafe { ffi::wxd_AuiManager_GetManagedWindow(self.ptr) };
+        let ptr = self.manager_ptr();
         if ptr.is_null() {
+            return None;
+        }
+        let window_ptr = unsafe { ffi::wxd_AuiManager_GetManagedWindow(ptr) };
+        if window_ptr.is_null() {
             None
         } else {
-            Some(unsafe { Window::from_ptr(ptr) })
+            Some(unsafe { Window::from_ptr(window_ptr) })
         }
     }
 
     /// Uninitialize the manager (detaches from the managed window)
+    /// No-op if the manager has been destroyed.
     pub fn uninit(&self) {
+        let ptr = self.manager_ptr();
+        if ptr.is_null() {
+            return;
+        }
         unsafe {
-            ffi::wxd_AuiManager_UnInit(self.ptr);
+            ffi::wxd_AuiManager_UnInit(ptr);
         }
     }
 
     /// Add a pane to the manager with a simple direction
+    /// Returns false if the manager has been destroyed.
     pub fn add_pane(&self, window: &impl WxWidget, direction: DockDirection, caption: &str) -> bool {
+        let ptr = self.manager_ptr();
+        if ptr.is_null() {
+            return false;
+        }
         let c_caption = CString::new(caption).expect("CString::new failed for caption");
-        unsafe { ffi::wxd_AuiManager_AddPane(self.ptr, window.handle_ptr(), direction as i32, c_caption.as_ptr()) }
+        unsafe { ffi::wxd_AuiManager_AddPane(ptr, window.handle_ptr(), direction as i32, c_caption.as_ptr()) }
     }
 
     /// Add a pane with detailed pane information
+    /// Returns false if the manager has been destroyed.
     pub fn add_pane_with_info(&self, window: &impl WxWidget, pane_info: PaneInfo) -> bool {
+        let ptr = self.manager_ptr();
+        if ptr.is_null() {
+            return false;
+        }
         // The pane_info is still managed by Rust and will be dropped automatically
-        unsafe { ffi::wxd_AuiManager_AddPaneWithInfo(self.ptr, window.handle_ptr(), pane_info.ptr) }
+        unsafe { ffi::wxd_AuiManager_AddPaneWithInfo(ptr, window.handle_ptr(), pane_info.ptr) }
     }
 
     /// Update the manager's layout (must be called after adding/removing panes)
+    /// Returns false if the manager has been destroyed.
     pub fn update(&self) -> bool {
-        unsafe { ffi::wxd_AuiManager_Update(self.ptr) }
+        let ptr = self.manager_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_AuiManager_Update(ptr) }
     }
 
     /// Save the current layout as a perspective string
+    /// Returns empty string if the manager has been destroyed.
     pub fn save_perspective(&self) -> String {
-        let len = unsafe { ffi::wxd_AuiManager_SavePerspective(self.ptr, std::ptr::null_mut(), 0) };
+        let ptr = self.manager_ptr();
+        if ptr.is_null() {
+            return String::new();
+        }
+        let len = unsafe { ffi::wxd_AuiManager_SavePerspective(ptr, std::ptr::null_mut(), 0) };
         if len <= 0 {
             return String::new();
         }
 
         // Create a buffer to hold the perspective string
         let mut b = vec![0; len as usize + 1]; // +1 for null terminator
-        unsafe { ffi::wxd_AuiManager_SavePerspective(self.ptr, b.as_mut_ptr(), b.len()) };
+        unsafe { ffi::wxd_AuiManager_SavePerspective(ptr, b.as_mut_ptr(), b.len()) };
         unsafe { CStr::from_ptr(b.as_ptr()).to_string_lossy().to_string() }
     }
 
     /// Load a perspective from a string
+    /// Returns false if the manager has been destroyed.
     pub fn load_perspective(&self, perspective: &str, update: bool) -> bool {
+        let ptr = self.manager_ptr();
+        if ptr.is_null() {
+            return false;
+        }
         let c_perspective = CString::new(perspective).expect("CString::new failed for perspective");
-        unsafe { ffi::wxd_AuiManager_LoadPerspective(self.ptr, c_perspective.as_ptr(), update) }
+        unsafe { ffi::wxd_AuiManager_LoadPerspective(ptr, c_perspective.as_ptr(), update) }
     }
 
     /// Detach a pane from the manager
+    /// Returns false if the manager has been destroyed.
     pub fn detach_pane(&self, window: &impl WxWidget) -> bool {
-        unsafe { ffi::wxd_AuiManager_DetachPane(self.ptr, window.handle_ptr()) }
+        let ptr = self.manager_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_AuiManager_DetachPane(ptr, window.handle_ptr()) }
     }
 }
 
-impl Drop for AuiManager {
-    fn drop(&mut self) {
-        // We need to have special handling for AuiManager
-        // Do not call delete directly as it can cause issues with dragging
-        // This is intentionally left empty to prevent premature cleanup
-        // wxWidgets will handle resource cleanup when the managed window is destroyed
-
-        // Note: The original implementation was:
-        // unsafe { ffi::wxd_AuiManager_Delete(self.ptr); }
-        // But this caused issues with pane dragging
+// Implement WxEvtHandler for AuiManager to allow event binding
+impl WxEvtHandler for AuiManager {
+    unsafe fn get_event_handler_ptr(&self) -> *mut ffi::wxd_EvtHandler_t {
+        self.manager_ptr() as *mut ffi::wxd_EvtHandler_t
     }
 }
+
+// Implement common event traits that all Window-based widgets support
+impl crate::event::WindowEvents for AuiManager {}
 
 // Re-export PaneInfo to make it easier to use
 pub use PaneInfo as AuiPaneInfo;

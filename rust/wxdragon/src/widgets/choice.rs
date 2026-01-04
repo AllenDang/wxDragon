@@ -1,8 +1,8 @@
 use crate::event::event_data::CommandEventData;
-use crate::event::{Event, EventType};
+use crate::event::{Event, EventType, WxEvtHandler};
 use crate::geometry::{Point, Size};
 use crate::id::Id;
-use crate::window::{Window, WxWidget};
+use crate::window::{WindowHandle, WxWidget};
 use std::ffi::{CStr, CString};
 use wxdragon_sys as ffi;
 
@@ -21,9 +21,15 @@ widget_style_enum!(
 );
 
 /// Represents a wxChoice control (dropdown list).
+///
+/// Choice uses `WindowHandle` internally for safe memory management.
+/// When the underlying window is destroyed (by calling `destroy()` or when
+/// its parent is destroyed), the handle becomes invalid and all operations
+/// become safe no-ops.
 #[derive(Clone, Copy)]
 pub struct Choice {
-    window: Window,
+    /// Safe handle to the underlying wxChoice - automatically invalidated on destroy
+    handle: WindowHandle,
 }
 
 impl Choice {
@@ -32,25 +38,48 @@ impl Choice {
         ChoiceBuilder::new(parent)
     }
 
+    /// Helper to get raw choice pointer, returns null if widget has been destroyed
+    #[inline]
+    fn widget_ptr(&self) -> *mut ffi::wxd_Choice_t {
+        self.handle
+            .get_ptr()
+            .map(|p| p as *mut ffi::wxd_Choice_t)
+            .unwrap_or(std::ptr::null_mut())
+    }
+
     /// Appends an item to the choice control.
+    /// No-op if the widget has been destroyed.
     pub fn append(&self, item: &str) {
+        let ptr = self.widget_ptr();
+        if ptr.is_null() {
+            return;
+        }
         let c_item = CString::new(item).expect("Invalid CString for Choice item");
         unsafe {
-            ffi::wxd_Choice_Append(self.window.as_ptr() as *mut _, c_item.as_ptr());
+            ffi::wxd_Choice_Append(ptr, c_item.as_ptr());
         }
     }
 
     /// Removes all items from the choice control.
+    /// No-op if the widget has been destroyed.
     pub fn clear(&self) {
+        let ptr = self.widget_ptr();
+        if ptr.is_null() {
+            return;
+        }
         unsafe {
-            ffi::wxd_Choice_Clear(self.window.as_ptr() as *mut _);
+            ffi::wxd_Choice_Clear(ptr);
         }
     }
 
     /// Gets the index of the currently selected item.
-    /// Returns `None` if no item is selected (matches `NOT_FOUND`).
+    /// Returns `None` if no item is selected (matches `NOT_FOUND`) or if the widget has been destroyed.
     pub fn get_selection(&self) -> Option<u32> {
-        let selection = unsafe { ffi::wxd_Choice_GetSelection(self.window.as_ptr() as *mut _) };
+        let ptr = self.widget_ptr();
+        if ptr.is_null() {
+            return None;
+        }
+        let selection = unsafe { ffi::wxd_Choice_GetSelection(ptr) };
         if selection == NOT_FOUND {
             None
         } else {
@@ -59,9 +88,12 @@ impl Choice {
     }
 
     /// Gets the string value of the currently selected item.
-    /// Returns `None` if no item is selected.
+    /// Returns `None` if no item is selected or if the widget has been destroyed.
     pub fn get_string_selection(&self) -> Option<String> {
-        let ptr = self.window.as_ptr() as *mut _;
+        let ptr = self.widget_ptr();
+        if ptr.is_null() {
+            return None;
+        }
         let len = unsafe { ffi::wxd_Choice_GetStringSelection(ptr, std::ptr::null_mut(), 0) };
 
         if len < 0 {
@@ -74,25 +106,44 @@ impl Choice {
     }
 
     /// Selects the item at the given index.
+    /// No-op if the widget has been destroyed.
     pub fn set_selection(&self, index: u32) {
-        unsafe { ffi::wxd_Choice_SetSelection(self.window.as_ptr() as *mut _, index as i32) };
+        let ptr = self.widget_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_Choice_SetSelection(ptr, index as i32) };
     }
 
     /// Gets the string at the specified index.
-    /// Returns `None` if the index is out of bounds.
+    /// Returns `None` if the index is out of bounds or if the widget has been destroyed.
     pub fn get_string(&self, index: u32) -> Option<String> {
-        let len = unsafe { ffi::wxd_Choice_GetString(self.window.as_ptr() as *mut _, index as i32, std::ptr::null_mut(), 0) };
+        let ptr = self.widget_ptr();
+        if ptr.is_null() {
+            return None;
+        }
+        let len = unsafe { ffi::wxd_Choice_GetString(ptr, index as i32, std::ptr::null_mut(), 0) };
         if len < 0 {
             return None; // Error or invalid index
         }
         let mut buf = vec![0; len as usize + 1];
-        unsafe { ffi::wxd_Choice_GetString(self.window.as_ptr() as *mut _, index as i32, buf.as_mut_ptr(), buf.len()) };
+        unsafe { ffi::wxd_Choice_GetString(ptr, index as i32, buf.as_mut_ptr(), buf.len()) };
         Some(unsafe { CStr::from_ptr(buf.as_ptr()).to_string_lossy().to_string() })
     }
 
     /// Gets the number of items in the choice control.
+    /// Returns 0 if the widget has been destroyed.
     pub fn get_count(&self) -> u32 {
-        unsafe { ffi::wxd_Choice_GetCount(self.window.as_ptr() as *mut _) }
+        let ptr = self.widget_ptr();
+        if ptr.is_null() {
+            return 0;
+        }
+        unsafe { ffi::wxd_Choice_GetCount(ptr) }
+    }
+
+    /// Returns the underlying WindowHandle for this choice.
+    pub fn window_handle(&self) -> WindowHandle {
+        self.handle
     }
 }
 
@@ -125,7 +176,7 @@ widget_builder!(
         }
 
         let choice = Choice {
-            window: unsafe { Window::from_ptr(ctrl_ptr as *mut ffi::wxd_Window_t) },
+            handle: WindowHandle::new(ctrl_ptr as *mut ffi::wxd_Window_t),
         };
 
         // Add initial choices
@@ -142,7 +193,26 @@ widget_builder!(
     }
 );
 
-implement_widget_traits_with_target!(Choice, window, Window);
+// Manual WxWidget implementation for Choice (using WindowHandle)
+impl WxWidget for Choice {
+    fn handle_ptr(&self) -> *mut ffi::wxd_Window_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut())
+    }
+
+    fn is_valid(&self) -> bool {
+        self.handle.is_valid()
+    }
+}
+
+// Implement WxEvtHandler for event binding
+impl WxEvtHandler for Choice {
+    unsafe fn get_event_handler_ptr(&self) -> *mut ffi::wxd_EvtHandler_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut()) as *mut ffi::wxd_EvtHandler_t
+    }
+}
+
+// Implement common event traits that all Window-based widgets support
+impl crate::event::WindowEvents for Choice {}
 
 // --- Choice specific event enum ---
 /// Events specific to Choice controls
@@ -190,7 +260,24 @@ crate::implement_widget_local_event_handlers!(
 );
 
 // Add XRC Support - enables Choice to be created from XRC-managed pointers
-impl_xrc_support!(Choice, { window });
+#[cfg(feature = "xrc")]
+impl crate::xrc::XrcSupport for Choice {
+    unsafe fn from_xrc_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        Choice {
+            handle: WindowHandle::new(ptr),
+        }
+    }
+}
 
 // Widget casting support for Choice
-impl_widget_cast!(Choice, "wxChoice", { window });
+impl crate::window::FromWindowWithClassName for Choice {
+    fn class_name() -> &'static str {
+        "wxChoice"
+    }
+
+    unsafe fn from_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        Choice {
+            handle: WindowHandle::new(ptr),
+        }
+    }
+}

@@ -2,7 +2,7 @@
 //! wxMenuItem wrapper and related types
 
 use crate::event::{Event, EventType, WxEvtHandler};
-use crate::window::{Window, WxWidget};
+use crate::window::{Window, WindowHandle, WxWidget};
 use std::ffi::{CStr, CString};
 use wxdragon_sys as ffi;
 
@@ -37,11 +37,14 @@ impl From<ItemKind> for i32 {
 
 /// Represents a wxMenuItem.
 /// This can be either a wrapper around an existing menu item or loaded from XRC.
+///
+/// MenuItem uses `WindowHandle` internally for safe memory management of the parent window.
+/// If the parent window is destroyed, operations that require the parent become safe no-ops.
 #[derive(Clone, Copy)]
 pub struct MenuItem {
     ptr: *mut ffi::wxd_MenuItem_t, // Non-owning pointer
-    /// Reference to the parent window that will receive menu events
-    parent_window: Window,
+    /// Safe handle to the parent window that will receive menu events
+    parent_handle: WindowHandle,
     /// The menu item's ID for event handling
     item_id: i32,
 }
@@ -67,11 +70,11 @@ impl MenuItem {
         let owner_ptr = unsafe { ffi::wxd_MenuItem_GetOwningWindow(ptr) };
         let item_id = unsafe { ffi::wxd_MenuItem_GetId(ptr) };
 
-        let parent_window = unsafe { Window::from_ptr(owner_ptr as *mut ffi::wxd_Window_t) };
+        let parent_handle = WindowHandle::new(owner_ptr as *mut ffi::wxd_Window_t);
 
         MenuItem {
             ptr,
-            parent_window,
+            parent_handle,
             item_id,
         }
     }
@@ -79,12 +82,23 @@ impl MenuItem {
     /// Creates a MenuItem wrapper from XRC information.
     /// This is typically called by the XRC loading system.
     #[cfg(feature = "xrc")]
-    pub(crate) fn new(parent_window: Window, item_id: i32) -> Self {
+    pub(crate) fn new(parent_handle: WindowHandle, item_id: i32) -> Self {
         Self {
             ptr: std::ptr::null_mut(), // Not used for XRC items
-            parent_window,
+            parent_handle,
             item_id,
         }
+    }
+
+    /// Helper to get parent window pointer, returns null if parent has been destroyed
+    #[inline]
+    fn parent_ptr(&self) -> *mut ffi::wxd_Window_t {
+        self.parent_handle.get_ptr().unwrap_or(std::ptr::null_mut())
+    }
+
+    /// Check if this menu item's parent window is still valid.
+    pub fn is_valid(&self) -> bool {
+        self.parent_handle.is_valid()
     }
 
     /// Gets the menu item's ID used for event handling.
@@ -94,26 +108,31 @@ impl MenuItem {
 
     /// Binds a click event handler to this menu item.
     /// This binds a menu event on the parent window for this item's ID.
+    /// No-op if the parent window has been destroyed.
     pub fn on_click<F>(&self, handler: F)
     where
         F: FnMut(Event) + 'static,
     {
-        // Use ID-specific binding for MENU events
-        self.parent_window
-            .bind_with_id_internal(EventType::MENU, self.item_id, handler);
+        let ptr = self.parent_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        // Use ID-specific binding for MENU events via the parent window
+        let parent_window = unsafe { Window::from_ptr(ptr) };
+        parent_window.bind_with_id_internal(EventType::MENU, self.item_id, handler);
     }
 
     /// Special XRC loading method for menu items.
     /// This looks up the menu item by name and creates a MenuItem wrapper.
     #[cfg(feature = "xrc")]
-    pub fn from_xrc_name(parent_window: &Window, item_name: &str) -> Option<Self> {
+    pub fn from_xrc_name(parent_handle: WindowHandle, item_name: &str) -> Option<Self> {
         use crate::xrc::XmlResource;
 
         // Get the XRC ID for this menu item name
         let item_id = XmlResource::get_xrc_id(item_name);
 
         if item_id != -1 {
-            Some(MenuItem::new(*parent_window, item_id))
+            Some(MenuItem::new(parent_handle, item_id))
         } else {
             None
         }
@@ -196,7 +215,7 @@ impl WxWidget for MenuItem {
     fn handle_ptr(&self) -> *mut ffi::wxd_Window_t {
         // Menu items don't have their own window handle - they're part of the menu system
         // Return the parent window's handle for XRC compatibility
-        self.parent_window.as_ptr()
+        self.parent_handle.get_ptr().unwrap_or(std::ptr::null_mut())
     }
 
     fn get_id(&self) -> i32 {
@@ -207,7 +226,7 @@ impl WxWidget for MenuItem {
 /// Event handler implementation for MenuItem (delegates to parent window)
 impl WxEvtHandler for MenuItem {
     unsafe fn get_event_handler_ptr(&self) -> *mut ffi::wxd_EvtHandler_t {
-        self.parent_window.as_ptr() as *mut ffi::wxd_EvtHandler_t
+        self.parent_handle.get_ptr().unwrap_or(std::ptr::null_mut()) as *mut ffi::wxd_EvtHandler_t
     }
 }
 

@@ -3,10 +3,10 @@
 
 use crate::bitmap::Bitmap;
 use crate::bitmap_bundle::BitmapBundle;
-use crate::event::{Event, EventType, WindowEvents, WxEvtHandler};
+use crate::event::{Event, EventType, WxEvtHandler};
 use crate::id::Id;
 use crate::menus::ItemKind; // Reuse ItemKind for tool types
-use crate::window::{Window, WxWidget};
+use crate::window::{WindowHandle, WxWidget};
 use std::ffi::CString;
 use std::os::raw::c_int;
 use wxdragon_sys as ffi;
@@ -79,10 +79,17 @@ impl ToolBarEventData {
 }
 
 /// Represents a wxToolBar control.
+///
+/// ToolBar uses `WindowHandle` internally for safe memory management.
+/// When the underlying window is destroyed (by calling `destroy()` or when
+/// its parent is destroyed), the handle becomes invalid and all operations
+/// become safe no-ops.
+///
 /// Toolbars generate `EventType::MENU` events on their parent window when a tool is clicked.
 #[derive(Clone, Copy)]
 pub struct ToolBar {
-    window: Window, // Composition: ToolBar IS a Window (and Control)
+    /// Safe handle to the underlying wxToolBar - automatically invalidated on destroy
+    handle: WindowHandle,
 }
 
 impl ToolBar {
@@ -91,16 +98,34 @@ impl ToolBar {
     /// The pointer must be a valid `wxd_ToolBar_t` pointer.
     pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_ToolBar_t) -> Self {
         ToolBar {
-            window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
+            handle: WindowHandle::new(ptr as *mut ffi::wxd_Window_t),
         }
+    }
+
+    /// Helper to get raw toolbar pointer, returns null if widget has been destroyed
+    #[inline]
+    fn toolbar_ptr(&self) -> *mut ffi::wxd_ToolBar_t {
+        self.handle
+            .get_ptr()
+            .map(|p| p as *mut ffi::wxd_ToolBar_t)
+            .unwrap_or(std::ptr::null_mut())
+    }
+
+    /// Returns the underlying WindowHandle for this ToolBar.
+    pub fn window_handle(&self) -> WindowHandle {
+        self.handle
     }
 
     /// Internal helper method for adding tools with all options.
     /// Prefer using `add_tool`, `add_check_tool`, `add_radio_tool` etc.
     /// Returns true if the tool was added successfully (C++ returns non-null ptr).
-    /// # Safety
-    /// Requires valid toolbar pointer and CString conversions must succeed.
+    /// No-op (returns false) if the toolbar has been destroyed.
     fn add_tool_raw(&self, config: ToolConfig) -> bool {
+        let ptr = self.toolbar_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+
         let c_label = CString::new(config.label).unwrap_or_default();
         let c_short_help = CString::new(config.short_help).unwrap_or_default();
         let c_longlong_help = CString::new(config.long_help).unwrap_or_default();
@@ -108,7 +133,7 @@ impl ToolBar {
 
         unsafe {
             let tool_ptr = ffi::wxd_ToolBar_AddTool(
-                self.window.as_ptr() as *mut _,
+                ptr,
                 config.tool_id,
                 c_label.as_ptr(),
                 config.bitmap.as_const_ptr(),
@@ -168,54 +193,93 @@ impl ToolBar {
     }
 
     /// Adds a separator.
+    /// No-op if the toolbar has been destroyed.
     pub fn add_separator(&self) {
+        let ptr = self.toolbar_ptr();
+        if ptr.is_null() {
+            return;
+        }
         unsafe {
-            ffi::wxd_ToolBar_AddSeparator(self.window.as_ptr() as *mut _);
+            ffi::wxd_ToolBar_AddSeparator(ptr);
         }
     }
 
     /// Adds an arbitrary control (like a `Choice` or `TextCtrl`) to the toolbar.
     /// The control should have the toolbar as its parent.
+    /// No-op if the toolbar has been destroyed.
     pub fn add_control<W: WxWidget>(&self, control: &W) {
+        let ptr = self.toolbar_ptr();
+        if ptr.is_null() {
+            return;
+        }
         unsafe {
-            ffi::wxd_ToolBar_AddControl(self.window.as_ptr() as *mut _, control.handle_ptr());
+            ffi::wxd_ToolBar_AddControl(ptr, control.handle_ptr());
         }
     }
 
     /// Must be called after adding tools to finalize the toolbar layout.
-    /// Returns true if successful.
+    /// Returns true if successful, false if toolbar has been destroyed.
     pub fn realize(&self) -> bool {
-        unsafe { ffi::wxd_ToolBar_Realize(self.window.as_ptr() as *mut _) }
+        let ptr = self.toolbar_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_ToolBar_Realize(ptr) }
     }
 
     /// Enables or disables a tool.
+    /// No-op if the toolbar has been destroyed.
     pub fn enable_tool(&self, tool_id: Id, enable: bool) {
+        let ptr = self.toolbar_ptr();
+        if ptr.is_null() {
+            return;
+        }
         unsafe {
-            ffi::wxd_ToolBar_EnableTool(self.window.as_ptr() as *mut _, tool_id, enable);
+            ffi::wxd_ToolBar_EnableTool(ptr, tool_id, enable);
         }
     }
 
     /// Toggles the state of a check or radio tool.
+    /// No-op if the toolbar has been destroyed.
     pub fn toggle_tool(&self, tool_id: Id, toggle: bool) {
+        let ptr = self.toolbar_ptr();
+        if ptr.is_null() {
+            return;
+        }
         unsafe {
-            ffi::wxd_ToolBar_ToggleTool(self.window.as_ptr() as *mut _, tool_id, toggle);
+            ffi::wxd_ToolBar_ToggleTool(ptr, tool_id, toggle);
         }
     }
 
     /// Checks if a tool is enabled.
+    /// Returns false if the toolbar has been destroyed.
     pub fn is_tool_enabled(&self, tool_id: Id) -> bool {
-        unsafe { ffi::wxd_ToolBar_IsToolEnabled(self.window.as_ptr() as *mut _, tool_id) }
+        let ptr = self.toolbar_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_ToolBar_IsToolEnabled(ptr, tool_id) }
     }
 
     /// Gets the state of a check or radio tool.
+    /// Returns false if the toolbar has been destroyed.
     pub fn get_tool_state(&self, tool_id: Id) -> bool {
-        unsafe { ffi::wxd_ToolBar_GetToolState(self.window.as_ptr() as *mut _, tool_id) }
+        let ptr = self.toolbar_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_ToolBar_GetToolState(ptr, tool_id) }
     }
 
     /// Sets the short help string (tooltip) for a tool.
+    /// No-op if the toolbar has been destroyed.
     pub fn set_tool_short_help(&self, tool_id: Id, help_string: &str) {
+        let ptr = self.toolbar_ptr();
+        if ptr.is_null() {
+            return;
+        }
         let c_help = CString::new(help_string).unwrap_or_default();
-        unsafe { ffi::wxd_ToolBar_SetToolShortHelp(self.window.as_ptr() as *mut _, tool_id, c_help.as_ptr()) };
+        unsafe { ffi::wxd_ToolBar_SetToolShortHelp(ptr, tool_id, c_help.as_ptr()) };
     }
 
     /// Adds a normal tool to the toolbar using a BitmapBundle instead of a Bitmap.
@@ -226,13 +290,20 @@ impl ToolBar {
     /// * `label` - Label shown if `TB_TEXT` style is used.
     /// * `bundle` - The bitmap bundle containing icons at various resolutions.
     /// * `short_help` - Short help string (tooltip).
+    ///
+    /// Returns false if the toolbar has been destroyed.
     pub fn add_tool_bundle(&self, tool_id: Id, label: &str, bundle: &BitmapBundle, short_help: &str) -> bool {
+        let ptr = self.toolbar_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+
         let c_label = CString::new(label).unwrap_or_default();
         let c_short_help = CString::new(short_help).unwrap_or_default();
 
         unsafe {
             ffi::wxd_ToolBar_AddToolWithBundles(
-                self.window.as_ptr() as *mut _,
+                ptr,
                 tool_id,
                 c_label.as_ptr(),
                 bundle.as_ptr(),
@@ -253,6 +324,8 @@ impl ToolBar {
     /// * `kind` - Type of tool (normal, check, radio).
     /// * `short_help` - Short help string (tooltip).
     /// * `long_help` - Long help string (status bar).
+    ///
+    /// Returns false if the toolbar has been destroyed.
     pub fn add_tool_bundle_raw(
         &self,
         tool_id: Id,
@@ -262,6 +335,11 @@ impl ToolBar {
         short_help: &str,
         long_help: &str,
     ) -> bool {
+        let ptr = self.toolbar_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+
         let c_label = CString::new(label).unwrap_or_default();
         let c_short_help = CString::new(short_help).unwrap_or_default();
         let c_long_help = CString::new(long_help).unwrap_or_default();
@@ -269,7 +347,7 @@ impl ToolBar {
 
         unsafe {
             ffi::wxd_ToolBar_AddToolWithBundles(
-                self.window.as_ptr() as *mut _,
+                ptr,
                 tool_id,
                 c_label.as_ptr(),
                 bundle.as_ptr(),
@@ -282,15 +360,20 @@ impl ToolBar {
 
     /// Gets a tool by its XRC name.
     /// Returns a Tool wrapper that can be used for event binding and operations.
+    /// Returns None if the toolbar has been destroyed or the tool name is not found.
     #[cfg(feature = "xrc")]
     pub fn get_tool_by_name(&self, tool_name: &str) -> Option<crate::widgets::Tool> {
         use crate::xrc::XmlResource;
+
+        if !self.handle.is_valid() {
+            return None;
+        }
 
         // Get the XRC ID for this tool name
         let tool_id = XmlResource::get_xrc_id(tool_name);
 
         if tool_id != -1 {
-            Some(crate::widgets::Tool::new(self.window, tool_id))
+            Some(crate::widgets::Tool::new(self.handle, tool_id))
         } else {
             None
         }
@@ -299,21 +382,26 @@ impl ToolBar {
 
 // --- Trait Implementations ---
 
+// Manual WxWidget implementation for ToolBar (using WindowHandle)
 impl WxWidget for ToolBar {
     fn handle_ptr(&self) -> *mut ffi::wxd_Window_t {
-        self.window.handle_ptr()
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut())
+    }
+
+    fn is_valid(&self) -> bool {
+        self.handle.is_valid()
     }
 }
 
-// Add WxEvtHandler implementation
+// Implement WxEvtHandler for event binding
 impl WxEvtHandler for ToolBar {
     unsafe fn get_event_handler_ptr(&self) -> *mut ffi::wxd_EvtHandler_t {
-        self.window.handle_ptr() as *mut ffi::wxd_EvtHandler_t
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut()) as *mut ffi::wxd_EvtHandler_t
     }
 }
 
-// ToolBar doesn't handle events directly, the parent (Frame) does via EventType::MENU
-// So, no WxEvtHandler impl needed for ToolBar itself.
+// Implement common event traits that all Window-based widgets support
+impl crate::event::WindowEvents for ToolBar {}
 
 // No Drop needed, wxToolBar is a Window managed by its parent frame.
 
@@ -325,11 +413,25 @@ crate::implement_widget_local_event_handlers!(
     Menu => menu, EventType::MENU
 );
 
-impl WindowEvents for ToolBar {}
-
-// Add XRC support
 // XRC Support - enables ToolBar to be created from XRC-managed pointers
-impl_xrc_support!(ToolBar, { window });
+#[cfg(feature = "xrc")]
+impl crate::xrc::XrcSupport for ToolBar {
+    unsafe fn from_xrc_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        ToolBar {
+            handle: WindowHandle::new(ptr),
+        }
+    }
+}
 
-// Widget casting support for ToolBar
-impl_widget_cast!(ToolBar, "wxToolBar", { window });
+// Enable widget casting for ToolBar
+impl crate::window::FromWindowWithClassName for ToolBar {
+    fn class_name() -> &'static str {
+        "wxToolBar"
+    }
+
+    unsafe fn from_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        ToolBar {
+            handle: WindowHandle::new(ptr),
+        }
+    }
+}

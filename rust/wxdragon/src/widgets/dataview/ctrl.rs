@@ -13,8 +13,9 @@ use super::{
 };
 
 use crate::color::Colour;
+use crate::event::WxEvtHandler;
 use crate::geometry::{Point, Size};
-use crate::window::Window;
+use crate::window::WindowHandle;
 
 // Define style enum for DataViewCtrl using the macro
 widget_style_enum!(
@@ -36,6 +37,11 @@ widget_style_enum!(
 ///
 /// DataViewCtrl is a control that displays data in a tabular or tree-like format,
 /// with customizable renderers and a flexible data model.
+///
+/// DataViewCtrl uses `WindowHandle` internally for safe memory management.
+/// When the underlying window is destroyed (by calling `destroy()` or when
+/// its parent is destroyed), the handle becomes invalid and all operations
+/// become safe no-ops.
 ///
 /// # Features
 ///
@@ -60,7 +66,8 @@ widget_style_enum!(
 /// ```
 #[derive(Clone, Copy)]
 pub struct DataViewCtrl {
-    window: Window,
+    /// Safe handle to the underlying wxDataViewCtrl - automatically invalidated on destroy
+    handle: WindowHandle,
 }
 
 /// Configuration for appending a spin column
@@ -118,7 +125,7 @@ impl DataViewCtrl {
     }
 
     fn new_impl(parent_ptr: *mut ffi::wxd_Window_t, id: i32, pos: Point, size: Size, style: i64) -> Self {
-        let handle = unsafe {
+        let ptr = unsafe {
             ffi::wxd_DataViewCtrl_Create(
                 parent_ptr,
                 id as i64,
@@ -128,8 +135,24 @@ impl DataViewCtrl {
             )
         };
 
-        let window = unsafe { Window::from_ptr(handle) };
-        Self { window }
+        if ptr.is_null() {
+            panic!("Failed to create DataViewCtrl widget");
+        }
+
+        DataViewCtrl {
+            handle: WindowHandle::new(ptr),
+        }
+    }
+
+    /// Helper to get raw window pointer, returns null if widget has been destroyed
+    #[inline]
+    fn dvc_ptr(&self) -> *mut ffi::wxd_Window_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut())
+    }
+
+    /// Returns the underlying WindowHandle for this DataViewCtrl.
+    pub fn window_handle(&self) -> WindowHandle {
+        self.handle
     }
 
     /// Associates a data model with this DataViewCtrl.
@@ -157,7 +180,7 @@ impl DataViewCtrl {
         // IMPORTANT: The model needs to remain valid for the lifetime of this control
         // wxWidgets doesn't fully manage the lifetime of custom models.
         let model_ptr = model.handle_ptr();
-        unsafe { ffi::wxd_DataViewCtrl_AssociateModel(self.window.handle_ptr(), model_ptr) }
+        unsafe { ffi::wxd_DataViewCtrl_AssociateModel(self.dvc_ptr(), model_ptr) }
     }
 
     /// Appends a column to the control.
@@ -166,7 +189,7 @@ impl DataViewCtrl {
     ///
     /// `true` if the column was successfully appended, `false` otherwise.
     pub fn append_column(&self, column: &DataViewColumn) -> bool {
-        unsafe { ffi::wxd_DataViewCtrl_AppendColumn(self.window.handle_ptr(), column.as_raw()) }
+        unsafe { ffi::wxd_DataViewCtrl_AppendColumn(self.dvc_ptr(), column.as_raw()) }
     }
 
     /// Prepends a column to the control.
@@ -175,7 +198,7 @@ impl DataViewCtrl {
     ///
     /// `true` if the column was successfully prepended, `false` otherwise.
     pub fn prepend_column(&self, column: &DataViewColumn) -> bool {
-        unsafe { ffi::wxd_DataViewCtrl_PrependColumn(self.window.handle_ptr(), column.as_raw()) }
+        unsafe { ffi::wxd_DataViewCtrl_PrependColumn(self.dvc_ptr(), column.as_raw()) }
     }
 
     /// Inserts a column at the specified position.
@@ -184,7 +207,7 @@ impl DataViewCtrl {
     ///
     /// `true` if the column was successfully inserted, `false` otherwise.
     pub fn insert_column(&self, pos: usize, column: &DataViewColumn) -> bool {
-        unsafe { ffi::wxd_DataViewCtrl_InsertColumn(self.window.handle_ptr(), pos as i64, column.as_raw()) }
+        unsafe { ffi::wxd_DataViewCtrl_InsertColumn(self.dvc_ptr(), pos as i64, column.as_raw()) }
     }
 
     /// Selects the specified row.
@@ -193,7 +216,7 @@ impl DataViewCtrl {
     ///
     /// `true` if the row was successfully selected, `false` otherwise.
     pub fn select_row(&self, row: usize) -> bool {
-        unsafe { ffi::wxd_DataViewCtrl_SelectRow(self.window.handle_ptr(), row as i64) }
+        unsafe { ffi::wxd_DataViewCtrl_SelectRow(self.dvc_ptr(), row as i64) }
     }
 
     /// Gets the currently selected row.
@@ -202,13 +225,13 @@ impl DataViewCtrl {
     ///
     /// An `Option` containing the index of the selected row, or `None` if no row is selected.
     pub fn get_selected_row(&self) -> Option<usize> {
-        let row = unsafe { ffi::wxd_DataViewCtrl_GetSelectedRow(self.window.handle_ptr()) };
+        let row = unsafe { ffi::wxd_DataViewCtrl_GetSelectedRow(self.dvc_ptr()) };
         if row >= 0 { Some(row as usize) } else { None }
     }
 
     /// Deselects all currently selected items.
     pub fn unselect_all(&self) {
-        unsafe { ffi::wxd_DataViewCtrl_UnselectAll(self.window.handle_ptr()) }
+        unsafe { ffi::wxd_DataViewCtrl_UnselectAll(self.dvc_ptr()) }
     }
 
     /// Creates and appends a text column to this control.
@@ -436,7 +459,7 @@ impl DataViewCtrl {
     ///
     /// The number of columns.
     pub fn get_column_count(&self) -> usize {
-        unsafe { ffi::wxd_DataViewCtrl_GetColumnCount(self.window.handle_ptr()) as usize }
+        unsafe { ffi::wxd_DataViewCtrl_GetColumnCount(self.dvc_ptr()) as usize }
     }
 
     /// Gets a column by index.
@@ -452,7 +475,7 @@ impl DataViewCtrl {
         if pos >= self.get_column_count() {
             return None; // Prevent out-of-bounds access
         }
-        let raw_col = unsafe { ffi::wxd_DataViewCtrl_GetColumn(self.window.handle_ptr(), pos as u32) };
+        let raw_col = unsafe { ffi::wxd_DataViewCtrl_GetColumn(self.dvc_ptr(), pos as u32) };
         if raw_col.is_null() {
             None
         } else {
@@ -471,7 +494,7 @@ impl DataViewCtrl {
     ///
     /// The position of the column, or -1 if not found.
     pub fn get_column_position(&self, column: &DataViewColumn) -> i32 {
-        unsafe { ffi::wxd_DataViewCtrl_GetColumnPosition(self.window.handle_ptr(), column.as_raw()) }
+        unsafe { ffi::wxd_DataViewCtrl_GetColumnPosition(self.dvc_ptr(), column.as_raw()) }
     }
 
     /// Removes all columns from the control.
@@ -480,7 +503,7 @@ impl DataViewCtrl {
     ///
     /// `true` if successful, `false` otherwise.
     pub fn clear_columns(&self) -> bool {
-        unsafe { ffi::wxd_DataViewCtrl_ClearColumns(self.window.handle_ptr()) }
+        unsafe { ffi::wxd_DataViewCtrl_ClearColumns(self.dvc_ptr()) }
     }
 
     /// Selects a specific item.
@@ -489,7 +512,7 @@ impl DataViewCtrl {
     ///
     /// * `item` - The item to select.
     pub fn select(&self, item: &DataViewItem) {
-        unsafe { ffi::wxd_DataViewCtrl_Select(self.window.handle_ptr(), **item) };
+        unsafe { ffi::wxd_DataViewCtrl_Select(self.dvc_ptr(), **item) };
     }
 
     /// Unselects a specific item.
@@ -498,12 +521,12 @@ impl DataViewCtrl {
     ///
     /// * `item` - The item to unselect.
     pub fn unselect(&self, item: &DataViewItem) {
-        unsafe { ffi::wxd_DataViewCtrl_Unselect(self.window.handle_ptr(), **item) };
+        unsafe { ffi::wxd_DataViewCtrl_Unselect(self.dvc_ptr(), **item) };
     }
 
     /// Selects all items in the control.
     pub fn select_all(&self) {
-        unsafe { ffi::wxd_DataViewCtrl_SelectAll(self.window.handle_ptr()) }
+        unsafe { ffi::wxd_DataViewCtrl_SelectAll(self.dvc_ptr()) }
     }
 
     /// Checks if an item is selected.
@@ -516,7 +539,7 @@ impl DataViewCtrl {
     ///
     /// `true` if the item is selected, `false` otherwise.
     pub fn is_selected(&self, item: &DataViewItem) -> bool {
-        unsafe { ffi::wxd_DataViewCtrl_IsSelected(self.window.handle_ptr(), **item) }
+        unsafe { ffi::wxd_DataViewCtrl_IsSelected(self.dvc_ptr(), **item) }
     }
 
     /// Gets the number of selected items.
@@ -525,7 +548,7 @@ impl DataViewCtrl {
     ///
     /// The number of selected items.
     pub fn get_selected_items_count(&self) -> usize {
-        unsafe { ffi::wxd_DataViewCtrl_GetSelectedItemsCount(self.window.handle_ptr()) as usize }
+        unsafe { ffi::wxd_DataViewCtrl_GetSelectedItemsCount(self.dvc_ptr()) as usize }
     }
 
     /// Checks if any items are selected.
@@ -553,7 +576,7 @@ impl DataViewCtrl {
         let mut items_raw: Vec<*const ffi::wxd_DataViewItem_t> = vec![std::ptr::null(); count];
 
         let ptr = items_raw.as_mut_ptr();
-        unsafe { ffi::wxd_DataViewCtrl_GetSelections(self.window.handle_ptr(), ptr, count as u32) };
+        unsafe { ffi::wxd_DataViewCtrl_GetSelections(self.dvc_ptr(), ptr, count as u32) };
 
         for raw_ptr in items_raw {
             if !raw_ptr.is_null() {
@@ -571,7 +594,7 @@ impl DataViewCtrl {
     /// * `items` - The items to select.
     pub fn set_selections(&self, items: &[DataViewItem]) {
         let items_raw: Vec<_> = items.iter().map(|item| **item).collect();
-        unsafe { ffi::wxd_DataViewCtrl_SetSelections(self.window.handle_ptr(), items_raw.as_ptr(), items_raw.len() as u32) };
+        unsafe { ffi::wxd_DataViewCtrl_SetSelections(self.dvc_ptr(), items_raw.as_ptr(), items_raw.len() as u32) };
     }
 
     /// Gets the currently focused item.
@@ -580,7 +603,7 @@ impl DataViewCtrl {
     ///
     /// An `Option` containing the current item, or `None` if no item is focused.
     pub fn get_current_item(&self) -> Option<DataViewItem> {
-        let item_ptr = unsafe { ffi::wxd_DataViewCtrl_GetCurrentItem(self.window.handle_ptr()) };
+        let item_ptr = unsafe { ffi::wxd_DataViewCtrl_GetCurrentItem(self.dvc_ptr()) };
         if item_ptr.is_null() {
             None
         } else {
@@ -590,18 +613,18 @@ impl DataViewCtrl {
 
     /// Gets the nth child of a parent item (works for tree models attached to a DataViewCtrl)
     pub fn get_nth_child(&self, parent: &DataViewItem, pos: u32) -> DataViewItem {
-        let item = unsafe { ffi::wxd_DataViewCtrl_GetNthChild(self.window.handle_ptr(), **parent, pos) };
+        let item = unsafe { ffi::wxd_DataViewCtrl_GetNthChild(self.dvc_ptr(), **parent, pos) };
         DataViewItem::from(item)
     }
 
     /// Expand the given item (works for tree models attached to a DataViewCtrl)
     pub fn expand(&self, item: &DataViewItem) {
-        unsafe { ffi::wxd_DataViewCtrl_Expand(self.window.handle_ptr(), **item) };
+        unsafe { ffi::wxd_DataViewCtrl_Expand(self.dvc_ptr(), **item) };
     }
 
     /// Ensure the given item is visible (scroll into view)
     pub fn ensure_visible(&self, item: &DataViewItem) {
-        unsafe { ffi::wxd_DataViewCtrl_EnsureVisible(self.window.handle_ptr(), **item) };
+        unsafe { ffi::wxd_DataViewCtrl_EnsureVisible(self.dvc_ptr(), **item) };
     }
 
     /// Gets the currently selected item.
@@ -610,7 +633,7 @@ impl DataViewCtrl {
     ///
     /// An `Option` containing the selected item, or `None` if no item is selected.
     pub fn get_selection(&self) -> Option<DataViewItem> {
-        let item_ptr = unsafe { ffi::wxd_DataViewCtrl_GetSelection(self.window.handle_ptr()) };
+        let item_ptr = unsafe { ffi::wxd_DataViewCtrl_GetSelection(self.dvc_ptr()) };
         if item_ptr.is_null() {
             None
         } else {
@@ -624,7 +647,7 @@ impl DataViewCtrl {
     ///
     /// * `item` - The item to set as current.
     pub fn set_current_item(&self, item: &DataViewItem) {
-        unsafe { ffi::wxd_DataViewCtrl_SetCurrentItem(self.window.handle_ptr(), **item) }
+        unsafe { ffi::wxd_DataViewCtrl_SetCurrentItem(self.dvc_ptr(), **item) }
     }
 
     /// Gets the currently used indentation.
@@ -633,7 +656,7 @@ impl DataViewCtrl {
     ///
     /// The current indentation in pixels.
     pub fn get_indent(&self) -> i32 {
-        unsafe { ffi::wxd_DataViewCtrl_GetIndent(self.window.handle_ptr()) }
+        unsafe { ffi::wxd_DataViewCtrl_GetIndent(self.dvc_ptr()) }
     }
 
     /// Sets the indentation for hierarchical items.
@@ -642,7 +665,7 @@ impl DataViewCtrl {
     ///
     /// * `indent` - The indentation in pixels to use.
     pub fn set_indent(&self, indent: i32) {
-        unsafe { ffi::wxd_DataViewCtrl_SetIndent(self.window.handle_ptr(), indent) }
+        unsafe { ffi::wxd_DataViewCtrl_SetIndent(self.dvc_ptr(), indent) }
     }
 
     /// Gets the column used as the expander column in tree mode.
@@ -651,7 +674,7 @@ impl DataViewCtrl {
     ///
     /// An `Option` containing the expander column, or `None` if not set.
     pub fn get_expander_column(&self) -> Option<DataViewColumn> {
-        let col_ptr = unsafe { ffi::wxd_DataViewCtrl_GetExpanderColumn(self.window.handle_ptr()) };
+        let col_ptr = unsafe { ffi::wxd_DataViewCtrl_GetExpanderColumn(self.dvc_ptr()) };
         if col_ptr.is_null() {
             None
         } else {
@@ -665,7 +688,7 @@ impl DataViewCtrl {
     ///
     /// * `column` - The column to use as the expander column.
     pub fn set_expander_column(&self, column: &DataViewColumn) {
-        unsafe { ffi::wxd_DataViewCtrl_SetExpanderColumn(self.window.handle_ptr(), column.as_raw()) }
+        unsafe { ffi::wxd_DataViewCtrl_SetExpanderColumn(self.dvc_ptr(), column.as_raw()) }
     }
 
     /// Sets the height of each row.
@@ -682,7 +705,7 @@ impl DataViewCtrl {
     ///
     /// This cannot be used when the `VariableLineHeight` style is enabled.
     pub fn set_row_height(&self, height: i32) -> bool {
-        unsafe { ffi::wxd_DataViewCtrl_SetRowHeight(self.window.handle_ptr(), height) }
+        unsafe { ffi::wxd_DataViewCtrl_SetRowHeight(self.dvc_ptr(), height) }
     }
 
     /// Sets alternate row colors for the control.
@@ -696,7 +719,7 @@ impl DataViewCtrl {
     /// `true` if the operation was successful, `false` otherwise.
     pub fn set_alternate_row_colour(&self, colour: &Colour) -> bool {
         let colour_raw = colour.to_raw();
-        unsafe { ffi::wxd_DataViewCtrl_SetAlternateRowColour(self.window.handle_ptr(), &colour_raw) }
+        unsafe { ffi::wxd_DataViewCtrl_SetAlternateRowColour(self.dvc_ptr(), &colour_raw) }
     }
 
     /// Clears any current sorting on the control.
@@ -714,7 +737,7 @@ impl DataViewCtrl {
     /// - On all supported platforms (Windows, macOS, Linux/GTK), this method behaves consistently and clears sorting as expected.
     /// - If the control is not currently sorted, calling this method has no effect.
     pub fn clear_sorting(&self) {
-        unsafe { ffi::wxd_DataViewCtrl_ClearSorting(self.window.handle_ptr()) }
+        unsafe { ffi::wxd_DataViewCtrl_ClearSorting(self.dvc_ptr()) }
     }
 
     /// Programmatically set the sorting column and order.
@@ -736,7 +759,7 @@ impl DataViewCtrl {
     ///
     /// Returns `true` if the column index was valid and sorting was applied, `false` otherwise.
     pub fn set_sorting_column(&self, column_index: usize, ascending: bool) -> bool {
-        unsafe { ffi::wxd_DataViewCtrl_SetSortingColumn(self.window.handle_ptr(), column_index as i32, ascending) }
+        unsafe { ffi::wxd_DataViewCtrl_SetSortingColumn(self.dvc_ptr(), column_index as i32, ascending) }
     }
 
     /// Returns the current sorting state if any: (model_column_index, ascending).
@@ -744,12 +767,31 @@ impl DataViewCtrl {
     pub fn sorting_state(&self) -> Option<(usize, bool)> {
         let mut col: i32 = -1;
         let mut asc: bool = true;
-        let ok = unsafe { ffi::wxd_DataViewCtrl_GetSortingState(self.window.handle_ptr(), &mut col, &mut asc) };
+        let ok = unsafe { ffi::wxd_DataViewCtrl_GetSortingState(self.dvc_ptr(), &mut col, &mut asc) };
         if ok && col >= 0 { Some((col as usize, asc)) } else { None }
     }
 }
 
-implement_widget_traits_with_target!(DataViewCtrl, window, Window);
+// Manual WxWidget implementation for DataViewCtrl (using WindowHandle)
+impl WxWidget for DataViewCtrl {
+    fn handle_ptr(&self) -> *mut ffi::wxd_Window_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut())
+    }
+
+    fn is_valid(&self) -> bool {
+        self.handle.is_valid()
+    }
+}
+
+// Implement WxEvtHandler for event binding
+impl WxEvtHandler for DataViewCtrl {
+    unsafe fn get_event_handler_ptr(&self) -> *mut ffi::wxd_EvtHandler_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut()) as *mut ffi::wxd_EvtHandler_t
+    }
+}
+
+// Implement common event traits that all Window-based widgets support
+impl crate::event::WindowEvents for DataViewCtrl {}
 
 widget_builder!(
     name: DataViewCtrl,

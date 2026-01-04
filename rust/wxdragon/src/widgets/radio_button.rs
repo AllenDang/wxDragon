@@ -1,10 +1,10 @@
 //! Safe wrapper for wxRadioButton.
 
 use crate::event::event_data::CommandEventData;
-use crate::event::{Event, EventType};
+use crate::event::{Event, EventType, WxEvtHandler};
 use crate::geometry::{Point, Size};
 use crate::id::Id;
-use crate::window::{Window, WxWidget};
+use crate::window::{WindowHandle, WxWidget};
 use std::ffi::CString;
 use wxdragon_sys as ffi;
 
@@ -20,9 +20,14 @@ widget_style_enum!(
 );
 
 /// Represents a wxRadioButton control.
+///
+/// RadioButton uses `WindowHandle` internally for safe memory management.
+/// When the underlying window is destroyed (by calling `destroy()` or when
+/// its parent is destroyed), the handle becomes invalid and all operations
+/// become safe no-ops.
 #[derive(Clone, Copy)]
 pub struct RadioButton {
-    window: Window,
+    handle: WindowHandle,
 }
 
 impl RadioButton {
@@ -31,28 +36,65 @@ impl RadioButton {
         RadioButtonBuilder::new(parent)
     }
 
+    /// Helper to get raw radio button pointer, returns null if widget has been destroyed
+    #[inline]
+    fn radiobutton_ptr(&self) -> *mut ffi::wxd_RadioButton_t {
+        self.handle
+            .get_ptr()
+            .map(|p| p as *mut ffi::wxd_RadioButton_t)
+            .unwrap_or(std::ptr::null_mut())
+    }
+
     /// Private constructor from raw pointer
     pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_RadioButton_t) -> Self {
         assert!(!ptr.is_null());
         RadioButton {
-            window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
+            handle: WindowHandle::new(ptr as *mut ffi::wxd_Window_t),
         }
     }
 
     /// Gets the state of the radio button.
+    /// Returns `false` if the radio button has been destroyed.
     pub fn get_value(&self) -> bool {
-        unsafe { ffi::wxd_RadioButton_GetValue(self.window.handle_ptr() as *mut ffi::wxd_RadioButton_t) }
+        let ptr = self.radiobutton_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_RadioButton_GetValue(ptr) }
     }
 
     /// Sets the state of the radio button.
     /// Note: Setting a radio button to `true` will implicitly set others in the same group to `false`.
+    /// No-op if the radio button has been destroyed.
     pub fn set_value(&self, value: bool) {
-        unsafe { ffi::wxd_RadioButton_SetValue(self.window.handle_ptr() as *mut ffi::wxd_RadioButton_t, value) };
+        let ptr = self.radiobutton_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_RadioButton_SetValue(ptr, value) };
     }
 }
 
-// Apply common trait implementations for RadioButton
-implement_widget_traits_with_target!(RadioButton, window, Window);
+// Manual WxWidget implementation for RadioButton (using WindowHandle)
+impl WxWidget for RadioButton {
+    fn handle_ptr(&self) -> *mut ffi::wxd_Window_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut())
+    }
+
+    fn is_valid(&self) -> bool {
+        self.handle.is_valid()
+    }
+}
+
+// Implement WxEvtHandler for event binding
+impl WxEvtHandler for RadioButton {
+    unsafe fn get_event_handler_ptr(&self) -> *mut ffi::wxd_EvtHandler_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut()) as *mut ffi::wxd_EvtHandler_t
+    }
+}
+
+// Implement common event traits that all Window-based widgets support
+impl crate::event::WindowEvents for RadioButton {}
 
 // Use the widget_builder macro to generate the RadioButtonBuilder implementation
 widget_builder!(
@@ -131,7 +173,24 @@ crate::implement_widget_local_event_handlers!(
 );
 
 // Add XRC Support - enables RadioButton to be created from XRC-managed pointers
-impl_xrc_support!(RadioButton, { window });
+#[cfg(feature = "xrc")]
+impl crate::xrc::XrcSupport for RadioButton {
+    unsafe fn from_xrc_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        RadioButton {
+            handle: WindowHandle::new(ptr),
+        }
+    }
+}
 
 // Widget casting support for RadioButton
-impl_widget_cast!(RadioButton, "wxRadioButton", { window });
+impl crate::window::FromWindowWithClassName for RadioButton {
+    fn class_name() -> &'static str {
+        "wxRadioButton"
+    }
+
+    unsafe fn from_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        RadioButton {
+            handle: WindowHandle::new(ptr),
+        }
+    }
+}

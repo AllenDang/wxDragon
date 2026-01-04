@@ -3,9 +3,9 @@ use std::ptr;
 use wxdragon_sys as ffi;
 
 use crate::datetime::DateTime;
-use crate::event::{Event, EventType};
+use crate::event::{Event, EventType, WxEvtHandler};
 use crate::prelude::*;
-use crate::window::{Window, WxWidget};
+use crate::window::{WindowHandle, WxWidget};
 use std::default::Default;
 
 // --- Style enum using macro ---
@@ -55,9 +55,31 @@ impl DatePickerCtrlEventData {
 }
 
 // --- wxDatePickerCtrl ---
+/// Represents a wxDatePickerCtrl.
+///
+/// DatePickerCtrl uses `WindowHandle` internally for safe memory management.
+/// When the underlying window is destroyed (by calling `destroy()` or when
+/// its parent is destroyed), the handle becomes invalid and all operations
+/// become safe no-ops.
+///
+/// # Example
+/// ```ignore
+/// let date_picker = DatePickerCtrl::builder(&frame).build();
+///
+/// // DatePickerCtrl is Copy - no clone needed for closures!
+/// date_picker.bind_date_changed(move |_| {
+///     // Safe: if date_picker was destroyed, this is a no-op
+///     let date = date_picker.get_value();
+/// });
+///
+/// // After parent destruction, date_picker operations are safe no-ops
+/// frame.destroy();
+/// assert!(!date_picker.is_valid());
+/// ```
 #[derive(Clone, Copy)]
 pub struct DatePickerCtrl {
-    window: Window, // Embed Window for common wxWindow functionality
+    /// Safe handle to the underlying wxDatePickerCtrl - automatically invalidated on destroy
+    handle: WindowHandle,
 }
 
 impl DatePickerCtrl {
@@ -66,25 +88,49 @@ impl DatePickerCtrl {
         DatePickerCtrlBuilder::new(parent)
     }
 
+    /// Helper to get raw date picker pointer, returns null if widget has been destroyed
+    #[inline]
+    fn date_picker_ptr(&self) -> *mut ffi::wxd_DatePickerCtrl_t {
+        self.handle
+            .get_ptr()
+            .map(|p| p as *mut ffi::wxd_DatePickerCtrl_t)
+            .unwrap_or(std::ptr::null_mut())
+    }
+
     /// Gets the currently selected date.
+    /// Returns an invalid DateTime if the widget has been destroyed.
     pub fn get_value(&self) -> DateTime {
-        let ffi_dt = unsafe { ffi::wxd_DatePickerCtrl_GetValue(self.window.as_ptr() as *mut ffi::wxd_DatePickerCtrl_t) };
+        let ptr = self.date_picker_ptr();
+        if ptr.is_null() {
+            return DateTime::default();
+        }
+        let ffi_dt = unsafe { ffi::wxd_DatePickerCtrl_GetValue(ptr) };
         DateTime::from(ffi_dt)
     }
 
     /// Sets the currently selected date.
+    /// No-op if the widget has been destroyed.
     pub fn set_value(&self, dt: &DateTime) {
-        unsafe { ffi::wxd_DatePickerCtrl_SetValue(self.window.as_ptr() as *mut ffi::wxd_DatePickerCtrl_t, dt.as_const_ptr()) };
+        let ptr = self.date_picker_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_DatePickerCtrl_SetValue(ptr, dt.as_const_ptr()) };
     }
 
     /// Gets the valid range for dates on the control.
     /// Returns `Ok((Option<DateTime>, Option<DateTime>))` if successful.
     /// The DateTimes in the tuple will be None if the corresponding bound is not set or if the bounds are invalid.
+    /// Returns an error if the widget has been destroyed.
     pub fn get_range(&self) -> Result<(Option<DateTime>, Option<DateTime>), String> {
+        let ptr = self.date_picker_ptr();
+        if ptr.is_null() {
+            return Err("DatePickerCtrl has been destroyed".to_string());
+        }
+
         let mut p1: *mut ffi::wxd_DateTime_t = std::ptr::null_mut();
         let mut p2: *mut ffi::wxd_DateTime_t = std::ptr::null_mut();
 
-        let ptr = self.window.as_ptr() as *mut ffi::wxd_DatePickerCtrl_t;
         let _has_range = unsafe { ffi::wxd_DatePickerCtrl_GetRange(ptr, &mut p1, &mut p2) };
 
         let opt_dt1 = if p1.is_null() { None } else { Some(DateTime::from(p1)) };
@@ -95,22 +141,54 @@ impl DatePickerCtrl {
 
     /// Sets the valid range for dates on the control.
     /// Pass `None` for `dt_start` or `dt_end` to remove the lower or upper bound, respectively.
+    /// No-op if the widget has been destroyed.
     pub fn set_range(&self, dt_start: Option<&DateTime>, dt_end: Option<&DateTime>) {
+        let ptr = self.date_picker_ptr();
+        if ptr.is_null() {
+            return;
+        }
+
         let ptr_dt1 = dt_start.map_or(ptr::null(), |dt| dt.as_const_ptr());
         let ptr_dt2 = dt_end.map_or(ptr::null(), |dt| dt.as_const_ptr());
 
-        unsafe { ffi::wxd_DatePickerCtrl_SetRange(self.window.as_ptr() as *mut ffi::wxd_DatePickerCtrl_t, ptr_dt1, ptr_dt2) };
+        unsafe { ffi::wxd_DatePickerCtrl_SetRange(ptr, ptr_dt1, ptr_dt2) };
     }
 
     /// Creates a DatePickerCtrl from a raw pointer.
-    /// # Safety
-    /// The pointer must be a valid `wxd_DatePickerCtrl_t`.
-    pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_DatePickerCtrl_t) -> Self {
-        DatePickerCtrl {
-            window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
+    /// This is intended for internal use by other widget wrappers.
+    #[allow(dead_code)]
+    pub(crate) fn from_ptr(ptr: *mut ffi::wxd_DatePickerCtrl_t) -> Self {
+        Self {
+            handle: WindowHandle::new(ptr as *mut ffi::wxd_Window_t),
         }
     }
+
+    /// Returns the underlying WindowHandle for this date picker.
+    pub fn window_handle(&self) -> WindowHandle {
+        self.handle
+    }
 }
+
+// Manual WxWidget implementation for DatePickerCtrl (using WindowHandle)
+impl WxWidget for DatePickerCtrl {
+    fn handle_ptr(&self) -> *mut ffi::wxd_Window_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut())
+    }
+
+    fn is_valid(&self) -> bool {
+        self.handle.is_valid()
+    }
+}
+
+// Implement WxEvtHandler for event binding
+impl WxEvtHandler for DatePickerCtrl {
+    unsafe fn get_event_handler_ptr(&self) -> *mut ffi::wxd_EvtHandler_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut()) as *mut ffi::wxd_EvtHandler_t
+    }
+}
+
+// Implement common event traits that all Window-based widgets support
+impl crate::event::WindowEvents for DatePickerCtrl {}
 
 // Implement event handlers for DatePickerCtrl
 crate::implement_widget_local_event_handlers!(
@@ -119,9 +197,6 @@ crate::implement_widget_local_event_handlers!(
     DatePickerCtrlEventData,
     DateChanged => date_changed, EventType::DATE_CHANGED
 );
-
-// Add XRC Support - enables DatePickerCtrl to be created from XRC-managed pointers
-impl_xrc_support!(DatePickerCtrl, { window });
 
 // Use the widget_builder macro to generate the DatePickerCtrlBuilder implementation
 widget_builder!(
@@ -148,14 +223,34 @@ widget_builder!(
         };
         if ptr.is_null() {
             panic!("Failed to create DatePickerCtrl: FFI returned null pointer.");
-        } else {
-            unsafe { DatePickerCtrl::from_ptr(ptr) }
+        }
+
+        // Create a WindowHandle which automatically registers for destroy events
+        DatePickerCtrl {
+            handle: WindowHandle::new(ptr as *mut ffi::wxd_Window_t),
         }
     }
 );
 
-// Use the implement_widget_traits_with_target macro to implement traits
-implement_widget_traits_with_target!(DatePickerCtrl, window, Window);
+// XRC Support - enables DatePickerCtrl to be created from XRC-managed pointers
+#[cfg(feature = "xrc")]
+impl crate::xrc::XrcSupport for DatePickerCtrl {
+    unsafe fn from_xrc_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        DatePickerCtrl {
+            handle: WindowHandle::new(ptr),
+        }
+    }
+}
 
-// Widget casting support for DatePickerCtrl
-impl_widget_cast!(DatePickerCtrl, "wxDatePickerCtrl", { window });
+// Enable widget casting for DatePickerCtrl
+impl crate::window::FromWindowWithClassName for DatePickerCtrl {
+    fn class_name() -> &'static str {
+        "wxDatePickerCtrl"
+    }
+
+    unsafe fn from_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        DatePickerCtrl {
+            handle: WindowHandle::new(ptr),
+        }
+    }
+}

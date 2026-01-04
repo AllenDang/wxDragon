@@ -1,17 +1,23 @@
 use crate::event::event_data::CommandEventData;
-use crate::event::{Event, EventType};
+use crate::event::{Event, EventType, WxEvtHandler};
 use crate::geometry::{Point, Size};
 use crate::id::Id;
-use crate::window::{Window, WxWidget};
+use crate::window::{WindowHandle, WxWidget};
 use std::ffi::CString;
 use wxdragon_sys as ffi;
 
 // Re-export specific CheckBox constants if needed later
 
 /// Represents a wxCheckBox.
+///
+/// CheckBox uses `WindowHandle` internally for safe memory management.
+/// When the underlying window is destroyed (by calling `destroy()` or when
+/// its parent is destroyed), the handle becomes invalid and all operations
+/// become safe no-ops.
 #[derive(Clone, Copy)]
 pub struct CheckBox {
-    window: Window,
+    /// Safe handle to the underlying wxCheckBox - automatically invalidated on destroy
+    handle: WindowHandle,
 }
 
 impl CheckBox {
@@ -34,33 +40,52 @@ impl CheckBox {
             )
         };
         assert!(!ctrl_ptr.is_null(), "wxd_CheckBox_Create returned null");
-        unsafe { Self::from_ptr(ctrl_ptr) }
+        CheckBox {
+            handle: WindowHandle::new(ctrl_ptr as *mut ffi::wxd_Window_t),
+        }
+    }
+
+    /// Helper to get raw checkbox pointer, returns null if widget has been destroyed
+    #[inline]
+    fn widget_ptr(&self) -> *mut ffi::wxd_CheckBox_t {
+        self.handle
+            .get_ptr()
+            .map(|p| p as *mut ffi::wxd_CheckBox_t)
+            .unwrap_or(std::ptr::null_mut())
     }
 
     /// Returns `true` if the checkbox is checked, `false` otherwise.
+    /// Returns `false` if the widget has been destroyed.
     pub fn is_checked(&self) -> bool {
-        unsafe { ffi::wxd_CheckBox_IsChecked(self.window.as_ptr() as *mut ffi::wxd_CheckBox_t) }
+        let ptr = self.widget_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_CheckBox_IsChecked(ptr) }
     }
 
     /// Sets the checkbox to the given state.
+    /// No-op if the widget has been destroyed.
     pub fn set_value(&self, value: bool) {
+        let ptr = self.widget_ptr();
+        if ptr.is_null() {
+            return;
+        }
         unsafe {
-            ffi::wxd_CheckBox_SetValue(self.window.as_ptr() as *mut ffi::wxd_CheckBox_t, value);
+            ffi::wxd_CheckBox_SetValue(ptr, value);
         }
     }
 
     /// Returns `true` if the checkbox is checked, `false` otherwise.
     /// Alias for `is_checked()` to match common widget patterns.
+    /// Returns `false` if the widget has been destroyed.
     pub fn get_value(&self) -> bool {
         self.is_checked()
     }
 
-    // Private unsafe constructor from raw pointer
-    unsafe fn from_ptr(ptr: *mut ffi::wxd_CheckBox_t) -> Self {
-        assert!(!ptr.is_null());
-        CheckBox {
-            window: unsafe { Window::from_ptr(ptr as *mut ffi::wxd_Window_t) },
-        }
+    /// Returns the underlying WindowHandle for this checkbox.
+    pub fn window_handle(&self) -> WindowHandle {
+        self.handle
     }
 }
 
@@ -144,11 +169,46 @@ widget_builder!(
     }
 );
 
-// Implement common widget traits
-implement_widget_traits_with_target!(CheckBox, window, Window);
+// Manual WxWidget implementation for CheckBox (using WindowHandle)
+impl WxWidget for CheckBox {
+    fn handle_ptr(&self) -> *mut ffi::wxd_Window_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut())
+    }
+
+    fn is_valid(&self) -> bool {
+        self.handle.is_valid()
+    }
+}
+
+// Implement WxEvtHandler for event binding
+impl WxEvtHandler for CheckBox {
+    unsafe fn get_event_handler_ptr(&self) -> *mut ffi::wxd_EvtHandler_t {
+        self.handle.get_ptr().unwrap_or(std::ptr::null_mut()) as *mut ffi::wxd_EvtHandler_t
+    }
+}
+
+// Implement common event traits that all Window-based widgets support
+impl crate::event::WindowEvents for CheckBox {}
 
 // XRC Support - enables CheckBox to be created from XRC-managed pointers
-impl_xrc_support!(CheckBox, { window });
+#[cfg(feature = "xrc")]
+impl crate::xrc::XrcSupport for CheckBox {
+    unsafe fn from_xrc_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        CheckBox {
+            handle: WindowHandle::new(ptr),
+        }
+    }
+}
 
 // Widget casting support for CheckBox
-impl_widget_cast!(CheckBox, "wxCheckBox", { window });
+impl crate::window::FromWindowWithClassName for CheckBox {
+    fn class_name() -> &'static str {
+        "wxCheckBox"
+    }
+
+    unsafe fn from_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
+        CheckBox {
+            handle: WindowHandle::new(ptr),
+        }
+    }
+}
