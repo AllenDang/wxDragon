@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.7
+
+### Enhancements
+
+- Use thread-local registry to track window handle, avoid double-free
+
 ## 0.9.6
 
 ### Enhancements
