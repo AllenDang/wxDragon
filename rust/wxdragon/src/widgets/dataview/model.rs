@@ -217,11 +217,7 @@ impl DataViewListModel {
     /// Get a value from the model at the specified row and column
     pub fn get_value(&self, row: usize, col: usize) -> Option<Variant> {
         let ptr = unsafe { ffi::wxd_DataViewListModel_GetValue(self.ptr, row, col) };
-        if ptr.is_null() {
-            None
-        } else {
-            Some(Variant::from(ptr))
-        }
+        if ptr.is_null() { None } else { Some(Variant::from(ptr)) }
     }
 }
 
