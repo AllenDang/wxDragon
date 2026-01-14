@@ -1233,4 +1233,318 @@ wxd_DataViewColumn_IsSortable(wxd_DataViewColumn_t* self)
     return false; // Default if col is null
 }
 
+// =============================================================================
+// DataViewListModel (DataViewListStore) - CRUD Operations
+// =============================================================================
+
+WXD_EXPORTED uint32_t
+wxd_DataViewListModel_GetItemCount(wxd_DataViewModel_t* self)
+{
+    if (!self)
+        return 0;
+    WxDDataViewListModel* model = reinterpret_cast<WxDDataViewListModel*>(self);
+    return static_cast<uint32_t>(model->GetCount());
+}
+
+WXD_EXPORTED bool
+wxd_DataViewListModel_PrependRow(wxd_DataViewModel_t* self)
+{
+    if (!self)
+        return false;
+    WxDDataViewListModel* model = reinterpret_cast<WxDDataViewListModel*>(self);
+
+    size_t colCount = model->GetColumnCount();
+    if (colCount == 0)
+        return false;
+
+    wxVector<wxVariant> values;
+    values.resize(colCount);
+    model->PrependItem(values);
+    return true;
+}
+
+WXD_EXPORTED bool
+wxd_DataViewListModel_InsertRow(wxd_DataViewModel_t* self, uint32_t pos)
+{
+    if (!self)
+        return false;
+    WxDDataViewListModel* model = reinterpret_cast<WxDDataViewListModel*>(self);
+
+    size_t colCount = model->GetColumnCount();
+    if (colCount == 0)
+        return false;
+
+    wxVector<wxVariant> values;
+    values.resize(colCount);
+    model->InsertItem(pos, values);
+    return true;
+}
+
+WXD_EXPORTED bool
+wxd_DataViewListModel_DeleteItem(wxd_DataViewModel_t* self, uint32_t row)
+{
+    if (!self)
+        return false;
+    WxDDataViewListModel* model = reinterpret_cast<WxDDataViewListModel*>(self);
+    model->DeleteItem(row);
+    return true;
+}
+
+WXD_EXPORTED bool
+wxd_DataViewListModel_DeleteAllItems(wxd_DataViewModel_t* self)
+{
+    if (!self)
+        return false;
+    WxDDataViewListModel* model = reinterpret_cast<WxDDataViewListModel*>(self);
+    model->DeleteAllItems();
+    return true;
+}
+
+WXD_EXPORTED wxd_Variant_t*
+wxd_DataViewListModel_GetValue(wxd_DataViewModel_t* self, size_t row, size_t col)
+{
+    if (!self)
+        return nullptr;
+    WxDDataViewListModel* model = reinterpret_cast<WxDDataViewListModel*>(self);
+
+    wxVariant value;
+    model->GetValueByRow(value, static_cast<unsigned int>(row), static_cast<unsigned int>(col));
+
+    // Allocate a new wxVariant on the heap and return it
+    wxVariant* result = new wxVariant(value);
+    return reinterpret_cast<wxd_Variant_t*>(result);
+}
+
+// =============================================================================
+// DataViewListCtrl - CRUD Operations
+// =============================================================================
+
+WXD_EXPORTED bool
+wxd_DataViewListCtrl_AppendItem(wxd_Window_t* self, const wxd_Variant_t* const* values,
+                                uint32_t count, uintptr_t data)
+{
+    if (!self)
+        return false;
+    wxDataViewListCtrl* ctrl = reinterpret_cast<wxDataViewListCtrl*>(self);
+
+    wxVector<wxVariant> wxValues;
+    wxValues.reserve(count);
+    for (uint32_t i = 0; i < count; ++i) {
+        if (values[i]) {
+            const wxVariant* v = reinterpret_cast<const wxVariant*>(values[i]);
+            wxValues.push_back(*v);
+        }
+        else {
+            wxValues.push_back(wxVariant());
+        }
+    }
+
+    ctrl->AppendItem(wxValues, static_cast<wxUIntPtr>(data));
+    return true;
+}
+
+WXD_EXPORTED bool
+wxd_DataViewListCtrl_PrependItem(wxd_Window_t* self, const wxd_Variant_t* const* values,
+                                 uint32_t count, uintptr_t data)
+{
+    if (!self)
+        return false;
+    wxDataViewListCtrl* ctrl = reinterpret_cast<wxDataViewListCtrl*>(self);
+
+    wxVector<wxVariant> wxValues;
+    wxValues.reserve(count);
+    for (uint32_t i = 0; i < count; ++i) {
+        if (values[i]) {
+            const wxVariant* v = reinterpret_cast<const wxVariant*>(values[i]);
+            wxValues.push_back(*v);
+        }
+        else {
+            wxValues.push_back(wxVariant());
+        }
+    }
+
+    ctrl->PrependItem(wxValues, static_cast<wxUIntPtr>(data));
+    return true;
+}
+
+WXD_EXPORTED bool
+wxd_DataViewListCtrl_InsertItem(wxd_Window_t* self, uint32_t row,
+                                const wxd_Variant_t* const* values, uint32_t count, uintptr_t data)
+{
+    if (!self)
+        return false;
+    wxDataViewListCtrl* ctrl = reinterpret_cast<wxDataViewListCtrl*>(self);
+
+    wxVector<wxVariant> wxValues;
+    wxValues.reserve(count);
+    for (uint32_t i = 0; i < count; ++i) {
+        if (values[i]) {
+            const wxVariant* v = reinterpret_cast<const wxVariant*>(values[i]);
+            wxValues.push_back(*v);
+        }
+        else {
+            wxValues.push_back(wxVariant());
+        }
+    }
+
+    ctrl->InsertItem(row, wxValues, static_cast<wxUIntPtr>(data));
+    return true;
+}
+
+WXD_EXPORTED bool
+wxd_DataViewListCtrl_DeleteItem(wxd_Window_t* self, uint32_t row)
+{
+    if (!self)
+        return false;
+    wxDataViewListCtrl* ctrl = reinterpret_cast<wxDataViewListCtrl*>(self);
+    ctrl->DeleteItem(row);
+    return true;
+}
+
+WXD_EXPORTED void
+wxd_DataViewListCtrl_DeleteAllItems(wxd_Window_t* self)
+{
+    if (!self)
+        return;
+    wxDataViewListCtrl* ctrl = reinterpret_cast<wxDataViewListCtrl*>(self);
+    ctrl->DeleteAllItems();
+}
+
+WXD_EXPORTED uint32_t
+wxd_DataViewListCtrl_GetItemCount(wxd_Window_t* self)
+{
+    if (!self)
+        return 0;
+    wxDataViewListCtrl* ctrl = reinterpret_cast<wxDataViewListCtrl*>(self);
+    return static_cast<uint32_t>(ctrl->GetItemCount());
+}
+
+WXD_EXPORTED void
+wxd_DataViewListCtrl_SetValue(wxd_Window_t* self, uint32_t row, uint32_t col,
+                              const wxd_Variant_t* value)
+{
+    if (!self || !value)
+        return;
+    wxDataViewListCtrl* ctrl = reinterpret_cast<wxDataViewListCtrl*>(self);
+    const wxVariant* v = reinterpret_cast<const wxVariant*>(value);
+    ctrl->SetValue(*v, row, col);
+}
+
+WXD_EXPORTED wxd_Variant_t*
+wxd_DataViewListCtrl_GetValue(wxd_Window_t* self, uint32_t row, uint32_t col)
+{
+    if (!self)
+        return nullptr;
+    wxDataViewListCtrl* ctrl = reinterpret_cast<wxDataViewListCtrl*>(self);
+
+    wxVariant value;
+    ctrl->GetValue(value, row, col);
+
+    wxVariant* result = new wxVariant(value);
+    return reinterpret_cast<wxd_Variant_t*>(result);
+}
+
+// Thread-local storage for GetTextValue return string
+static thread_local wxString g_text_value_buffer;
+
+WXD_EXPORTED void
+wxd_DataViewListCtrl_SetTextValue(wxd_Window_t* self, uint32_t row, uint32_t col, const char* value)
+{
+    if (!self)
+        return;
+    wxDataViewListCtrl* ctrl = reinterpret_cast<wxDataViewListCtrl*>(self);
+    wxString wxValue = wxString::FromUTF8(value ? value : "");
+    ctrl->SetTextValue(wxValue, row, col);
+}
+
+WXD_EXPORTED const char*
+wxd_DataViewListCtrl_GetTextValue(wxd_Window_t* self, uint32_t row, uint32_t col)
+{
+    if (!self)
+        return "";
+    wxDataViewListCtrl* ctrl = reinterpret_cast<wxDataViewListCtrl*>(self);
+    g_text_value_buffer = ctrl->GetTextValue(row, col);
+    return g_text_value_buffer.utf8_str().data();
+}
+
+WXD_EXPORTED void
+wxd_DataViewListCtrl_SetToggleValue(wxd_Window_t* self, uint32_t row, uint32_t col, bool value)
+{
+    if (!self)
+        return;
+    wxDataViewListCtrl* ctrl = reinterpret_cast<wxDataViewListCtrl*>(self);
+    ctrl->SetToggleValue(value, row, col);
+}
+
+WXD_EXPORTED bool
+wxd_DataViewListCtrl_GetToggleValue(wxd_Window_t* self, uint32_t row, uint32_t col)
+{
+    if (!self)
+        return false;
+    wxDataViewListCtrl* ctrl = reinterpret_cast<wxDataViewListCtrl*>(self);
+    return ctrl->GetToggleValue(row, col);
+}
+
+WXD_EXPORTED int32_t
+wxd_DataViewListCtrl_ItemToRow(wxd_Window_t* self, const wxd_DataViewItem_t* item)
+{
+    if (!self || !item)
+        return -1;
+    wxDataViewListCtrl* ctrl = reinterpret_cast<wxDataViewListCtrl*>(self);
+    const wxDataViewItem* wxItem = reinterpret_cast<const wxDataViewItem*>(item);
+    return ctrl->ItemToRow(*wxItem);
+}
+
+WXD_EXPORTED wxd_DataViewItem_t*
+wxd_DataViewListCtrl_RowToItem(wxd_Window_t* self, int32_t row)
+{
+    if (!self || row < 0)
+        return nullptr;
+    wxDataViewListCtrl* ctrl = reinterpret_cast<wxDataViewListCtrl*>(self);
+    wxDataViewItem item = ctrl->RowToItem(row);
+    if (!item.IsOk())
+        return nullptr;
+    // wxd_DataViewItem_Clone returns const pointer, but we own this new item
+    return const_cast<wxd_DataViewItem_t*>(
+        wxd_DataViewItem_Clone(reinterpret_cast<const wxd_DataViewItem_t*>(&item)));
+}
+
+WXD_EXPORTED void
+wxd_DataViewListCtrl_UnselectRow(wxd_Window_t* self, uint32_t row)
+{
+    if (!self)
+        return;
+    wxDataViewListCtrl* ctrl = reinterpret_cast<wxDataViewListCtrl*>(self);
+    ctrl->UnselectRow(row);
+}
+
+WXD_EXPORTED bool
+wxd_DataViewListCtrl_IsRowSelected(wxd_Window_t* self, uint32_t row)
+{
+    if (!self)
+        return false;
+    wxDataViewListCtrl* ctrl = reinterpret_cast<wxDataViewListCtrl*>(self);
+    return ctrl->IsRowSelected(row);
+}
+
+WXD_EXPORTED void
+wxd_DataViewListCtrl_SetItemData(wxd_Window_t* self, const wxd_DataViewItem_t* item, uintptr_t data)
+{
+    if (!self || !item)
+        return;
+    wxDataViewListCtrl* ctrl = reinterpret_cast<wxDataViewListCtrl*>(self);
+    const wxDataViewItem* wxItem = reinterpret_cast<const wxDataViewItem*>(item);
+    ctrl->SetItemData(*wxItem, static_cast<wxUIntPtr>(data));
+}
+
+WXD_EXPORTED uintptr_t
+wxd_DataViewListCtrl_GetItemData(wxd_Window_t* self, const wxd_DataViewItem_t* item)
+{
+    if (!self || !item)
+        return 0;
+    wxDataViewListCtrl* ctrl = reinterpret_cast<wxDataViewListCtrl*>(self);
+    const wxDataViewItem* wxItem = reinterpret_cast<const wxDataViewItem*>(item);
+    return static_cast<uintptr_t>(ctrl->GetItemData(*wxItem));
+}
+
 } // extern "C"

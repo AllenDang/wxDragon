@@ -408,6 +408,92 @@ wxd_DataViewCustomRenderer_ReleaseCallbacks(wxd_DataViewRenderer_t* renderer);
 WXD_EXPORTED void
 drop_rust_custom_renderer_callbacks(void* ptr);
 
+// =============================================================================
+// DataViewListModel (DataViewListStore) - CRUD Operations
+// =============================================================================
+
+// Row count
+WXD_EXPORTED uint32_t
+wxd_DataViewListModel_GetItemCount(wxd_DataViewModel_t* self);
+
+// Item operations - Adding
+WXD_EXPORTED bool
+wxd_DataViewListModel_PrependRow(wxd_DataViewModel_t* self);
+WXD_EXPORTED bool
+wxd_DataViewListModel_InsertRow(wxd_DataViewModel_t* self, uint32_t pos);
+
+// Item operations - Removing
+WXD_EXPORTED bool
+wxd_DataViewListModel_DeleteItem(wxd_DataViewModel_t* self, uint32_t row);
+WXD_EXPORTED bool
+wxd_DataViewListModel_DeleteAllItems(wxd_DataViewModel_t* self);
+
+// Get value
+WXD_EXPORTED wxd_Variant_t*
+wxd_DataViewListModel_GetValue(wxd_DataViewModel_t* self, size_t row, size_t col);
+
+// =============================================================================
+// DataViewListCtrl - CRUD Operations
+// =============================================================================
+
+// Item operations - Adding (with values)
+WXD_EXPORTED bool
+wxd_DataViewListCtrl_AppendItem(wxd_Window_t* self, const wxd_Variant_t* const* values,
+                                uint32_t count, uintptr_t data);
+WXD_EXPORTED bool
+wxd_DataViewListCtrl_PrependItem(wxd_Window_t* self, const wxd_Variant_t* const* values,
+                                 uint32_t count, uintptr_t data);
+WXD_EXPORTED bool
+wxd_DataViewListCtrl_InsertItem(wxd_Window_t* self, uint32_t row,
+                                const wxd_Variant_t* const* values, uint32_t count, uintptr_t data);
+
+// Item operations - Removing
+WXD_EXPORTED bool
+wxd_DataViewListCtrl_DeleteItem(wxd_Window_t* self, uint32_t row);
+WXD_EXPORTED void
+wxd_DataViewListCtrl_DeleteAllItems(wxd_Window_t* self);
+
+// Row count
+WXD_EXPORTED uint32_t
+wxd_DataViewListCtrl_GetItemCount(wxd_Window_t* self);
+
+// Get/Set values
+WXD_EXPORTED void
+wxd_DataViewListCtrl_SetValue(wxd_Window_t* self, uint32_t row, uint32_t col,
+                              const wxd_Variant_t* value);
+WXD_EXPORTED wxd_Variant_t*
+wxd_DataViewListCtrl_GetValue(wxd_Window_t* self, uint32_t row, uint32_t col);
+
+// Text convenience methods
+WXD_EXPORTED void
+wxd_DataViewListCtrl_SetTextValue(wxd_Window_t* self, uint32_t row, uint32_t col, const char* value);
+WXD_EXPORTED const char*
+wxd_DataViewListCtrl_GetTextValue(wxd_Window_t* self, uint32_t row, uint32_t col);
+
+// Toggle convenience methods
+WXD_EXPORTED void
+wxd_DataViewListCtrl_SetToggleValue(wxd_Window_t* self, uint32_t row, uint32_t col, bool value);
+WXD_EXPORTED bool
+wxd_DataViewListCtrl_GetToggleValue(wxd_Window_t* self, uint32_t row, uint32_t col);
+
+// Row/Item conversion
+WXD_EXPORTED int32_t
+wxd_DataViewListCtrl_ItemToRow(wxd_Window_t* self, const wxd_DataViewItem_t* item);
+WXD_EXPORTED wxd_DataViewItem_t*
+wxd_DataViewListCtrl_RowToItem(wxd_Window_t* self, int32_t row);
+
+// Selection
+WXD_EXPORTED void
+wxd_DataViewListCtrl_UnselectRow(wxd_Window_t* self, uint32_t row);
+WXD_EXPORTED bool
+wxd_DataViewListCtrl_IsRowSelected(wxd_Window_t* self, uint32_t row);
+
+// Item data
+WXD_EXPORTED void
+wxd_DataViewListCtrl_SetItemData(wxd_Window_t* self, const wxd_DataViewItem_t* item, uintptr_t data);
+WXD_EXPORTED uintptr_t
+wxd_DataViewListCtrl_GetItemData(wxd_Window_t* self, const wxd_DataViewItem_t* item);
+
 #ifdef __cplusplus
 }
 #endif

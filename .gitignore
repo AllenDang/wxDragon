@@ -18,3 +18,4 @@ examples/cpp/minimal_cpp/minimal_cpp_notif_test
 justfile
 Cargo.lock
 .claude
+ref/wxWidgets

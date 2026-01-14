@@ -188,6 +188,41 @@ impl DataViewListModel {
         let v: Variant = value.into();
         unsafe { ffi::wxd_DataViewListModel_SetValue(self.ptr, row, col, v.as_const_ptr()) }
     }
+
+    /// Get the number of items (rows) in the model
+    pub fn get_item_count(&self) -> usize {
+        unsafe { ffi::wxd_DataViewListModel_GetItemCount(self.ptr) as usize }
+    }
+
+    /// Prepend an empty row to the model
+    pub fn prepend_row(&self) -> bool {
+        unsafe { ffi::wxd_DataViewListModel_PrependRow(self.ptr) }
+    }
+
+    /// Insert an empty row at the specified position
+    pub fn insert_row(&self, pos: usize) -> bool {
+        unsafe { ffi::wxd_DataViewListModel_InsertRow(self.ptr, pos as u32) }
+    }
+
+    /// Delete a row at the specified position
+    pub fn delete_item(&self, row: usize) -> bool {
+        unsafe { ffi::wxd_DataViewListModel_DeleteItem(self.ptr, row as u32) }
+    }
+
+    /// Delete all rows from the model
+    pub fn delete_all_items(&self) -> bool {
+        unsafe { ffi::wxd_DataViewListModel_DeleteAllItems(self.ptr) }
+    }
+
+    /// Get a value from the model at the specified row and column
+    pub fn get_value(&self, row: usize, col: usize) -> Option<Variant> {
+        let ptr = unsafe { ffi::wxd_DataViewListModel_GetValue(self.ptr, row, col) };
+        if ptr.is_null() {
+            None
+        } else {
+            Some(Variant::from(ptr))
+        }
+    }
 }
 
 impl DataViewModel for DataViewListModel {
