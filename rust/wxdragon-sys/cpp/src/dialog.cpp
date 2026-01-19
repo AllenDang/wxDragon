@@ -61,6 +61,54 @@ wxd_Dialog_EndModal(wxd_Dialog* self, int retCode)
     ((wxDialog*)self)->EndModal(retCode);
 }
 
+void
+wxd_Dialog_SetEscapeId(wxd_Dialog* self, int id)
+{
+    if (!self)
+        return;
+    ((wxDialog*)self)->SetEscapeId(id);
+}
+
+int
+wxd_Dialog_GetEscapeId(wxd_Dialog* self)
+{
+    if (!self)
+        return wxID_NONE;
+    return ((wxDialog*)self)->GetEscapeId();
+}
+
+void
+wxd_Dialog_SetAffirmativeId(wxd_Dialog* self, int id)
+{
+    if (!self)
+        return;
+    ((wxDialog*)self)->SetAffirmativeId(id);
+}
+
+int
+wxd_Dialog_GetAffirmativeId(wxd_Dialog* self)
+{
+    if (!self)
+        return wxID_OK; // Default is wxID_OK
+    return ((wxDialog*)self)->GetAffirmativeId();
+}
+
+void
+wxd_Dialog_SetReturnCode(wxd_Dialog* self, int retCode)
+{
+    if (!self)
+        return;
+    ((wxDialog*)self)->SetReturnCode(retCode);
+}
+
+int
+wxd_Dialog_GetReturnCode(wxd_Dialog* self)
+{
+    if (!self)
+        return 0;
+    return ((wxDialog*)self)->GetReturnCode();
+}
+
 // Note: wxDialog itself is usually not created directly with a simple 'Create' function in this C API.
 // Derived dialogs (like wxMessageDialog) will have their own creation functions that return a wxd_Dialog* or wxd_SpecificDialog* castable to wxd_Dialog*.
 // Destruction is handled by wxd_Window_Destroy, as wxDialog inherits from wxWindow.

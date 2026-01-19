@@ -17,6 +17,29 @@ wxd_Dialog_ShowModal(wxd_Dialog_t* self);
 WXD_EXPORTED void
 wxd_Dialog_EndModal(wxd_Dialog_t* self, int retCode);
 
+// Escape ID handling - controls which button is triggered by ESC key
+// Special values: wxID_ANY (default) = use CANCEL if present, else affirmative
+//                 wxID_NONE = disable ESC handling
+WXD_EXPORTED void
+wxd_Dialog_SetEscapeId(wxd_Dialog_t* self, int id);
+
+WXD_EXPORTED int
+wxd_Dialog_GetEscapeId(wxd_Dialog_t* self);
+
+// Affirmative ID - the button that acts as "OK" (default: wxID_OK)
+WXD_EXPORTED void
+wxd_Dialog_SetAffirmativeId(wxd_Dialog_t* self, int id);
+
+WXD_EXPORTED int
+wxd_Dialog_GetAffirmativeId(wxd_Dialog_t* self);
+
+// Return code - the value returned by ShowModal()
+WXD_EXPORTED void
+wxd_Dialog_SetReturnCode(wxd_Dialog_t* self, int retCode);
+
+WXD_EXPORTED int
+wxd_Dialog_GetReturnCode(wxd_Dialog_t* self);
+
 // --- MessageDialog ---
 WXD_EXPORTED wxd_MessageDialog_t*
 wxd_MessageDialog_Create(wxd_Window_t* parent, const char* message, const char* caption,

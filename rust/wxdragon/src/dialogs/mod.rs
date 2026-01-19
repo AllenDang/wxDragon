@@ -126,6 +126,96 @@ impl Dialog {
         unsafe { ffi::wxd_Dialog_EndModal(ptr, ret_code) }
     }
 
+    /// Sets the identifier of the button which should work like the standard "Cancel" button.
+    ///
+    /// When the button with this ID is clicked, the dialog is closed. Also, when the user
+    /// presses ESC in the dialog or closes it using the close button in the title bar,
+    /// this is mapped to clicking the button with the specified ID.
+    ///
+    /// # Special Values
+    /// - `ID_ANY` (default): Maps ESC to `ID_CANCEL` if present, otherwise to the affirmative ID
+    /// - `ID_NONE`: Disables ESC key handling entirely
+    /// - Any other ID: Maps ESC to that specific button ID
+    ///
+    /// # Example
+    /// ```ignore
+    /// use wxdragon::{Dialog, id::{ID_NONE, ID_CANCEL}};
+    ///
+    /// // Disable ESC key closing the dialog
+    /// dialog.set_escape_id(ID_NONE);
+    ///
+    /// // Use a custom button for ESC
+    /// dialog.set_escape_id(my_custom_button_id);
+    /// ```
+    pub fn set_escape_id(&self, id: i32) {
+        let ptr = self.dialog_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_Dialog_SetEscapeId(ptr, id) }
+    }
+
+    /// Gets the identifier of the button to map presses of ESC button to.
+    ///
+    /// Returns the escape ID, which may be a specific button ID or one of the special values
+    /// `ID_ANY` (default behavior) or `ID_NONE` (ESC disabled).
+    pub fn get_escape_id(&self) -> i32 {
+        let ptr = self.dialog_ptr();
+        if ptr.is_null() {
+            return crate::id::ID_NONE;
+        }
+        unsafe { ffi::wxd_Dialog_GetEscapeId(ptr) }
+    }
+
+    /// Sets the identifier to be used as the OK button.
+    ///
+    /// When the button with this ID is pressed, the dialog calls validation and
+    /// data transfer, and if both succeed, closes the dialog with the affirmative ID
+    /// as the return code.
+    ///
+    /// By default, the affirmative ID is `ID_OK`.
+    pub fn set_affirmative_id(&self, id: i32) {
+        let ptr = self.dialog_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_Dialog_SetAffirmativeId(ptr, id) }
+    }
+
+    /// Gets the identifier of the button which works like standard OK button.
+    ///
+    /// Returns `ID_OK` by default.
+    pub fn get_affirmative_id(&self) -> i32 {
+        let ptr = self.dialog_ptr();
+        if ptr.is_null() {
+            return crate::id::ID_OK;
+        }
+        unsafe { ffi::wxd_Dialog_GetAffirmativeId(ptr) }
+    }
+
+    /// Sets the return code for this dialog.
+    ///
+    /// A return code is normally associated with a modal dialog, where `show_modal()`
+    /// returns a code to the application. The `end_modal()` method calls this internally.
+    pub fn set_return_code(&self, ret_code: i32) {
+        let ptr = self.dialog_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_Dialog_SetReturnCode(ptr, ret_code) }
+    }
+
+    /// Gets the return code for this dialog.
+    ///
+    /// Returns the value that was set by `set_return_code()` or `end_modal()`.
+    pub fn get_return_code(&self) -> i32 {
+        let ptr = self.dialog_ptr();
+        if ptr.is_null() {
+            return 0;
+        }
+        unsafe { ffi::wxd_Dialog_GetReturnCode(ptr) }
+    }
+
     /// Returns the raw underlying dialog pointer.
     pub fn as_ptr(&self) -> *mut ffi::wxd_Dialog_t {
         self.dialog_ptr()
