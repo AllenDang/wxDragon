@@ -203,6 +203,7 @@ set(WXDRAGON_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/timepickerctrl.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/togglebutton.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/toolbar.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/translations.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/treebook.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/treectrl.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/treelistctrl.cpp

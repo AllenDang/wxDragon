@@ -1,0 +1,71 @@
+# German translations for translations_demo
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: de\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Hello"
+msgstr "Hallo"
+
+msgid "Goodbye"
+msgstr "Auf Wiedersehen"
+
+msgid "Yes"
+msgstr "Ja"
+
+msgid "No"
+msgstr "Nein"
+
+msgid "OK"
+msgstr "OK"
+
+msgid "Cancel"
+msgstr "Abbrechen"
+
+msgid "Welcome"
+msgstr "Willkommen"
+
+msgid "Thank you"
+msgstr "Danke"
+
+msgid "Please"
+msgstr "Bitte"
+
+msgid "Error"
+msgstr "Fehler"
+
+msgid "Warning"
+msgstr "Warnung"
+
+msgid "Information"
+msgstr "Information"
+
+msgid "File"
+msgstr "Datei"
+
+msgid "Edit"
+msgstr "Bearbeiten"
+
+msgid "View"
+msgstr "Ansicht"
+
+msgid "Help"
+msgstr "Hilfe"
+
+msgid "Open"
+msgstr "Öffnen"
+
+msgid "Save"
+msgstr "Speichern"
+
+msgid "Close"
+msgstr "Schließen"
+
+msgid "Exit"
+msgstr "Beenden"
+
+msgid "1 item selected"
+msgid_plural "%d items selected"
+msgstr[0] "1 Element ausgewählt"
+msgstr[1] "%d Elemente ausgewählt"

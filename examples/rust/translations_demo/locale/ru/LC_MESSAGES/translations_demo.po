@@ -1,0 +1,72 @@
+# Russian translations for translations_demo
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: ru\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+
+msgid "Hello"
+msgstr "Привет"
+
+msgid "Goodbye"
+msgstr "До свидания"
+
+msgid "Yes"
+msgstr "Да"
+
+msgid "No"
+msgstr "Нет"
+
+msgid "OK"
+msgstr "ОК"
+
+msgid "Cancel"
+msgstr "Отмена"
+
+msgid "Welcome"
+msgstr "Добро пожаловать"
+
+msgid "Thank you"
+msgstr "Спасибо"
+
+msgid "Please"
+msgstr "Пожалуйста"
+
+msgid "Error"
+msgstr "Ошибка"
+
+msgid "Warning"
+msgstr "Предупреждение"
+
+msgid "Information"
+msgstr "Информация"
+
+msgid "File"
+msgstr "Файл"
+
+msgid "Edit"
+msgstr "Редактировать"
+
+msgid "View"
+msgstr "Вид"
+
+msgid "Help"
+msgstr "Справка"
+
+msgid "Open"
+msgstr "Открыть"
+
+msgid "Save"
+msgstr "Сохранить"
+
+msgid "Close"
+msgstr "Закрыть"
+
+msgid "Exit"
+msgstr "Выход"
+
+msgid "1 item selected"
+msgid_plural "%d items selected"
+msgstr[0] "%d элемент выбран"
+msgstr[1] "%d элемента выбрано"
+msgstr[2] "%d элементов выбрано"

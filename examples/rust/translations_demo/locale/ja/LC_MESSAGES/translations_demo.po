@@ -1,0 +1,70 @@
+# Japanese translations for translations_demo
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: ja\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid "Hello"
+msgstr "こんにちは"
+
+msgid "Goodbye"
+msgstr "さようなら"
+
+msgid "Yes"
+msgstr "はい"
+
+msgid "No"
+msgstr "いいえ"
+
+msgid "OK"
+msgstr "OK"
+
+msgid "Cancel"
+msgstr "キャンセル"
+
+msgid "Welcome"
+msgstr "ようこそ"
+
+msgid "Thank you"
+msgstr "ありがとう"
+
+msgid "Please"
+msgstr "お願いします"
+
+msgid "Error"
+msgstr "エラー"
+
+msgid "Warning"
+msgstr "警告"
+
+msgid "Information"
+msgstr "情報"
+
+msgid "File"
+msgstr "ファイル"
+
+msgid "Edit"
+msgstr "編集"
+
+msgid "View"
+msgstr "表示"
+
+msgid "Help"
+msgstr "ヘルプ"
+
+msgid "Open"
+msgstr "開く"
+
+msgid "Save"
+msgstr "保存"
+
+msgid "Close"
+msgstr "閉じる"
+
+msgid "Exit"
+msgstr "終了"
+
+msgid "1 item selected"
+msgid_plural "%d items selected"
+msgstr[0] "%d 個のアイテムを選択"

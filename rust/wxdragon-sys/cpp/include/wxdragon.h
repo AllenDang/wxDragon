@@ -147,6 +147,7 @@ extern "C" {
 #include "widgets/wxd_rearrangelist.h"
 #include "core/wxd_clipboard.h"
 #include "core/wxd_dataobject.h"
+#include "core/wxd_translations.h"
 
 #ifdef __cplusplus
 } // extern "C"

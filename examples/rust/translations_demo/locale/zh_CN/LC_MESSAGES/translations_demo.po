@@ -1,0 +1,70 @@
+# Chinese (Simplified) translations for translations_demo
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: zh_CN\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid "Hello"
+msgstr "你好"
+
+msgid "Goodbye"
+msgstr "再见"
+
+msgid "Yes"
+msgstr "是"
+
+msgid "No"
+msgstr "否"
+
+msgid "OK"
+msgstr "确定"
+
+msgid "Cancel"
+msgstr "取消"
+
+msgid "Welcome"
+msgstr "欢迎"
+
+msgid "Thank you"
+msgstr "谢谢"
+
+msgid "Please"
+msgstr "请"
+
+msgid "Error"
+msgstr "错误"
+
+msgid "Warning"
+msgstr "警告"
+
+msgid "Information"
+msgstr "信息"
+
+msgid "File"
+msgstr "文件"
+
+msgid "Edit"
+msgstr "编辑"
+
+msgid "View"
+msgstr "视图"
+
+msgid "Help"
+msgstr "帮助"
+
+msgid "Open"
+msgstr "打开"
+
+msgid "Save"
+msgstr "保存"
+
+msgid "Close"
+msgstr "关闭"
+
+msgid "Exit"
+msgstr "退出"
+
+msgid "1 item selected"
+msgid_plural "%d items selected"
+msgstr[0] "已选择 %d 个项目"

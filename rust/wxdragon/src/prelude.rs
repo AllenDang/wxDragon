@@ -16,6 +16,7 @@ pub use crate::event::event_data::{CommandEventData, KeyEventData, MouseEventDat
 pub use crate::event::{IdleEventData, MenuEventData};
 pub use crate::geometry::{Point, Rect, Size};
 pub use crate::id::{ID_ANY, ID_CANCEL, ID_HIGHEST, ID_NO, ID_OK, ID_YES, Id};
+pub use crate::language::Language;
 pub use crate::sizers::WxSizer;
 pub use crate::sysopt::SystemOptions;
 pub use crate::types::Style;
@@ -206,7 +207,8 @@ pub use crate::dc::{
 // --- Application & Misc ---
 // pub use crate::app::App; // Commented out as per previous error, App is in main or app module
 pub use crate::appprogress::AppProgressIndicator;
-pub use crate::timer::Timer; // Added Timer
+pub use crate::timer::Timer;
+pub use crate::translations::{Translations, add_catalog_lookup_path_prefix, translate, translate_plural};
 
 // --- Constants for specific widgets that might be commonly used ---
 // Example: ListBox specific constants
