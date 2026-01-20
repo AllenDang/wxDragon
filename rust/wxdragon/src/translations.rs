@@ -447,7 +447,8 @@ pub fn translate(s: &str) -> String {
 /// ```rust,no_run
 /// use wxdragon::translations::translate_plural;
 ///
-/// let msg = translate_plural("1 file", "{n} files", file_count);
+/// let file_count = 5;
+/// let msg = translate_plural("1 item selected", "%d items selected", file_count);
 /// ```
 pub fn translate_plural(singular: &str, plural: &str, n: u32) -> String {
     if let Some(translations) = Translations::get()
