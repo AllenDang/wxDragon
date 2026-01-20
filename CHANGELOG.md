@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.9.8
+
+### Enhancements
+
+- Wrap wxTranslations
+- Implement escape handling API for dialog
+
 ## 0.9.7
 
 ### Enhancements
