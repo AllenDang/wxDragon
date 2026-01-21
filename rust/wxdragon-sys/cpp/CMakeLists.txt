@@ -184,6 +184,7 @@ set(WXDRAGON_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/scrolled_window.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/search_ctrl.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/single_choice_dialog.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/singleinstancechecker.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/sizer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/slider.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/spinbutton.cpp

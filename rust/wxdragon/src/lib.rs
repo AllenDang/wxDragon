@@ -26,6 +26,7 @@ pub mod language;
 pub mod menus;
 pub mod prelude;
 pub mod scrollable;
+pub mod single_instance_checker;
 pub mod sizers;
 pub mod sysopt;
 pub mod timer;

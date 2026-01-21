@@ -148,6 +148,7 @@ extern "C" {
 #include "core/wxd_clipboard.h"
 #include "core/wxd_dataobject.h"
 #include "core/wxd_translations.h"
+#include "core/wxd_singleinstancechecker.h"
 
 #ifdef __cplusplus
 } // extern "C"
