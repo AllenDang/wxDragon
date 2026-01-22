@@ -33,7 +33,7 @@ use std::ffi::CString;
 use wxdragon_sys as ffi;
 
 /// Mouse button constants for UIActionSimulator.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 #[repr(i32)]
 pub enum MouseButton {
     /// Any mouse button.
@@ -41,6 +41,7 @@ pub enum MouseButton {
     /// No mouse button.
     None = ffi::wxd_MouseButton_WXD_MOUSE_BTN_NONE,
     /// Left mouse button.
+    #[default]
     Left = ffi::wxd_MouseButton_WXD_MOUSE_BTN_LEFT,
     /// Middle mouse button.
     Middle = ffi::wxd_MouseButton_WXD_MOUSE_BTN_MIDDLE,
@@ -50,12 +51,6 @@ pub enum MouseButton {
     Aux1 = ffi::wxd_MouseButton_WXD_MOUSE_BTN_AUX1,
     /// Auxiliary button 2.
     Aux2 = ffi::wxd_MouseButton_WXD_MOUSE_BTN_AUX2,
-}
-
-impl Default for MouseButton {
-    fn default() -> Self {
-        MouseButton::Left
-    }
 }
 
 /// Key modifier flags for UIActionSimulator.

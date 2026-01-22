@@ -95,9 +95,6 @@ fn main() {
             // Write String
             {
                 let config = config_clone.clone();
-                let key_input = key_input.clone();
-                let value_input = value_input.clone();
-                let status_label = status_label.clone();
                 btn_write_string.on_click(move |_| {
                     let key = key_input.get_value();
                     let value = value_input.get_value();
@@ -115,9 +112,6 @@ fn main() {
             // Write Long
             {
                 let config = config_clone.clone();
-                let key_input = key_input.clone();
-                let value_input = value_input.clone();
-                let status_label = status_label.clone();
                 btn_write_long.on_click(move |_| {
                     let key = key_input.get_value();
                     let value_str = value_input.get_value();
@@ -138,9 +132,6 @@ fn main() {
             // Write Bool
             {
                 let config = config_clone.clone();
-                let key_input = key_input.clone();
-                let value_input = value_input.clone();
-                let status_label = status_label.clone();
                 btn_write_bool.on_click(move |_| {
                     let key = key_input.get_value();
                     let value_str = value_input.get_value().to_lowercase();
@@ -158,9 +149,6 @@ fn main() {
             // Read
             {
                 let config = config_clone.clone();
-                let key_input = key_input.clone();
-                let info_text = info_text.clone();
-                let status_label = status_label.clone();
                 btn_read.on_click(move |_| {
                     let key = key_input.get_value();
                     if config.has_entry(&key) {
@@ -193,8 +181,6 @@ fn main() {
             // Delete
             {
                 let config = config_clone.clone();
-                let key_input = key_input.clone();
-                let status_label = status_label.clone();
                 btn_delete.on_click(move |_| {
                     let key = key_input.get_value();
                     if config.delete_entry(&key, true) {
@@ -211,8 +197,6 @@ fn main() {
             // List All
             {
                 let config = config_clone.clone();
-                let info_text = info_text.clone();
-                let status_label = status_label.clone();
                 btn_list.on_click(move |_| {
                     let mut info = String::new();
                     info.push_str(&format!("Current Path: {}\n", config.get_path()));
@@ -239,8 +223,6 @@ fn main() {
             // Set Path
             {
                 let config = config_clone.clone();
-                let path_input = path_input.clone();
-                let status_label = status_label.clone();
                 btn_set_path.on_click(move |_| {
                     let path = path_input.get_value();
                     config.set_path(&path);

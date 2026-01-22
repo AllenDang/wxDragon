@@ -56,14 +56,12 @@ fn main() {
 
         // Set up event handlers
         {
-            let text_ctrl_clone = text_ctrl.clone();
-            let status_label_clone = status_label.clone();
             btn_type_text.on_click(move |_| {
                 log::info!("Simulating text typing...");
-                status_label_clone.set_label("Status: Typing text...");
+                status_label.set_label("Status: Typing text...");
 
                 // Focus the text control first
-                text_ctrl_clone.set_focus();
+                text_ctrl.set_focus();
 
                 // Create simulator and type text
                 let sim = UIActionSimulator::new();
@@ -71,47 +69,44 @@ fn main() {
                     // Type some text
                     if sim.text("Hello from UIActionSimulator! ") {
                         log::info!("Text typing simulation successful");
-                        status_label_clone.set_label("Status: Text typed successfully!");
+                        status_label.set_label("Status: Text typed successfully!");
                     } else {
                         log::warn!("Text typing simulation failed");
-                        status_label_clone.set_label("Status: Text typing failed");
+                        status_label.set_label("Status: Text typing failed");
                     }
                 } else {
                     log::error!("Failed to create UIActionSimulator");
-                    status_label_clone.set_label("Status: Simulator not available");
+                    status_label.set_label("Status: Simulator not available");
                 }
             });
         }
 
         {
-            let click_counter_clone = click_counter.clone();
-            let click_counter_for_demo = click_counter.clone();
-            let status_label_clone = status_label.clone();
             let counter = std::cell::RefCell::new(0);
 
             click_counter.on_click(move |_| {
                 let mut count = counter.borrow_mut();
                 *count += 1;
-                click_counter_clone.set_label(&format!("Click Counter: {}", *count));
+                click_counter.set_label(&format!("Click Counter: {}", *count));
                 log::info!("Counter clicked! Count: {}", *count);
             });
 
             btn_click_demo.on_click(move |_| {
                 log::info!("Demonstrating mouse click simulation...");
-                status_label_clone.set_label("Status: Click simulation (check counter)");
+                status_label.set_label("Status: Click simulation (check counter)");
 
                 let sim = UIActionSimulator::new();
                 if sim.is_ok() {
                     // Get the click counter button's position and size
-                    let btn_pos = click_counter_for_demo.get_position();
-                    let btn_size = click_counter_for_demo.get_size();
+                    let btn_pos = click_counter.get_position();
+                    let btn_size = click_counter.get_size();
 
                     // Calculate center of button in client coordinates
                     let center_x = btn_pos.x + btn_size.width / 2;
                     let center_y = btn_pos.y + btn_size.height / 2;
 
                     // Convert to screen coordinates
-                    let screen_pos = click_counter_for_demo.client_to_screen(Point::new(btn_size.width / 2, btn_size.height / 2));
+                    let screen_pos = click_counter.client_to_screen(Point::new(btn_size.width / 2, btn_size.height / 2));
 
                     log::info!(
                         "Click counter button: pos=({}, {}), size=({}, {}), center=({}, {}), screen=({}, {})",
@@ -130,31 +125,29 @@ fn main() {
                         log::info!("Mouse moved to click counter button");
                         if sim.mouse_click(MouseButton::Left) {
                             log::info!("Mouse click simulated on click counter!");
-                            status_label_clone.set_label("Status: Clicked the counter button!");
+                            status_label.set_label("Status: Clicked the counter button!");
                         } else {
                             log::warn!("Mouse click failed");
-                            status_label_clone.set_label("Status: Click failed");
+                            status_label.set_label("Status: Click failed");
                         }
                     } else {
                         log::warn!("Mouse move failed");
-                        status_label_clone.set_label("Status: Mouse move failed");
+                        status_label.set_label("Status: Mouse move failed");
                     }
                 } else {
                     log::error!("Failed to create UIActionSimulator");
-                    status_label_clone.set_label("Status: Simulator not available");
+                    status_label.set_label("Status: Simulator not available");
                 }
             });
         }
 
         {
-            let text_ctrl_clone = text_ctrl.clone();
-            let status_label_clone = status_label.clone();
             btn_key_combo.on_click(move |_| {
                 log::info!("Simulating Ctrl+A (select all)...");
-                status_label_clone.set_label("Status: Simulating Ctrl+A...");
+                status_label.set_label("Status: Simulating Ctrl+A...");
 
                 // Focus the text control
-                text_ctrl_clone.set_focus();
+                text_ctrl.set_focus();
 
                 let sim = UIActionSimulator::new();
                 if sim.is_ok() {
@@ -162,23 +155,22 @@ fn main() {
                     // 'A' key code is 65
                     if sim.char_with_modifiers(65, KeyModifier::CONTROL) {
                         log::info!("Ctrl+A simulation successful");
-                        status_label_clone.set_label("Status: Ctrl+A simulated (text selected)");
+                        status_label.set_label("Status: Ctrl+A simulated (text selected)");
                     } else {
                         log::warn!("Ctrl+A simulation failed");
-                        status_label_clone.set_label("Status: Key combo failed");
+                        status_label.set_label("Status: Key combo failed");
                     }
                 } else {
                     log::error!("Failed to create UIActionSimulator");
-                    status_label_clone.set_label("Status: Simulator not available");
+                    status_label.set_label("Status: Simulator not available");
                 }
             });
         }
 
         {
-            let status_label_clone = status_label.clone();
             btn_mouse_move.on_click(move |_| {
                 log::info!("Demonstrating mouse movement...");
-                status_label_clone.set_label("Status: Moving mouse...");
+                status_label.set_label("Status: Moving mouse...");
 
                 let sim = UIActionSimulator::new();
                 if sim.is_ok() {
@@ -192,10 +184,10 @@ fn main() {
                             // Small delay would be needed in real usage
                         }
                     }
-                    status_label_clone.set_label("Status: Mouse movement demo complete");
+                    status_label.set_label("Status: Mouse movement demo complete");
                 } else {
                     log::error!("Failed to create UIActionSimulator");
-                    status_label_clone.set_label("Status: Simulator not available");
+                    status_label.set_label("Status: Simulator not available");
                 }
             });
         }
