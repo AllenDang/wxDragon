@@ -696,6 +696,7 @@ fn build_wxdragon_wrapper(
             println!("cargo:rustc-link-lib={_lib}");
         }
         println!("cargo:rustc-link-lib=X11");
+        println!("cargo:rustc-link-lib=Xtst"); // XTest extension for wxUIActionSimulator
         println!("cargo:rustc-link-lib=png");
         println!("cargo:rustc-link-lib=jpeg");
         println!("cargo:rustc-link-lib=expat");
