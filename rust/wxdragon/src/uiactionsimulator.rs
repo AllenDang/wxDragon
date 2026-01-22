@@ -61,22 +61,23 @@ pub enum MouseButton {
 pub struct KeyModifier(i32);
 
 impl KeyModifier {
+    // Values defined directly to avoid cross-platform cast issues with FFI constants
     /// No modifier keys.
-    pub const NONE: KeyModifier = KeyModifier(ffi::wxd_KeyModifier_WXD_MOD_NONE as i32);
+    pub const NONE: KeyModifier = KeyModifier(0x0000);
     /// Alt key.
-    pub const ALT: KeyModifier = KeyModifier(ffi::wxd_KeyModifier_WXD_MOD_ALT as i32);
+    pub const ALT: KeyModifier = KeyModifier(0x0001);
     /// Control key.
-    pub const CONTROL: KeyModifier = KeyModifier(ffi::wxd_KeyModifier_WXD_MOD_CONTROL as i32);
+    pub const CONTROL: KeyModifier = KeyModifier(0x0002);
     /// Alt+Ctrl combination (AltGr on some keyboards).
-    pub const ALTGR: KeyModifier = KeyModifier(ffi::wxd_KeyModifier_WXD_MOD_ALTGR as i32);
+    pub const ALTGR: KeyModifier = KeyModifier(0x0003);
     /// Shift key.
-    pub const SHIFT: KeyModifier = KeyModifier(ffi::wxd_KeyModifier_WXD_MOD_SHIFT as i32);
+    pub const SHIFT: KeyModifier = KeyModifier(0x0004);
     /// Meta/Windows/Command key.
-    pub const META: KeyModifier = KeyModifier(ffi::wxd_KeyModifier_WXD_MOD_META as i32);
+    pub const META: KeyModifier = KeyModifier(0x0008);
     /// Windows key (alias for META).
-    pub const WIN: KeyModifier = KeyModifier(ffi::wxd_KeyModifier_WXD_MOD_WIN as i32);
+    pub const WIN: KeyModifier = KeyModifier(0x0008);
     /// All modifier keys.
-    pub const ALL: KeyModifier = KeyModifier(ffi::wxd_KeyModifier_WXD_MOD_ALL as i32);
+    pub const ALL: KeyModifier = KeyModifier(0x000f);
 
     /// Create a KeyModifier from a raw value.
     pub fn from_raw(value: i32) -> Self {

@@ -98,13 +98,15 @@ pub enum ConfigEntryType {
 
 impl From<i32> for ConfigEntryType {
     fn from(value: i32) -> Self {
-        if value == ffi::wxd_ConfigEntryType_WXD_CONFIG_TYPE_STRING as i32 {
+        // Cast to i64 for cross-platform compatibility (constants are u32 on macOS, i32 on Windows)
+        let v = value as i64;
+        if v == ffi::wxd_ConfigEntryType_WXD_CONFIG_TYPE_STRING as i64 {
             ConfigEntryType::String
-        } else if value == ffi::wxd_ConfigEntryType_WXD_CONFIG_TYPE_BOOLEAN as i32 {
+        } else if v == ffi::wxd_ConfigEntryType_WXD_CONFIG_TYPE_BOOLEAN as i64 {
             ConfigEntryType::Boolean
-        } else if value == ffi::wxd_ConfigEntryType_WXD_CONFIG_TYPE_INTEGER as i32 {
+        } else if v == ffi::wxd_ConfigEntryType_WXD_CONFIG_TYPE_INTEGER as i64 {
             ConfigEntryType::Integer
-        } else if value == ffi::wxd_ConfigEntryType_WXD_CONFIG_TYPE_FLOAT as i32 {
+        } else if v == ffi::wxd_ConfigEntryType_WXD_CONFIG_TYPE_FLOAT as i64 {
             ConfigEntryType::Float
         } else {
             ConfigEntryType::Unknown
