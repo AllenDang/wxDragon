@@ -11,6 +11,7 @@ pub mod bitmap;
 pub mod bitmap_bundle;
 pub mod clipboard;
 pub mod color;
+pub mod config;
 pub mod cursor;
 pub mod data_object;
 pub mod datetime;

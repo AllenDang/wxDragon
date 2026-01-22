@@ -115,8 +115,14 @@ fn main() {
 
                     log::info!(
                         "Click counter button: pos=({}, {}), size=({}, {}), center=({}, {}), screen=({}, {})",
-                        btn_pos.x, btn_pos.y, btn_size.width, btn_size.height,
-                        center_x, center_y, screen_pos.x, screen_pos.y
+                        btn_pos.x,
+                        btn_pos.y,
+                        btn_size.width,
+                        btn_size.height,
+                        center_x,
+                        center_y,
+                        screen_pos.x,
+                        screen_pos.y
                     );
 
                     // Move mouse to the center of the click counter button and click

@@ -441,6 +441,27 @@ typedef enum {
     WXD_MOD_ALL = 0x000f
 } wxd_KeyModifier;
 
+// ConfigBase opaque type
+typedef struct wxd_ConfigBase_t wxd_ConfigBase_t;
+
+// Config style flags
+typedef enum {
+    WXD_CONFIG_USE_LOCAL_FILE = 1,
+    WXD_CONFIG_USE_GLOBAL_FILE = 2,
+    WXD_CONFIG_USE_RELATIVE_PATH = 4,
+    WXD_CONFIG_USE_NO_ESCAPE_CHARACTERS = 8,
+    WXD_CONFIG_USE_SUBDIR = 16
+} wxd_ConfigStyle;
+
+// Config entry type
+typedef enum {
+    WXD_CONFIG_TYPE_UNKNOWN = 0,
+    WXD_CONFIG_TYPE_STRING = 1,
+    WXD_CONFIG_TYPE_BOOLEAN = 2,
+    WXD_CONFIG_TYPE_INTEGER = 3,
+    WXD_CONFIG_TYPE_FLOAT = 4
+} wxd_ConfigEntryType;
+
 // XRC-related opaque types
 typedef struct wxd_XmlResource_t wxd_XmlResource_t;
 
