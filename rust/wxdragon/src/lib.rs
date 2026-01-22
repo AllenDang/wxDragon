@@ -32,6 +32,7 @@ pub mod sysopt;
 pub mod timer;
 pub mod translations;
 pub mod types;
+pub mod uiactionsimulator;
 pub mod utils;
 pub mod widgets;
 pub mod window;

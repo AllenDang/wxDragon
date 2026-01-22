@@ -415,6 +415,32 @@ typedef struct wxd_Translations_t wxd_Translations_t;
 // SingleInstanceChecker opaque type
 typedef struct wxd_SingleInstanceChecker_t wxd_SingleInstanceChecker_t;
 
+// UIActionSimulator opaque type
+typedef struct wxd_UIActionSimulator_t wxd_UIActionSimulator_t;
+
+// --- Mouse Button Constants (for UIActionSimulator) ---
+typedef enum {
+    WXD_MOUSE_BTN_ANY = -1,
+    WXD_MOUSE_BTN_NONE = 0,
+    WXD_MOUSE_BTN_LEFT = 1,
+    WXD_MOUSE_BTN_MIDDLE = 2,
+    WXD_MOUSE_BTN_RIGHT = 3,
+    WXD_MOUSE_BTN_AUX1 = 4,
+    WXD_MOUSE_BTN_AUX2 = 5
+} wxd_MouseButton;
+
+// --- Key Modifier Constants (for UIActionSimulator) ---
+typedef enum {
+    WXD_MOD_NONE = 0x0000,
+    WXD_MOD_ALT = 0x0001,
+    WXD_MOD_CONTROL = 0x0002,
+    WXD_MOD_ALTGR = 0x0003,
+    WXD_MOD_SHIFT = 0x0004,
+    WXD_MOD_META = 0x0008,
+    WXD_MOD_WIN = 0x0008,  // Same as WXD_MOD_META
+    WXD_MOD_ALL = 0x000f
+} wxd_KeyModifier;
+
 // XRC-related opaque types
 typedef struct wxd_XmlResource_t wxd_XmlResource_t;
 
