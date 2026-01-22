@@ -30,6 +30,7 @@
 //! This class currently doesn't work when using Wayland with wxGTK.
 
 use std::ffi::CString;
+use std::os::raw::c_long;
 use wxdragon_sys as ffi;
 
 /// Mouse button constants for UIActionSimulator.
@@ -163,7 +164,7 @@ impl UIActionSimulator {
         if self.ptr.is_null() {
             return false;
         }
-        unsafe { ffi::wxd_UIActionSimulator_MouseMove(self.ptr, x as i64, y as i64) }
+        unsafe { ffi::wxd_UIActionSimulator_MouseMove(self.ptr, x as c_long, y as c_long) }
     }
 
     /// Press a mouse button.
@@ -247,7 +248,16 @@ impl UIActionSimulator {
         if self.ptr.is_null() {
             return false;
         }
-        unsafe { ffi::wxd_UIActionSimulator_MouseDragDrop(self.ptr, x1 as i64, y1 as i64, x2 as i64, y2 as i64, button as i32) }
+        unsafe {
+            ffi::wxd_UIActionSimulator_MouseDragDrop(
+                self.ptr,
+                x1 as c_long,
+                y1 as c_long,
+                x2 as c_long,
+                y2 as c_long,
+                button as i32,
+            )
+        }
     }
 
     // --- Keyboard Simulation ---

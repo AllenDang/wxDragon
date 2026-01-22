@@ -32,12 +32,12 @@
 //! ```
 
 use std::ffi::{CStr, CString};
-use std::os::raw::c_char;
+use std::os::raw::{c_char, c_long};
 use wxdragon_sys as ffi;
 
 /// Configuration style flags.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-pub struct ConfigStyle(i64);
+pub struct ConfigStyle(c_long);
 
 impl ConfigStyle {
     /// Empty style (default behavior).
@@ -46,23 +46,23 @@ impl ConfigStyle {
     }
 
     /// Use local configuration file.
-    pub const USE_LOCAL_FILE: ConfigStyle = ConfigStyle(ffi::wxd_ConfigStyle_WXD_CONFIG_USE_LOCAL_FILE as i64);
+    pub const USE_LOCAL_FILE: ConfigStyle = ConfigStyle(ffi::wxd_ConfigStyle_WXD_CONFIG_USE_LOCAL_FILE as c_long);
 
     /// Use global configuration file.
-    pub const USE_GLOBAL_FILE: ConfigStyle = ConfigStyle(ffi::wxd_ConfigStyle_WXD_CONFIG_USE_GLOBAL_FILE as i64);
+    pub const USE_GLOBAL_FILE: ConfigStyle = ConfigStyle(ffi::wxd_ConfigStyle_WXD_CONFIG_USE_GLOBAL_FILE as c_long);
 
     /// Use relative paths.
-    pub const USE_RELATIVE_PATH: ConfigStyle = ConfigStyle(ffi::wxd_ConfigStyle_WXD_CONFIG_USE_RELATIVE_PATH as i64);
+    pub const USE_RELATIVE_PATH: ConfigStyle = ConfigStyle(ffi::wxd_ConfigStyle_WXD_CONFIG_USE_RELATIVE_PATH as c_long);
 
     /// Don't escape special characters.
     pub const USE_NO_ESCAPE_CHARACTERS: ConfigStyle =
-        ConfigStyle(ffi::wxd_ConfigStyle_WXD_CONFIG_USE_NO_ESCAPE_CHARACTERS as i64);
+        ConfigStyle(ffi::wxd_ConfigStyle_WXD_CONFIG_USE_NO_ESCAPE_CHARACTERS as c_long);
 
     /// Use subdirectory for config file.
-    pub const USE_SUBDIR: ConfigStyle = ConfigStyle(ffi::wxd_ConfigStyle_WXD_CONFIG_USE_SUBDIR as i64);
+    pub const USE_SUBDIR: ConfigStyle = ConfigStyle(ffi::wxd_ConfigStyle_WXD_CONFIG_USE_SUBDIR as c_long);
 
     /// Get the raw value.
-    pub fn to_raw(self) -> i64 {
+    pub fn to_raw(self) -> c_long {
         self.0
     }
 }
@@ -98,12 +98,16 @@ pub enum ConfigEntryType {
 
 impl From<i32> for ConfigEntryType {
     fn from(value: i32) -> Self {
-        match value as u32 {
-            ffi::wxd_ConfigEntryType_WXD_CONFIG_TYPE_STRING => ConfigEntryType::String,
-            ffi::wxd_ConfigEntryType_WXD_CONFIG_TYPE_BOOLEAN => ConfigEntryType::Boolean,
-            ffi::wxd_ConfigEntryType_WXD_CONFIG_TYPE_INTEGER => ConfigEntryType::Integer,
-            ffi::wxd_ConfigEntryType_WXD_CONFIG_TYPE_FLOAT => ConfigEntryType::Float,
-            _ => ConfigEntryType::Unknown,
+        if value == ffi::wxd_ConfigEntryType_WXD_CONFIG_TYPE_STRING as i32 {
+            ConfigEntryType::String
+        } else if value == ffi::wxd_ConfigEntryType_WXD_CONFIG_TYPE_BOOLEAN as i32 {
+            ConfigEntryType::Boolean
+        } else if value == ffi::wxd_ConfigEntryType_WXD_CONFIG_TYPE_INTEGER as i32 {
+            ConfigEntryType::Integer
+        } else if value == ffi::wxd_ConfigEntryType_WXD_CONFIG_TYPE_FLOAT as i32 {
+            ConfigEntryType::Float
+        } else {
+            ConfigEntryType::Unknown
         }
     }
 }
@@ -254,9 +258,9 @@ impl Config {
             Ok(s) => s,
             Err(_) => return default,
         };
-        let mut value: i64 = default;
-        unsafe { ffi::wxd_Config_ReadLong(self.ptr, c_key.as_ptr(), &mut value, default) };
-        value
+        let mut value: c_long = default as c_long;
+        unsafe { ffi::wxd_Config_ReadLong(self.ptr, c_key.as_ptr(), &mut value, default as c_long) };
+        value as i64
     }
 
     /// Reads a double value.
@@ -314,7 +318,7 @@ impl Config {
             Ok(s) => s,
             Err(_) => return false,
         };
-        unsafe { ffi::wxd_Config_WriteLong(self.ptr, c_key.as_ptr(), value) }
+        unsafe { ffi::wxd_Config_WriteLong(self.ptr, c_key.as_ptr(), value as c_long) }
     }
 
     /// Writes a double value.
@@ -438,7 +442,7 @@ impl Config {
         }
 
         let mut entries = Vec::new();
-        let mut index: i64 = 0;
+        let mut index: c_long = 0;
         let mut buf: Vec<c_char> = vec![0; 256];
 
         let mut has_more = unsafe { ffi::wxd_Config_GetFirstEntry(self.ptr, buf.as_mut_ptr(), buf.len(), &mut index) };
@@ -460,7 +464,7 @@ impl Config {
         }
 
         let mut groups = Vec::new();
-        let mut index: i64 = 0;
+        let mut index: c_long = 0;
         let mut buf: Vec<c_char> = vec![0; 256];
 
         let mut has_more = unsafe { ffi::wxd_Config_GetFirstGroup(self.ptr, buf.as_mut_ptr(), buf.len(), &mut index) };
