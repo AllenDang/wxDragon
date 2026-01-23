@@ -112,6 +112,27 @@ impl From<TreeItemIcon> for ffi::wxd_TreeItemIconType_t {
     }
 }
 
+bitflags::bitflags! {
+    /// Flags returned by TreeCtrl::hit_test() indicating what part of an item was hit.
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    pub struct TreeHitTestFlags: u32 {
+        const ABOVE = 0x0001;
+        const BELOW = 0x0002;
+        const NOWHERE = 0x0004;
+        const ON_ITEM_BUTTON = 0x0008;
+        const ON_ITEM_ICON = 0x0010;
+        const ON_ITEM_INDENT = 0x0020;
+        const ON_ITEM_LABEL = 0x0040;
+        const ON_ITEM_RIGHT = 0x0080;
+        const ON_ITEM_STATE_ICON = 0x0100;
+        const TO_LEFT = 0x0200;
+        const TO_RIGHT = 0x0400;
+        const ON_ITEM_UPPER_PART = 0x0800;
+        const ON_ITEM_LOWER_PART = 0x1000;
+        const ON_ITEM = Self::ON_ITEM_ICON.bits() | Self::ON_ITEM_LABEL.bits();
+    }
+}
+
 // Represents the opaque wxTreeItemId used by wxWidgets.
 // This struct owns the pointer returned by the C++ FFI functions
 // and is responsible for freeing it via wxd_TreeItemId_Free.
@@ -579,6 +600,454 @@ impl TreeCtrl {
             return -1;
         }
         unsafe { ffi::wxd_TreeCtrl_GetItemImage(ptr, item.as_ptr(), icon_type.into()) }
+    }
+
+    /// Gets the text label of the given item.
+    /// Returns None if the item is invalid or the tree control has been destroyed.
+    pub fn get_item_text(&self, item: &TreeItemId) -> Option<String> {
+        let ptr = self.treectrl_ptr();
+        if ptr.is_null() {
+            return None;
+        }
+
+        // First call to get the required buffer size
+        let required_size = unsafe { ffi::wxd_TreeCtrl_GetItemText(ptr, item.as_ptr(), std::ptr::null_mut(), 0) };
+
+        if required_size < 0 {
+            return None;
+        }
+
+        // Allocate buffer with space for null terminator
+        let buffer_size = (required_size as usize) + 1;
+        let mut buffer: Vec<u8> = vec![0; buffer_size];
+
+        // Second call to get the actual text
+        let result = unsafe { ffi::wxd_TreeCtrl_GetItemText(ptr, item.as_ptr(), buffer.as_mut_ptr() as *mut i8, buffer_size) };
+
+        if result < 0 {
+            return None;
+        }
+
+        // Convert to String, removing trailing null if present
+        let text_len = result as usize;
+        buffer.truncate(text_len);
+        String::from_utf8(buffer).ok()
+    }
+
+    /// Scrolls and/or expands items to ensure that the given item is visible.
+    pub fn ensure_visible(&self, item: &TreeItemId) {
+        let ptr = self.treectrl_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_TreeCtrl_EnsureVisible(ptr, item.as_ptr()) }
+    }
+
+    /// Sets the currently focused item (the item that has keyboard focus).
+    pub fn set_focused_item(&self, item: &TreeItemId) {
+        let ptr = self.treectrl_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_TreeCtrl_SetFocusedItem(ptr, item.as_ptr()) }
+    }
+
+    /// Expands all items in the tree.
+    pub fn expand_all(&self) {
+        let ptr = self.treectrl_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_TreeCtrl_ExpandAll(ptr) }
+    }
+
+    /// Sets the text label of the given item.
+    pub fn set_item_text(&self, item: &TreeItemId, text: &str) {
+        let ptr = self.treectrl_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        let c_text = CString::new(text).unwrap_or_default();
+        unsafe { ffi::wxd_TreeCtrl_SetItemText(ptr, item.as_ptr(), c_text.as_ptr()) }
+    }
+
+    /// Gets the currently focused item.
+    pub fn get_focused_item(&self) -> Option<TreeItemId> {
+        let ptr = self.treectrl_ptr();
+        if ptr.is_null() {
+            return None;
+        }
+        let item_ptr = unsafe { ffi::wxd_TreeCtrl_GetFocusedItem(ptr) };
+        unsafe { TreeItemId::from_ptr(item_ptr) }
+    }
+
+    /// Collapses the given item.
+    pub fn collapse(&self, item: &TreeItemId) {
+        let ptr = self.treectrl_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_TreeCtrl_Collapse(ptr, item.as_ptr()) }
+    }
+
+    /// Collapses all items in the tree.
+    pub fn collapse_all(&self) {
+        let ptr = self.treectrl_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_TreeCtrl_CollapseAll(ptr) }
+    }
+
+    /// Collapses the given item and all its children.
+    pub fn collapse_all_children(&self, item: &TreeItemId) {
+        let ptr = self.treectrl_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_TreeCtrl_CollapseAllChildren(ptr, item.as_ptr()) }
+    }
+
+    /// Collapses the item and removes all children.
+    pub fn collapse_and_reset(&self, item: &TreeItemId) {
+        let ptr = self.treectrl_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_TreeCtrl_CollapseAndReset(ptr, item.as_ptr()) }
+    }
+
+    /// Toggles the expand/collapse state of the given item.
+    pub fn toggle(&self, item: &TreeItemId) {
+        let ptr = self.treectrl_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_TreeCtrl_Toggle(ptr, item.as_ptr()) }
+    }
+
+    /// Checks if the given item is expanded.
+    pub fn is_expanded(&self, item: &TreeItemId) -> bool {
+        let ptr = self.treectrl_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_TreeCtrl_IsExpanded(ptr, item.as_ptr()) }
+    }
+
+    /// Checks if the given item is selected.
+    pub fn is_selected(&self, item: &TreeItemId) -> bool {
+        let ptr = self.treectrl_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_TreeCtrl_IsSelected(ptr, item.as_ptr()) }
+    }
+
+    /// Unselects all items.
+    pub fn unselect_all(&self) {
+        let ptr = self.treectrl_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_TreeCtrl_UnselectAll(ptr) }
+    }
+
+    /// Unselects the given item.
+    pub fn unselect_item(&self, item: &TreeItemId) {
+        let ptr = self.treectrl_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_TreeCtrl_UnselectItem(ptr, item.as_ptr()) }
+    }
+
+    /// Selects all items (only works with TR_MULTIPLE style).
+    pub fn select_all(&self) {
+        let ptr = self.treectrl_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_TreeCtrl_SelectAll(ptr) }
+    }
+
+    /// Gets all selected items (for multi-selection trees).
+    pub fn get_selections(&self) -> Vec<TreeItemId> {
+        let ptr = self.treectrl_ptr();
+        if ptr.is_null() {
+            return Vec::new();
+        }
+        // First get the count
+        let count = unsafe { ffi::wxd_TreeCtrl_GetSelections(ptr, std::ptr::null_mut(), 0) };
+        if count == 0 {
+            return Vec::new();
+        }
+        // Allocate and get the items
+        let mut items: Vec<*mut ffi::wxd_TreeItemId_t> = vec![std::ptr::null_mut(); count];
+        unsafe { ffi::wxd_TreeCtrl_GetSelections(ptr, items.as_mut_ptr(), count) };
+        items.into_iter().filter_map(|p| unsafe { TreeItemId::from_ptr(p) }).collect()
+    }
+
+    /// Gets the parent of the given item.
+    pub fn get_item_parent(&self, item: &TreeItemId) -> Option<TreeItemId> {
+        let ptr = self.treectrl_ptr();
+        if ptr.is_null() {
+            return None;
+        }
+        let item_ptr = unsafe { ffi::wxd_TreeCtrl_GetItemParent(ptr, item.as_ptr()) };
+        unsafe { TreeItemId::from_ptr(item_ptr) }
+    }
+
+    /// Gets the previous sibling of the given item.
+    pub fn get_prev_sibling(&self, item: &TreeItemId) -> Option<TreeItemId> {
+        let ptr = self.treectrl_ptr();
+        if ptr.is_null() {
+            return None;
+        }
+        let item_ptr = unsafe { ffi::wxd_TreeCtrl_GetPrevSibling(ptr, item.as_ptr()) };
+        unsafe { TreeItemId::from_ptr(item_ptr) }
+    }
+
+    /// Gets the last child of the given item.
+    pub fn get_last_child(&self, item: &TreeItemId) -> Option<TreeItemId> {
+        let ptr = self.treectrl_ptr();
+        if ptr.is_null() {
+            return None;
+        }
+        let item_ptr = unsafe { ffi::wxd_TreeCtrl_GetLastChild(ptr, item.as_ptr()) };
+        unsafe { TreeItemId::from_ptr(item_ptr) }
+    }
+
+    /// Checks if the given item is visible.
+    pub fn is_visible(&self, item: &TreeItemId) -> bool {
+        let ptr = self.treectrl_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_TreeCtrl_IsVisible(ptr, item.as_ptr()) }
+    }
+
+    /// Checks if the given item has children.
+    pub fn item_has_children(&self, item: &TreeItemId) -> bool {
+        let ptr = self.treectrl_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_TreeCtrl_ItemHasChildren(ptr, item.as_ptr()) }
+    }
+
+    /// Checks if the given item is bold.
+    pub fn is_bold(&self, item: &TreeItemId) -> bool {
+        let ptr = self.treectrl_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_TreeCtrl_IsBold(ptr, item.as_ptr()) }
+    }
+
+    /// Sets the item to bold or normal.
+    pub fn set_item_bold(&self, item: &TreeItemId, bold: bool) {
+        let ptr = self.treectrl_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_TreeCtrl_SetItemBold(ptr, item.as_ptr(), bold) }
+    }
+
+    /// Sets the text colour of the given item.
+    pub fn set_item_text_colour(&self, item: &TreeItemId, colour: crate::color::Colour) {
+        let ptr = self.treectrl_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_TreeCtrl_SetItemTextColour(ptr, item.as_ptr(), colour.into()) }
+    }
+
+    /// Gets the text colour of the given item.
+    pub fn get_item_text_colour(&self, item: &TreeItemId) -> crate::color::Colour {
+        let ptr = self.treectrl_ptr();
+        if ptr.is_null() {
+            return crate::color::Colour::new(0, 0, 0, 255);
+        }
+        let c = unsafe { ffi::wxd_TreeCtrl_GetItemTextColour(ptr, item.as_ptr()) };
+        crate::color::Colour::new(c.r, c.g, c.b, c.a)
+    }
+
+    /// Sets the background colour of the given item.
+    pub fn set_item_background_colour(&self, item: &TreeItemId, colour: crate::color::Colour) {
+        let ptr = self.treectrl_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_TreeCtrl_SetItemBackgroundColour(ptr, item.as_ptr(), colour.into()) }
+    }
+
+    /// Gets the background colour of the given item.
+    pub fn get_item_background_colour(&self, item: &TreeItemId) -> crate::color::Colour {
+        let ptr = self.treectrl_ptr();
+        if ptr.is_null() {
+            return crate::color::Colour::new(255, 255, 255, 255);
+        }
+        let c = unsafe { ffi::wxd_TreeCtrl_GetItemBackgroundColour(ptr, item.as_ptr()) };
+        crate::color::Colour::new(c.r, c.g, c.b, c.a)
+    }
+
+    /// Inserts an item after the given previous item.
+    pub fn insert_item(
+        &self,
+        parent: &TreeItemId,
+        previous: &TreeItemId,
+        text: &str,
+        image: Option<i32>,
+        selected_image: Option<i32>,
+    ) -> Option<TreeItemId> {
+        let ptr = self.treectrl_ptr();
+        if ptr.is_null() {
+            return None;
+        }
+        let c_text = CString::new(text).unwrap_or_default();
+        let img = image.unwrap_or(-1);
+        let sel_img = selected_image.unwrap_or(-1);
+        let item_ptr = unsafe {
+            ffi::wxd_TreeCtrl_InsertItem(
+                ptr,
+                parent.as_ptr(),
+                previous.as_ptr(),
+                c_text.as_ptr(),
+                img,
+                sel_img,
+                ptr::null_mut(),
+            )
+        };
+        unsafe { TreeItemId::from_ptr(item_ptr) }
+    }
+
+    /// Inserts an item at the given position (0-based index).
+    pub fn insert_item_before(
+        &self,
+        parent: &TreeItemId,
+        pos: usize,
+        text: &str,
+        image: Option<i32>,
+        selected_image: Option<i32>,
+    ) -> Option<TreeItemId> {
+        let ptr = self.treectrl_ptr();
+        if ptr.is_null() {
+            return None;
+        }
+        let c_text = CString::new(text).unwrap_or_default();
+        let img = image.unwrap_or(-1);
+        let sel_img = selected_image.unwrap_or(-1);
+        let item_ptr = unsafe {
+            ffi::wxd_TreeCtrl_InsertItemBefore(ptr, parent.as_ptr(), pos, c_text.as_ptr(), img, sel_img, ptr::null_mut())
+        };
+        unsafe { TreeItemId::from_ptr(item_ptr) }
+    }
+
+    /// Prepends an item as the first child.
+    pub fn prepend_item(
+        &self,
+        parent: &TreeItemId,
+        text: &str,
+        image: Option<i32>,
+        selected_image: Option<i32>,
+    ) -> Option<TreeItemId> {
+        let ptr = self.treectrl_ptr();
+        if ptr.is_null() {
+            return None;
+        }
+        let c_text = CString::new(text).unwrap_or_default();
+        let img = image.unwrap_or(-1);
+        let sel_img = selected_image.unwrap_or(-1);
+        let item_ptr =
+            unsafe { ffi::wxd_TreeCtrl_PrependItem(ptr, parent.as_ptr(), c_text.as_ptr(), img, sel_img, ptr::null_mut()) };
+        unsafe { TreeItemId::from_ptr(item_ptr) }
+    }
+
+    /// Deletes all items in the tree.
+    pub fn delete_all_items(&self) {
+        let ptr = self.treectrl_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_TreeCtrl_DeleteAllItems(ptr) }
+    }
+
+    /// Deletes all children of the given item.
+    pub fn delete_children(&self, item: &TreeItemId) {
+        let ptr = self.treectrl_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_TreeCtrl_DeleteChildren(ptr, item.as_ptr()) }
+    }
+
+    /// Gets the total number of items in the tree.
+    pub fn get_count(&self) -> usize {
+        let ptr = self.treectrl_ptr();
+        if ptr.is_null() {
+            return 0;
+        }
+        unsafe { ffi::wxd_TreeCtrl_GetCount(ptr) }
+    }
+
+    /// Scrolls to the given item (without expanding).
+    pub fn scroll_to(&self, item: &TreeItemId) {
+        let ptr = self.treectrl_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_TreeCtrl_ScrollTo(ptr, item.as_ptr()) }
+    }
+
+    /// Sorts the children of the given item alphabetically.
+    pub fn sort_children(&self, item: &TreeItemId) {
+        let ptr = self.treectrl_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_TreeCtrl_SortChildren(ptr, item.as_ptr()) }
+    }
+
+    /// Sets whether the item has a button (+/-) to expand/collapse.
+    pub fn set_item_has_children(&self, item: &TreeItemId, has: bool) {
+        let ptr = self.treectrl_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_TreeCtrl_SetItemHasChildren(ptr, item.as_ptr(), has) }
+    }
+
+    /// Hit test - returns the item at the given point along with flags.
+    pub fn hit_test(&self, point: Point) -> (Option<TreeItemId>, TreeHitTestFlags) {
+        let ptr = self.treectrl_ptr();
+        if ptr.is_null() {
+            return (None, TreeHitTestFlags::NOWHERE);
+        }
+        let mut flags: i32 = 0;
+        let item_ptr = unsafe { ffi::wxd_TreeCtrl_HitTest(ptr, point.into(), &mut flags) };
+        let item = unsafe { TreeItemId::from_ptr(item_ptr) };
+        (item, TreeHitTestFlags::from_bits_truncate(flags as u32))
+    }
+
+    /// Gets the bounding rectangle of an item.
+    pub fn get_bounding_rect(&self, item: &TreeItemId, text_only: bool) -> Option<crate::geometry::Rect> {
+        let ptr = self.treectrl_ptr();
+        if ptr.is_null() {
+            return None;
+        }
+        let mut rect = ffi::wxd_Rect {
+            x: 0,
+            y: 0,
+            width: 0,
+            height: 0,
+        };
+        let success = unsafe { ffi::wxd_TreeCtrl_GetBoundingRect(ptr, item.as_ptr(), &mut rect, text_only) };
+        if success {
+            Some(crate::geometry::Rect::new(rect.x, rect.y, rect.width, rect.height))
+        } else {
+            None
+        }
     }
 }
 

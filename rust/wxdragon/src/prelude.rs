@@ -21,7 +21,7 @@ pub use crate::language::Language;
 pub use crate::sizers::WxSizer;
 pub use crate::sysopt::SystemOptions;
 pub use crate::types::Style;
-pub use crate::utils::ArrayString;
+pub use crate::utils::{ArrayString, BrowserLaunchFlags, bell, launch_default_browser};
 pub use crate::window::{BackgroundStyle, ExtraWindowStyle, Window, WindowStyle, WxWidget, WxWidgetDowncast};
 
 // --- Sizers ---
@@ -165,7 +165,7 @@ pub use crate::widgets::time_picker_ctrl::{TimePickerCtrl, TimePickerCtrlBuilder
 pub use crate::widgets::togglebutton::{ToggleButton, ToggleButtonBuilder, ToggleButtonStyle};
 pub use crate::widgets::toolbar::{ToolBar, ToolBarStyle}; // Added Style
 pub use crate::widgets::treebook::{Treebook, TreebookBuilder, TreebookStyle}; // Added Style
-pub use crate::widgets::treectrl::{TreeCtrl, TreeCtrlBuilder, TreeCtrlStyle, TreeItemIcon, TreeItemId};
+pub use crate::widgets::treectrl::{TreeCtrl, TreeCtrlBuilder, TreeCtrlStyle, TreeHitTestFlags, TreeItemIcon, TreeItemId};
 
 // --- Menus ---
 pub use crate::menus::menuitem::{ID_ABOUT, ID_EXIT, ID_SEPARATOR};

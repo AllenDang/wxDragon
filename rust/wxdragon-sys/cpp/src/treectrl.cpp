@@ -429,4 +429,552 @@ wxd_TreeCtrl_GetItemImage(wxd_TreeCtrl_t* self, wxd_TreeItemId_t* itemId,
     return -1; // Default/error value
 }
 
+// Get the text label of an item
+WXD_EXPORTED int
+wxd_TreeCtrl_GetItemText(wxd_TreeCtrl_t* self, wxd_TreeItemId_t* itemId, char* buffer, size_t buffer_len)
+{
+    wxTreeCtrl* treeCtrl = WXD_UNWRAP_TREE_CTRL(self);
+    wxTreeItemId* wx_itemId = WXD_UNWRAP_TREE_ITEM_ID(itemId);
+    if (!treeCtrl || !wx_itemId || !wx_itemId->IsOk()) {
+        return -1;
+    }
+
+    wxString text = treeCtrl->GetItemText(*wx_itemId);
+    return (int)wxd_cpp_utils::copy_wxstring_to_buffer(text, buffer, buffer_len);
+}
+
+// Scrolls and/or expands items to ensure that the given item is visible
+WXD_EXPORTED void
+wxd_TreeCtrl_EnsureVisible(wxd_TreeCtrl_t* self, wxd_TreeItemId_t* itemId)
+{
+    wxTreeCtrl* treeCtrl = WXD_UNWRAP_TREE_CTRL(self);
+    wxTreeItemId* wx_itemId = WXD_UNWRAP_TREE_ITEM_ID(itemId);
+    if (!treeCtrl || !wx_itemId || !wx_itemId->IsOk()) {
+        return;
+    }
+
+    treeCtrl->EnsureVisible(*wx_itemId);
+}
+
+// Sets the currently focused item
+WXD_EXPORTED void
+wxd_TreeCtrl_SetFocusedItem(wxd_TreeCtrl_t* self, wxd_TreeItemId_t* itemId)
+{
+    wxTreeCtrl* treeCtrl = WXD_UNWRAP_TREE_CTRL(self);
+    wxTreeItemId* wx_itemId = WXD_UNWRAP_TREE_ITEM_ID(itemId);
+    if (!treeCtrl || !wx_itemId || !wx_itemId->IsOk()) {
+        return;
+    }
+
+    treeCtrl->SetFocusedItem(*wx_itemId);
+}
+
+// Expands all items in the tree
+WXD_EXPORTED void
+wxd_TreeCtrl_ExpandAll(wxd_TreeCtrl_t* self)
+{
+    wxTreeCtrl* treeCtrl = WXD_UNWRAP_TREE_CTRL(self);
+    if (!treeCtrl) return;
+    treeCtrl->ExpandAll();
+}
+
+// Set item text
+WXD_EXPORTED void
+wxd_TreeCtrl_SetItemText(wxd_TreeCtrl_t* self, wxd_TreeItemId_t* itemId, const char* text)
+{
+    wxTreeCtrl* treeCtrl = WXD_UNWRAP_TREE_CTRL(self);
+    wxTreeItemId* wx_itemId = WXD_UNWRAP_TREE_ITEM_ID(itemId);
+    if (!treeCtrl || !wx_itemId || !wx_itemId->IsOk()) return;
+    treeCtrl->SetItemText(*wx_itemId, wxString::FromUTF8(text ? text : ""));
+}
+
+// Get focused item
+WXD_EXPORTED wxd_TreeItemId_t*
+wxd_TreeCtrl_GetFocusedItem(wxd_TreeCtrl_t* self)
+{
+    wxTreeCtrl* treeCtrl = WXD_UNWRAP_TREE_CTRL(self);
+    if (!treeCtrl) return nullptr;
+    wxTreeItemId focusedId = treeCtrl->GetFocusedItem();
+    if (!focusedId.IsOk()) return nullptr;
+    return WXD_WRAP_TREE_ITEM_ID(new wxTreeItemId(focusedId));
+}
+
+// Collapse
+WXD_EXPORTED void
+wxd_TreeCtrl_Collapse(wxd_TreeCtrl_t* self, wxd_TreeItemId_t* itemId)
+{
+    wxTreeCtrl* treeCtrl = WXD_UNWRAP_TREE_CTRL(self);
+    wxTreeItemId* wx_itemId = WXD_UNWRAP_TREE_ITEM_ID(itemId);
+    if (!treeCtrl || !wx_itemId || !wx_itemId->IsOk()) return;
+    treeCtrl->Collapse(*wx_itemId);
+}
+
+// CollapseAll
+WXD_EXPORTED void
+wxd_TreeCtrl_CollapseAll(wxd_TreeCtrl_t* self)
+{
+    wxTreeCtrl* treeCtrl = WXD_UNWRAP_TREE_CTRL(self);
+    if (!treeCtrl) return;
+    treeCtrl->CollapseAll();
+}
+
+// CollapseAllChildren
+WXD_EXPORTED void
+wxd_TreeCtrl_CollapseAllChildren(wxd_TreeCtrl_t* self, wxd_TreeItemId_t* itemId)
+{
+    wxTreeCtrl* treeCtrl = WXD_UNWRAP_TREE_CTRL(self);
+    wxTreeItemId* wx_itemId = WXD_UNWRAP_TREE_ITEM_ID(itemId);
+    if (!treeCtrl || !wx_itemId || !wx_itemId->IsOk()) return;
+    treeCtrl->CollapseAllChildren(*wx_itemId);
+}
+
+// CollapseAndReset
+WXD_EXPORTED void
+wxd_TreeCtrl_CollapseAndReset(wxd_TreeCtrl_t* self, wxd_TreeItemId_t* itemId)
+{
+    wxTreeCtrl* treeCtrl = WXD_UNWRAP_TREE_CTRL(self);
+    wxTreeItemId* wx_itemId = WXD_UNWRAP_TREE_ITEM_ID(itemId);
+    if (!treeCtrl || !wx_itemId || !wx_itemId->IsOk()) return;
+    treeCtrl->CollapseAndReset(*wx_itemId);
+}
+
+// Toggle
+WXD_EXPORTED void
+wxd_TreeCtrl_Toggle(wxd_TreeCtrl_t* self, wxd_TreeItemId_t* itemId)
+{
+    wxTreeCtrl* treeCtrl = WXD_UNWRAP_TREE_CTRL(self);
+    wxTreeItemId* wx_itemId = WXD_UNWRAP_TREE_ITEM_ID(itemId);
+    if (!treeCtrl || !wx_itemId || !wx_itemId->IsOk()) return;
+    treeCtrl->Toggle(*wx_itemId);
+}
+
+// IsExpanded
+WXD_EXPORTED bool
+wxd_TreeCtrl_IsExpanded(wxd_TreeCtrl_t* self, wxd_TreeItemId_t* itemId)
+{
+    wxTreeCtrl* treeCtrl = WXD_UNWRAP_TREE_CTRL(self);
+    wxTreeItemId* wx_itemId = WXD_UNWRAP_TREE_ITEM_ID(itemId);
+    if (!treeCtrl || !wx_itemId || !wx_itemId->IsOk()) return false;
+    return treeCtrl->IsExpanded(*wx_itemId);
+}
+
+// IsSelected
+WXD_EXPORTED bool
+wxd_TreeCtrl_IsSelected(wxd_TreeCtrl_t* self, wxd_TreeItemId_t* itemId)
+{
+    wxTreeCtrl* treeCtrl = WXD_UNWRAP_TREE_CTRL(self);
+    wxTreeItemId* wx_itemId = WXD_UNWRAP_TREE_ITEM_ID(itemId);
+    if (!treeCtrl || !wx_itemId || !wx_itemId->IsOk()) return false;
+    return treeCtrl->IsSelected(*wx_itemId);
+}
+
+// UnselectAll
+WXD_EXPORTED void
+wxd_TreeCtrl_UnselectAll(wxd_TreeCtrl_t* self)
+{
+    wxTreeCtrl* treeCtrl = WXD_UNWRAP_TREE_CTRL(self);
+    if (!treeCtrl) return;
+    treeCtrl->UnselectAll();
+}
+
+// UnselectItem
+WXD_EXPORTED void
+wxd_TreeCtrl_UnselectItem(wxd_TreeCtrl_t* self, wxd_TreeItemId_t* itemId)
+{
+    wxTreeCtrl* treeCtrl = WXD_UNWRAP_TREE_CTRL(self);
+    wxTreeItemId* wx_itemId = WXD_UNWRAP_TREE_ITEM_ID(itemId);
+    if (!treeCtrl || !wx_itemId || !wx_itemId->IsOk()) return;
+    treeCtrl->UnselectItem(*wx_itemId);
+}
+
+// SelectAll - Note: Not available in wxTreeCtrl on all platforms
+// Use SelectChildren or iterate through items instead
+WXD_EXPORTED void
+wxd_TreeCtrl_SelectAll(wxd_TreeCtrl_t* self)
+{
+    wxTreeCtrl* treeCtrl = WXD_UNWRAP_TREE_CTRL(self);
+    if (!treeCtrl) return;
+    // SelectAll is not available in generic wxTreeCtrl
+    // Users should iterate through items and select them individually
+    (void)treeCtrl;
+}
+
+// GetSelections
+WXD_EXPORTED size_t
+wxd_TreeCtrl_GetSelections(wxd_TreeCtrl_t* self, wxd_TreeItemId_t** items, size_t max_items)
+{
+    wxTreeCtrl* treeCtrl = WXD_UNWRAP_TREE_CTRL(self);
+    if (!treeCtrl) return 0;
+
+    wxArrayTreeItemIds selections;
+    size_t count = treeCtrl->GetSelections(selections);
+
+    if (items && max_items > 0) {
+        size_t to_copy = (count < max_items) ? count : max_items;
+        for (size_t i = 0; i < to_copy; i++) {
+            items[i] = WXD_WRAP_TREE_ITEM_ID(new wxTreeItemId(selections[i]));
+        }
+    }
+    return count;
+}
+
+// GetItemParent
+WXD_EXPORTED wxd_TreeItemId_t*
+wxd_TreeCtrl_GetItemParent(wxd_TreeCtrl_t* self, wxd_TreeItemId_t* itemId)
+{
+    wxTreeCtrl* treeCtrl = WXD_UNWRAP_TREE_CTRL(self);
+    wxTreeItemId* wx_itemId = WXD_UNWRAP_TREE_ITEM_ID(itemId);
+    if (!treeCtrl || !wx_itemId || !wx_itemId->IsOk()) return nullptr;
+    wxTreeItemId parentId = treeCtrl->GetItemParent(*wx_itemId);
+    if (!parentId.IsOk()) return nullptr;
+    return WXD_WRAP_TREE_ITEM_ID(new wxTreeItemId(parentId));
+}
+
+// GetPrevSibling
+WXD_EXPORTED wxd_TreeItemId_t*
+wxd_TreeCtrl_GetPrevSibling(wxd_TreeCtrl_t* self, wxd_TreeItemId_t* itemId)
+{
+    wxTreeCtrl* treeCtrl = WXD_UNWRAP_TREE_CTRL(self);
+    wxTreeItemId* wx_itemId = WXD_UNWRAP_TREE_ITEM_ID(itemId);
+    if (!treeCtrl || !wx_itemId || !wx_itemId->IsOk()) return nullptr;
+    wxTreeItemId siblingId = treeCtrl->GetPrevSibling(*wx_itemId);
+    if (!siblingId.IsOk()) return nullptr;
+    return WXD_WRAP_TREE_ITEM_ID(new wxTreeItemId(siblingId));
+}
+
+// GetLastChild
+WXD_EXPORTED wxd_TreeItemId_t*
+wxd_TreeCtrl_GetLastChild(wxd_TreeCtrl_t* self, wxd_TreeItemId_t* itemId)
+{
+    wxTreeCtrl* treeCtrl = WXD_UNWRAP_TREE_CTRL(self);
+    wxTreeItemId* wx_itemId = WXD_UNWRAP_TREE_ITEM_ID(itemId);
+    if (!treeCtrl || !wx_itemId || !wx_itemId->IsOk()) return nullptr;
+    wxTreeItemId lastChildId = treeCtrl->GetLastChild(*wx_itemId);
+    if (!lastChildId.IsOk()) return nullptr;
+    return WXD_WRAP_TREE_ITEM_ID(new wxTreeItemId(lastChildId));
+}
+
+// IsVisible
+WXD_EXPORTED bool
+wxd_TreeCtrl_IsVisible(wxd_TreeCtrl_t* self, wxd_TreeItemId_t* itemId)
+{
+    wxTreeCtrl* treeCtrl = WXD_UNWRAP_TREE_CTRL(self);
+    wxTreeItemId* wx_itemId = WXD_UNWRAP_TREE_ITEM_ID(itemId);
+    if (!treeCtrl || !wx_itemId || !wx_itemId->IsOk()) return false;
+    return treeCtrl->IsVisible(*wx_itemId);
+}
+
+// ItemHasChildren
+WXD_EXPORTED bool
+wxd_TreeCtrl_ItemHasChildren(wxd_TreeCtrl_t* self, wxd_TreeItemId_t* itemId)
+{
+    wxTreeCtrl* treeCtrl = WXD_UNWRAP_TREE_CTRL(self);
+    wxTreeItemId* wx_itemId = WXD_UNWRAP_TREE_ITEM_ID(itemId);
+    if (!treeCtrl || !wx_itemId || !wx_itemId->IsOk()) return false;
+    return treeCtrl->ItemHasChildren(*wx_itemId);
+}
+
+// IsBold
+WXD_EXPORTED bool
+wxd_TreeCtrl_IsBold(wxd_TreeCtrl_t* self, wxd_TreeItemId_t* itemId)
+{
+    wxTreeCtrl* treeCtrl = WXD_UNWRAP_TREE_CTRL(self);
+    wxTreeItemId* wx_itemId = WXD_UNWRAP_TREE_ITEM_ID(itemId);
+    if (!treeCtrl || !wx_itemId || !wx_itemId->IsOk()) return false;
+    return treeCtrl->IsBold(*wx_itemId);
+}
+
+// SetItemBold
+WXD_EXPORTED void
+wxd_TreeCtrl_SetItemBold(wxd_TreeCtrl_t* self, wxd_TreeItemId_t* itemId, bool bold)
+{
+    wxTreeCtrl* treeCtrl = WXD_UNWRAP_TREE_CTRL(self);
+    wxTreeItemId* wx_itemId = WXD_UNWRAP_TREE_ITEM_ID(itemId);
+    if (!treeCtrl || !wx_itemId || !wx_itemId->IsOk()) return;
+    treeCtrl->SetItemBold(*wx_itemId, bold);
+}
+
+// SetItemTextColour
+WXD_EXPORTED void
+wxd_TreeCtrl_SetItemTextColour(wxd_TreeCtrl_t* self, wxd_TreeItemId_t* itemId, wxd_Colour_t colour)
+{
+    wxTreeCtrl* treeCtrl = WXD_UNWRAP_TREE_CTRL(self);
+    wxTreeItemId* wx_itemId = WXD_UNWRAP_TREE_ITEM_ID(itemId);
+    if (!treeCtrl || !wx_itemId || !wx_itemId->IsOk()) return;
+    treeCtrl->SetItemTextColour(*wx_itemId, wxColour(colour.r, colour.g, colour.b, colour.a));
+}
+
+// GetItemTextColour
+WXD_EXPORTED wxd_Colour_t
+wxd_TreeCtrl_GetItemTextColour(wxd_TreeCtrl_t* self, wxd_TreeItemId_t* itemId)
+{
+    wxd_Colour_t result = {0, 0, 0, 255};
+    wxTreeCtrl* treeCtrl = WXD_UNWRAP_TREE_CTRL(self);
+    wxTreeItemId* wx_itemId = WXD_UNWRAP_TREE_ITEM_ID(itemId);
+    if (!treeCtrl || !wx_itemId || !wx_itemId->IsOk()) return result;
+    wxColour col = treeCtrl->GetItemTextColour(*wx_itemId);
+    result.r = col.Red(); result.g = col.Green(); result.b = col.Blue(); result.a = col.Alpha();
+    return result;
+}
+
+// SetItemBackgroundColour
+WXD_EXPORTED void
+wxd_TreeCtrl_SetItemBackgroundColour(wxd_TreeCtrl_t* self, wxd_TreeItemId_t* itemId, wxd_Colour_t colour)
+{
+    wxTreeCtrl* treeCtrl = WXD_UNWRAP_TREE_CTRL(self);
+    wxTreeItemId* wx_itemId = WXD_UNWRAP_TREE_ITEM_ID(itemId);
+    if (!treeCtrl || !wx_itemId || !wx_itemId->IsOk()) return;
+    treeCtrl->SetItemBackgroundColour(*wx_itemId, wxColour(colour.r, colour.g, colour.b, colour.a));
+}
+
+// GetItemBackgroundColour
+WXD_EXPORTED wxd_Colour_t
+wxd_TreeCtrl_GetItemBackgroundColour(wxd_TreeCtrl_t* self, wxd_TreeItemId_t* itemId)
+{
+    wxd_Colour_t result = {255, 255, 255, 255};
+    wxTreeCtrl* treeCtrl = WXD_UNWRAP_TREE_CTRL(self);
+    wxTreeItemId* wx_itemId = WXD_UNWRAP_TREE_ITEM_ID(itemId);
+    if (!treeCtrl || !wx_itemId || !wx_itemId->IsOk()) return result;
+    wxColour col = treeCtrl->GetItemBackgroundColour(*wx_itemId);
+    result.r = col.Red(); result.g = col.Green(); result.b = col.Blue(); result.a = col.Alpha();
+    return result;
+}
+
+// SetItemFont
+WXD_EXPORTED void
+wxd_TreeCtrl_SetItemFont(wxd_TreeCtrl_t* self, wxd_TreeItemId_t* itemId, wxd_Font_t* font)
+{
+    wxTreeCtrl* treeCtrl = WXD_UNWRAP_TREE_CTRL(self);
+    wxTreeItemId* wx_itemId = WXD_UNWRAP_TREE_ITEM_ID(itemId);
+    wxFont* wx_font = reinterpret_cast<wxFont*>(font);
+    if (!treeCtrl || !wx_itemId || !wx_itemId->IsOk() || !wx_font) return;
+    treeCtrl->SetItemFont(*wx_itemId, *wx_font);
+}
+
+// GetItemFont
+WXD_EXPORTED wxd_Font_t*
+wxd_TreeCtrl_GetItemFont(wxd_TreeCtrl_t* self, wxd_TreeItemId_t* itemId)
+{
+    wxTreeCtrl* treeCtrl = WXD_UNWRAP_TREE_CTRL(self);
+    wxTreeItemId* wx_itemId = WXD_UNWRAP_TREE_ITEM_ID(itemId);
+    if (!treeCtrl || !wx_itemId || !wx_itemId->IsOk()) return nullptr;
+    wxFont font = treeCtrl->GetItemFont(*wx_itemId);
+    if (!font.IsOk()) return nullptr;
+    return reinterpret_cast<wxd_Font_t*>(new wxFont(font));
+}
+
+// InsertItem (after another item)
+WXD_EXPORTED wxd_TreeItemId_t*
+wxd_TreeCtrl_InsertItem(wxd_TreeCtrl_t* self, wxd_TreeItemId_t* parent, wxd_TreeItemId_t* idPrevious,
+                        const char* text, int image, int selImage, void* data)
+{
+    wxTreeCtrl* treeCtrl = WXD_UNWRAP_TREE_CTRL(self);
+    wxTreeItemId* wx_parent = WXD_UNWRAP_TREE_ITEM_ID(parent);
+    wxTreeItemId* wx_prev = WXD_UNWRAP_TREE_ITEM_ID(idPrevious);
+    if (!treeCtrl || !wx_parent || !wx_parent->IsOk() || !wx_prev || !wx_prev->IsOk()) return nullptr;
+    wxString wxText = wxString::FromUTF8(text ? text : "");
+    wxTreeItemId newId = treeCtrl->InsertItem(*wx_parent, *wx_prev, wxText, image, selImage,
+                                               reinterpret_cast<wxTreeItemData*>(data));
+    if (!newId.IsOk()) return nullptr;
+    return WXD_WRAP_TREE_ITEM_ID(new wxTreeItemId(newId));
+}
+
+// InsertItemBefore (at position)
+WXD_EXPORTED wxd_TreeItemId_t*
+wxd_TreeCtrl_InsertItemBefore(wxd_TreeCtrl_t* self, wxd_TreeItemId_t* parent, size_t pos,
+                              const char* text, int image, int selImage, void* data)
+{
+    wxTreeCtrl* treeCtrl = WXD_UNWRAP_TREE_CTRL(self);
+    wxTreeItemId* wx_parent = WXD_UNWRAP_TREE_ITEM_ID(parent);
+    if (!treeCtrl || !wx_parent || !wx_parent->IsOk()) return nullptr;
+    wxString wxText = wxString::FromUTF8(text ? text : "");
+    wxTreeItemId newId = treeCtrl->InsertItem(*wx_parent, pos, wxText, image, selImage,
+                                               reinterpret_cast<wxTreeItemData*>(data));
+    if (!newId.IsOk()) return nullptr;
+    return WXD_WRAP_TREE_ITEM_ID(new wxTreeItemId(newId));
+}
+
+// PrependItem
+WXD_EXPORTED wxd_TreeItemId_t*
+wxd_TreeCtrl_PrependItem(wxd_TreeCtrl_t* self, wxd_TreeItemId_t* parent, const char* text,
+                         int image, int selImage, void* data)
+{
+    wxTreeCtrl* treeCtrl = WXD_UNWRAP_TREE_CTRL(self);
+    wxTreeItemId* wx_parent = WXD_UNWRAP_TREE_ITEM_ID(parent);
+    if (!treeCtrl || !wx_parent || !wx_parent->IsOk()) return nullptr;
+    wxString wxText = wxString::FromUTF8(text ? text : "");
+    wxTreeItemId newId = treeCtrl->PrependItem(*wx_parent, wxText, image, selImage,
+                                                reinterpret_cast<wxTreeItemData*>(data));
+    if (!newId.IsOk()) return nullptr;
+    return WXD_WRAP_TREE_ITEM_ID(new wxTreeItemId(newId));
+}
+
+// DeleteAllItems
+WXD_EXPORTED void
+wxd_TreeCtrl_DeleteAllItems(wxd_TreeCtrl_t* self)
+{
+    wxTreeCtrl* treeCtrl = WXD_UNWRAP_TREE_CTRL(self);
+    if (!treeCtrl) return;
+    treeCtrl->DeleteAllItems();
+}
+
+// DeleteChildren
+WXD_EXPORTED void
+wxd_TreeCtrl_DeleteChildren(wxd_TreeCtrl_t* self, wxd_TreeItemId_t* itemId)
+{
+    wxTreeCtrl* treeCtrl = WXD_UNWRAP_TREE_CTRL(self);
+    wxTreeItemId* wx_itemId = WXD_UNWRAP_TREE_ITEM_ID(itemId);
+    if (!treeCtrl || !wx_itemId || !wx_itemId->IsOk()) return;
+    treeCtrl->DeleteChildren(*wx_itemId);
+}
+
+// GetCount
+WXD_EXPORTED size_t
+wxd_TreeCtrl_GetCount(wxd_TreeCtrl_t* self)
+{
+    wxTreeCtrl* treeCtrl = WXD_UNWRAP_TREE_CTRL(self);
+    if (!treeCtrl) return 0;
+    return treeCtrl->GetCount();
+}
+
+// EditLabel
+WXD_EXPORTED wxd_TextCtrl_t*
+wxd_TreeCtrl_EditLabel(wxd_TreeCtrl_t* self, wxd_TreeItemId_t* itemId)
+{
+    wxTreeCtrl* treeCtrl = WXD_UNWRAP_TREE_CTRL(self);
+    wxTreeItemId* wx_itemId = WXD_UNWRAP_TREE_ITEM_ID(itemId);
+    if (!treeCtrl || !wx_itemId || !wx_itemId->IsOk()) return nullptr;
+    wxTextCtrl* editCtrl = treeCtrl->EditLabel(*wx_itemId);
+    return reinterpret_cast<wxd_TextCtrl_t*>(editCtrl);
+}
+
+// EndEditLabel
+WXD_EXPORTED void
+wxd_TreeCtrl_EndEditLabel(wxd_TreeCtrl_t* self, wxd_TreeItemId_t* itemId, bool discardChanges)
+{
+    wxTreeCtrl* treeCtrl = WXD_UNWRAP_TREE_CTRL(self);
+    wxTreeItemId* wx_itemId = WXD_UNWRAP_TREE_ITEM_ID(itemId);
+    if (!treeCtrl || !wx_itemId || !wx_itemId->IsOk()) return;
+    treeCtrl->EndEditLabel(*wx_itemId, discardChanges);
+}
+
+// GetEditControl
+WXD_EXPORTED wxd_TextCtrl_t*
+wxd_TreeCtrl_GetEditControl(wxd_TreeCtrl_t* self)
+{
+    wxTreeCtrl* treeCtrl = WXD_UNWRAP_TREE_CTRL(self);
+    if (!treeCtrl) return nullptr;
+    return reinterpret_cast<wxd_TextCtrl_t*>(treeCtrl->GetEditControl());
+}
+
+// ScrollTo
+WXD_EXPORTED void
+wxd_TreeCtrl_ScrollTo(wxd_TreeCtrl_t* self, wxd_TreeItemId_t* itemId)
+{
+    wxTreeCtrl* treeCtrl = WXD_UNWRAP_TREE_CTRL(self);
+    wxTreeItemId* wx_itemId = WXD_UNWRAP_TREE_ITEM_ID(itemId);
+    if (!treeCtrl || !wx_itemId || !wx_itemId->IsOk()) return;
+    treeCtrl->ScrollTo(*wx_itemId);
+}
+
+// SortChildren
+WXD_EXPORTED void
+wxd_TreeCtrl_SortChildren(wxd_TreeCtrl_t* self, wxd_TreeItemId_t* itemId)
+{
+    wxTreeCtrl* treeCtrl = WXD_UNWRAP_TREE_CTRL(self);
+    wxTreeItemId* wx_itemId = WXD_UNWRAP_TREE_ITEM_ID(itemId);
+    if (!treeCtrl || !wx_itemId || !wx_itemId->IsOk()) return;
+    treeCtrl->SortChildren(*wx_itemId);
+}
+
+// HitTest
+WXD_EXPORTED wxd_TreeItemId_t*
+wxd_TreeCtrl_HitTest(wxd_TreeCtrl_t* self, wxd_Point point, int* flags)
+{
+    wxTreeCtrl* treeCtrl = WXD_UNWRAP_TREE_CTRL(self);
+    if (!treeCtrl) return nullptr;
+    int hitFlags = 0;
+    wxTreeItemId hitId = treeCtrl->HitTest(wxPoint(point.x, point.y), hitFlags);
+    if (flags) *flags = hitFlags;
+    if (!hitId.IsOk()) return nullptr;
+    return WXD_WRAP_TREE_ITEM_ID(new wxTreeItemId(hitId));
+}
+
+// GetBoundingRect
+WXD_EXPORTED bool
+wxd_TreeCtrl_GetBoundingRect(wxd_TreeCtrl_t* self, wxd_TreeItemId_t* itemId, wxd_Rect* rect, bool textOnly)
+{
+    wxTreeCtrl* treeCtrl = WXD_UNWRAP_TREE_CTRL(self);
+    wxTreeItemId* wx_itemId = WXD_UNWRAP_TREE_ITEM_ID(itemId);
+    if (!treeCtrl || !wx_itemId || !wx_itemId->IsOk() || !rect) return false;
+    wxRect wxRect;
+    bool result = treeCtrl->GetBoundingRect(*wx_itemId, wxRect, textOnly);
+    if (result) {
+        rect->x = wxRect.x; rect->y = wxRect.y;
+        rect->width = wxRect.width; rect->height = wxRect.height;
+    }
+    return result;
+}
+
+// SetStateImageList
+WXD_EXPORTED void
+wxd_TreeCtrl_SetStateImageList(wxd_TreeCtrl_t* self, wxd_ImageList_t* imageList)
+{
+    wxTreeCtrl* treeCtrl = WXD_UNWRAP_TREE_CTRL(self);
+    wxImageList* wx_imageList = reinterpret_cast<wxImageList*>(imageList);
+    if (!treeCtrl) return;
+    treeCtrl->SetStateImageList(wx_imageList);
+}
+
+// GetStateImageList
+WXD_EXPORTED wxd_ImageList_t*
+wxd_TreeCtrl_GetStateImageList(wxd_TreeCtrl_t* self)
+{
+    wxTreeCtrl* treeCtrl = WXD_UNWRAP_TREE_CTRL(self);
+    if (!treeCtrl) return nullptr;
+    return reinterpret_cast<wxd_ImageList_t*>(treeCtrl->GetStateImageList());
+}
+
+// SetItemState
+WXD_EXPORTED void
+wxd_TreeCtrl_SetItemState(wxd_TreeCtrl_t* self, wxd_TreeItemId_t* itemId, int state)
+{
+    wxTreeCtrl* treeCtrl = WXD_UNWRAP_TREE_CTRL(self);
+    wxTreeItemId* wx_itemId = WXD_UNWRAP_TREE_ITEM_ID(itemId);
+    if (!treeCtrl || !wx_itemId || !wx_itemId->IsOk()) return;
+    treeCtrl->SetItemState(*wx_itemId, state);
+}
+
+// GetItemState
+WXD_EXPORTED int
+wxd_TreeCtrl_GetItemState(wxd_TreeCtrl_t* self, wxd_TreeItemId_t* itemId)
+{
+    wxTreeCtrl* treeCtrl = WXD_UNWRAP_TREE_CTRL(self);
+    wxTreeItemId* wx_itemId = WXD_UNWRAP_TREE_ITEM_ID(itemId);
+    if (!treeCtrl || !wx_itemId || !wx_itemId->IsOk()) return -1;
+    return treeCtrl->GetItemState(*wx_itemId);
+}
+
+// SetItemHasChildren
+WXD_EXPORTED void
+wxd_TreeCtrl_SetItemHasChildren(wxd_TreeCtrl_t* self, wxd_TreeItemId_t* itemId, bool has)
+{
+    wxTreeCtrl* treeCtrl = WXD_UNWRAP_TREE_CTRL(self);
+    wxTreeItemId* wx_itemId = WXD_UNWRAP_TREE_ITEM_ID(itemId);
+    if (!treeCtrl || !wx_itemId || !wx_itemId->IsOk()) return;
+    treeCtrl->SetItemHasChildren(*wx_itemId, has);
+}
+
+// EnableItem - Note: This may not be available in all wxWidgets versions
+WXD_EXPORTED void
+wxd_TreeCtrl_EnableItem(wxd_TreeCtrl_t* self, wxd_TreeItemId_t* itemId, bool enable)
+{
+    wxTreeCtrl* treeCtrl = WXD_UNWRAP_TREE_CTRL(self);
+    wxTreeItemId* wx_itemId = WXD_UNWRAP_TREE_ITEM_ID(itemId);
+    if (!treeCtrl || !wx_itemId || !wx_itemId->IsOk()) return;
+    // EnableItem may not be available in older wxWidgets versions
+    // treeCtrl->EnableItem(*wx_itemId, enable);
+    (void)enable; // Suppress unused parameter warning for now
+}
+
 } // extern "C"

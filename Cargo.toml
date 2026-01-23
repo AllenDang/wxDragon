@@ -26,6 +26,7 @@ members = [
   "examples/rust/taskbar_demo",
   "examples/rust/tokio_async_demo",
   "examples/rust/translations_demo",
+  "examples/rust/treectrl_demo",
   "examples/rust/uiactionsimulator_demo",
   "examples/rust/virtual_list_demo",
   "examples/rust/window_features_test",
