@@ -283,10 +283,17 @@ fn build_wxdragon_wrapper(
             // RelWithDebInfo for symbols while keeping Release CRT.
             is_debug = false;
 
-            let rt_lib = if is_debug {
-                "MultiThreadedDebugDLL"
+            let target_features = std::env::var("CARGO_CFG_TARGET_FEATURE").unwrap_or_default();
+            let crt_static = target_features.split(',').any(|f| f == "crt-static");
+
+            let rt_lib = if crt_static {
+                if is_debug { "MultiThreadedDebug" } else { "MultiThreaded" }
             } else {
-                "MultiThreadedDLL"
+                if is_debug {
+                    "MultiThreadedDebugDLL"
+                } else {
+                    "MultiThreadedDLL"
+                }
             };
 
             let build_type = if is_debug { "Debug" } else { "RelWithDebInfo" };
