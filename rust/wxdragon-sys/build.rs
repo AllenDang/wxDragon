@@ -288,12 +288,10 @@ fn build_wxdragon_wrapper(
 
             let rt_lib = if crt_static {
                 if is_debug { "MultiThreadedDebug" } else { "MultiThreaded" }
+            } else if is_debug {
+                "MultiThreadedDebugDLL"
             } else {
-                if is_debug {
-                    "MultiThreadedDebugDLL"
-                } else {
-                    "MultiThreadedDLL"
-                }
+                "MultiThreadedDLL"
             };
 
             let build_type = if is_debug { "Debug" } else { "RelWithDebInfo" };
