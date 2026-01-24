@@ -192,7 +192,7 @@ impl Drop for AboutDialogInfo {
 /// # Arguments
 /// * `info` - The information to display in the dialog.
 /// * `parent` - Optional parent window. If `None`, the dialog will be shown
-///              without a parent (top-level).
+///   without a parent (top-level).
 ///
 /// # Example
 /// ```ignore
