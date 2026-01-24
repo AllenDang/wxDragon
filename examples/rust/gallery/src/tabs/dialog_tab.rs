@@ -43,6 +43,8 @@ pub struct DialogTabControls {
     pub show_multi_choice_dialog_btn: Button,
     pub multi_choice_dialog_status_label: StaticText,
     pub dlg_dir_button: Button,
+    // About Dialog
+    pub show_about_dialog_btn: Button,
     // Keep NotificationMessage alive while showing
     pub notification_message: Arc<Mutex<Option<NotificationMessage>>>,
 }
@@ -280,6 +282,16 @@ pub fn create_dialog_tab(notebook: &Notebook, _frame: &Frame) -> DialogTabContro
     dir_dialog_sizer.add(&dlg_dir_button, 0, SizerFlag::AlignCenterVertical | SizerFlag::All, 2);
     grid_sizer.add_sizer(&dir_dialog_sizer, 1, SizerFlag::Expand, 0);
 
+    // --- About Dialog ---
+    let about_dialog_label = StaticText::builder(&dialog_panel).with_label("About Dialog:").build();
+    let show_about_dialog_btn = Button::builder(&dialog_panel).with_label("Show About...").build();
+    show_about_dialog_btn.set_tooltip("Click to show the About dialog.");
+
+    grid_sizer.add(&about_dialog_label, 0, label_flags, 0);
+    let about_dialog_sizer = BoxSizer::builder(Orientation::Horizontal).build();
+    about_dialog_sizer.add(&show_about_dialog_btn, 0, SizerFlag::AlignCenterVertical | SizerFlag::All, 2);
+    grid_sizer.add_sizer(&about_dialog_sizer, 1, SizerFlag::Expand, 0);
+
     main_sizer.add_sizer(&grid_sizer, 1, SizerFlag::Expand | SizerFlag::All, 10);
     dialog_panel.set_sizer(main_sizer, true);
     dialog_panel.fit(); // Fit the panel to its contents
@@ -314,6 +326,7 @@ pub fn create_dialog_tab(notebook: &Notebook, _frame: &Frame) -> DialogTabContro
         show_multi_choice_dialog_btn,
         multi_choice_dialog_status_label,
         dlg_dir_button,
+        show_about_dialog_btn,
         notification_message: Arc::new(Mutex::new(None)),
     }
 }
@@ -631,6 +644,22 @@ impl DialogTabControls {
             } else {
                 println!("Directory Dialog canceled");
             }
+        });
+
+        // About Dialog Button
+        self.show_about_dialog_btn.on_click(move |_| {
+            let mut info = AboutDialogInfo::new();
+            info.set_name("wxDragon Gallery");
+            info.set_version("0.9.8");
+            info.set_description("A gallery example demonstrating wxDragon widgets and dialogs.\n\nwxDragon provides safe Rust bindings to wxWidgets.");
+            info.set_copyright("(c) 2024 wxDragon Contributors");
+            info.set_website_ex("https://github.com/aspect/wxDragon", "wxDragon on GitHub");
+            info.set_license("MIT License\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software.");
+            info.add_developer("wxDragon Team");
+            info.add_doc_writer("Documentation Contributors");
+
+            show_about_box(&info, Some(&frame));
+            println!("About Dialog: Shown.");
         });
 
         let notif_store_on_destroy = self.notification_message.clone();

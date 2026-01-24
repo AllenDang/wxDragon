@@ -323,6 +323,22 @@ impl Button {
     pub fn window_handle(&self) -> WindowHandle {
         self.handle
     }
+
+    /// Sets this button as the default button for its top-level window.
+    ///
+    /// When the user presses Enter in the dialog or top-level window,
+    /// the default button will be activated.
+    ///
+    /// No-op if the button has been destroyed.
+    pub fn set_default(&self) {
+        let ptr = self.button_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe {
+            ffi::wxd_Button_SetDefault(ptr);
+        }
+    }
 }
 
 // Implement ButtonEvents trait for Button

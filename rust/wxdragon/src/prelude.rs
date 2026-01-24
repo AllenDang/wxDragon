@@ -181,6 +181,7 @@ pub use crate::bitmap::Bitmap;
 pub use crate::bitmap_bundle::BitmapBundle; // Added BitmapBundle
 
 // --- Dialogs ---
+pub use crate::dialogs::about_dialog::{AboutDialogInfo, show_about_box};
 pub use crate::dialogs::colour_dialog::{ColourDialog, ColourDialogBuilder}; // Added Builder
 pub use crate::dialogs::dir_dialog::{DirDialog, DirDialogBuilder, DirDialogStyle}; // Added DirDialog
 pub use crate::dialogs::file_dialog::{FileDialog, FileDialogBuilder, FileDialogStyle}; // Added Builder

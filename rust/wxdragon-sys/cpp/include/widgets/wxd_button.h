@@ -75,4 +75,9 @@ wxd_Button_SetBitmapBundlePressed(wxd_Button_t* button, wxd_BitmapBundle_t* bund
 WXD_EXPORTED void
 wxd_Button_SetBitmapBundleHover(wxd_Button_t* button, wxd_BitmapBundle_t* bundle);
 
+// Sets this button as the default button for its top-level window.
+// When the user presses Enter, the default button is activated.
+WXD_EXPORTED void
+wxd_Button_SetDefault(wxd_Button_t* button);
+
 #endif // WXD_BUTTON_H

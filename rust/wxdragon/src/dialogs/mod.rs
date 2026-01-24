@@ -5,6 +5,7 @@ use std::ffi::CString;
 use std::marker::PhantomData;
 use wxdragon_sys as ffi;
 
+pub mod about_dialog;
 pub mod colour_dialog;
 pub mod dir_dialog;
 pub mod file_dialog;

@@ -232,3 +232,12 @@ wxd_Button_SetBitmapBundleHover(wxd_Button_t* button, wxd_BitmapBundle_t* bundle
     wxBitmapBundle* bundlePtr = reinterpret_cast<wxBitmapBundle*>(bundle);
     btn->SetBitmapCurrent(bundle ? *bundlePtr : wxBitmapBundle());
 }
+
+WXD_EXPORTED void
+wxd_Button_SetDefault(wxd_Button_t* button)
+{
+    if (!button)
+        return;
+    wxButton* btn = reinterpret_cast<wxButton*>(button);
+    btn->SetDefault();
+}

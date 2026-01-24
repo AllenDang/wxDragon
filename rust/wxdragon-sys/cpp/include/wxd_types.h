@@ -667,4 +667,7 @@ typedef struct wxd_SystemAppearance_t wxd_SystemAppearance_t;
 typedef struct wxd_RichTextCtrl_t wxd_RichTextCtrl_t;
 typedef struct wxd_TreeListCtrl_t wxd_TreeListCtrl_t;
 
+// AboutDialogInfo type
+typedef struct wxd_AboutDialogInfo_t wxd_AboutDialogInfo_t;
+
 #endif // WXD_TYPES_H
