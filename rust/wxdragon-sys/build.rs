@@ -283,7 +283,12 @@ fn build_wxdragon_wrapper(
             // RelWithDebInfo for symbols while keeping Release CRT.
             is_debug = false;
 
-            let rt_lib = if is_debug {
+            let target_features = std::env::var("CARGO_CFG_TARGET_FEATURE").unwrap_or_default();
+            let crt_static = target_features.split(',').any(|f| f == "crt-static");
+
+            let rt_lib = if crt_static {
+                if is_debug { "MultiThreadedDebug" } else { "MultiThreaded" }
+            } else if is_debug {
                 "MultiThreadedDebugDLL"
             } else {
                 "MultiThreadedDLL"
@@ -620,48 +625,91 @@ fn build_wxdragon_wrapper(
         } else {
             let debug_suffix = if is_debug { "d" } else { "" };
 
-            println!("cargo:rustc-link-lib=static=wxmsw33u{debug_suffix}_adv");
-            println!("cargo:rustc-link-lib=static=wxmsw33u{debug_suffix}_core");
-            println!("cargo:rustc-link-lib=static=wxmsw33u{debug_suffix}_gl");
-            println!("cargo:rustc-link-lib=static=wxmsw33u{debug_suffix}_propgrid");
+            if target_env == "gnu" {
+                // MinGW linking (using standard wxWidgets CMake MinGW names)
+                // e.g. libwx_mswu_core-3.3-Windows.a -> -lwx_mswu_core-3.3-Windows
+                println!("cargo:rustc-link-lib=static=wx_mswu_adv-3.3-Windows");
+                println!("cargo:rustc-link-lib=static=wx_mswu_core-3.3-Windows");
+                println!("cargo:rustc-link-lib=static=wx_mswu_gl-3.3-Windows");
+                println!("cargo:rustc-link-lib=static=wx_mswu_propgrid-3.3-Windows");
 
-            if cfg!(feature = "aui") {
-                println!("cargo:rustc-link-lib=static=wxmsw33u{debug_suffix}_aui");
-            }
-            if cfg!(feature = "media-ctrl") {
-                println!("cargo:rustc-link-lib=static=wxmsw33u{debug_suffix}_media");
-            }
-            if cfg!(feature = "webview") {
-                println!("cargo:rustc-link-lib=static=wxmsw33u{debug_suffix}_webview");
-            }
-            if cfg!(feature = "xrc") || cfg!(feature = "webview") {
-                println!("cargo:rustc-link-lib=static=wxmsw33u{debug_suffix}_html");
-            }
-            if cfg!(feature = "stc") {
-                println!("cargo:rustc-link-lib=static=wxmsw33u{debug_suffix}_stc");
-                println!("cargo:rustc-link-lib=static=wxscintilla{debug_suffix}");
-                println!("cargo:rustc-link-lib=static=wxlexilla{debug_suffix}");
-            }
-            if cfg!(feature = "xrc") {
-                println!("cargo:rustc-link-lib=static=wxmsw33u{debug_suffix}_xrc");
-                println!("cargo:rustc-link-lib=static=wxbase33u{debug_suffix}_xml");
-            }
-            if cfg!(feature = "richtext") {
-                println!("cargo:rustc-link-lib=static=wxmsw33u{debug_suffix}_html");
-                println!("cargo:rustc-link-lib=static=wxbase33u{debug_suffix}_xml");
-                println!("cargo:rustc-link-lib=static=wxmsw33u{debug_suffix}_richtext");
-            }
+                if cfg!(feature = "aui") {
+                    println!("cargo:rustc-link-lib=static=wx_mswu_aui-3.3-Windows");
+                }
+                if cfg!(feature = "media-ctrl") {
+                    println!("cargo:rustc-link-lib=static=wx_mswu_media-3.3-Windows");
+                }
+                if cfg!(feature = "webview") {
+                    println!("cargo:rustc-link-lib=static=wx_mswu_webview-3.3-Windows");
+                }
+                if cfg!(feature = "xrc") || cfg!(feature = "webview") {
+                    println!("cargo:rustc-link-lib=static=wx_mswu_html-3.3-Windows");
+                }
+                if cfg!(feature = "stc") {
+                    println!("cargo:rustc-link-lib=static=wx_mswu_stc-3.3-Windows");
+                    println!("cargo:rustc-link-lib=static=wxscintilla-3.3");
+                    println!("cargo:rustc-link-lib=static=wxlexilla-3.3");
+                }
+                if cfg!(feature = "xrc") {
+                    println!("cargo:rustc-link-lib=static=wx_mswu_xrc-3.3-Windows");
+                    println!("cargo:rustc-link-lib=static=wx_baseu_xml-3.3-Windows");
+                }
+                if cfg!(feature = "richtext") {
+                    println!("cargo:rustc-link-lib=static=wx_mswu_html-3.3-Windows");
+                    println!("cargo:rustc-link-lib=static=wx_baseu_xml-3.3-Windows");
+                    println!("cargo:rustc-link-lib=static=wx_mswu_richtext-3.3-Windows");
+                }
+            } else {
+                println!("cargo:rustc-link-lib=static=wxmsw33u{debug_suffix}_adv");
+                println!("cargo:rustc-link-lib=static=wxmsw33u{debug_suffix}_core");
+                println!("cargo:rustc-link-lib=static=wxmsw33u{debug_suffix}_gl");
+                println!("cargo:rustc-link-lib=static=wxmsw33u{debug_suffix}_propgrid");
 
-            println!("cargo:rustc-link-lib=static=wxbase33u{debug_suffix}");
-            println!("cargo:rustc-link-lib=static=wxtiff{debug_suffix}");
-            println!("cargo:rustc-link-lib=static=wxjpeg{debug_suffix}");
-            println!("cargo:rustc-link-lib=static=wxpng{debug_suffix}");
-            println!("cargo:rustc-link-lib=static=wxregexu{debug_suffix}");
-            println!("cargo:rustc-link-lib=static=wxzlib{debug_suffix}");
-            println!("cargo:rustc-link-lib=static=wxexpat{debug_suffix}");
+                if cfg!(feature = "aui") {
+                    println!("cargo:rustc-link-lib=static=wxmsw33u{debug_suffix}_aui");
+                }
+                if cfg!(feature = "media-ctrl") {
+                    println!("cargo:rustc-link-lib=static=wxmsw33u{debug_suffix}_media");
+                }
+                if cfg!(feature = "webview") {
+                    println!("cargo:rustc-link-lib=static=wxmsw33u{debug_suffix}_webview");
+                }
+                if cfg!(feature = "xrc") || cfg!(feature = "webview") {
+                    println!("cargo:rustc-link-lib=static=wxmsw33u{debug_suffix}_html");
+                }
+                if cfg!(feature = "stc") {
+                    println!("cargo:rustc-link-lib=static=wxmsw33u{debug_suffix}_stc");
+                    println!("cargo:rustc-link-lib=static=wxscintilla{debug_suffix}");
+                    println!("cargo:rustc-link-lib=static=wxlexilla{debug_suffix}");
+                }
+                if cfg!(feature = "xrc") {
+                    println!("cargo:rustc-link-lib=static=wxmsw33u{debug_suffix}_xrc");
+                    println!("cargo:rustc-link-lib=static=wxbase33u{debug_suffix}_xml");
+                }
+                if cfg!(feature = "richtext") {
+                    println!("cargo:rustc-link-lib=static=wxmsw33u{debug_suffix}_html");
+                    println!("cargo:rustc-link-lib=static=wxbase33u{debug_suffix}_xml");
+                    println!("cargo:rustc-link-lib=static=wxmsw33u{debug_suffix}_richtext");
+                }
+            }
 
             if target_env == "gnu" {
+                println!("cargo:rustc-link-lib=static=wx_baseu-3.3-Windows");
+                println!("cargo:rustc-link-lib=static=wxtiff-3.3");
+                println!("cargo:rustc-link-lib=static=wxjpeg-3.3");
+                println!("cargo:rustc-link-lib=static=wxpng-3.3");
+                println!("cargo:rustc-link-lib=static=wxregexu-3.3");
+                println!("cargo:rustc-link-lib=static=wxzlib-3.3");
+                println!("cargo:rustc-link-lib=static=wxexpat-3.3");
                 println!("cargo:rustc-link-lib=stdc++");
+            } else {
+                println!("cargo:rustc-link-lib=static=wxbase33u{debug_suffix}");
+                println!("cargo:rustc-link-lib=static=wxtiff{debug_suffix}");
+                println!("cargo:rustc-link-lib=static=wxjpeg{debug_suffix}");
+                println!("cargo:rustc-link-lib=static=wxpng{debug_suffix}");
+                println!("cargo:rustc-link-lib=static=wxregexu{debug_suffix}");
+                println!("cargo:rustc-link-lib=static=wxzlib{debug_suffix}");
+                println!("cargo:rustc-link-lib=static=wxexpat{debug_suffix}");
             }
         }
 
