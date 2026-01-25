@@ -458,3 +458,113 @@ pub fn translate_plural(singular: &str, plural: &str, n: u32) -> String {
     }
     if n == 1 { singular.to_string() } else { plural.to_string() }
 }
+
+/// Information about a language.
+///
+/// Wraps `wxLanguageInfo`. This structure provides details about a language
+/// supported by wxWidgets, such as its description and canonical name.
+#[derive(Clone, Copy)]
+pub struct LanguageInfo {
+    ptr: *const ffi::wxd_LanguageInfo_t,
+}
+
+impl LanguageInfo {
+    /// Get the user-readable description of the language (e.g. "French").
+    pub fn description(&self) -> String {
+        if self.ptr.is_null() {
+            return String::new();
+        }
+        let len = unsafe { ffi::wxd_LanguageInfo_GetDescription(self.ptr, std::ptr::null_mut(), 0) };
+        if len < 0 {
+            return String::new();
+        }
+        let mut buf = vec![0u8; len as usize + 1];
+        unsafe {
+            ffi::wxd_LanguageInfo_GetDescription(self.ptr, buf.as_mut_ptr() as *mut _, buf.len());
+        }
+        // Remove null terminator
+        if let Some(last) = buf.last()
+            && *last == 0
+        {
+            buf.pop();
+        }
+        String::from_utf8_lossy(&buf).to_string()
+    }
+
+    /// Get the canonical name of the language (e.g. "fr_FR").
+    pub fn canonical_name(&self) -> String {
+        if self.ptr.is_null() {
+            return String::new();
+        }
+        let len = unsafe { ffi::wxd_LanguageInfo_GetCanonicalName(self.ptr, std::ptr::null_mut(), 0) };
+        if len < 0 {
+            return String::new();
+        }
+        let mut buf = vec![0u8; len as usize + 1];
+        unsafe {
+            ffi::wxd_LanguageInfo_GetCanonicalName(self.ptr, buf.as_mut_ptr() as *mut _, buf.len());
+        }
+        if let Some(last) = buf.last()
+            && *last == 0
+        {
+            buf.pop();
+        }
+        String::from_utf8_lossy(&buf).to_string()
+    }
+}
+
+/// Locale-related helper functions.
+///
+/// Provides access to wxWidgets' locale database to look up language names and information.
+pub struct Locale;
+
+impl Locale {
+    /// Get the English name of the given language (e.g. "French").
+    pub fn get_language_name(lang: Language) -> Option<String> {
+        let len = unsafe { ffi::wxd_Locale_GetLanguageName(lang.as_i32(), std::ptr::null_mut(), 0) };
+        if len < 0 {
+            return None;
+        }
+        let mut buf = vec![0u8; len as usize + 1];
+        unsafe {
+            ffi::wxd_Locale_GetLanguageName(lang.as_i32(), buf.as_mut_ptr() as *mut _, buf.len());
+        }
+        if let Some(last) = buf.last()
+            && *last == 0
+        {
+            buf.pop();
+        }
+        Some(String::from_utf8_lossy(&buf).to_string())
+    }
+
+    /// Get the canonical name of the given language (e.g. "fr_FR").
+    pub fn get_language_canonical_name(lang: Language) -> Option<String> {
+        let len = unsafe { ffi::wxd_Locale_GetLanguageCanonicalName(lang.as_i32(), std::ptr::null_mut(), 0) };
+        if len < 0 {
+            return None;
+        }
+        let mut buf = vec![0u8; len as usize + 1];
+        unsafe {
+            ffi::wxd_Locale_GetLanguageCanonicalName(lang.as_i32(), buf.as_mut_ptr() as *mut _, buf.len());
+        }
+        if let Some(last) = buf.last()
+            && *last == 0
+        {
+            buf.pop();
+        }
+        Some(String::from_utf8_lossy(&buf).to_string())
+    }
+
+    /// Find language info from a locale string (e.g. "fr", "en_US").
+    pub fn find_language_info(locale: &str) -> Option<LanguageInfo> {
+        let c_locale = CString::new(locale).ok()?;
+        let ptr = unsafe { ffi::wxd_Locale_FindLanguageInfo(c_locale.as_ptr()) };
+        if ptr.is_null() { None } else { Some(LanguageInfo { ptr }) }
+    }
+
+    /// Get the language info for the given language id.
+    pub fn get_language_info(lang: Language) -> Option<LanguageInfo> {
+        let ptr = unsafe { ffi::wxd_Locale_GetLanguageInfo(lang.as_i32()) };
+        if ptr.is_null() { None } else { Some(LanguageInfo { ptr }) }
+    }
+}

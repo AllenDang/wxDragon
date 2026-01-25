@@ -255,4 +255,60 @@ wxd_FileTranslationsLoader_AddCatalogLookupPathPrefix(const char* prefix)
         wxString::FromUTF8(prefix));
 }
 
+// --- Locale Functions Implementation ---
+
+int
+wxd_Locale_GetLanguageName(int lang, char* buffer, size_t buffer_len)
+{
+    wxString name = wxLocale::GetLanguageName(static_cast<wxLanguage>(lang));
+    if (name.empty())
+        return -1;
+    return (int)wxd_cpp_utils::copy_wxstring_to_buffer(name, buffer, buffer_len);
+}
+
+int
+wxd_Locale_GetLanguageCanonicalName(int lang, char* buffer, size_t buffer_len)
+{
+    const wxLanguageInfo* info = wxLocale::GetLanguageInfo(static_cast<wxLanguage>(lang));
+    if (!info)
+        return -1;
+    return (int)wxd_cpp_utils::copy_wxstring_to_buffer(info->CanonicalName, buffer, buffer_len);
+}
+
+const wxd_LanguageInfo_t*
+wxd_Locale_FindLanguageInfo(const char* locale)
+{
+    if (!locale)
+        return nullptr;
+    const wxLanguageInfo* info = wxLocale::FindLanguageInfo(wxString::FromUTF8(locale));
+    return reinterpret_cast<const wxd_LanguageInfo_t*>(info);
+}
+
+const wxd_LanguageInfo_t*
+wxd_Locale_GetLanguageInfo(int lang)
+{
+    const wxLanguageInfo* info = wxLocale::GetLanguageInfo(static_cast<wxLanguage>(lang));
+    return reinterpret_cast<const wxd_LanguageInfo_t*>(info);
+}
+
+// --- LanguageInfo Functions Implementation ---
+
+int
+wxd_LanguageInfo_GetDescription(const wxd_LanguageInfo_t* info, char* buffer, size_t buffer_len)
+{
+    if (!info)
+        return -1;
+    const wxLanguageInfo* wx_info = reinterpret_cast<const wxLanguageInfo*>(info);
+    return (int)wxd_cpp_utils::copy_wxstring_to_buffer(wx_info->Description, buffer, buffer_len);
+}
+
+int
+wxd_LanguageInfo_GetCanonicalName(const wxd_LanguageInfo_t* info, char* buffer, size_t buffer_len)
+{
+    if (!info)
+        return -1;
+    const wxLanguageInfo* wx_info = reinterpret_cast<const wxLanguageInfo*>(info);
+    return (int)wxd_cpp_utils::copy_wxstring_to_buffer(wx_info->CanonicalName, buffer, buffer_len);
+}
+
 } // extern "C"
