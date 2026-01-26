@@ -411,6 +411,7 @@ typedef struct wxd_Clipboard_t wxd_Clipboard_t;
 
 // Translations opaque types
 typedef struct wxd_Translations_t wxd_Translations_t;
+typedef struct wxd_LanguageInfo_t wxd_LanguageInfo_t;
 
 // SingleInstanceChecker opaque type
 typedef struct wxd_SingleInstanceChecker_t wxd_SingleInstanceChecker_t;

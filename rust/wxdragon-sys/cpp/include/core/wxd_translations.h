@@ -106,4 +106,34 @@ wxd_Translations_GetAvailableTranslations(wxd_Translations_t* translations,
 WXD_EXPORTED void
 wxd_FileTranslationsLoader_AddCatalogLookupPathPrefix(const char* prefix);
 
+// --- Locale Functions ---
+
+// Get the English name of the given language (e.g. "French")
+WXD_EXPORTED int
+wxd_Locale_GetLanguageName(int lang, char* buffer, size_t buffer_len);
+
+// Get the canonical name of the given language (e.g. "fr_FR")
+WXD_EXPORTED int
+wxd_Locale_GetLanguageCanonicalName(int lang, char* buffer, size_t buffer_len);
+
+// Find language info from a locale string (e.g. "fr", "en_US")
+// Returns null if not found
+WXD_EXPORTED const wxd_LanguageInfo_t*
+wxd_Locale_FindLanguageInfo(const char* locale);
+
+// Get the language info for the given language id
+// Returns null if not found
+WXD_EXPORTED const wxd_LanguageInfo_t*
+wxd_Locale_GetLanguageInfo(int lang);
+
+// --- LanguageInfo Functions ---
+
+// Get the description of the language (e.g. "French")
+WXD_EXPORTED int
+wxd_LanguageInfo_GetDescription(const wxd_LanguageInfo_t* info, char* buffer, size_t buffer_len);
+
+// Get the canonical name of the language (e.g. "fr_FR")
+WXD_EXPORTED int
+wxd_LanguageInfo_GetCanonicalName(const wxd_LanguageInfo_t* info, char* buffer, size_t buffer_len);
+
 #endif // WXD_TRANSLATIONS_H
