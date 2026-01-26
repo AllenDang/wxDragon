@@ -511,6 +511,28 @@ impl LanguageInfo {
         }
         String::from_utf8_lossy(&buf).to_string()
     }
+
+    /// Get the native description of the language (e.g. "Français").
+    pub fn native_description(&self) -> String {
+        if self.ptr.is_null() {
+            return String::new();
+        }
+        let len = unsafe { ffi::wxd_LanguageInfo_GetDescriptionNative(self.ptr, std::ptr::null_mut(), 0) };
+        if len < 0 {
+            return String::new();
+        }
+        let mut buf = vec![0u8; len as usize + 1];
+        unsafe {
+            ffi::wxd_LanguageInfo_GetDescriptionNative(self.ptr, buf.as_mut_ptr() as *mut _, buf.len());
+        }
+        // Remove null terminator
+        if let Some(last) = buf.last()
+            && *last == 0
+        {
+            buf.pop();
+        }
+        String::from_utf8_lossy(&buf).to_string()
+    }
 }
 
 /// Locale-related helper functions.
@@ -566,5 +588,65 @@ impl Locale {
     pub fn get_language_info(lang: Language) -> Option<LanguageInfo> {
         let ptr = unsafe { ffi::wxd_Locale_GetLanguageInfo(lang.as_i32()) };
         if ptr.is_null() { None } else { Some(LanguageInfo { ptr }) }
+    }
+
+    /// Get the system default language.
+    pub fn get_system_language() -> Language {
+        let lang_id = unsafe { ffi::wxd_Locale_GetSystemLanguage() };
+        Language::from_i32(lang_id).unwrap_or(Language::Unknown)
+    }
+}
+
+/// Represents a UI locale.
+///
+/// Wraps `wxUILocale`. This class provides access to the current UI locale settings.
+pub struct UILocale {
+    ptr: *mut ffi::wxd_UILocale_t,
+}
+
+impl UILocale {
+    /// Get the object corresponding to the current locale.
+    pub fn get_current() -> Self {
+        let ptr = unsafe { ffi::wxd_UILocale_GetCurrent() };
+        Self { ptr }
+    }
+
+    /// Get the locale name.
+    pub fn get_name(&self) -> String {
+        if self.ptr.is_null() {
+            return String::new();
+        }
+        let len = unsafe { ffi::wxd_UILocale_GetName(self.ptr, std::ptr::null_mut(), 0) };
+        if len < 0 {
+            return String::new();
+        }
+        let mut buf = vec![0u8; len as usize + 1];
+        unsafe {
+            ffi::wxd_UILocale_GetName(self.ptr, buf.as_mut_ptr() as *mut _, buf.len());
+        }
+        // Remove null terminator
+        if let Some(last) = buf.last()
+            && *last == 0
+        {
+            buf.pop();
+        }
+        String::from_utf8_lossy(&buf).to_string()
+    }
+
+    /// Get the language info for this locale.
+    pub fn get_info(&self) -> Option<LanguageInfo> {
+        if self.ptr.is_null() {
+            return None;
+        }
+        let lang_id = unsafe { ffi::wxd_UILocale_GetLanguage(self.ptr) };
+        Locale::get_language_info(Language::from_i32(lang_id).unwrap_or(Language::Unknown))
+    }
+}
+
+impl Drop for UILocale {
+    fn drop(&mut self) {
+        if !self.ptr.is_null() {
+            unsafe { ffi::wxd_UILocale_Destroy(self.ptr) };
+        }
     }
 }

@@ -3,6 +3,7 @@
 #include "../include/wxdragon.h"
 #include <wx/translation.h>
 #include <wx/intl.h>
+#include <wx/uilocale.h>
 
 extern "C" {
 
@@ -291,6 +292,12 @@ wxd_Locale_GetLanguageInfo(int lang)
     return reinterpret_cast<const wxd_LanguageInfo_t*>(info);
 }
 
+int
+wxd_Locale_GetSystemLanguage()
+{
+    return wxLocale::GetSystemLanguage();
+}
+
 // --- LanguageInfo Functions Implementation ---
 
 int
@@ -303,12 +310,69 @@ wxd_LanguageInfo_GetDescription(const wxd_LanguageInfo_t* info, char* buffer, si
 }
 
 int
+wxd_LanguageInfo_GetDescriptionNative(const wxd_LanguageInfo_t* info, char* buffer, size_t buffer_len)
+{
+    if (!info)
+        return -1;
+    const wxLanguageInfo* wx_info = reinterpret_cast<const wxLanguageInfo*>(info);
+    return (int)wxd_cpp_utils::copy_wxstring_to_buffer(wx_info->DescriptionNative, buffer, buffer_len);
+}
+
+int
 wxd_LanguageInfo_GetCanonicalName(const wxd_LanguageInfo_t* info, char* buffer, size_t buffer_len)
 {
     if (!info)
         return -1;
     const wxLanguageInfo* wx_info = reinterpret_cast<const wxLanguageInfo*>(info);
     return (int)wxd_cpp_utils::copy_wxstring_to_buffer(wx_info->CanonicalName, buffer, buffer_len);
+}
+
+// --- UILocale Functions Implementation ---
+
+wxd_UILocale_t*
+wxd_UILocale_GetCurrent()
+{
+    // wxUILocale::GetCurrent() returns a reference to the current locale
+    // We create a copy to store in our opaque pointer
+    const wxUILocale& current = wxUILocale::GetCurrent();
+    return reinterpret_cast<wxd_UILocale_t*>(new wxUILocale(current));
+}
+
+void
+wxd_UILocale_Destroy(wxd_UILocale_t* locale)
+{
+    if (locale) {
+        delete reinterpret_cast<wxUILocale*>(locale);
+    }
+}
+
+int
+wxd_UILocale_GetName(const wxd_UILocale_t* locale, char* buffer, size_t buffer_len)
+{
+    if (!locale)
+        return -1;
+    const wxUILocale* wx_locale = reinterpret_cast<const wxUILocale*>(locale);
+    return (int)wxd_cpp_utils::copy_wxstring_to_buffer(wx_locale->GetName(), buffer, buffer_len);
+}
+
+int
+wxd_UILocale_GetLanguage(const wxd_UILocale_t* locale)
+{
+    if (!locale)
+        return 0; // wxLANGUAGE_UNKNOWN is 0 in Rust enum but 1 in C++? 
+        // Rust: Default=0, Unknown=1. 
+        // wxWidgets: wxLANGUAGE_UNKNOWN is usually 1. wxLANGUAGE_DEFAULT is 0.
+        // Let's use the constant if possible, or 0/1. 
+        // Actually, let's just return the int value.
+        
+    const wxUILocale* wx_locale = reinterpret_cast<const wxUILocale*>(locale);
+    
+    // Try to find via name
+    const wxLanguageInfo* info = wxLocale::FindLanguageInfo(wx_locale->GetName());
+    if (info)
+        return info->Language;
+        
+    return 1; // wxLANGUAGE_UNKNOWN
 }
 
 } // extern "C"

@@ -126,14 +126,41 @@ wxd_Locale_FindLanguageInfo(const char* locale);
 WXD_EXPORTED const wxd_LanguageInfo_t*
 wxd_Locale_GetLanguageInfo(int lang);
 
+// Get the system default language (e.g. wxLANGUAGE_ENGLISH_US)
+WXD_EXPORTED int
+wxd_Locale_GetSystemLanguage();
+
 // --- LanguageInfo Functions ---
 
 // Get the description of the language (e.g. "French")
 WXD_EXPORTED int
 wxd_LanguageInfo_GetDescription(const wxd_LanguageInfo_t* info, char* buffer, size_t buffer_len);
 
+// Get the native description of the language (e.g. "Français")
+WXD_EXPORTED int
+wxd_LanguageInfo_GetDescriptionNative(const wxd_LanguageInfo_t* info, char* buffer, size_t buffer_len);
+
 // Get the canonical name of the language (e.g. "fr_FR")
 WXD_EXPORTED int
 wxd_LanguageInfo_GetCanonicalName(const wxd_LanguageInfo_t* info, char* buffer, size_t buffer_len);
+
+// --- UILocale Functions ---
+
+// Get the current UI locale
+// Returns a new wxd_UILocale_t instance that must be freed with wxd_UILocale_Destroy
+WXD_EXPORTED wxd_UILocale_t*
+wxd_UILocale_GetCurrent();
+
+// Destroy a wxd_UILocale_t instance
+WXD_EXPORTED void
+wxd_UILocale_Destroy(wxd_UILocale_t* locale);
+
+// Get the name of the locale
+WXD_EXPORTED int
+wxd_UILocale_GetName(const wxd_UILocale_t* locale, char* buffer, size_t buffer_len);
+
+// Get the language ID of this locale (returns wxLANGUAGE_UNKNOWN if unknown)
+WXD_EXPORTED int
+wxd_UILocale_GetLanguage(const wxd_UILocale_t* locale);
 
 #endif // WXD_TRANSLATIONS_H
