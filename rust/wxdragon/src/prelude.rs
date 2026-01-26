@@ -51,6 +51,7 @@ pub use crate::widgets::aui_notebook::{AuiNotebook, AuiNotebookBuilder, AuiNoteb
 pub use crate::widgets::aui_toolbar::{AuiToolBar, AuiToolBarBuilder, AuiToolBarStyle}; // Added Style
 pub use crate::widgets::bitmap_button::{BitmapButton, BitmapButtonBuilder, BitmapButtonStyle}; // Added Style
 pub use crate::widgets::bitmap_combobox::{BitmapComboBox, BitmapComboBoxBuilder}; // Style is ComboBoxStyle
+pub use crate::widgets::bitmaptogglebutton::{BitmapToggleButton, BitmapToggleButtonBuilder, BitmapToggleButtonStyle};
 pub use crate::widgets::button::{Button, ButtonBuilder, ButtonStyle};
 pub use crate::widgets::calendar_ctrl::{CalendarCtrl, CalendarCtrlBuilder, CalendarCtrlStyle};
 pub use crate::widgets::checkbox::{CheckBox, CheckBoxBuilder, CheckBoxStyle};

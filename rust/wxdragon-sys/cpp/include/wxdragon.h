@@ -50,6 +50,7 @@ extern "C" {
 #include "widgets/wxd_checkbox.h"
 #include "widgets/wxd_radiobutton.h"
 #include "widgets/wxd_togglebutton.h"
+#include "widgets/wxd_bitmaptogglebutton.h"
 #include "widgets/wxd_gauge.h"
 #include "widgets/wxd_slider.h"
 #include "widgets/wxd_spinctrl.h"

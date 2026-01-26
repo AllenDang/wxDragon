@@ -343,6 +343,7 @@ typedef struct wxd_Choice_t wxd_Choice_t;
 typedef struct wxd_ComboBox_t wxd_ComboBox_t;
 typedef struct wxd_CheckListBox_t wxd_CheckListBox_t;
 typedef struct wxd_ToggleButton_t wxd_ToggleButton_t;
+typedef struct wxd_BitmapToggleButton_t wxd_BitmapToggleButton_t;
 typedef struct wxd_RadioBox_t wxd_RadioBox_t;
 typedef struct wxd_BitmapComboBox_t wxd_BitmapComboBox_t;
 typedef struct wxd_TreeCtrl_t wxd_TreeCtrl_t;
