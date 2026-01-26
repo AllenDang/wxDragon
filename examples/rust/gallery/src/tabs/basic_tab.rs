@@ -11,6 +11,8 @@ pub struct BasicTabControls {
     pub radio_status_label: StaticText,
     pub toggle_button: ToggleButton,
     pub toggle_status_label: StaticText,
+    pub bitmap_toggle_button: BitmapToggleButton,
+    pub bitmap_toggle_status_label: StaticText,
     pub bitmap_button: BitmapButton,
     pub art_button: BitmapButton,
     pub radio_box: RadioBox,
@@ -88,6 +90,22 @@ pub fn create_basic_tab(notebook: &Notebook, _frame: &Frame) -> BasicTabControls
     toggle_button.set_value(true);
     toggle_button.set_tooltip("Click to toggle ON/OFF.");
     let toggle_status_label = StaticText::builder(&basic_panel).with_label("ON").build();
+
+    // BitmapToggleButton - toggle button with bitmap icons
+    let bitmap_toggle_label = StaticText::builder(&basic_panel).with_label("Bitmap Toggle:").build();
+    let toggle_on_bitmap = ArtProvider::get_bitmap(ArtId::TickMark, ArtClient::Button, None)
+        .or_else(|| ArtProvider::get_bitmap(ArtId::Information, ArtClient::Button, None))
+        .expect("Failed to get toggle ON bitmap");
+    let toggle_pressed_bitmap = ArtProvider::get_bitmap(ArtId::CrossMark, ArtClient::Button, None)
+        .or_else(|| ArtProvider::get_bitmap(ArtId::Warning, ArtClient::Button, None))
+        .expect("Failed to get toggle pressed bitmap");
+    let bitmap_toggle_button = BitmapToggleButton::builder(&basic_panel)
+        .with_bitmap(Some(toggle_on_bitmap.clone()))
+        .with_bitmap_pressed(Some(toggle_pressed_bitmap))
+        .build();
+    bitmap_toggle_button.set_value(false);
+    bitmap_toggle_button.set_tooltip("A toggle button with bitmap icons. Click to toggle ON/OFF.");
+    let bitmap_toggle_status_label = StaticText::builder(&basic_panel).with_label("OFF").build();
 
     let cmd_link_button_label = StaticText::builder(&basic_panel).with_label("Cmd Link Btn:").build();
     let cmd_link_button = CommandLinkButton::builder(&basic_panel)
@@ -281,6 +299,19 @@ pub fn create_basic_tab(notebook: &Notebook, _frame: &Frame) -> BasicTabControls
     toggle_sizer.add_spacer(5);
     toggle_sizer.add(&toggle_status_label, 1, SizerFlag::Expand, 0);
     grid.add_sizer(&toggle_sizer, 1, SizerFlag::AlignLeft | SizerFlag::AlignCenterVertical, 0);
+
+    grid.add(&bitmap_toggle_label, 0, label_flags, 0);
+    let bitmap_toggle_sizer = BoxSizer::builder(Orientation::Horizontal).build();
+    bitmap_toggle_sizer.add(&bitmap_toggle_button, 0, SizerFlag::AlignCenterVertical, 0);
+    bitmap_toggle_sizer.add_spacer(5);
+    bitmap_toggle_sizer.add(&bitmap_toggle_status_label, 1, SizerFlag::Expand, 0);
+    grid.add_sizer(
+        &bitmap_toggle_sizer,
+        1,
+        SizerFlag::AlignLeft | SizerFlag::AlignCenterVertical,
+        0,
+    );
+
     grid.add(&bitmap_button_label, 0, label_flags, 0);
     grid.add(&bitmap_button, 0, SizerFlag::AlignLeft | SizerFlag::AlignCenterVertical, 0);
     grid.add(&art_button_label, 0, label_flags, 0);
@@ -366,6 +397,8 @@ pub fn create_basic_tab(notebook: &Notebook, _frame: &Frame) -> BasicTabControls
         radio_status_label,
         toggle_button,
         toggle_status_label,
+        bitmap_toggle_button,
+        bitmap_toggle_status_label,
         bitmap_button,
         art_button,
         radio_box,
@@ -489,6 +522,18 @@ impl BasicTabControls {
             let is_on = event.is_checked().unwrap_or(false);
             toggle_status_label.set_label(if is_on { "ON" } else { "OFF" });
             println!("ToggleButton clicked, is_on: {is_on}");
+        });
+
+        // BitmapToggleButton Event Binding
+        let bitmap_toggle_button = self.bitmap_toggle_button;
+        let bitmap_toggle_status_label = self.bitmap_toggle_status_label;
+        self.bitmap_toggle_button.on_toggle(move |event| {
+            let is_on = event.is_checked().unwrap_or(false);
+            bitmap_toggle_status_label.set_label(if is_on { "ON" } else { "OFF" });
+            println!(
+                "BitmapToggleButton clicked, is_on: {is_on}, value: {}",
+                bitmap_toggle_button.get_value()
+            );
         });
 
         // SpinButton Event Bindings
