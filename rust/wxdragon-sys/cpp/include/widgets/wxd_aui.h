@@ -171,7 +171,35 @@ wxd_AuiNotebook_GetPageCount(wxd_AuiNotebook_t* self);
 
 WXD_EXPORTED size_t
 wxd_AuiNotebook_SetSelection(wxd_AuiNotebook_t* self, size_t new_page);
-// WXD_EXPORTED wxd_Window_t* wxd_AuiNotebook_GetPage(wxd_AuiNotebook_t* self, size_t page_idx); // TODO: decide if GetPage is needed and how to manage its lifecycle
+
+WXD_EXPORTED int
+wxd_AuiNotebook_GetSelection(wxd_AuiNotebook_t* self);
+
+WXD_EXPORTED bool
+wxd_AuiNotebook_InsertPage(wxd_AuiNotebook_t* self, size_t page_idx, wxd_Window_t* page,
+                           const char* caption, bool select, int bitmap_id);
+
+WXD_EXPORTED bool
+wxd_AuiNotebook_DeletePage(wxd_AuiNotebook_t* self, size_t page);
+
+WXD_EXPORTED bool
+wxd_AuiNotebook_RemovePage(wxd_AuiNotebook_t* self, size_t page);
+
+WXD_EXPORTED bool
+wxd_AuiNotebook_DeleteAllPages(wxd_AuiNotebook_t* self);
+
+WXD_EXPORTED wxd_Window_t*
+wxd_AuiNotebook_GetPage(wxd_AuiNotebook_t* self, size_t page_idx);
+
+WXD_EXPORTED int
+wxd_AuiNotebook_GetPageIndex(wxd_AuiNotebook_t* self, wxd_Window_t* page_wnd);
+
+WXD_EXPORTED int
+wxd_AuiNotebook_GetPageText(wxd_AuiNotebook_t* self, size_t page_idx, char* buffer, size_t buffer_len);
+
+WXD_EXPORTED bool
+wxd_AuiNotebook_SetPageText(wxd_AuiNotebook_t* self, size_t page_idx, const char* text);
+
 
 // --- wxAuiToolBar ---
 WXD_EXPORTED wxd_AuiToolBar_t*

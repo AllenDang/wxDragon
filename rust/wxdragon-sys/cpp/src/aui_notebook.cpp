@@ -2,6 +2,7 @@
 #include <wx/wx.h>
 #include "../include/wxdragon.h"
 #include <wx/aui/auibook.h> // For wxAuiNotebook
+#include "wxd_utils.h"
 
 // Ensure this is part of wx/aui/auibook.h or wx/aui/aui.h
 // If wxAuiNotebook is in wx/aui/aui.h, this might need adjustment,
@@ -73,6 +74,90 @@ wxd_AuiNotebook_SetSelection(wxd_AuiNotebook_t* self, size_t new_page)
     return notebook->SetSelection(new_page);
 }
 
-// Add implementations for other wxAuiNotebook functions (GetPage, InsertPage, DeletePage, etc.) here as needed.
+WXD_EXPORTED int
+wxd_AuiNotebook_GetSelection(wxd_AuiNotebook_t* self)
+{
+    wxAuiNotebook* notebook = (wxAuiNotebook*)self;
+    if (!notebook) return -1;
+    return notebook->GetSelection();
+}
+
+WXD_EXPORTED bool
+wxd_AuiNotebook_InsertPage(wxd_AuiNotebook_t* self, size_t page_idx, wxd_Window_t* page,
+                           const char* caption, bool select, int bitmap_id)
+{
+    wxAuiNotebook* notebook = (wxAuiNotebook*)self;
+    wxWindow* pagePtr = (wxWindow*)page;
+    if (!notebook || !pagePtr) return false;
+
+    wxString wxCaption = WXD_STR_TO_WX_STRING_UTF8_NULL_OK(caption);
+    return notebook->InsertPage(page_idx, pagePtr, wxCaption, select, bitmap_id);
+}
+
+WXD_EXPORTED bool
+wxd_AuiNotebook_DeletePage(wxd_AuiNotebook_t* self, size_t page)
+{
+    wxAuiNotebook* notebook = (wxAuiNotebook*)self;
+    if (!notebook) return false;
+    return notebook->DeletePage(page);
+}
+
+WXD_EXPORTED bool
+wxd_AuiNotebook_RemovePage(wxd_AuiNotebook_t* self, size_t page)
+{
+    wxAuiNotebook* notebook = (wxAuiNotebook*)self;
+    if (!notebook) return false;
+    return notebook->RemovePage(page);
+}
+
+WXD_EXPORTED bool
+wxd_AuiNotebook_DeleteAllPages(wxd_AuiNotebook_t* self)
+{
+    wxAuiNotebook* notebook = (wxAuiNotebook*)self;
+    if (!notebook) return false;
+    return notebook->DeleteAllPages();
+}
+
+WXD_EXPORTED wxd_Window_t*
+wxd_AuiNotebook_GetPage(wxd_AuiNotebook_t* self, size_t page_idx)
+{
+    wxAuiNotebook* notebook = (wxAuiNotebook*)self;
+    if (!notebook) return nullptr;
+    return (wxd_Window_t*)notebook->GetPage(page_idx);
+}
+
+WXD_EXPORTED int
+wxd_AuiNotebook_GetPageIndex(wxd_AuiNotebook_t* self, wxd_Window_t* page_wnd)
+{
+    wxAuiNotebook* notebook = (wxAuiNotebook*)self;
+    wxWindow* page = (wxWindow*)page_wnd;
+    if (!notebook || !page) return -1;
+    return notebook->GetPageIndex(page);
+}
+
+WXD_EXPORTED int
+wxd_AuiNotebook_GetPageText(wxd_AuiNotebook_t* self, size_t page_idx, char* buffer, size_t buffer_len)
+{
+    wxAuiNotebook* notebook = (wxAuiNotebook*)self;
+    if (!notebook) return -1;
+    
+    // Safety check for page index? wxWidgets might assert.
+    if (page_idx >= notebook->GetPageCount()) return -1;
+    
+    wxString text = notebook->GetPageText(page_idx);
+    return (int)wxd_cpp_utils::copy_wxstring_to_buffer(text, buffer, buffer_len);
+}
+
+WXD_EXPORTED bool
+wxd_AuiNotebook_SetPageText(wxd_AuiNotebook_t* self, size_t page_idx, const char* text)
+{
+    wxAuiNotebook* notebook = (wxAuiNotebook*)self;
+    if (!notebook) return false;
+    
+    if (page_idx >= notebook->GetPageCount()) return false;
+
+    wxString wxText = WXD_STR_TO_WX_STRING_UTF8_NULL_OK(text);
+    return notebook->SetPageText(page_idx, wxText);
+}
 
 } // extern "C"
