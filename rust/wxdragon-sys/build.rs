@@ -491,6 +491,7 @@ fn build_wxdragon_wrapper(
         // If macOS also has d suffix for debug, this section would need similar conditional logic
         println!("cargo:rustc-link-lib=static=wx_osx_cocoau_core-3.3");
         println!("cargo:rustc-link-lib=static=wx_baseu-3.3");
+        println!("cargo:rustc-link-lib=static=wx_baseu_net-3.3");
         println!("cargo:rustc-link-lib=static=wx_osx_cocoau_adv-3.3");
         println!("cargo:rustc-link-lib=static=wx_osx_cocoau_gl-3.3");
         println!("cargo:rustc-link-lib=static=wx_osx_cocoau_propgrid-3.3");

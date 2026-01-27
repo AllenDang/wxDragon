@@ -123,6 +123,9 @@ extern "C" {
 // Application progress indicator
 #include "core/wxd_appprogress.h"
 
+// IPC (Inter-Process Communication)
+#include "core/wxd_ipc.h"
+
 // Other categories
 #include "sizers/wxd_sizers.h"
 #include "dialogs/wxd_dialogs.h"
