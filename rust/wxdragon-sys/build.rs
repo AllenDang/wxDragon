@@ -571,6 +571,7 @@ fn build_wxdragon_wrapper(
             println!("cargo:rustc-link-lib=static=wx_mswu_core-3.3-Windows");
             println!("cargo:rustc-link-lib=static=wx_mswu_adv-3.3-Windows");
             println!("cargo:rustc-link-lib=static=wx_baseu-3.3-Windows");
+            println!("cargo:rustc-link-lib=static=wx_baseu_net-3.3-Windows");
             println!("cargo:rustc-link-lib=static=wx_mswu_gl-3.3-Windows");
             println!("cargo:rustc-link-lib=static=wx_mswu_propgrid-3.3-Windows");
 
@@ -659,6 +660,7 @@ fn build_wxdragon_wrapper(
             }
 
             println!("cargo:rustc-link-lib=static=wxbase33u{debug_suffix}");
+            println!("cargo:rustc-link-lib=static=wxbase33u{debug_suffix}_net");
             println!("cargo:rustc-link-lib=static=wxtiff{debug_suffix}");
             println!("cargo:rustc-link-lib=static=wxjpeg{debug_suffix}");
             println!("cargo:rustc-link-lib=static=wxpng{debug_suffix}");
@@ -712,6 +714,7 @@ fn build_wxdragon_wrapper(
         println!("cargo:rustc-link-lib=static=wx_gtk3u_adv-3.3");
         println!("cargo:rustc-link-lib=static=wx_gtk3u_core-3.3");
         println!("cargo:rustc-link-lib=static=wx_baseu-3.3");
+        println!("cargo:rustc-link-lib=static=wx_baseu_net-3.3");
         println!("cargo:rustc-link-lib=stdc++");
 
         if cfg!(feature = "aui") {
