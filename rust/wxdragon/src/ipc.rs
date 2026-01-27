@@ -18,8 +18,8 @@
 //! // Server side
 //! let server = IPCServer::new(|topic| {
 //!     println!("Client connecting to topic: {}", topic);
-//!     Some(IPCConnection::new()
-//!         .on_execute(|topic, data, format| {
+//!     Some(IPCConnection::builder()
+//!         .on_execute(|_topic, data, _format| {
 //!             println!("Received execute: {:?}", data);
 //!             true
 //!         })
