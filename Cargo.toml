@@ -15,6 +15,7 @@ members = [
   "examples/rust/generic_dialog_test",
   "examples/rust/gridbagsizer_test",
   "examples/rust/gridsizer_test",
+  "examples/rust/ipc_demo",
   "examples/rust/menu_events_demo",
   "examples/rust/neat_demo",
   "examples/rust/simple",

@@ -673,4 +673,9 @@ typedef struct wxd_TreeListCtrl_t wxd_TreeListCtrl_t;
 // AboutDialogInfo type
 typedef struct wxd_AboutDialogInfo_t wxd_AboutDialogInfo_t;
 
+// IPC (Inter-Process Communication) types
+typedef struct wxd_IPCConnection_t wxd_IPCConnection_t;
+typedef struct wxd_IPCServer_t wxd_IPCServer_t;
+typedef struct wxd_IPCClient_t wxd_IPCClient_t;
+
 #endif // WXD_TYPES_H

@@ -52,6 +52,7 @@ set(wxUSE_ADV ON CACHE BOOL "Use wxWidgets advanced features")
 set(wxUSE_HTML ON CACHE BOOL "Use wxWidgets HTML features")
 set(wxUSE_OPENGL ON CACHE BOOL "Use wxWidgets OpenGL features")
 set(wxUSE_SOCKETS ON CACHE BOOL "Use wxWidgets sockets")
+set(wxUSE_IPC ON CACHE BOOL "Use wxWidgets IPC (inter-process communication)")
 set(wxUSE_PROPGRID ON CACHE BOOL "Use wxWidgets property grid")
 set(wxUSE_DEBUGREPORT ON CACHE BOOL "Use wxWidgets debug report features")
 set(wxUSE_RIBBON ON CACHE BOOL "Use wxWidgets ribbon control")
@@ -168,6 +169,7 @@ set(WXDRAGON_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/gauge.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/hyperlink_ctrl.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/imagelist.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ipc.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/item.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/list_ctrl.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/listbox.cpp

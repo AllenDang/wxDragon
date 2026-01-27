@@ -23,6 +23,7 @@ pub mod font;
 pub mod font_data;
 pub mod geometry;
 pub mod id;
+pub mod ipc;
 pub mod language;
 pub mod menus;
 pub mod prelude;
