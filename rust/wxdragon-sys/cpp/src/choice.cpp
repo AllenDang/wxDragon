@@ -23,11 +23,20 @@ wxd_Choice_Create(wxd_Window_t* parent, wxd_Id id, wxd_Point pos, wxd_Size size,
 }
 
 WXD_EXPORTED void
-wxd_Choice_Append(wxd_Choice_t* choice, const char* item)
+wxd_Choice_Append(wxd_Choice_t* self, const char* item)
 {
-    wxChoice* ch = (wxChoice*)choice;
-    if (ch && item) {
-        ch->Append(wxString::FromUTF8(item));
+    wxChoice* choice = (wxChoice*)self;
+    if (choice && item) {
+        choice->Append(wxString::FromUTF8(item));
+    }
+}
+
+WXD_EXPORTED void
+wxd_Choice_Insert(wxd_Choice_t* self, const char* item, unsigned int pos)
+{
+    wxChoice* choice = (wxChoice*)self;
+    if (choice && item) {
+        choice->Insert(wxString::FromUTF8(item), pos);
     }
 }
 

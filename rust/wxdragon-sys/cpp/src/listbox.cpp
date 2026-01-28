@@ -41,6 +41,15 @@ wxd_ListBox_Append(wxd_ListBox_t* listbox, const char* item)
 }
 
 WXD_EXPORTED void
+wxd_ListBox_Insert(wxd_ListBox_t* listbox, const char* item, unsigned int pos)
+{
+    wxListBox* lb = (wxListBox*)listbox;
+    if (lb && item) {
+        lb->Insert(wxString::FromUTF8(item), pos);
+    }
+}
+
+WXD_EXPORTED void
 wxd_ListBox_Clear(wxd_ListBox_t* listbox)
 {
     wxListBox* lb = (wxListBox*)listbox;

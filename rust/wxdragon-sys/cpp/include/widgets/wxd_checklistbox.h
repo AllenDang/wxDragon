@@ -10,6 +10,8 @@ wxd_CheckListBox_Create(wxd_Window_t* parent, wxd_Id id, wxd_Point pos, wxd_Size
 WXD_EXPORTED void
 wxd_CheckListBox_Append(wxd_CheckListBox_t* clbox, const char* item);
 WXD_EXPORTED void
+wxd_CheckListBox_Insert(wxd_CheckListBox_t* clbox, const char* item, unsigned int pos);
+WXD_EXPORTED void
 wxd_CheckListBox_Clear(wxd_CheckListBox_t* clbox);
 WXD_EXPORTED int
 wxd_CheckListBox_GetSelection(wxd_CheckListBox_t* clbox);

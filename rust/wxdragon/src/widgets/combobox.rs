@@ -40,7 +40,7 @@ impl ComboBox {
             .unwrap_or(std::ptr::null_mut())
     }
 
-    /// Appends an item to the combobox list.
+    /// Appends an item to the combobox.
     /// No-op if the combobox has been destroyed.
     pub fn append(&self, item: &str) {
         let ptr = self.combobox_ptr();
@@ -53,7 +53,20 @@ impl ComboBox {
         }
     }
 
-    /// Removes all items from the combobox list.
+    /// Inserts an item into the combobox at the specified position.
+    /// No-op if the combobox has been destroyed.
+    pub fn insert(&self, item: &str, pos: usize) {
+        let ptr = self.combobox_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        let c_item = CString::new(item).expect("Invalid CString for ComboBox item");
+        unsafe {
+            ffi::wxd_ComboBox_Insert(ptr, c_item.as_ptr(), pos as u32);
+        }
+    }
+
+    /// Clears all items from the combobox.
     /// Does not clear the text entry field value.
     /// No-op if the combobox has been destroyed.
     pub fn clear(&self) {

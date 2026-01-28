@@ -49,6 +49,19 @@ wxd_BitmapComboBox_Append(wxd_BitmapComboBox_t* self, const char* item,
 }
 
 WXD_EXPORTED void
+wxd_BitmapComboBox_Insert(wxd_BitmapComboBox_t* self, const char* item, const wxd_Bitmap_t* bitmap, unsigned int pos)
+{
+    wxBitmapComboBox* cb = (wxBitmapComboBox*)self;
+    if (cb && item) {
+        if (bitmap) {
+            cb->Insert(wxString::FromUTF8(item), *(const wxBitmap*)bitmap, pos);
+        } else {
+            cb->Insert(wxString::FromUTF8(item), wxNullBitmap, pos);
+        }
+    }
+}
+
+WXD_EXPORTED void
 wxd_BitmapComboBox_Clear(wxd_BitmapComboBox_t* self)
 {
     wxBitmapComboBox* cb = (wxBitmapComboBox*)self;

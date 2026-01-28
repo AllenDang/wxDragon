@@ -35,6 +35,15 @@ wxd_ComboBox_Append(wxd_ComboBox_t* combo, const char* item)
 }
 
 WXD_EXPORTED void
+wxd_ComboBox_Insert(wxd_ComboBox_t* combo, const char* item, unsigned int pos)
+{
+    wxComboBox* cb = (wxComboBox*)combo;
+    if (cb && item) {
+        cb->Insert(wxString::FromUTF8(item), pos);
+    }
+}
+
+WXD_EXPORTED void
 wxd_ComboBox_Clear(wxd_ComboBox_t* combo)
 {
     wxComboBox* cb = (wxComboBox*)combo;

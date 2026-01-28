@@ -12,6 +12,9 @@ WXD_EXPORTED void
 wxd_BitmapComboBox_Append(wxd_BitmapComboBox_t* self, const char* item, const wxd_Bitmap_t* bitmap);
 
 WXD_EXPORTED void
+wxd_BitmapComboBox_Insert(wxd_BitmapComboBox_t* self, const char* item, const wxd_Bitmap_t* bitmap, unsigned int pos);
+
+WXD_EXPORTED void
 wxd_BitmapComboBox_Clear(wxd_BitmapComboBox_t* self);
 
 WXD_EXPORTED int

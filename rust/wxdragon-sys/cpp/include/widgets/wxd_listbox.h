@@ -10,6 +10,8 @@ wxd_ListBox_Create(wxd_Window_t* parent, wxd_Id id, wxd_Point pos, wxd_Size size
 WXD_EXPORTED void
 wxd_ListBox_Append(wxd_ListBox_t* self, const char* item);
 WXD_EXPORTED void
+wxd_ListBox_Insert(wxd_ListBox_t* self, const char* item, unsigned int pos);
+WXD_EXPORTED void
 wxd_ListBox_Clear(wxd_ListBox_t* listbox);
 WXD_EXPORTED int
 wxd_ListBox_GetSelection(wxd_ListBox_t* listbox);

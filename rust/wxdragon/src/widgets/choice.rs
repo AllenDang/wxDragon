@@ -48,7 +48,7 @@ impl Choice {
     }
 
     /// Appends an item to the choice control.
-    /// No-op if the widget has been destroyed.
+    /// No-op if the choice has been destroyed.
     pub fn append(&self, item: &str) {
         let ptr = self.widget_ptr();
         if ptr.is_null() {
@@ -60,7 +60,20 @@ impl Choice {
         }
     }
 
-    /// Removes all items from the choice control.
+    /// Inserts an item into the choice control at the specified position.
+    /// No-op if the choice has been destroyed.
+    pub fn insert(&self, item: &str, pos: usize) {
+        let ptr = self.widget_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        let c_item = CString::new(item).expect("Invalid CString for Choice item");
+        unsafe {
+            ffi::wxd_Choice_Insert(ptr, c_item.as_ptr(), pos as u32);
+        }
+    }
+
+    /// Clears all items from the choice control.
     /// No-op if the widget has been destroyed.
     pub fn clear(&self) {
         let ptr = self.widget_ptr();

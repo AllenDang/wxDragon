@@ -10,6 +10,8 @@ wxd_ComboBox_Create(wxd_Window_t* parent, wxd_Id id, const char* value, wxd_Poin
 WXD_EXPORTED void
 wxd_ComboBox_Append(wxd_ComboBox_t* combo, const char* item);
 WXD_EXPORTED void
+wxd_ComboBox_Insert(wxd_ComboBox_t* combo, const char* item, unsigned int pos);
+WXD_EXPORTED void
 wxd_ComboBox_Clear(wxd_ComboBox_t* combo);
 WXD_EXPORTED int
 wxd_ComboBox_GetSelection(wxd_ComboBox_t* combo);
