@@ -132,6 +132,13 @@ impl CheckListBox {
     }
 
     /// Clears all items from the checklistbox.
+    pub fn clear(&self) {
+        let ptr = self.checklistbox_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_CheckListBox_Clear(ptr) };
+    }
 
     /// Gets the index of the currently selected item.
     /// Returns `None` if no item is selected (matches `NOT_FOUND`) or if destroyed.
