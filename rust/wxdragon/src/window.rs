@@ -116,6 +116,8 @@ unsafe extern "C" {
         name: *const std::os::raw::c_char,
     ) -> *mut ffi::wxd_Window_t;
     unsafe fn wxd_Window_FindWindowById(window: *mut ffi::wxd_Window_t, id: std::os::raw::c_int) -> *mut ffi::wxd_Window_t;
+    #[cfg(target_os = "windows")]
+    unsafe fn wxd_Window_MSWDisableComposited(window: *mut ffi::wxd_Window_t);
 }
 
 // Use the widget_style_enum macro to define ExtraWindowStyle
@@ -1561,6 +1563,18 @@ pub trait WxWidget: std::any::Any {
             return std::ptr::null_mut();
         }
         unsafe { ffi::wxd_Window_GetHandle(handle) }
+    }
+
+    /// Disables compositing for the window (Windows only).
+    ///
+    /// This can be useful for avoiding flickering or other issues with some controls.
+    /// This method is only available on Windows.
+    #[cfg(target_os = "windows")]
+    fn msw_disable_composited(&self) {
+        let handle = self.handle_ptr();
+        if !handle.is_null() {
+            unsafe { wxd_Window_MSWDisableComposited(handle) }
+        }
     }
 
     // --- Tab Order Functions ---

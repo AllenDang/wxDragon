@@ -993,6 +993,17 @@ wxd_Window_GetClassName(const wxd_Window_t* window, char* outName, size_t maxLen
     return (int)wxd_cpp_utils::copy_wxstring_to_buffer(wx_str, outName, maxLen);
 }
 
+#ifdef __WXMSW__
+WXD_EXPORTED void
+wxd_Window_MSWDisableComposited(wxd_Window_t* window)
+{
+    wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
+    if (wx_window) {
+        wx_window->MSWDisableComposited();
+    }
+}
+#endif
+
 // --- Tab Order Functions ---
 
 WXD_EXPORTED void
