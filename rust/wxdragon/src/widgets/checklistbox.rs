@@ -105,7 +105,7 @@ impl CheckListBox {
             .unwrap_or(std::ptr::null_mut())
     }
 
-    /// Appends an item to the list box.
+    /// Appends an item to the checklistbox.
     /// No-op if the checklistbox has been destroyed.
     pub fn append(&self, item: &str) {
         let ptr = self.checklistbox_ptr();
@@ -118,16 +118,26 @@ impl CheckListBox {
         }
     }
 
-    /// Removes all items from the list box.
+    /// Inserts an item into the checklistbox at the specified position.
     /// No-op if the checklistbox has been destroyed.
+    pub fn insert(&self, item: &str, pos: usize) {
+        let ptr = self.checklistbox_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        let c_item = CString::new(item).expect("Invalid CString for CheckListBox item");
+        unsafe {
+            ffi::wxd_CheckListBox_Insert(ptr, c_item.as_ptr(), pos as u32);
+        }
+    }
+
+    /// Clears all items from the checklistbox.
     pub fn clear(&self) {
         let ptr = self.checklistbox_ptr();
         if ptr.is_null() {
             return;
         }
-        unsafe {
-            ffi::wxd_CheckListBox_Clear(ptr);
-        }
+        unsafe { ffi::wxd_CheckListBox_Clear(ptr) };
     }
 
     /// Gets the index of the currently selected item.

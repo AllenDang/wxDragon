@@ -33,9 +33,18 @@ wxd_CheckListBox_Create(wxd_Window_t* parent, wxd_Id id, wxd_Point pos, wxd_Size
 WXD_EXPORTED void
 wxd_CheckListBox_Append(wxd_CheckListBox_t* clbox, const char* item)
 {
-    wxCheckListBox* wxClbox = reinterpret_cast<wxCheckListBox*>(clbox);
-    if (wxClbox && item) {
-        wxClbox->Append(wxString::FromUTF8(item));
+    wxCheckListBox* lb = (wxCheckListBox*)clbox;
+    if (lb && item) {
+        lb->Append(wxString::FromUTF8(item));
+    }
+}
+
+WXD_EXPORTED void
+wxd_CheckListBox_Insert(wxd_CheckListBox_t* clbox, const char* item, unsigned int pos)
+{
+    wxCheckListBox* lb = (wxCheckListBox*)clbox;
+    if (lb && item) {
+        lb->Insert(wxString::FromUTF8(item), pos);
     }
 }
 

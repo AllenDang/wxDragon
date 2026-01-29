@@ -57,7 +57,7 @@ impl ListBox {
             .unwrap_or(std::ptr::null_mut())
     }
 
-    /// Appends an item to the list box.
+    /// Appends an item to the listbox.
     /// No-op if the listbox has been destroyed.
     pub fn append(&self, item: &str) {
         let ptr = self.listbox_ptr();
@@ -70,7 +70,20 @@ impl ListBox {
         }
     }
 
-    /// Removes all items from the list box.
+    /// Inserts an item into the listbox at the specified position.
+    /// No-op if the listbox has been destroyed.
+    pub fn insert(&self, item: &str, pos: usize) {
+        let ptr = self.listbox_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        let c_item = CString::new(item).expect("Invalid CString for ListBox item");
+        unsafe {
+            ffi::wxd_ListBox_Insert(ptr, c_item.as_ptr(), pos as u32);
+        }
+    }
+
+    /// Clears all items from the listbox.
     /// No-op if the listbox has been destroyed.
     pub fn clear(&self) {
         let ptr = self.listbox_ptr();

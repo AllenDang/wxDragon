@@ -7,7 +7,6 @@ use crate::id::Id;
 use crate::widgets::combobox::ComboBoxStyle;
 use crate::window::{WindowHandle, WxWidget};
 use std::ffi::{CStr, CString};
-use std::ptr;
 use wxdragon_sys as ffi;
 
 /// Represents a wxBitmapComboBox widget.
@@ -36,20 +35,35 @@ impl BitmapComboBox {
             .unwrap_or(std::ptr::null_mut())
     }
 
-    /// Appends an item with an optional bitmap.
-    /// No-op if the bitmap combobox has been destroyed.
+    /// Appends an item with an optional bitmap to the combobox.
+    /// No-op if the combobox has been destroyed.
     pub fn append(&self, item: &str, bitmap: Option<&Bitmap>) {
         let ptr = self.bitmap_combobox_ptr();
         if ptr.is_null() {
             return;
         }
-        let c_item = CString::new(item).expect("CString::new failed for item");
-        let bmp_ptr = bitmap.map_or(ptr::null(), |b| b.as_const_ptr());
-        unsafe { ffi::wxd_BitmapComboBox_Append(ptr, c_item.as_ptr(), bmp_ptr) };
+        let c_item = CString::new(item).expect("Invalid CString for BitmapComboBox item");
+        let b_ptr = bitmap.map(|b| b.as_const_ptr()).unwrap_or(std::ptr::null());
+        unsafe {
+            ffi::wxd_BitmapComboBox_Append(ptr, c_item.as_ptr(), b_ptr);
+        }
     }
 
-    /// Removes all items from the control.
-    /// No-op if the bitmap combobox has been destroyed.
+    /// Inserts an item with an optional bitmap into the combobox at the specified position.
+    /// No-op if the combobox has been destroyed.
+    pub fn insert(&self, item: &str, bitmap: Option<&Bitmap>, pos: usize) {
+        let ptr = self.bitmap_combobox_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        let c_item = CString::new(item).expect("Invalid CString for BitmapComboBox item");
+        let b_ptr = bitmap.map(|b| b.as_const_ptr()).unwrap_or(std::ptr::null());
+        unsafe {
+            ffi::wxd_BitmapComboBox_Insert(ptr, c_item.as_ptr(), b_ptr, pos as u32);
+        }
+    }
+
+    /// Clears all items from the combobox.
     pub fn clear(&self) {
         let ptr = self.bitmap_combobox_ptr();
         if ptr.is_null() {
