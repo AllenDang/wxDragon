@@ -233,6 +233,13 @@ wxd_Window_Navigate(wxd_Window_t* window, int flags);
 WXD_EXPORTED void*
 wxd_Window_GetHandle(wxd_Window_t* window);
 
+#ifdef __WXMSW__
+/// Disables compositing for the window (Windows only).
+/// This can be useful for avoiding flickering or other issues with some controls.
+WXD_EXPORTED void
+wxd_Window_MSWDisableComposited(wxd_Window_t* window);
+#endif
+
 // --- Popup Menu Functions ---
 /// Shows a popup menu at the specified position (or current mouse position if
 /// NULL) Returns true if a menu item was selected, false otherwise
