@@ -409,8 +409,16 @@ WxdEventHandler::DispatchEvent(wxEvent& event)
         event.Skip(false);
     }
     else {
+        // DESTROY events should NEVER propagate to parent windows.
+        // When a child window is destroyed, only that window (and its children)
+        // should receive the DESTROY event. If we Skip() here, the event would
+        // propagate up the window hierarchy, incorrectly triggering DESTROY
+        // handlers on parent windows that are still alive.
+        if (eventType == wxEVT_DESTROY) {
+            event.Skip(false);
+        }
         // General handling for all vetable events
-        if (IsEventVetoed(event)) {
+        else if (IsEventVetoed(event)) {
             // Event was vetoed, don't allow it to continue to default handlers
             event.Skip(false);
         }
