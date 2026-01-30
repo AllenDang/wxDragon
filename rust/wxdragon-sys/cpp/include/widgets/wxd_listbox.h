@@ -31,6 +31,10 @@ WXD_EXPORTED unsigned int
 wxd_ListBox_GetCount(wxd_ListBox_t* listbox);
 WXD_EXPORTED void
 wxd_ListBox_Delete(wxd_ListBox_t* listbox, int index);
+WXD_EXPORTED void
+wxd_ListBox_SetString(wxd_ListBox_t* listbox, unsigned int n, const char* text);
+WXD_EXPORTED void
+wxd_ListBox_EnsureVisible(wxd_ListBox_t* listbox, int index);
 WXD_EXPORTED bool
 wxd_ListBox_PopupMenu(wxd_ListBox_t* listbox, wxd_Menu_t* menu, wxd_Point pos);
 

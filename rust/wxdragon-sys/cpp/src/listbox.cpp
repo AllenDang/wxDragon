@@ -121,8 +121,32 @@ WXD_EXPORTED void
 wxd_ListBox_Delete(wxd_ListBox_t* listbox, int index)
 {
     wxListBox* lb = (wxListBox*)listbox;
-    if (lb) {
+    if (lb)
+    {
         lb->Delete(index);
+    }
+}
+
+WXD_EXPORTED void
+wxd_ListBox_SetString(wxd_ListBox_t* listbox, unsigned int n, const char* text)
+{
+    wxListBox* lb = (wxListBox*)listbox;
+    if (lb && text)
+    {
+        if (n < lb->GetCount())
+        {
+            lb->SetString(n, wxString::FromUTF8(text));
+        }
+    }
+}
+
+WXD_EXPORTED void
+wxd_ListBox_EnsureVisible(wxd_ListBox_t* listbox, int index)
+{
+    wxListBox* lb = (wxListBox*)listbox;
+    if (lb)
+    {
+        lb->EnsureVisible(index);
     }
 }
 

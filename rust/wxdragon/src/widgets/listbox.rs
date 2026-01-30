@@ -213,6 +213,31 @@ impl ListBox {
         }
     }
 
+    /// Sets the text of the item at the given index.
+    /// No-op if the listbox has been destroyed.
+    pub fn set_string(&self, index: u32, text: &str) {
+        let ptr = self.listbox_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        let c_text = CString::new(text).expect("Invalid CString for ListBox item");
+        unsafe {
+            ffi::wxd_ListBox_SetString(ptr, index, c_text.as_ptr());
+        }
+    }
+
+    /// Ensures that the item with the given index is visible.
+    /// No-op if the listbox has been destroyed.
+    pub fn ensure_visible(&self, index: i32) {
+        let ptr = self.listbox_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe {
+            ffi::wxd_ListBox_EnsureVisible(ptr, index);
+        }
+    }
+
     /// Creates a ListBox from a raw pointer.
     /// # Safety
     /// The pointer must be a valid `wxd_ListBox_t`.
