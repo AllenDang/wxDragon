@@ -24,6 +24,16 @@ wxd_MenuBar_EnableItem(wxd_MenuBar_t* menubar, wxd_Id id, bool enable);
 WXD_EXPORTED bool
 wxd_MenuBar_IsItemEnabled(const wxd_MenuBar_t* menubar, wxd_Id id);
 
+/**
+ * @brief Find a menu item by its id in the menubar.
+ * @param menubar Pointer to wxMenuBar.
+ * @param id The item ID.
+ * @param menu [Optional, Out] If not NULL, receives the pointer to the menu containing the item.
+ * @return Pointer to the found wxMenuItem, or NULL if not found.
+ */
+WXD_EXPORTED wxd_MenuItem_t*
+wxd_MenuBar_FindItem(wxd_MenuBar_t* menubar, wxd_Id id, wxd_Menu_t** menu);
+
 WXD_EXPORTED wxd_Menu_t*
 wxd_Menu_Create(const char* title, wxd_Style_t style);
 
@@ -79,6 +89,15 @@ wxd_Menu_ItemEnable(wxd_Menu_t* menu, wxd_Id id, bool enable);
 
 WXD_EXPORTED bool
 wxd_Menu_IsItemEnabled(const wxd_Menu_t* menu, wxd_Id id);
+
+/**
+ * @brief Find a menu item by its id.
+ * @param menu Pointer to wxMenu.
+ * @param id The item ID.
+ * @return Pointer to the found wxMenuItem, or NULL if not found.
+ */
+WXD_EXPORTED wxd_MenuItem_t*
+wxd_Menu_FindItem(wxd_Menu_t* menu, wxd_Id id);
 
 WXD_EXPORTED void
 wxd_Menu_AppendSeparator(wxd_Menu_t* menu);
