@@ -1,9 +1,7 @@
 //! wxMenuBar wrapper
 
 use crate::id::Id;
-use crate::menus::Menu;
-#[cfg(feature = "xrc")]
-use crate::menus::MenuItem;
+use crate::menus::{Menu, MenuItem};
 #[cfg(feature = "xrc")]
 use crate::window::WindowHandle;
 #[cfg(feature = "xrc")]
