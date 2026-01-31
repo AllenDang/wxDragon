@@ -1,9 +1,7 @@
 //! wxMenuBar wrapper
 
 use crate::id::Id;
-use crate::menus::Menu;
-#[cfg(feature = "xrc")]
-use crate::menus::MenuItem;
+use crate::menus::{Menu, MenuItem};
 #[cfg(feature = "xrc")]
 use crate::window::WindowHandle;
 #[cfg(feature = "xrc")]
@@ -79,6 +77,19 @@ impl MenuBar {
     /// Checks if a menu item is enabled via this menu bar.
     pub fn is_item_enabled(&self, id: Id) -> bool {
         unsafe { ffi::wxd_MenuBar_IsItemEnabled(self.ptr, id) }
+    }
+
+    /// Finds a menu item by its ID.
+    /// Returns the found MenuItem or None if not found.
+    pub fn find_item(&self, id: Id) -> Option<MenuItem> {
+        let item_ptr = unsafe { ffi::wxd_MenuBar_FindItem(self.ptr, id, std::ptr::null_mut()) };
+
+        if item_ptr.is_null() {
+            None
+        } else {
+            // MenuItem::from_ptr creates a non-owning wrapper
+            Some(MenuItem::from_ptr(item_ptr))
+        }
     }
 }
 

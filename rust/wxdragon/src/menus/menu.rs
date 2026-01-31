@@ -191,6 +191,13 @@ impl Menu {
         unsafe { ffi::wxd_Menu_IsItemEnabled(self.ptr, id) }
     }
 
+    /// Finds a menu item by its ID.
+    /// Returns the found MenuItem or None if not found.
+    pub fn find_item(&self, id: Id) -> Option<MenuItem> {
+        let ptr = unsafe { ffi::wxd_Menu_FindItem(self.ptr, id) };
+        if ptr.is_null() { None } else { Some(MenuItem::from_ptr(ptr)) }
+    }
+
     /// Appends a separator.
     pub fn append_separator(&self) {
         self.append_separator_raw();

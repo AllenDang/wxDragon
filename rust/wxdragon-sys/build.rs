@@ -620,6 +620,18 @@ fn build_wxdragon_wrapper(
                 // Add linker arguments for fully static C++ runtime
                 println!("cargo:rustc-link-arg=-static-libgcc");
                 println!("cargo:rustc-link-arg=-static-libstdc++");
+            } else if is_cross_linux_to_windows {
+                // For zigbuild cross-compilation from Linux to Windows, we need to statically link
+                // zig's bundled libc++. Find zig's lib path and link statically.
+                if let Some(zig_lib_path) = find_zig_lib_path() {
+                    println!("cargo:rustc-link-search=native={}", zig_lib_path.display());
+                    println!("cargo:rustc-link-lib=static=c++");
+                    println!("cargo:rustc-link-lib=static=unwind");
+                } else {
+                    // Fallback: let the linker find it
+                    println!("cargo:warning=Could not find zig lib path, trying default linking");
+                    println!("cargo:rustc-link-lib=c++");
+                }
             }
             // Note: For webview feature with MinGW, wxWidgets uses dynamic loading of WebView2Loader.dll
             // at runtime (wxUSE_WEBVIEW_EDGE_STATIC=OFF in CMakeLists.txt), so no compile-time linking needed.
@@ -976,6 +988,40 @@ where
     }
 
     Ok(())
+}
+
+/// Find zig's lib directory containing libc++.a for static linking.
+/// This searches for zig's installation path and returns the lib directory.
+fn find_zig_lib_path() -> Option<std::path::PathBuf> {
+    // Try to get zig's lib path from `zig env`
+    let output = std::process::Command::new("zig").arg("env").output().ok()?;
+
+    if !output.status.success() {
+        return None;
+    }
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+
+    // Parse JSON output to find lib_dir
+    // zig env outputs JSON like: {"lib_dir": "/path/to/zig/lib", ...}
+    for line in stdout.lines() {
+        let line = line.trim();
+        if line.contains("\"lib_dir\"") {
+            // Extract the path from: "lib_dir": "/path/to/lib",
+            if let Some(start) = line.find(": \"") {
+                let rest = &line[start + 3..];
+                if let Some(end) = rest.find('"') {
+                    let lib_dir = std::path::PathBuf::from(&rest[..end]);
+                    if lib_dir.exists() {
+                        println!("info: Found zig lib directory: {}", lib_dir.display());
+                        return Some(lib_dir);
+                    }
+                }
+            }
+        }
+    }
+
+    None
 }
 
 fn chk_wx_version<P: AsRef<std::path::Path>>(wxwidgets_dir: P, expected_version: &str) -> std::io::Result<bool> {

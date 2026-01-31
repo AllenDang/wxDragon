@@ -49,6 +49,22 @@ wxd_MenuBar_IsItemEnabled(const wxd_MenuBar_t* menubar, wxd_Id id)
     return wx_menubar->IsEnabled(id);
 }
 
+WXD_EXPORTED wxd_MenuItem_t*
+wxd_MenuBar_FindItem(wxd_MenuBar_t* menubar, wxd_Id id, wxd_Menu_t** menu)
+{
+    if (!menubar)
+        return nullptr;
+    wxMenuBar* wx_menubar = reinterpret_cast<wxMenuBar*>(menubar);
+    wxMenu* wx_found_menu = nullptr;
+    wxMenuItem* item = wx_menubar->FindItem(id, menu ? &wx_found_menu : nullptr);
+    
+    if (menu) {
+        *menu = reinterpret_cast<wxd_Menu_t*>(wx_found_menu);
+    }
+    
+    return reinterpret_cast<wxd_MenuItem_t*>(item);
+}
+
 // --- Menu Functions ---
 WXD_EXPORTED wxd_Menu_t*
 wxd_Menu_Create(const char* title, wxd_Style_t style)
@@ -158,6 +174,16 @@ wxd_Menu_IsItemEnabled(const wxd_Menu_t* menu, wxd_Id id)
     if (!item)
         return false;
     return item->IsEnabled();
+}
+
+WXD_EXPORTED wxd_MenuItem_t*
+wxd_Menu_FindItem(wxd_Menu_t* menu, wxd_Id id)
+{
+    if (!menu)
+        return nullptr;
+    wxMenu* wx_menu = reinterpret_cast<wxMenu*>(menu);
+    wxMenuItem* item = wx_menu->FindItem(id);
+    return reinterpret_cast<wxd_MenuItem_t*>(item);
 }
 
 WXD_EXPORTED void
