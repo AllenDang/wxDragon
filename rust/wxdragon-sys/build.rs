@@ -620,11 +620,9 @@ fn build_wxdragon_wrapper(
                 // Add linker arguments for fully static C++ runtime
                 println!("cargo:rustc-link-arg=-static-libgcc");
                 println!("cargo:rustc-link-arg=-static-libstdc++");
-            } else if is_cross_linux_to_windows {
-                println!("info: Using static linking for cross-compilation from Linux to Windows (Zig)");
-                println!("cargo:rustc-link-lib=static=c++");
-                println!("cargo:rustc-link-lib=static=unwind");
             }
+            // Note: For zigbuild cross-compilation from Linux to Windows, zig provides its own
+            // bundled C/C++ runtime, so no explicit c++/unwind linking is needed.
             // Note: For webview feature with MinGW, wxWidgets uses dynamic loading of WebView2Loader.dll
             // at runtime (wxUSE_WEBVIEW_EDGE_STATIC=OFF in CMakeLists.txt), so no compile-time linking needed.
             // The WebView2Loader.dll must be present on the target system or alongside the executable.
