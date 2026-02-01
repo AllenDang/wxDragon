@@ -102,6 +102,72 @@ wxd_Menu_FindItem(wxd_Menu_t* menu, wxd_Id id);
 WXD_EXPORTED void
 wxd_Menu_AppendSeparator(wxd_Menu_t* menu);
 
+/**
+ * @brief Insert an item at a given position.
+ */
+WXD_EXPORTED wxd_MenuItem_t*
+wxd_Menu_Insert(wxd_Menu_t* menu, size_t pos, wxd_Id id, const char* item, const char* helpString, int kind);
+
+/**
+ * @brief Insert a submenu at a given position.
+ */
+WXD_EXPORTED const wxd_MenuItem_t*
+wxd_Menu_InsertSubMenu(wxd_Menu_t* menu, size_t pos, wxd_Menu_t* submenu, const char* title, const char* helpString);
+
+/**
+ * @brief Insert a separator at a given position.
+ */
+WXD_EXPORTED wxd_MenuItem_t*
+wxd_Menu_InsertSeparator(wxd_Menu_t* menu, size_t pos);
+
+/**
+ * @brief Prepend an item to the menu.
+ */
+WXD_EXPORTED wxd_MenuItem_t*
+wxd_Menu_Prepend(wxd_Menu_t* menu, wxd_Id id, const char* item, const char* helpString, int kind);
+
+/**
+ * @brief Prepend a submenu to the menu.
+ */
+WXD_EXPORTED const wxd_MenuItem_t*
+wxd_Menu_PrependSubMenu(wxd_Menu_t* menu, wxd_Menu_t* submenu, const char* title, const char* helpString);
+
+/**
+ * @brief Prepend a separator to the menu.
+ */
+WXD_EXPORTED wxd_MenuItem_t*
+wxd_Menu_PrependSeparator(wxd_Menu_t* menu);
+
+/**
+ * @brief Remove an item by id (ownership transferred to caller).
+ */
+WXD_EXPORTED wxd_MenuItem_t*
+wxd_Menu_Remove(wxd_Menu_t* menu, wxd_Id id);
+
+/**
+ * @brief Remove an item (ownership transferred to caller).
+ */
+WXD_EXPORTED wxd_MenuItem_t*
+wxd_Menu_RemoveItem(wxd_Menu_t* menu, wxd_MenuItem_t* item);
+
+/**
+ * @brief Delete an item by id (destroys the item).
+ */
+WXD_EXPORTED bool
+wxd_Menu_Delete(wxd_Menu_t* menu, wxd_Id id);
+
+/**
+ * @brief Delete an item (destroys the item).
+ */
+WXD_EXPORTED bool
+wxd_Menu_DeleteItem(wxd_Menu_t* menu, wxd_MenuItem_t* item);
+
+/**
+ * @brief Find an item by its position in the menu.
+ */
+WXD_EXPORTED wxd_MenuItem_t*
+wxd_Menu_FindItemByPosition(const wxd_Menu_t* menu, size_t pos);
+
 WXD_EXPORTED void
 wxd_MenuItem_Destroy(wxd_MenuItem_t* item);
 

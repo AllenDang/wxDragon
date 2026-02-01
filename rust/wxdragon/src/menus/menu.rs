@@ -203,6 +203,108 @@ impl Menu {
         self.append_separator_raw();
     }
 
+    /// Inserts a menu item at a specific position.
+    pub fn insert(&self, pos: usize, id: Id, item: &str, help_string: &str, kind: ItemKind) -> Option<MenuItem> {
+        let item_c = CString::new(item).unwrap_or_default();
+        let help_c = CString::new(help_string).unwrap_or_default();
+        let item_ptr = unsafe { ffi::wxd_Menu_Insert(self.ptr, pos, id, item_c.as_ptr(), help_c.as_ptr(), kind.into()) };
+        if item_ptr.is_null() {
+            None
+        } else {
+            Some(MenuItem::from_ptr(item_ptr))
+        }
+    }
+
+    /// Inserts a submenu at a specific position.
+    pub fn insert_submenu(&self, pos: usize, submenu: Menu, title: &str, help_string: &str) -> Option<MenuItem> {
+        let title = CString::new(title).unwrap_or_default();
+        let help_c = CString::new(help_string).unwrap_or_default();
+        let item_ptr = unsafe { ffi::wxd_Menu_InsertSubMenu(self.ptr, pos, submenu.into_raw_mut(), title.as_ptr(), help_c.as_ptr()) };
+        if item_ptr.is_null() {
+            return None;
+        }
+        Some(MenuItem::from(item_ptr))
+    }
+
+    /// Inserts a separator at a specific position.
+    pub fn insert_separator(&self, pos: usize) -> Option<MenuItem> {
+        let item_ptr = unsafe { ffi::wxd_Menu_InsertSeparator(self.ptr, pos) };
+        if item_ptr.is_null() {
+             None
+        } else {
+            Some(MenuItem::from_ptr(item_ptr))
+        }
+    }
+
+    /// Prepends a menu item.
+    pub fn prepend(&self, id: Id, item: &str, help_string: &str, kind: ItemKind) -> Option<MenuItem> {
+        let item_c = CString::new(item).unwrap_or_default();
+        let help_c = CString::new(help_string).unwrap_or_default();
+        let item_ptr = unsafe { ffi::wxd_Menu_Prepend(self.ptr, id, item_c.as_ptr(), help_c.as_ptr(), kind.into()) };
+        if item_ptr.is_null() {
+            None
+        } else {
+            Some(MenuItem::from_ptr(item_ptr))
+        }
+    }
+
+    /// Prepends a submenu.
+    pub fn prepend_submenu(&self, submenu: Menu, title: &str, help_string: &str) -> Option<MenuItem> {
+        let title = CString::new(title).unwrap_or_default();
+        let help_c = CString::new(help_string).unwrap_or_default();
+        let item_ptr = unsafe { ffi::wxd_Menu_PrependSubMenu(self.ptr, submenu.into_raw_mut(), title.as_ptr(), help_c.as_ptr()) };
+        if item_ptr.is_null() {
+            return None;
+        }
+        Some(MenuItem::from(item_ptr))
+    }
+
+    /// Prepends a separator.
+    pub fn prepend_separator(&self) -> Option<MenuItem> {
+        let item_ptr = unsafe { ffi::wxd_Menu_PrependSeparator(self.ptr) };
+        if item_ptr.is_null() {
+             None
+        } else {
+            Some(MenuItem::from_ptr(item_ptr))
+        }
+    }
+
+    /// Removes a menu item by ID. The item is not destroyed, but returned.
+    /// Ownership of the returned MenuItem is transferred to the caller.
+    pub fn remove(&self, id: Id) -> Option<MenuItem> {
+        let ptr = unsafe { ffi::wxd_Menu_Remove(self.ptr, id) };
+        if ptr.is_null() { None } else { Some(MenuItem::from(ptr)) }
+    }
+
+    /// Removes a menu item. The item is not destroyed, but returned.
+    /// Ownership of the returned MenuItem is transferred to the caller.
+    pub fn remove_item(&self, item: &MenuItem) -> Option<MenuItem> {
+        let raw_item = item.as_const_ptr() as *mut ffi::wxd_MenuItem_t;
+        let ptr = unsafe { ffi::wxd_Menu_RemoveItem(self.ptr, raw_item) };
+        if ptr.is_null() { None } else { Some(MenuItem::from(ptr)) }
+    }
+
+    /// Deletes a menu item by ID.
+    pub fn delete(&self, id: Id) -> bool {
+        unsafe { ffi::wxd_Menu_Delete(self.ptr, id) }
+    }
+
+    /// Deletes a menu item.
+    ///
+    /// # Safety
+    /// This method destroys the underlying C++ menu item. Any `MenuItem` wrappers
+    /// pointing to this item (including the one passed in) will become invalid
+    /// and must not be used.
+    pub fn delete_item(&self, item: &MenuItem) -> bool {
+        unsafe { ffi::wxd_Menu_DeleteItem(self.ptr, item.as_const_ptr() as *mut _) }
+    }
+
+    /// Finds an item by its position.
+    pub fn find_item_by_position(&self, pos: usize) -> Option<MenuItem> {
+        let ptr = unsafe { ffi::wxd_Menu_FindItemByPosition(self.ptr, pos) };
+        if ptr.is_null() { None } else { Some(MenuItem::from_ptr(ptr)) }
+    }
+
     /// Gets a menu item by its XRC name.
     /// Returns a MenuItem wrapper that can be used for event binding.
     #[cfg(feature = "xrc")]
