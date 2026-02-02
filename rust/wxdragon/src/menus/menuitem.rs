@@ -208,6 +208,25 @@ impl MenuItem {
         }
         unsafe { ffi::wxd_MenuItem_IsChecked(self.ptr) }
     }
+
+    /// Returns a const raw pointer to the underlying wxMenuItem.
+    pub fn as_const_ptr(&self) -> *const ffi::wxd_MenuItem_t {
+        self.ptr as *const _
+    }
+
+    /// Explicitly destroys the underlying wxMenuItem.
+    ///
+    /// # Safety
+    /// This should ONLY be called if the item has been removed from its parent menu.
+    /// If the item is still attached to a menu, the menu will destroy it automatically,
+    /// and calling this will result in a double-free.
+    pub unsafe fn destroy(&self) {
+        unsafe {
+            if !self.ptr.is_null() {
+                ffi::wxd_MenuItem_Destroy(self.ptr);
+            }
+        }
+    }
 }
 
 /// Implement WxWidget for MenuItem (delegating to parent window)

@@ -195,17 +195,135 @@ wxd_Menu_AppendSeparator(wxd_Menu_t* menu)
     wx_menu->AppendSeparator();
 }
 
+WXD_EXPORTED wxd_MenuItem_t*
+wxd_Menu_Insert(wxd_Menu_t* menu, size_t pos, wxd_Id id, const char* item, const char* helpString, int kind)
+{
+    if (!menu)
+        return nullptr;
+    wxMenu* wx_menu = reinterpret_cast<wxMenu*>(menu);
+    wxItemKind wx_kind = static_cast<wxItemKind>(kind);
+    // wxMenu::Insert takes: pos, id, text, help, kind
+    wxMenuItem* wx_item = wx_menu->Insert(pos, id, wxString::FromUTF8(item ? item : ""),
+                                          wxString::FromUTF8(helpString ? helpString : ""),
+                                          wx_kind);
+    return reinterpret_cast<wxd_MenuItem_t*>(wx_item);
+}
+
+WXD_EXPORTED const wxd_MenuItem_t*
+wxd_Menu_InsertSubMenu(wxd_Menu_t* menu, size_t pos, wxd_Menu_t* submenu, const char* title, const char* helpString)
+{
+    if (!menu || !submenu)
+        return nullptr;
+    wxMenu* wx_menu = reinterpret_cast<wxMenu*>(menu);
+    wxMenu* wx_submenu = reinterpret_cast<wxMenu*>(submenu);
+    wxMenuItem* wx_item = wx_menu->Insert(pos, wxID_ANY, wxString::FromUTF8(title ? title : ""),
+                                          wx_submenu, wxString::FromUTF8(helpString ? helpString : ""));
+    return reinterpret_cast<const wxd_MenuItem_t*>(wx_item);
+}
+
+WXD_EXPORTED wxd_MenuItem_t*
+wxd_Menu_InsertSeparator(wxd_Menu_t* menu, size_t pos)
+{
+    if (!menu)
+        return nullptr;
+    wxMenu* wx_menu = reinterpret_cast<wxMenu*>(menu);
+    wxMenuItem* wx_item = wx_menu->InsertSeparator(pos);
+    return reinterpret_cast<wxd_MenuItem_t*>(wx_item);
+}
+
+WXD_EXPORTED wxd_MenuItem_t*
+wxd_Menu_Prepend(wxd_Menu_t* menu, wxd_Id id, const char* item, const char* helpString, int kind)
+{
+    if (!menu)
+        return nullptr;
+    wxMenu* wx_menu = reinterpret_cast<wxMenu*>(menu);
+    wxItemKind wx_kind = static_cast<wxItemKind>(kind);
+    wxMenuItem* wx_item = wx_menu->Prepend(id, wxString::FromUTF8(item ? item : ""),
+                                           wxString::FromUTF8(helpString ? helpString : ""),
+                                           wx_kind);
+    return reinterpret_cast<wxd_MenuItem_t*>(wx_item);
+}
+
+WXD_EXPORTED const wxd_MenuItem_t*
+wxd_Menu_PrependSubMenu(wxd_Menu_t* menu, wxd_Menu_t* submenu, const char* title, const char* helpString)
+{
+    if (!menu || !submenu)
+        return nullptr;
+    wxMenu* wx_menu = reinterpret_cast<wxMenu*>(menu);
+    wxMenu* wx_submenu = reinterpret_cast<wxMenu*>(submenu);
+    wxMenuItem* wx_item = wx_menu->Prepend(wxID_ANY, wxString::FromUTF8(title ? title : ""),
+                                           wx_submenu, wxString::FromUTF8(helpString ? helpString : ""));
+    return reinterpret_cast<const wxd_MenuItem_t*>(wx_item);
+}
+
+WXD_EXPORTED wxd_MenuItem_t*
+wxd_Menu_PrependSeparator(wxd_Menu_t* menu)
+{
+    if (!menu)
+        return nullptr;
+    wxMenu* wx_menu = reinterpret_cast<wxMenu*>(menu);
+    wxMenuItem* wx_item = wx_menu->PrependSeparator();
+    return reinterpret_cast<wxd_MenuItem_t*>(wx_item);
+}
+
+WXD_EXPORTED wxd_MenuItem_t*
+wxd_Menu_Remove(wxd_Menu_t* menu, wxd_Id id)
+{
+    if (!menu)
+        return nullptr;
+    wxMenu* wx_menu = reinterpret_cast<wxMenu*>(menu);
+    wxMenuItem* wx_item = wx_menu->Remove(id);
+    return reinterpret_cast<wxd_MenuItem_t*>(wx_item);
+}
+
+WXD_EXPORTED wxd_MenuItem_t*
+wxd_Menu_RemoveItem(wxd_Menu_t* menu, wxd_MenuItem_t* item)
+{
+    if (!menu || !item)
+        return nullptr;
+    wxMenu* wx_menu = reinterpret_cast<wxMenu*>(menu);
+    wxMenuItem* wx_item = reinterpret_cast<wxMenuItem*>(item);
+    wxMenuItem* removed = wx_menu->Remove(wx_item);
+    return reinterpret_cast<wxd_MenuItem_t*>(removed);
+}
+
+WXD_EXPORTED bool
+wxd_Menu_Delete(wxd_Menu_t* menu, wxd_Id id)
+{
+    if (!menu)
+        return false;
+    wxMenu* wx_menu = reinterpret_cast<wxMenu*>(menu);
+    return wx_menu->Delete(id);
+}
+
+WXD_EXPORTED bool
+wxd_Menu_DeleteItem(wxd_Menu_t* menu, wxd_MenuItem_t* item)
+{
+    if (!menu || !item)
+        return false;
+    wxMenu* wx_menu = reinterpret_cast<wxMenu*>(menu);
+    wxMenuItem* wx_item = reinterpret_cast<wxMenuItem*>(item);
+    return wx_menu->Delete(wx_item);
+}
+
+WXD_EXPORTED wxd_MenuItem_t*
+wxd_Menu_FindItemByPosition(const wxd_Menu_t* menu, size_t pos)
+{
+    if (!menu)
+        return nullptr;
+    const wxMenu* wx_menu = reinterpret_cast<const wxMenu*>(menu);
+    wxMenuItem* item = wx_menu->FindItemByPosition(pos);
+    return reinterpret_cast<wxd_MenuItem_t*>(item);
+}
+
 // --- MenuItem Functions ---
 WXD_EXPORTED void
 wxd_MenuItem_Destroy(wxd_MenuItem_t* item)
 {
-    // Generally not needed - wxMenu manages item deletion.
-    // If we created items *separately* and passed them to Append,
-    // we might need this. But Append creates the item.
-    // However, providing a stub might be harmless if called inappropriately.
-    // wxMenuItem* wx_item = reinterpret_cast<wxMenuItem*>(item);
-    // delete wx_item; // Risky - likely double free
-    // Consider logging a warning if called?
+    if (!item)
+        return;
+    wxMenuItem* wx_item = reinterpret_cast<wxMenuItem*>(item);
+    delete wx_item;
 }
 
 // --- MenuItem State Functions ---
