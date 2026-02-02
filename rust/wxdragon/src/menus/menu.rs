@@ -219,7 +219,8 @@ impl Menu {
     pub fn insert_submenu(&self, pos: usize, submenu: Menu, title: &str, help_string: &str) -> Option<MenuItem> {
         let title = CString::new(title).unwrap_or_default();
         let help_c = CString::new(help_string).unwrap_or_default();
-        let item_ptr = unsafe { ffi::wxd_Menu_InsertSubMenu(self.ptr, pos, submenu.into_raw_mut(), title.as_ptr(), help_c.as_ptr()) };
+        let item_ptr =
+            unsafe { ffi::wxd_Menu_InsertSubMenu(self.ptr, pos, submenu.into_raw_mut(), title.as_ptr(), help_c.as_ptr()) };
         if item_ptr.is_null() {
             return None;
         }
@@ -230,7 +231,7 @@ impl Menu {
     pub fn insert_separator(&self, pos: usize) -> Option<MenuItem> {
         let item_ptr = unsafe { ffi::wxd_Menu_InsertSeparator(self.ptr, pos) };
         if item_ptr.is_null() {
-             None
+            None
         } else {
             Some(MenuItem::from_ptr(item_ptr))
         }
@@ -263,7 +264,7 @@ impl Menu {
     pub fn prepend_separator(&self) -> Option<MenuItem> {
         let item_ptr = unsafe { ffi::wxd_Menu_PrependSeparator(self.ptr) };
         if item_ptr.is_null() {
-             None
+            None
         } else {
             Some(MenuItem::from_ptr(item_ptr))
         }

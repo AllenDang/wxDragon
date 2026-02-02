@@ -220,11 +220,13 @@ impl MenuItem {
     /// This should ONLY be called if the item has been removed from its parent menu.
     /// If the item is still attached to a menu, the menu will destroy it automatically,
     /// and calling this will result in a double-free.
-    pub unsafe fn destroy(&self) { unsafe {
-        if !self.ptr.is_null() {
-            ffi::wxd_MenuItem_Destroy(self.ptr);
+    pub unsafe fn destroy(&self) {
+        unsafe {
+            if !self.ptr.is_null() {
+                ffi::wxd_MenuItem_Destroy(self.ptr);
+            }
         }
-    }}
+    }
 }
 
 /// Implement WxWidget for MenuItem (delegating to parent window)
