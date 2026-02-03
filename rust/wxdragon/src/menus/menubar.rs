@@ -6,7 +6,7 @@ use crate::menus::{Menu, MenuItem};
 use crate::window::WindowHandle;
 #[cfg(feature = "xrc")]
 use crate::xrc::XmlResource;
-use std::ffi::CString;
+use std::ffi::{CStr, CString};
 use std::marker::PhantomData;
 use wxdragon_sys as ffi;
 
@@ -79,6 +79,16 @@ impl MenuBar {
         unsafe { ffi::wxd_MenuBar_IsItemEnabled(self.ptr, id) }
     }
 
+    /// Checks or unchecks a menu item by its ID across this menu bar.
+    pub fn check_item(&self, id: Id, check: bool) {
+        unsafe { ffi::wxd_MenuBar_CheckItem(self.ptr, id, check) }
+    }
+
+    /// Checks if a menu item is checked via this menu bar.
+    pub fn is_item_checked(&self, id: Id) -> bool {
+        unsafe { ffi::wxd_MenuBar_IsItemChecked(self.ptr, id) }
+    }
+
     /// Finds a menu item by its ID.
     /// Returns the found MenuItem or None if not found.
     pub fn find_item(&self, id: Id) -> Option<MenuItem> {
@@ -89,6 +99,81 @@ impl MenuBar {
         } else {
             // MenuItem::from_ptr creates a non-owning wrapper
             Some(MenuItem::from_ptr(item_ptr))
+        }
+    }
+
+    /// Finds a menu item by its ID and returns both the item and the menu it belongs to.
+    /// Returns (MenuItem, Menu) or None if not found.
+    pub fn find_item_and_menu(&self, id: Id) -> Option<(MenuItem, Menu)> {
+        let mut menu_ptr: *mut ffi::wxd_Menu_t = std::ptr::null_mut();
+        let item_ptr = unsafe { ffi::wxd_MenuBar_FindItem(self.ptr, id, &mut menu_ptr) };
+
+        if item_ptr.is_null() || menu_ptr.is_null() {
+            None
+        } else {
+            // Both MenuItem and Menu are returned as non-owning wrappers here
+            // because they are owned by the MenuBar structure.
+            Some((MenuItem::from_ptr(item_ptr), Menu::from(menu_ptr as *const ffi::wxd_Menu_t)))
+        }
+    }
+
+    /// Returns the menu at the specified index.
+    pub fn get_menu(&self, index: usize) -> Option<Menu> {
+        let ptr = unsafe { ffi::wxd_MenuBar_GetMenu(self.ptr, index) };
+        if ptr.is_null() {
+            None
+        } else {
+            // Return non-owning wrapper
+            Some(Menu::from(ptr as *const ffi::wxd_Menu_t))
+        }
+    }
+
+    /// Returns the number of menus in the menu bar.
+    pub fn get_menu_count(&self) -> usize {
+        unsafe { ffi::wxd_MenuBar_GetMenuCount(self.ptr) }
+    }
+
+    /// Returns the index of the menu with the given title or NOT_FOUND if not found.
+    pub fn find_menu(&self, title: &str) -> i32 {
+        let c_title = CString::new(title).unwrap_or_default();
+        unsafe { ffi::wxd_MenuBar_FindMenu(self.ptr, c_title.as_ptr()) }
+    }
+
+    /// Enables or disables the menu at the given position.
+    pub fn enable_top(&self, pos: usize, enable: bool) {
+        unsafe { ffi::wxd_MenuBar_EnableTop(self.ptr, pos, enable) }
+    }
+
+    /// Gets the label of the menu at the given position.
+    pub fn get_menu_label(&self, pos: usize) -> String {
+        let len = unsafe { ffi::wxd_MenuBar_GetMenuLabel(self.ptr, pos, std::ptr::null_mut(), 0) };
+        if len <= 0 {
+            return String::new();
+        }
+        let mut buffer = vec![0u8; len as usize + 1];
+        unsafe { ffi::wxd_MenuBar_GetMenuLabel(self.ptr, pos, buffer.as_mut_ptr() as *mut _, buffer.len()) };
+        unsafe { CStr::from_ptr(buffer.as_ptr() as *const _).to_string_lossy().into_owned() }
+    }
+
+    /// Sets the label of the menu at the given position.
+    pub fn set_menu_label(&self, pos: usize, label: &str) {
+        let c_label = CString::new(label).unwrap_or_default();
+        unsafe { ffi::wxd_MenuBar_SetMenuLabel(self.ptr, pos, c_label.as_ptr()) }
+    }
+
+    /// Replaces the menu at the given position with another one.
+    /// The MenuBar takes ownership of the new menu.
+    /// Returns the old menu (which is now owned by the caller) or None on failure.
+    pub fn replace(&self, pos: usize, menu: Menu, title: &str) -> Option<Menu> {
+        let c_title = CString::new(title).unwrap_or_default();
+        // MenuBar takes ownership, so we use into_raw_mut
+        let ptr = unsafe { ffi::wxd_MenuBar_Replace(self.ptr, pos, menu.into_raw_mut(), c_title.as_ptr()) };
+        if ptr.is_null() {
+            None
+        } else {
+            // The old menu is detached, so we own it now.
+            // Menu::from(*mut) sets owned=true.
+            Some(Menu::from(ptr))
         }
     }
 }

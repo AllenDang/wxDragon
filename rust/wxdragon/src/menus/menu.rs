@@ -191,6 +191,16 @@ impl Menu {
         unsafe { ffi::wxd_Menu_IsItemEnabled(self.ptr, id) }
     }
 
+    /// Checks or unchecks a menu item by its ID.
+    pub fn check_item(&self, id: Id, check: bool) {
+        unsafe { ffi::wxd_Menu_CheckItem(self.ptr, id, check) }
+    }
+
+    /// Checks if a menu item is checked.
+    pub fn is_item_checked(&self, id: Id) -> bool {
+        unsafe { ffi::wxd_Menu_IsItemChecked(self.ptr, id) }
+    }
+
     /// Finds a menu item by its ID.
     /// Returns the found MenuItem or None if not found.
     pub fn find_item(&self, id: Id) -> Option<MenuItem> {
@@ -304,6 +314,51 @@ impl Menu {
     pub fn find_item_by_position(&self, pos: usize) -> Option<MenuItem> {
         let ptr = unsafe { ffi::wxd_Menu_FindItemByPosition(self.ptr, pos) };
         if ptr.is_null() { None } else { Some(MenuItem::from_ptr(ptr)) }
+    }
+
+    /// Gets the help string associated with the given item ID.
+    pub fn get_help_string(&self, id: Id) -> String {
+        let len = unsafe { ffi::wxd_Menu_GetHelpString(self.ptr, id, std::ptr::null_mut(), 0) };
+        if len < 0 {
+            return String::new();
+        }
+        let mut buffer = vec![0u8; len as usize + 1];
+        unsafe { ffi::wxd_Menu_GetHelpString(self.ptr, id, buffer.as_mut_ptr() as *mut _, buffer.len()) };
+        unsafe { CStr::from_ptr(buffer.as_ptr() as *const _).to_string_lossy().into_owned() }
+    }
+
+    /// Sets the help string associated with the given item ID.
+    pub fn set_help_string(&self, id: Id, help_string: &str) {
+        let c_help = CString::new(help_string).unwrap_or_default();
+        unsafe { ffi::wxd_Menu_SetHelpString(self.ptr, id, c_help.as_ptr()) }
+    }
+
+    /// Updates the UI of the menu items.
+    /// The source argument is usually the window that handles the update events.
+    /// If source is None, the menu itself or its invoker is used.
+    pub fn update_ui(&self, source: Option<&impl crate::event::WxEvtHandler>) {
+        let source_ptr = source
+            .map(|s| unsafe { s.get_event_handler_ptr() })
+            .unwrap_or(std::ptr::null_mut());
+        unsafe { ffi::wxd_Menu_UpdateUI(self.ptr, source_ptr) }
+    }
+
+    /// Inserts a break in the menu.
+    pub fn insert_break(&self) {
+        unsafe { ffi::wxd_Menu_Break(self.ptr) }
+    }
+
+    /// Returns a list of all menu items in this menu.
+    /// This is an iterative wrapper around FindItemByPosition.
+    pub fn get_menu_items(&self) -> Vec<MenuItem> {
+        let count = self.get_item_count();
+        let mut items = Vec::with_capacity(count);
+        for i in 0..count {
+            if let Some(item) = self.find_item_by_position(i) {
+                items.push(item);
+            }
+        }
+        items
     }
 
     /// Gets a menu item by its XRC name.

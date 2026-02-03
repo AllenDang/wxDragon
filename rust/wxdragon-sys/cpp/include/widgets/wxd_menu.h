@@ -25,6 +25,18 @@ WXD_EXPORTED bool
 wxd_MenuBar_IsItemEnabled(const wxd_MenuBar_t* menubar, wxd_Id id);
 
 /**
+ * @brief Check or uncheck a menu item by its id across the entire menubar.
+ */
+WXD_EXPORTED void
+wxd_MenuBar_CheckItem(wxd_MenuBar_t* menubar, wxd_Id id, bool check);
+
+/**
+ * @brief Query whether a menu item is checked via the menubar.
+ */
+WXD_EXPORTED bool
+wxd_MenuBar_IsItemChecked(const wxd_MenuBar_t* menubar, wxd_Id id);
+
+/**
  * @brief Find a menu item by its id in the menubar.
  * @param menubar Pointer to wxMenuBar.
  * @param id The item ID.
@@ -89,6 +101,18 @@ wxd_Menu_ItemEnable(wxd_Menu_t* menu, wxd_Id id, bool enable);
 
 WXD_EXPORTED bool
 wxd_Menu_IsItemEnabled(const wxd_Menu_t* menu, wxd_Id id);
+
+/**
+ * @brief Check or uncheck a menu item by its id.
+ */
+WXD_EXPORTED void
+wxd_Menu_CheckItem(wxd_Menu_t* menu, wxd_Id id, bool check);
+
+/**
+ * @brief Query whether a menu item is checked by its id.
+ */
+WXD_EXPORTED bool
+wxd_Menu_IsItemChecked(const wxd_Menu_t* menu, wxd_Id id);
 
 /**
  * @brief Find a menu item by its id.
@@ -168,6 +192,75 @@ wxd_Menu_DeleteItem(wxd_Menu_t* menu, wxd_MenuItem_t* item);
 WXD_EXPORTED wxd_MenuItem_t*
 wxd_Menu_FindItemByPosition(const wxd_Menu_t* menu, size_t pos);
 
+/**
+ * @brief Get the help string associated with a menu item.
+ */
+WXD_EXPORTED int
+wxd_Menu_GetHelpString(const wxd_Menu_t* menu, wxd_Id id, char* buffer, size_t buffer_size);
+
+/**
+ * @brief Set the help string associated with a menu item.
+ */
+WXD_EXPORTED void
+wxd_Menu_SetHelpString(wxd_Menu_t* menu, wxd_Id id, const char* helpString);
+
+/**
+ * @brief Update the UI of the menu items.
+ */
+WXD_EXPORTED void
+wxd_Menu_UpdateUI(wxd_Menu_t* menu, wxd_EvtHandler_t* source);
+
+/**
+ * @brief Insert a break in the menu.
+ */
+WXD_EXPORTED void
+wxd_Menu_Break(wxd_Menu_t* menu);
+
+// --- MenuBar Extended Functions ---
+
+/**
+ * @brief Get the menu at the specified index.
+ */
+WXD_EXPORTED wxd_Menu_t*
+wxd_MenuBar_GetMenu(const wxd_MenuBar_t* menubar, size_t index);
+
+/**
+ * @brief Get the number of menus in the menubar.
+ */
+WXD_EXPORTED size_t
+wxd_MenuBar_GetMenuCount(const wxd_MenuBar_t* menubar);
+
+/**
+ * @brief Find the index of a menu by its title.
+ */
+WXD_EXPORTED int
+wxd_MenuBar_FindMenu(const wxd_MenuBar_t* menubar, const char* title);
+
+/**
+ * @brief Enable or disable a whole menu.
+ */
+WXD_EXPORTED void
+wxd_MenuBar_EnableTop(wxd_MenuBar_t* menubar, size_t pos, bool enable);
+
+/**
+ * @brief Get the label of a top-level menu.
+ */
+WXD_EXPORTED int
+wxd_MenuBar_GetMenuLabel(const wxd_MenuBar_t* menubar, size_t pos, char* buffer, size_t buffer_size);
+
+/**
+ * @brief Set the label of a top-level menu.
+ */
+WXD_EXPORTED void
+wxd_MenuBar_SetMenuLabel(wxd_MenuBar_t* menubar, size_t pos, const char* label);
+
+/**
+ * @brief Replace the menu at the given position with another one.
+ * Returns the old menu (caller takes ownership).
+ */
+WXD_EXPORTED wxd_Menu_t*
+wxd_MenuBar_Replace(wxd_MenuBar_t* menubar, size_t pos, wxd_Menu_t* menu, const char* title);
+
 WXD_EXPORTED void
 wxd_MenuItem_Destroy(wxd_MenuItem_t* item);
 
@@ -207,5 +300,24 @@ wxd_MenuItem_GetOwningWindow(const wxd_MenuItem_t* item);
 /// Get the integer id of the menu item.
 WXD_EXPORTED int
 wxd_MenuItem_GetId(const wxd_MenuItem_t* item);
+
+/**
+ * @brief Get the submenu associated with this menu item, if any.
+ */
+WXD_EXPORTED wxd_Menu_t*
+wxd_MenuItem_GetSubMenu(const wxd_MenuItem_t* item);
+
+/**
+ * @brief Set the bitmap for the menu item.
+ */
+WXD_EXPORTED void
+wxd_MenuItem_SetBitmap(wxd_MenuItem_t* item, const wxd_Bitmap_t* bitmap);
+
+/**
+ * @brief Get the bitmap associated with the menu item.
+ * Returns a new heap-allocated clone of the bitmap; caller must destroy.
+ */
+WXD_EXPORTED wxd_Bitmap_t*
+wxd_MenuItem_GetBitmap(const wxd_MenuItem_t* item);
 
 #endif // WXD_MENU_H
