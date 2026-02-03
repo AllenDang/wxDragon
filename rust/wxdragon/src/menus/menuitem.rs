@@ -1,7 +1,9 @@
 // wxdragon/src/menus/menuitem.rs
 //! wxMenuItem wrapper and related types
 
+use crate::bitmap::Bitmap;
 use crate::event::{Event, EventType, WxEvtHandler};
+use crate::menus::Menu;
 use crate::window::{Window, WindowHandle, WxWidget};
 use std::ffi::{CStr, CString};
 use wxdragon_sys as ffi;
@@ -207,6 +209,45 @@ impl MenuItem {
             return false;
         }
         unsafe { ffi::wxd_MenuItem_IsChecked(self.ptr) }
+    }
+
+    /// Returns the submenu associated with this menu item, if any.
+    pub fn get_sub_menu(&self) -> Option<Menu> {
+        if self.ptr.is_null() {
+            return None;
+        }
+        let ptr = unsafe { ffi::wxd_MenuItem_GetSubMenu(self.ptr) };
+        if ptr.is_null() {
+            None
+        } else {
+            // Submenus are owned by their parent menu/item.
+            // Returning a non-owning wrapper.
+            Some(Menu::from(ptr as *const ffi::wxd_Menu_t))
+        }
+    }
+
+    /// Sets the bitmap for the menu item.
+    pub fn set_bitmap(&self, bitmap: &Bitmap) {
+        if self.ptr.is_null() {
+            return;
+        }
+        unsafe {
+            ffi::wxd_MenuItem_SetBitmap(self.ptr, bitmap.as_const_ptr());
+        }
+    }
+
+    /// Gets the bitmap associated with the menu item.
+    pub fn get_bitmap(&self) -> Option<Bitmap> {
+        if self.ptr.is_null() {
+            return None;
+        }
+        let ptr = unsafe { ffi::wxd_MenuItem_GetBitmap(self.ptr) };
+        if ptr.is_null() {
+            None
+        } else {
+            // The C++ side returns a heap-allocated copy.
+            Some(Bitmap::from(ptr))
+        }
     }
 
     /// Returns a const raw pointer to the underlying wxMenuItem.

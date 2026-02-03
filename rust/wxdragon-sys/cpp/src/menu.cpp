@@ -49,6 +49,24 @@ wxd_MenuBar_IsItemEnabled(const wxd_MenuBar_t* menubar, wxd_Id id)
     return wx_menubar->IsEnabled(id);
 }
 
+WXD_EXPORTED void
+wxd_MenuBar_CheckItem(wxd_MenuBar_t* menubar, wxd_Id id, bool check)
+{
+    if (!menubar)
+        return;
+    wxMenuBar* wx_menubar = reinterpret_cast<wxMenuBar*>(menubar);
+    wx_menubar->Check(id, check);
+}
+
+WXD_EXPORTED bool
+wxd_MenuBar_IsItemChecked(const wxd_MenuBar_t* menubar, wxd_Id id)
+{
+    if (!menubar)
+        return false;
+    const wxMenuBar* wx_menubar = reinterpret_cast<const wxMenuBar*>(menubar);
+    return wx_menubar->IsChecked(id);
+}
+
 WXD_EXPORTED wxd_MenuItem_t*
 wxd_MenuBar_FindItem(wxd_MenuBar_t* menubar, wxd_Id id, wxd_Menu_t** menu)
 {
@@ -174,6 +192,24 @@ wxd_Menu_IsItemEnabled(const wxd_Menu_t* menu, wxd_Id id)
     if (!item)
         return false;
     return item->IsEnabled();
+}
+
+WXD_EXPORTED void
+wxd_Menu_CheckItem(wxd_Menu_t* menu, wxd_Id id, bool check)
+{
+    if (!menu)
+        return;
+    wxMenu* wx_menu = reinterpret_cast<wxMenu*>(menu);
+    wx_menu->Check(id, check);
+}
+
+WXD_EXPORTED bool
+wxd_Menu_IsItemChecked(const wxd_Menu_t* menu, wxd_Id id)
+{
+    if (!menu)
+        return false;
+    const wxMenu* wx_menu = reinterpret_cast<const wxMenu*>(menu);
+    return wx_menu->IsChecked(id);
 }
 
 WXD_EXPORTED wxd_MenuItem_t*
@@ -316,6 +352,114 @@ wxd_Menu_FindItemByPosition(const wxd_Menu_t* menu, size_t pos)
     return reinterpret_cast<wxd_MenuItem_t*>(item);
 }
 
+WXD_EXPORTED int
+wxd_Menu_GetHelpString(const wxd_Menu_t* menu, wxd_Id id, char* buffer, size_t buffer_size)
+{
+    if (!menu)
+        return -1;
+    const wxMenu* wx_menu = reinterpret_cast<const wxMenu*>(menu);
+    wxString help = wx_menu->GetHelpString(id);
+    return (int)wxd_cpp_utils::copy_wxstring_to_buffer(help, buffer, buffer_size);
+}
+
+WXD_EXPORTED void
+wxd_Menu_SetHelpString(wxd_Menu_t* menu, wxd_Id id, const char* helpString)
+{
+    if (!menu)
+        return;
+    wxMenu* wx_menu = reinterpret_cast<wxMenu*>(menu);
+    wx_menu->SetHelpString(id, wxString::FromUTF8(helpString ? helpString : ""));
+}
+
+WXD_EXPORTED void
+wxd_Menu_UpdateUI(wxd_Menu_t* menu, wxd_EvtHandler_t* source)
+{
+    if (!menu)
+        return;
+    wxMenu* wx_menu = reinterpret_cast<wxMenu*>(menu);
+    wxEvtHandler* wx_source = source ? reinterpret_cast<wxEvtHandler*>(source) : nullptr;
+    wx_menu->UpdateUI(wx_source);
+}
+
+WXD_EXPORTED void
+wxd_Menu_Break(wxd_Menu_t* menu)
+{
+    if (!menu)
+        return;
+    wxMenu* wx_menu = reinterpret_cast<wxMenu*>(menu);
+    wx_menu->Break();
+}
+
+// --- MenuBar Extended Functions ---
+
+WXD_EXPORTED wxd_Menu_t*
+wxd_MenuBar_GetMenu(const wxd_MenuBar_t* menubar, size_t index)
+{
+    if (!menubar)
+        return nullptr;
+    const wxMenuBar* wx_menubar = reinterpret_cast<const wxMenuBar*>(menubar);
+    wxMenu* menu = wx_menubar->GetMenu(index);
+    return reinterpret_cast<wxd_Menu_t*>(menu);
+}
+
+WXD_EXPORTED size_t
+wxd_MenuBar_GetMenuCount(const wxd_MenuBar_t* menubar)
+{
+    if (!menubar)
+        return 0;
+    const wxMenuBar* wx_menubar = reinterpret_cast<const wxMenuBar*>(menubar);
+    return wx_menubar->GetMenuCount();
+}
+
+WXD_EXPORTED int
+wxd_MenuBar_FindMenu(const wxd_MenuBar_t* menubar, const char* title)
+{
+    if (!menubar)
+        return wxNOT_FOUND;
+    const wxMenuBar* wx_menubar = reinterpret_cast<const wxMenuBar*>(menubar);
+    return wx_menubar->FindMenu(wxString::FromUTF8(title ? title : ""));
+}
+
+WXD_EXPORTED void
+wxd_MenuBar_EnableTop(wxd_MenuBar_t* menubar, size_t pos, bool enable)
+{
+    if (!menubar)
+        return;
+    wxMenuBar* wx_menubar = reinterpret_cast<wxMenuBar*>(menubar);
+    wx_menubar->EnableTop(pos, enable);
+}
+
+WXD_EXPORTED int
+wxd_MenuBar_GetMenuLabel(const wxd_MenuBar_t* menubar, size_t pos, char* buffer, size_t buffer_size)
+{
+    if (!menubar)
+        return -1;
+    const wxMenuBar* wx_menubar = reinterpret_cast<const wxMenuBar*>(menubar);
+    wxString label = wx_menubar->GetMenuLabel(pos);
+    return (int)wxd_cpp_utils::copy_wxstring_to_buffer(label, buffer, buffer_size);
+}
+
+WXD_EXPORTED void
+wxd_MenuBar_SetMenuLabel(wxd_MenuBar_t* menubar, size_t pos, const char* label)
+{
+    if (!menubar)
+        return;
+    wxMenuBar* wx_menubar = reinterpret_cast<wxMenuBar*>(menubar);
+    wx_menubar->SetMenuLabel(pos, wxString::FromUTF8(label ? label : ""));
+}
+
+WXD_EXPORTED wxd_Menu_t*
+wxd_MenuBar_Replace(wxd_MenuBar_t* menubar, size_t pos, wxd_Menu_t* menu, const char* title)
+{
+    if (!menubar || !menu)
+        return nullptr;
+    wxMenuBar* wx_menubar = reinterpret_cast<wxMenuBar*>(menubar);
+    wxMenu* wx_menu = reinterpret_cast<wxMenu*>(menu);
+    // wxMenuBar takes ownership of the new menu
+    wxMenu* old = wx_menubar->Replace(pos, wx_menu, wxString::FromUTF8(title ? title : ""));
+    return reinterpret_cast<wxd_Menu_t*>(old);
+}
+
 // --- MenuItem Functions ---
 WXD_EXPORTED void
 wxd_MenuItem_Destroy(wxd_MenuItem_t* item)
@@ -410,6 +554,37 @@ wxd_MenuItem_GetId(const wxd_MenuItem_t* item)
         return -1;
     const wxMenuItem* wx_item = reinterpret_cast<const wxMenuItem*>(item);
     return wx_item->GetId();
+}
+
+WXD_EXPORTED wxd_Menu_t*
+wxd_MenuItem_GetSubMenu(const wxd_MenuItem_t* item)
+{
+    if (!item)
+        return nullptr;
+    const wxMenuItem* wx_item = reinterpret_cast<const wxMenuItem*>(item);
+    return reinterpret_cast<wxd_Menu_t*>(wx_item->GetSubMenu());
+}
+
+WXD_EXPORTED void
+wxd_MenuItem_SetBitmap(wxd_MenuItem_t* item, const wxd_Bitmap_t* bitmap)
+{
+    if (!item)
+        return;
+    wxMenuItem* wx_item = reinterpret_cast<wxMenuItem*>(item);
+    const wxBitmap* wx_bitmap = reinterpret_cast<const wxBitmap*>(bitmap);
+    wx_item->SetBitmap(wx_bitmap ? *wx_bitmap : wxNullBitmap);
+}
+
+WXD_EXPORTED wxd_Bitmap_t*
+wxd_MenuItem_GetBitmap(const wxd_MenuItem_t* item)
+{
+    if (!item)
+        return nullptr;
+    const wxMenuItem* wx_item = reinterpret_cast<const wxMenuItem*>(item);
+    const wxBitmap& bmp = wx_item->GetBitmap();
+    if (!bmp.IsOk())
+        return nullptr;
+    return reinterpret_cast<wxd_Bitmap_t*>(new wxBitmap(bmp));
 }
 
 } // extern "C"
