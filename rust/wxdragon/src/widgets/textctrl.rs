@@ -161,6 +161,23 @@ impl TextCtrl {
             .unwrap_or(null_mut())
     }
 
+    fn read_string_with_retry(mut getter: impl FnMut(*mut c_char, i32) -> i32) -> String {
+        let mut buffer: Vec<c_char> = vec![0; 1024];
+        let mut len = getter(buffer.as_mut_ptr(), buffer.len() as i32);
+        if len < 0 {
+            return String::new();
+        }
+        if len as usize >= buffer.len() {
+            buffer = vec![0; len as usize + 1];
+            len = getter(buffer.as_mut_ptr(), buffer.len() as i32);
+            if len < 0 {
+                return String::new();
+            }
+        }
+        let byte_slice = unsafe { std::slice::from_raw_parts(buffer.as_ptr() as *const u8, len as usize) };
+        String::from_utf8_lossy(byte_slice).to_string()
+    }
+
     /// Sets the text value of the control.
     /// No-op if the control has been destroyed.
     pub fn set_value(&self, value: &str) {
@@ -179,16 +196,7 @@ impl TextCtrl {
         if ptr.is_null() {
             return String::new();
         }
-        unsafe {
-            let mut buffer: Vec<c_char> = vec![0; 1024];
-            let len = ffi::wxd_TextCtrl_GetValue(ptr, buffer.as_mut_ptr(), buffer.len() as i32);
-            if len >= 0 {
-                let byte_slice = std::slice::from_raw_parts(buffer.as_ptr() as *const u8, len as usize);
-                String::from_utf8_lossy(byte_slice).to_string()
-            } else {
-                String::new()
-            }
-        }
+        unsafe { Self::read_string_with_retry(|buf, len| ffi::wxd_TextCtrl_GetValue(ptr, buf, len)) }
     }
 
     /// Appends text to the end of the control.
@@ -369,16 +377,7 @@ impl TextCtrl {
         if ptr.is_null() {
             return String::new();
         }
-        unsafe {
-            let mut buffer: Vec<c_char> = vec![0; 1024];
-            let len = ffi::wxd_TextCtrl_GetStringSelection(ptr, buffer.as_mut_ptr(), buffer.len() as i32);
-            if len >= 0 {
-                let byte_slice = std::slice::from_raw_parts(buffer.as_ptr() as *const u8, len as usize);
-                String::from_utf8_lossy(byte_slice).to_string()
-            } else {
-                String::new()
-            }
-        }
+        unsafe { Self::read_string_with_retry(|buf, len| ffi::wxd_TextCtrl_GetStringSelection(ptr, buf, len)) }
     }
 
     /// Sets the insertion point to the end of the text control.
@@ -475,3 +474,4 @@ impl crate::window::FromWindowWithClassName for TextCtrl {
         }
     }
 }
+

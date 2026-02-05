@@ -200,6 +200,23 @@ impl RichTextCtrl {
             .unwrap_or(std::ptr::null_mut())
     }
 
+    fn read_string_with_retry(mut getter: impl FnMut(*mut c_char, i32) -> i32) -> String {
+        let mut buffer: Vec<c_char> = vec![0; 1024];
+        let mut len = getter(buffer.as_mut_ptr(), buffer.len() as i32);
+        if len < 0 {
+            return String::new();
+        }
+        if len as usize >= buffer.len() {
+            buffer = vec![0; len as usize + 1];
+            len = getter(buffer.as_mut_ptr(), buffer.len() as i32);
+            if len < 0 {
+                return String::new();
+            }
+        }
+        let byte_slice = unsafe { std::slice::from_raw_parts(buffer.as_ptr() as *const u8, len as usize) };
+        String::from_utf8_lossy(byte_slice).to_string()
+    }
+
     // --- Text Content Operations ---
 
     /// Sets the text value of the control.
@@ -220,16 +237,7 @@ impl RichTextCtrl {
         if ptr.is_null() {
             return String::new();
         }
-        unsafe {
-            let mut buffer: Vec<c_char> = vec![0; 1024];
-            let len = ffi::wxd_RichTextCtrl_GetValue(ptr, buffer.as_mut_ptr(), buffer.len() as i32);
-            if len >= 0 {
-                let byte_slice = std::slice::from_raw_parts(buffer.as_ptr() as *const u8, len as usize);
-                String::from_utf8_lossy(byte_slice).to_string()
-            } else {
-                String::new()
-            }
-        }
+        unsafe { Self::read_string_with_retry(|buf, len| ffi::wxd_RichTextCtrl_GetValue(ptr, buf, len)) }
     }
 
     /// Writes text at the current insertion point.
@@ -283,16 +291,7 @@ impl RichTextCtrl {
         if ptr.is_null() {
             return String::new();
         }
-        unsafe {
-            let mut buffer: Vec<c_char> = vec![0; 1024];
-            let len = ffi::wxd_RichTextCtrl_GetRange(ptr, from, to, buffer.as_mut_ptr(), buffer.len() as i32);
-            if len >= 0 {
-                let byte_slice = std::slice::from_raw_parts(buffer.as_ptr() as *const u8, len as usize);
-                String::from_utf8_lossy(byte_slice).to_string()
-            } else {
-                String::new()
-            }
-        }
+        unsafe { Self::read_string_with_retry(|buf, len| ffi::wxd_RichTextCtrl_GetRange(ptr, from, to, buf, len)) }
     }
 
     /// Sets the selection range.
@@ -325,16 +324,7 @@ impl RichTextCtrl {
         if ptr.is_null() {
             return String::new();
         }
-        unsafe {
-            let mut buffer: Vec<c_char> = vec![0; 1024];
-            let len = ffi::wxd_RichTextCtrl_GetSelectedText(ptr, buffer.as_mut_ptr(), buffer.len() as i32);
-            if len >= 0 {
-                let byte_slice = std::slice::from_raw_parts(buffer.as_ptr() as *const u8, len as usize);
-                String::from_utf8_lossy(byte_slice).to_string()
-            } else {
-                String::new()
-            }
-        }
+        unsafe { Self::read_string_with_retry(|buf, len| ffi::wxd_RichTextCtrl_GetSelectedText(ptr, buf, len)) }
     }
 
     // --- Editing Operations ---
@@ -758,3 +748,4 @@ impl crate::window::FromWindowWithClassName for RichTextCtrl {
         }
     }
 }
+
