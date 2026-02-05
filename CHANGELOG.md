@@ -1,5 +1,38 @@
 # Changelog
 
+## 0.9.9
+
+### New Features
+
+- **BitmapToggleButton**: Added BitmapToggleButton widget
+- **wxConfig**: Added wxConfig wrapper for persistent configuration storage
+- **wxUIActionSimulator**: Added UI automation support for testing
+- **wxSingleInstanceChecker**: Added single instance application support
+- **wxIPC**: Added inter-process communication support
+- **AboutBox**: Added AboutBox dialog and `Button::set_default()`
+
+### Enhancements
+
+- **Menu/MenuBar**: Added `find_item()`, full menu item insertion and removal wrappers
+- **ListBox**: Added `set_string()`, `ensure_visible()`, and `insert()` methods
+- **CheckListBox/Choice/ComboBox**: Added `insert()` method
+- **AuiNotebook**: Wrapped missing functions
+- **TreeCtrl**: Added missing tree control functions
+- **wxLocale/wxUILocale**: Added comprehensive locale support including `find_language_info()` and language name lookup
+- **MSWDisableComposited**: Added Windows-specific composited rendering control
+
+### Bug Fixes
+
+- Fixed issue #109
+- Fixed cross-platform integer type conversion compatibility
+- Fixed various clippy warnings
+
+### Build System
+
+- Added static CRT linking support for MSVC targets
+- Fixed zigbuild linking with proper libc++ for C++ runtime symbols
+- Improved Linux CI build compatibility
+
 ## 0.9.8
 
 ### Enhancements
