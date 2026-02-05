@@ -32,6 +32,7 @@ pub mod font_picker_ctrl;
 pub mod frame;
 pub mod gauge;
 pub mod generic_static_bitmap;
+pub mod grid;
 pub mod hyperlink_ctrl;
 pub mod item_data;
 pub mod list_ctrl;
@@ -123,6 +124,7 @@ pub use dataview::{
 pub use font_picker_ctrl::{FontPickerCtrl, FontPickerCtrlBuilder, FontPickerCtrlStyle};
 pub use frame::{Frame, FrameBuilder};
 pub use gauge::{Gauge, GaugeBuilder};
+pub use grid::{Grid, GridBuilder, GridEvent, GridEventData, GridSelectionMode, GridStyle};
 // GenericStaticBitmap is mainly for internal use by the platform-aware XRC handler
 pub use generic_static_bitmap::{GenericStaticBitmap, GenericStaticBitmapBuilder};
 pub use hyperlink_ctrl::{HyperlinkCtrl, HyperlinkCtrlBuilder};

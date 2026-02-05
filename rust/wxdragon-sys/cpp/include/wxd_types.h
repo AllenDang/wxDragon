@@ -316,6 +316,26 @@ typedef enum {
     WXD_EVENT_TYPE_MENU_HIGHLIGHT = 362, // wxEVT_MENU_HIGHLIGHT
     WXD_EVENT_TYPE_CONTEXT_MENU = 363,   // wxEVT_CONTEXT_MENU
 
+    // Grid event types
+    WXD_EVENT_TYPE_GRID_CELL_LEFT_CLICK = 370,      // wxEVT_GRID_CELL_LEFT_CLICK
+    WXD_EVENT_TYPE_GRID_CELL_RIGHT_CLICK = 371,     // wxEVT_GRID_CELL_RIGHT_CLICK
+    WXD_EVENT_TYPE_GRID_CELL_LEFT_DCLICK = 372,     // wxEVT_GRID_CELL_LEFT_DCLICK
+    WXD_EVENT_TYPE_GRID_CELL_RIGHT_DCLICK = 373,    // wxEVT_GRID_CELL_RIGHT_DCLICK
+    WXD_EVENT_TYPE_GRID_LABEL_LEFT_CLICK = 374,     // wxEVT_GRID_LABEL_LEFT_CLICK
+    WXD_EVENT_TYPE_GRID_LABEL_RIGHT_CLICK = 375,    // wxEVT_GRID_LABEL_RIGHT_CLICK
+    WXD_EVENT_TYPE_GRID_LABEL_LEFT_DCLICK = 376,    // wxEVT_GRID_LABEL_LEFT_DCLICK
+    WXD_EVENT_TYPE_GRID_LABEL_RIGHT_DCLICK = 377,   // wxEVT_GRID_LABEL_RIGHT_DCLICK
+    WXD_EVENT_TYPE_GRID_CELL_CHANGED = 378,         // wxEVT_GRID_CELL_CHANGED
+    WXD_EVENT_TYPE_GRID_SELECT_CELL = 379,          // wxEVT_GRID_SELECT_CELL
+    WXD_EVENT_TYPE_GRID_EDITOR_SHOWN = 380,         // wxEVT_GRID_EDITOR_SHOWN
+    WXD_EVENT_TYPE_GRID_EDITOR_HIDDEN = 381,        // wxEVT_GRID_EDITOR_HIDDEN
+    WXD_EVENT_TYPE_GRID_EDITOR_CREATED = 382,       // wxEVT_GRID_EDITOR_CREATED
+    WXD_EVENT_TYPE_GRID_CELL_BEGIN_DRAG = 383,      // wxEVT_GRID_CELL_BEGIN_DRAG
+    WXD_EVENT_TYPE_GRID_ROW_SIZE = 384,             // wxEVT_GRID_ROW_SIZE
+    WXD_EVENT_TYPE_GRID_COL_SIZE = 385,             // wxEVT_GRID_COL_SIZE
+    WXD_EVENT_TYPE_GRID_RANGE_SELECTED = 386,       // wxEVT_GRID_RANGE_SELECTED
+    WXD_EVENT_TYPE_GRID_TABBING = 387,              // wxEVT_GRID_TABBING
+
     WXD_EVENT_TYPE_MAX // Keep this last for count if needed, or remove if not used for iteration
 } WXDEventTypeCEnum;
 
@@ -669,6 +689,9 @@ typedef struct wxd_SystemAppearance_t wxd_SystemAppearance_t;
 // RichText types
 typedef struct wxd_RichTextCtrl_t wxd_RichTextCtrl_t;
 typedef struct wxd_TreeListCtrl_t wxd_TreeListCtrl_t;
+
+// Grid types
+typedef struct wxd_Grid_t wxd_Grid_t;
 
 // AboutDialogInfo type
 typedef struct wxd_AboutDialogInfo_t wxd_AboutDialogInfo_t;

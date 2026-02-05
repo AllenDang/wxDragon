@@ -13,6 +13,7 @@ members = [
   "examples/rust/events_triple_demo",
   "examples/rust/gallery",
   "examples/rust/generic_dialog_test",
+  "examples/rust/grid_example",
   "examples/rust/gridbagsizer_test",
   "examples/rust/gridsizer_test",
   "examples/rust/ipc_demo",

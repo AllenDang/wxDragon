@@ -167,6 +167,7 @@ set(WXDRAGON_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/fontpickerctrl.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/frame.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/gauge.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/grid.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/hyperlink_ctrl.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/imagelist.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ipc.cpp
