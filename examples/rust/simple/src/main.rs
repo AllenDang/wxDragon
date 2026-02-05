@@ -15,7 +15,7 @@ fn main() {
             .with_style(TextCtrlStyle::MultiLine)
             .with_size(Size::new(-1, 60))
             .build();
-        let long_text = "x".repeat(1000);
+        let long_text = "x".repeat(1500);
         text_ctrl.set_value(&long_text);
         debug_assert_eq!(text_ctrl.get_value(), long_text);
 
