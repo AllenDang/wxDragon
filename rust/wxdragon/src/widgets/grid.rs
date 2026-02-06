@@ -8,7 +8,6 @@ use crate::window::{WindowHandle, WxWidget};
 use std::ffi::{CStr, CString};
 use wxdragon_sys as ffi;
 
-
 // --- Grid Selection Modes ---
 
 /// Selection modes for Grid
@@ -191,9 +190,7 @@ impl Grid {
     fn new_impl(parent_ptr: *mut ffi::wxd_Window_t, id: Id, pos: Point, size: Size, style: i64) -> Self {
         assert!(!parent_ptr.is_null(), "Grid requires a parent");
 
-        let ptr = unsafe {
-            ffi::wxd_Grid_Create(parent_ptr, id, pos.into(), size.into(), style)
-        };
+        let ptr = unsafe { ffi::wxd_Grid_Create(parent_ptr, id, pos.into(), size.into(), style) };
 
         if ptr.is_null() {
             panic!("Failed to create Grid: FFI returned null pointer.");
@@ -321,9 +318,7 @@ impl Grid {
             }
             let mut buffer = vec![0u8; len as usize + 1];
             ffi::wxd_Grid_GetCellValue(ptr, row, col, buffer.as_mut_ptr() as *mut i8, buffer.len() as i32);
-            CStr::from_ptr(buffer.as_ptr() as *const i8)
-                .to_string_lossy()
-                .into_owned()
+            CStr::from_ptr(buffer.as_ptr() as *const i8).to_string_lossy().into_owned()
         }
     }
 
@@ -352,9 +347,7 @@ impl Grid {
             }
             let mut buffer = vec![0u8; len as usize + 1];
             ffi::wxd_Grid_GetRowLabelValue(ptr, row, buffer.as_mut_ptr() as *mut i8, buffer.len() as i32);
-            CStr::from_ptr(buffer.as_ptr() as *const i8)
-                .to_string_lossy()
-                .into_owned()
+            CStr::from_ptr(buffer.as_ptr() as *const i8).to_string_lossy().into_owned()
         }
     }
 
@@ -381,9 +374,7 @@ impl Grid {
             }
             let mut buffer = vec![0u8; len as usize + 1];
             ffi::wxd_Grid_GetColLabelValue(ptr, col, buffer.as_mut_ptr() as *mut i8, buffer.len() as i32);
-            CStr::from_ptr(buffer.as_ptr() as *const i8)
-                .to_string_lossy()
-                .into_owned()
+            CStr::from_ptr(buffer.as_ptr() as *const i8).to_string_lossy().into_owned()
         }
     }
 

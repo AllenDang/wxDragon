@@ -49,27 +49,15 @@ fn main() {
 
         // Set up event handlers
         grid.on_cell_left_click(|event| {
-            println!(
-                "Cell clicked at row: {}, col: {}",
-                event.get_row(),
-                event.get_col()
-            );
+            println!("Cell clicked at row: {}, col: {}", event.get_row(), event.get_col());
         });
 
         grid.on_cell_changed(|event| {
-            println!(
-                "Cell changed at row: {}, col: {}",
-                event.get_row(),
-                event.get_col()
-            );
+            println!("Cell changed at row: {}, col: {}", event.get_row(), event.get_col());
         });
 
         grid.on_select_cell(|event| {
-            println!(
-                "Cell selected at row: {}, col: {}",
-                event.get_row(),
-                event.get_col()
-            );
+            println!("Cell selected at row: {}, col: {}", event.get_row(), event.get_col());
         });
 
         frame.show(true);
