@@ -748,4 +748,3 @@ impl crate::window::FromWindowWithClassName for RichTextCtrl {
         }
     }
 }
-

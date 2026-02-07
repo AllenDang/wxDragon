@@ -51,4 +51,3 @@ fn main() {
         // Frame is automatically managed after show()
     });
 }
-

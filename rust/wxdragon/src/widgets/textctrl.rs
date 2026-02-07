@@ -474,4 +474,3 @@ impl crate::window::FromWindowWithClassName for TextCtrl {
         }
     }
 }
-
