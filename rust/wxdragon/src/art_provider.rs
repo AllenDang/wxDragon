@@ -299,9 +299,3 @@ impl ArtProvider {
         unsafe { ffi::wxd_ArtProvider_HasNativeProvider() }
     }
 }
-
-// All old pub const ART_XXX definitions below this point should be removed.
-// The edit tool started this process but didn't complete it.
-// The following is a placeholder to indicate all subsequent lines of old constants are gone.
-
-// End of file (effectively)

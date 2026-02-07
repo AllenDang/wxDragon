@@ -4,8 +4,6 @@ use crate::id::Id;
 use crate::menus::menuitem::{ItemKind, MenuItem};
 #[cfg(feature = "xrc")]
 use crate::window::WindowHandle;
-#[cfg(feature = "xrc")]
-use crate::xrc::XmlResource;
 use crate::{CommandEventData, Event, EventType};
 use std::ffi::{CStr, CString};
 use std::marker::PhantomData;
@@ -366,24 +364,6 @@ impl Menu {
     #[cfg(feature = "xrc")]
     pub fn get_item_by_name(&self, parent_handle: WindowHandle, item_name: &str) -> Option<MenuItem> {
         MenuItem::from_xrc_name(parent_handle, item_name)
-    }
-
-    /// Special XRC loading method for menus.
-    /// This looks up the menu by name and creates a Menu wrapper.
-    #[cfg(feature = "xrc")]
-    pub fn from_xrc_name(menu_name: &str) -> Option<Self> {
-        // For now, we'll assume menus are loaded as part of menubar
-        // This might need to be extended if we support standalone menu loading
-        // Get the XRC resource to check if the menu exists
-        let menu_id = XmlResource::get_xrc_id(menu_name);
-
-        if menu_id != -1 {
-            // This is a placeholder - in practice, menus are usually loaded as part of menubars
-            // We might need to extend XRC support for standalone menus if needed
-            None
-        } else {
-            None
-        }
     }
 
     // Make append private as it's called by builder

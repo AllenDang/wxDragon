@@ -1,18 +1,17 @@
-//!
 //! Safe wrapper for wxNotificationMessage.
 
-// use crate::window::Window; // For parent type, though it's just a handle - Unused, removing
-// use crate::base::WxResult; // Will define locally for now
 use crate::event::{Event, EventType};
 use crate::window::WxWidget;
 use std::ffi::{CString, NulError};
 use std::os::raw::c_int;
-use wxdragon_sys as ffi; // Import WxWidget trait
+use wxdragon_sys as ffi;
 
-// --- Temporary Error Handling --- TODO: Refactor to use a crate-wide error type
+/// Error type for notification message operations.
 #[derive(Debug)]
 pub enum Error {
+    /// A nul byte was found in a string argument.
     NulError(NulError),
+    /// Failed to create the notification message via FFI.
     FfiCreation(String),
 }
 
@@ -22,8 +21,8 @@ impl From<NulError> for Error {
     }
 }
 
+/// Result type alias for notification message operations.
 pub type WxResult<T> = Result<T, Error>;
-// --- End Temporary Error Handling ---
 
 // wxNotificationMessage specific constants that might be useful
 // These values are from wxWidgets documentation for wxNotificationMessage::Show

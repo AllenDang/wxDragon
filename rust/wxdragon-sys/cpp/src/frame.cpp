@@ -220,6 +220,14 @@ wxd_Frame_SetIconFromBitmap(wxd_Frame_t* frame, const wxd_Bitmap_t* bitmap)
     }
 }
 
+void
+wxd_Frame_RequestUserAttention(wxd_Frame_t* frame, int flags)
+{
+    if (frame) {
+        ((wxFrame*)frame)->RequestUserAttention(flags);
+    }
+}
+
 // If a general wxd_rust_string_free is needed for other cases, it would go here or in a common utils.cpp
 // For example:
 // extern "C" void wxd_rust_string_free(char* str) {

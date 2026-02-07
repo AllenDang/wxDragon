@@ -98,7 +98,7 @@ pub use crate::widgets::editable_listbox::{EditableListBox, EditableListBoxBuild
 pub use crate::widgets::file_ctrl::{FileCtrl, FileCtrlBuilder, FileCtrlStyle};
 pub use crate::widgets::file_picker_ctrl::{FilePickerCtrl, FilePickerCtrlBuilder, FilePickerCtrlStyle};
 pub use crate::widgets::font_picker_ctrl::{FontPickerCtrl, FontPickerCtrlBuilder, FontPickerCtrlStyle};
-pub use crate::widgets::frame::{Frame, FrameBuilder, FrameStyle};
+pub use crate::widgets::frame::{Frame, FrameBuilder, FrameStyle, UserAttentionFlag};
 pub use crate::widgets::gauge::{Gauge, GaugeBuilder, GaugeStyle};
 pub use crate::widgets::grid::{Grid, GridBuilder, GridEvent, GridEventData, GridSelectionMode, GridStyle};
 pub use crate::widgets::hyperlink_ctrl::{HyperlinkCtrl, HyperlinkCtrlBuilder, HyperlinkCtrlStyle};

@@ -528,3 +528,7 @@ pub const WXD_FONTWEIGHT_SEMIBOLD: i64 = 600;
 pub const WXD_FONTWEIGHT_BOLD: i64 = 700;
 pub const WXD_FONTWEIGHT_EXTRABOLD: i64 = 800;
 pub const WXD_FONTWEIGHT_HEAVY: i64 = 900;
+
+// User attention flags for RequestUserAttention
+pub const WXD_USER_ATTENTION_INFO: i64 = 1;
+pub const WXD_USER_ATTENTION_ERROR: i64 = 2;

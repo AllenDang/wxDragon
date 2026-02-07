@@ -37,6 +37,26 @@ widget_style_enum!(
     default_variant: Default
 );
 
+/// Flags for `Frame::request_user_attention`.
+///
+/// Controls the urgency of the attention request when the application is in the background.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum UserAttentionFlag {
+    /// Requests user attention in a non-intrusive way (default).
+    Info,
+    /// Results in a more drastic action, e.g. flashing the taskbar icon on Windows.
+    Error,
+}
+
+impl UserAttentionFlag {
+    fn as_raw(self) -> i32 {
+        match self {
+            UserAttentionFlag::Info => ffi::WXD_USER_ATTENTION_INFO as i32,
+            UserAttentionFlag::Error => ffi::WXD_USER_ATTENTION_ERROR as i32,
+        }
+    }
+}
+
 /// Represents a wxFrame.
 ///
 /// Frame uses `WindowHandle` internally for safe memory management.
@@ -424,6 +444,21 @@ impl Frame {
             return;
         }
         unsafe { ffi::wxd_Frame_SetIconFromBitmap(ptr, bitmap.as_const_ptr()) };
+    }
+
+    /// Attracts the user's attention to this window if the application is inactive.
+    ///
+    /// This is typically used when a background event occurs that requires user attention.
+    /// On Windows, this flashes the taskbar button. On GTK, the behavior depends on the
+    /// window manager.
+    ///
+    /// No-op if the frame has been destroyed.
+    pub fn request_user_attention(&self, flags: UserAttentionFlag) {
+        let ptr = self.frame_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_Frame_RequestUserAttention(ptr, flags.as_raw()) }
     }
 }
 
