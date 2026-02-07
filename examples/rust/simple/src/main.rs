@@ -11,6 +11,14 @@ fn main() {
 
         let sizer = BoxSizer::builder(Orientation::Vertical).build();
 
+        let text_ctrl = TextCtrl::builder(&frame)
+            .with_style(TextCtrlStyle::MultiLine)
+            .with_size(Size::new(-1, 60))
+            .build();
+        let long_text = "x".repeat(1500);
+        text_ctrl.set_value(&long_text);
+        debug_assert_eq!(text_ctrl.get_value(), long_text);
+
         let button = Button::builder(&frame).with_label("Click me").build();
 
         button.on_click(|_| {
@@ -22,6 +30,7 @@ fn main() {
             evt.skip(true);
         });
 
+        sizer.add(&text_ctrl, 0, SizerFlag::Expand | SizerFlag::All, 8);
         sizer.add_stretch_spacer(1);
         let flag = SizerFlag::AlignCenterHorizontal | SizerFlag::AlignCenterVertical;
         sizer.add(&button, 0, flag, 0);
