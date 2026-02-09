@@ -1,7 +1,11 @@
 //! IPC (Inter-Process Communication) module for wxDragon.
 //!
-//! This module provides safe wrappers around wxWidgets' wxIPC classes (wxTCPServer,
-//! wxTCPClient, wxTCPConnection) for inter-process communication using TCP sockets.
+//! This module provides safe wrappers around wxWidgets' generic IPC classes (wxServer,
+//! wxClient, wxConnection). The underlying transport is platform-dependent:
+//! - **Windows**: Uses DDE (Dynamic Data Exchange), which is OS-native and does not
+//!   trigger firewall prompts.
+//! - **Unix/macOS**: Uses TCP sockets. Unix domain sockets are also supported when a
+//!   file path is passed as the service name instead of a port number.
 //!
 //! # Overview
 //!
@@ -642,9 +646,11 @@ unsafe extern "C" fn free_server_callbacks(user_data: *mut c_void) {
 
 /// An IPC server that listens for client connections.
 ///
-/// The server listens on a service (port number or Unix socket path) and
-/// accepts connections from clients. When a client connects, the OnAcceptConnection
-/// callback is called, which should return a new IPCConnection to handle the client.
+/// The server listens on a service and accepts connections from clients.
+/// On Windows, the service name identifies a DDE service. On Unix/macOS, the service
+/// can be a port number (TCP) or a file path (Unix domain socket).
+/// When a client connects, the OnAcceptConnection callback is called, which should
+/// return a new IPCConnection to handle the client.
 ///
 /// # Example
 ///
@@ -719,7 +725,9 @@ impl Drop for IPCServer {
 
 /// An IPC client that connects to servers.
 ///
-/// The client connects to a server on a given host, service (port), and topic.
+/// The client connects to a server on a given host, service, and topic.
+/// On Windows, DDE is used (host is ignored for local DDE connections). On Unix/macOS,
+/// TCP sockets or Unix domain sockets are used depending on the service format.
 /// If the connection is successful, it returns an IPCConnection that can be
 /// used to exchange data with the server.
 ///

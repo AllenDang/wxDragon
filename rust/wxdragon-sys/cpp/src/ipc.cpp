@@ -3,11 +3,10 @@
 #include "../include/wxdragon.h"
 #include "../include/core/wxd_ipc.h"
 #include <wx/ipc.h>
-#include <wx/sckipc.h>
 
 // --- WxdConnection: Custom connection class that wraps callbacks ---
 
-class WxdConnection : public wxTCPConnection {
+class WxdConnection : public wxConnection {
 public:
     WxdConnection()
         : m_userData(nullptr),
@@ -155,7 +154,7 @@ private:
 
 // --- WxdServer: Custom server class that wraps callbacks ---
 
-class WxdServer : public wxTCPServer {
+class WxdServer : public wxServer {
 public:
     WxdServer(
         void* user_data,
@@ -193,7 +192,7 @@ private:
 
 // --- WxdClient: Custom client class that stores pending callbacks ---
 
-class WxdClient : public wxTCPClient {
+class WxdClient : public wxClient {
 public:
     WxdClient()
         : m_pendingUserData(nullptr),
@@ -413,7 +412,7 @@ WXD_EXPORTED size_t
 wxd_IPCConnection_GetTopic(wxd_IPCConnection_t* conn, char* buffer, size_t buffer_size)
 {
     if (!conn) return 0;
-    // wxTCPConnection doesn't expose GetTopic() directly
+    // wxConnection doesn't expose GetTopic() directly
     // We would need to track it ourselves or access protected members
     (void)buffer;
     (void)buffer_size;
