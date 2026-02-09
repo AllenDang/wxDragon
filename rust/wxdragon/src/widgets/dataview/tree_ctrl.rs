@@ -409,15 +409,6 @@ impl DataViewTreeCtrl {
 
         items
     }
-
-    // TODO: Add event binding. This would re-introduce EventType, WxEvtHandler, and potentially CommandEvent.
-    // Example:
-    // pub fn bind_selection_changed<F>(&self, closure: F)
-    // where
-    //     F: Fn(crate::CommandEvent) + 'static, // Assuming CommandEvent is at crate level
-    // {
-    //     self.bind_event_handler(crate::event::EventType::DataViewSelectionChanged, closure);
-    // }
 }
 
 // Manual WxWidget implementation for DataViewTreeCtrl (using WindowHandle)

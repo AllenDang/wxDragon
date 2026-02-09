@@ -398,7 +398,6 @@ enum MenuAction {
         kind: ItemKind,
     },
     AppendSeparator,
-    // TODO: Add AppendSubMenu if needed
 }
 
 /// Builder for [`Menu`].

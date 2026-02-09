@@ -265,10 +265,11 @@ impl CollapsiblePaneEventData {
 
     /// Get whether the pane is currently expanded
     pub fn is_expanded(&self) -> bool {
-        // Note: In wxWidgets, you would typically get this from the event source
-        // For now, we'll provide a way to check the current state
-        // The user can call is_expanded() on the control itself
-        true // Placeholder - in a real implementation you'd check the event details
+        if self.event.is_null() {
+            return false;
+        }
+        // wxCollapsiblePaneEvent::GetCollapsed() returns true when the pane is being collapsed
+        !unsafe { ffi::wxd_CollapsiblePaneEvent_GetCollapsed(self.event.0) }
     }
 }
 

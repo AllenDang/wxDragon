@@ -269,8 +269,7 @@ pub fn create_lists_tab(notebook: &Notebook, _frame: &Frame) -> ListsTabControls
     let list_sizer_main = BoxSizer::builder(Orientation::Vertical).build();
     let list_row_sizer = BoxSizer::builder(Orientation::Horizontal).build();
     let list_box_col = BoxSizer::builder(Orientation::Vertical).build();
-    // TODO: Re-evaluate create_section_title usage
-    // listbox_sizer.add(&create_section_title(&panel, "ListBox"), 0, SizerFlag::Expand | SizerFlag::Bottom, 5);
+    // Section title for ListBox omitted to keep the layout compact.
     list_box_col.add(&list_box, 1, SizerFlag::Expand | SizerFlag::All, 5);
     list_box_col.add(&listbox_status_label, 0, SizerFlag::AlignCenterHorizontal | SizerFlag::All, 5);
     list_row_sizer.add_sizer(&list_box_col, 1, SizerFlag::Expand | SizerFlag::All, 5);

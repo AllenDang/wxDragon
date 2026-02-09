@@ -4,6 +4,7 @@ use crate::event::event_data::{KeyEventData, MouseEventData};
 use crate::event::{Event, EventType};
 use crate::geometry::Size;
 use std::fmt::Debug;
+use wxdragon_sys as ffi;
 
 /// Base window events that are common to all widgets
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -239,9 +240,17 @@ impl WindowSizeEvent {
     }
 
     pub fn get_size(&self) -> Option<Size> {
-        // For now, we'll need to implement this in the Event struct
-        // or re-implement the C API call here
-        None
+        if self.event.is_null() {
+            return None;
+        }
+        let c_size = unsafe { ffi::wxd_SizeEvent_GetSize(self.event.0) };
+        if c_size.width == -1 && c_size.height == -1 {
+            return None;
+        }
+        Some(Size {
+            width: c_size.width,
+            height: c_size.height,
+        })
     }
 }
 

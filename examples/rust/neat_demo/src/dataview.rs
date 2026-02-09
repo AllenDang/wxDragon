@@ -78,7 +78,6 @@ pub fn create_data_view_panel(parent: &dyn WxWidget, model: &CustomDataViewTreeM
     });
 
     dataview.on_item_activated(move |event: DataViewEvent| {
-        // FIXME: Remove this comment after verifying the get_row() works as intended
         let row = event.get_row();
         log::info!("Item activated for row: {row:?}");
 

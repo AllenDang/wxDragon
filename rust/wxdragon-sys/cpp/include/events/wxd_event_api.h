@@ -232,6 +232,14 @@ wxd_MenuEvent_IsPopup(wxd_Event_t* event);
 WXD_EXPORTED wxd_Point
 wxd_ContextMenuEvent_GetPosition(wxd_Event_t* event);
 
+// SizeEvent specific accessors
+WXD_EXPORTED wxd_Size
+wxd_SizeEvent_GetSize(wxd_Event_t* event);
+
+// CollapsiblePaneEvent specific accessors
+WXD_EXPORTED bool
+wxd_CollapsiblePaneEvent_GetCollapsed(wxd_Event_t* event);
+
 #ifdef __cplusplus
 }
 #endif

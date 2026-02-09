@@ -182,5 +182,4 @@ pub trait WindowXrcMethods: WxWidget + Sized {
 // Implement for all WxWidget types
 impl<W: WxWidget> WindowXrcMethods for W {}
 
-// FromXrcPtr implementations are now handled automatically by the implement_widget_traits_with_target! macro
-// TODO: Add more FromXrcPtr implementations for other widget types as needed
+// FromXrcPtr implementations are handled automatically by the implement_widget_traits_with_target! macro.

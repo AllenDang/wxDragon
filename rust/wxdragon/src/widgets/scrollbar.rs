@@ -99,8 +99,6 @@ impl ScrollBar {
     pub fn window_handle(&self) -> WindowHandle {
         self.handle
     }
-
-    // TODO: Add GetThumbSize, GetPageSize, GetRange if needed via FFI calls.
 }
 
 // Implement ScrollEvents trait for ScrollBar

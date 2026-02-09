@@ -303,10 +303,17 @@ fn generate_xrc_struct(input: XrcMacroInput) -> syn::Result<proc_macro2::TokenSt
         let field_name = Ident::new(&tool_obj.name, proc_macro2::Span::call_site());
         let tool_name_lit = &tool_obj.name;
 
-        // Find the parent toolbar - for now assume it's "main_toolbar"
-        // TODO: Implement proper parent detection from XRC hierarchy
+        // Find the parent toolbar from XRC hierarchy
+        let toolbar_name = root_object
+            .children
+            .iter()
+            .find_map(|child| find_toolbar_parent_for_tool(child, &tool_obj.name))
+            .or_else(|| find_toolbar_parent_for_tool(root_object, &tool_obj.name))
+            .unwrap_or("main_toolbar");
+        let toolbar_field = Ident::new(toolbar_name, proc_macro2::Span::call_site());
+
         quote! {
-            let #field_name = main_toolbar.get_tool_by_name(#tool_name_lit)
+            let #field_name = #toolbar_field.get_tool_by_name(#tool_name_lit)
                 .unwrap_or_else(|| panic!("Failed to find tool: {}", #tool_name_lit));
         }
     });
@@ -539,4 +546,21 @@ fn collect_named_objects(obj: &XrcObject, result: &mut Vec<XrcObject>) {
     for child in &obj.children {
         collect_named_objects(child, result);
     }
+}
+
+/// Find the parent toolbar name for a tool in the XRC hierarchy.
+/// Returns None if no toolbar parent is found.
+fn find_toolbar_parent_for_tool<'a>(obj: &'a XrcObject, tool_name: &str) -> Option<&'a str> {
+    let is_toolbar = obj.class == "wxToolBar" || obj.class == "wxAuiToolBar";
+
+    for child in &obj.children {
+        if child.class == "tool" && child.name == tool_name && is_toolbar && !obj.name.is_empty() {
+            return Some(&obj.name);
+        }
+        if let Some(parent_name) = find_toolbar_parent_for_tool(child, tool_name) {
+            return Some(parent_name);
+        }
+    }
+
+    None
 }

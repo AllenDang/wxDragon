@@ -1520,6 +1520,44 @@ get_wx_event_type_for_c_enum(WXDEventTypeCEnum c_enum_val)
     case WXD_EVENT_TYPE_CONTEXT_MENU:
         return wxEVT_CONTEXT_MENU;
 
+    // Grid event types
+    case WXD_EVENT_TYPE_GRID_CELL_LEFT_CLICK:
+        return wxEVT_GRID_CELL_LEFT_CLICK;
+    case WXD_EVENT_TYPE_GRID_CELL_RIGHT_CLICK:
+        return wxEVT_GRID_CELL_RIGHT_CLICK;
+    case WXD_EVENT_TYPE_GRID_CELL_LEFT_DCLICK:
+        return wxEVT_GRID_CELL_LEFT_DCLICK;
+    case WXD_EVENT_TYPE_GRID_CELL_RIGHT_DCLICK:
+        return wxEVT_GRID_CELL_RIGHT_DCLICK;
+    case WXD_EVENT_TYPE_GRID_LABEL_LEFT_CLICK:
+        return wxEVT_GRID_LABEL_LEFT_CLICK;
+    case WXD_EVENT_TYPE_GRID_LABEL_RIGHT_CLICK:
+        return wxEVT_GRID_LABEL_RIGHT_CLICK;
+    case WXD_EVENT_TYPE_GRID_LABEL_LEFT_DCLICK:
+        return wxEVT_GRID_LABEL_LEFT_DCLICK;
+    case WXD_EVENT_TYPE_GRID_LABEL_RIGHT_DCLICK:
+        return wxEVT_GRID_LABEL_RIGHT_DCLICK;
+    case WXD_EVENT_TYPE_GRID_CELL_CHANGED:
+        return wxEVT_GRID_CELL_CHANGED;
+    case WXD_EVENT_TYPE_GRID_SELECT_CELL:
+        return wxEVT_GRID_SELECT_CELL;
+    case WXD_EVENT_TYPE_GRID_EDITOR_SHOWN:
+        return wxEVT_GRID_EDITOR_SHOWN;
+    case WXD_EVENT_TYPE_GRID_EDITOR_HIDDEN:
+        return wxEVT_GRID_EDITOR_HIDDEN;
+    case WXD_EVENT_TYPE_GRID_EDITOR_CREATED:
+        return wxEVT_GRID_EDITOR_CREATED;
+    case WXD_EVENT_TYPE_GRID_CELL_BEGIN_DRAG:
+        return wxEVT_GRID_CELL_BEGIN_DRAG;
+    case WXD_EVENT_TYPE_GRID_ROW_SIZE:
+        return wxEVT_GRID_ROW_SIZE;
+    case WXD_EVENT_TYPE_GRID_COL_SIZE:
+        return wxEVT_GRID_COL_SIZE;
+    case WXD_EVENT_TYPE_GRID_RANGE_SELECTED:
+        return wxEVT_GRID_RANGE_SELECTED;
+    case WXD_EVENT_TYPE_GRID_TABBING:
+        return wxEVT_GRID_TABBING;
+
     default:
         return wxEVT_NULL;
     }
@@ -2156,4 +2194,38 @@ wxd_DataViewEvent_GetSortOrder(const wxd_Event_t* event, bool* ascending)
     }
     *ascending = col->IsSortOrderAscending();
     return true;
+}
+
+// --- SizeEvent specific ---
+
+extern "C" wxd_Size
+wxd_SizeEvent_GetSize(wxd_Event_t* event)
+{
+    wxd_Size result = { -1, -1 };
+    if (!event)
+        return result;
+    wxEvent* wx_event = reinterpret_cast<wxEvent*>(event);
+    wxSizeEvent* size_event = dynamic_cast<wxSizeEvent*>(wx_event);
+    if (!size_event)
+        return result;
+
+    wxSize size = size_event->GetSize();
+    result.width = size.GetWidth();
+    result.height = size.GetHeight();
+    return result;
+}
+
+// --- CollapsiblePaneEvent specific ---
+
+extern "C" bool
+wxd_CollapsiblePaneEvent_GetCollapsed(wxd_Event_t* event)
+{
+    if (!event)
+        return false;
+    wxEvent* wx_event = reinterpret_cast<wxEvent*>(event);
+    wxCollapsiblePaneEvent* cp_event = dynamic_cast<wxCollapsiblePaneEvent*>(wx_event);
+    if (!cp_event)
+        return false;
+
+    return cp_event->GetCollapsed();
 }

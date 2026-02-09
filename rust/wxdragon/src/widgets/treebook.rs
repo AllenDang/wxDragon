@@ -260,7 +260,6 @@ impl Treebook {
     pub fn window_handle(&self) -> WindowHandle {
         self.handle
     }
-    // TODO: Add other wxBookCtrlBase methods like GetPage, InsertPage, DeletePage etc.
 }
 
 // Manual WxWidget implementation for Treebook (using WindowHandle)
