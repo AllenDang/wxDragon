@@ -100,7 +100,10 @@ pub use crate::widgets::file_picker_ctrl::{FilePickerCtrl, FilePickerCtrlBuilder
 pub use crate::widgets::font_picker_ctrl::{FontPickerCtrl, FontPickerCtrlBuilder, FontPickerCtrlStyle};
 pub use crate::widgets::frame::{Frame, FrameBuilder, FrameStyle, UserAttentionFlag};
 pub use crate::widgets::gauge::{Gauge, GaugeBuilder, GaugeStyle};
-pub use crate::widgets::grid::{Grid, GridBuilder, GridEvent, GridEventData, GridSelectionMode, GridStyle};
+pub use crate::widgets::grid::{
+    CellSpan, Grid, GridBlockCoords, GridBuilder, GridCellCoords, GridEvent, GridEventData, GridSelectionMode, GridStyle,
+    TabBehaviour,
+};
 pub use crate::widgets::hyperlink_ctrl::{HyperlinkCtrl, HyperlinkCtrlBuilder, HyperlinkCtrlStyle};
 // ADDED: ImageList
 pub use crate::widgets::imagelist::ImageList;
