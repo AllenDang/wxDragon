@@ -19,6 +19,7 @@ pub use crate::geometry::{Point, Rect, Size};
 pub use crate::id::{ID_ANY, ID_CANCEL, ID_HIGHEST, ID_NO, ID_OK, ID_YES, Id};
 pub use crate::language::Language;
 pub use crate::sizers::WxSizer;
+pub use crate::sound::{Sound, SoundFlags};
 pub use crate::sysopt::SystemOptions;
 pub use crate::types::Style;
 pub use crate::utils::{ArrayString, BrowserLaunchFlags, bell, launch_default_browser};

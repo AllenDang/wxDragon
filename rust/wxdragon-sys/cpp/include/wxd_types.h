@@ -1,6 +1,14 @@
 #ifndef WXD_TYPES_H
 #define WXD_TYPES_H
 
+// Define WXDRAGON_API for export/import
+#define WXDRAGON_API
+
+// Define export macro
+#ifndef WXD_EXPORTED
+#define WXD_EXPORTED WXDRAGON_API
+#endif
+
 // Use standard C types
 #include <stdbool.h>
 #include <stdint.h> // For integer types if needed
@@ -664,6 +672,7 @@ typedef struct wxd_StyledTextCtrl_t wxd_StyledTextCtrl_t;
 
 // AppProgressIndicator type
 typedef struct wxd_AppProgressIndicator_t wxd_AppProgressIndicator_t;
+typedef struct wxd_Sound_t wxd_Sound_t;
 
 // --- Appearance Support (wxWidgets 3.3.0+) ---
 
