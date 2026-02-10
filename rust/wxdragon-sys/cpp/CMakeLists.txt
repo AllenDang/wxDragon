@@ -118,6 +118,7 @@ endif()
 
 # --- wxDragon Library Sources ---
 set(WXDRAGON_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/core/sound.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/core/timer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/about.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/activity_indicator.cpp
