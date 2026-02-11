@@ -408,6 +408,7 @@ typedef struct wxd_GridSizer_t wxd_GridSizer_t;
 typedef struct wxd_GridBagSizer_t wxd_GridBagSizer_t;
 typedef struct wxd_StaticBoxSizer_t wxd_StaticBoxSizer_t;
 typedef struct wxd_WrapSizer_t wxd_WrapSizer_t;
+typedef struct wxd_StdDialogButtonSizer_t wxd_StdDialogButtonSizer_t;
 typedef struct wxd_StaticBitmap_t wxd_StaticBitmap_t;
 typedef struct wxd_GenericStaticBitmap_t wxd_GenericStaticBitmap_t;
 typedef struct wxd_StaticLine_t wxd_StaticLine_t;

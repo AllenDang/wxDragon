@@ -113,4 +113,28 @@ wxd_GridBagSizer_SetEmptyCellSize(wxd_GridBagSizer_t* sizer, wxd_Size size);
 WXD_EXPORTED wxd_Size
 wxd_GridBagSizer_GetCellSize(wxd_GridBagSizer_t* sizer, int row, int col);
 
+// --- StdDialogButtonSizer ---
+WXD_EXPORTED wxd_StdDialogButtonSizer_t*
+wxd_StdDialogButtonSizer_Create();
+WXD_EXPORTED void
+wxd_StdDialogButtonSizer_AddButton(wxd_StdDialogButtonSizer_t* self, wxd_Button_t* button);
+WXD_EXPORTED void
+wxd_StdDialogButtonSizer_Realize(wxd_StdDialogButtonSizer_t* self);
+WXD_EXPORTED wxd_Button_t*
+wxd_StdDialogButtonSizer_GetAffirmativeButton(wxd_StdDialogButtonSizer_t* self);
+WXD_EXPORTED wxd_Button_t*
+wxd_StdDialogButtonSizer_GetApplyButton(wxd_StdDialogButtonSizer_t* self);
+WXD_EXPORTED wxd_Button_t*
+wxd_StdDialogButtonSizer_GetNegativeButton(wxd_StdDialogButtonSizer_t* self);
+WXD_EXPORTED wxd_Button_t*
+wxd_StdDialogButtonSizer_GetCancelButton(wxd_StdDialogButtonSizer_t* self);
+WXD_EXPORTED wxd_Button_t*
+wxd_StdDialogButtonSizer_GetHelpButton(wxd_StdDialogButtonSizer_t* self);
+WXD_EXPORTED void
+wxd_StdDialogButtonSizer_SetAffirmativeButton(wxd_StdDialogButtonSizer_t* self, wxd_Button_t* button);
+WXD_EXPORTED void
+wxd_StdDialogButtonSizer_SetNegativeButton(wxd_StdDialogButtonSizer_t* self, wxd_Button_t* button);
+WXD_EXPORTED void
+wxd_StdDialogButtonSizer_SetCancelButton(wxd_StdDialogButtonSizer_t* self, wxd_Button_t* button);
+
 #endif // WXD_SIZERS_H

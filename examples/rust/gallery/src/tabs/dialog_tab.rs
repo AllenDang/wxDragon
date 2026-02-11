@@ -45,6 +45,8 @@ pub struct DialogTabControls {
     pub dlg_dir_button: Button,
     // About Dialog
     pub show_about_dialog_btn: Button,
+    // StdDialogButtonSizer
+    pub show_std_btn_sizer_btn: Button,
     // Keep NotificationMessage alive while showing
     pub notification_message: Arc<Mutex<Option<NotificationMessage>>>,
 }
@@ -292,6 +294,16 @@ pub fn create_dialog_tab(notebook: &Notebook, _frame: &Frame) -> DialogTabContro
     about_dialog_sizer.add(&show_about_dialog_btn, 0, SizerFlag::AlignCenterVertical | SizerFlag::All, 2);
     grid_sizer.add_sizer(&about_dialog_sizer, 1, SizerFlag::Expand, 0);
 
+    // --- StdDialogButtonSizer demo ---
+    let std_btn_sizer_label = StaticText::builder(&dialog_panel).with_label("StdDialogButtonSizer:").build();
+    let show_std_btn_sizer_btn = Button::builder(&dialog_panel).with_label("Show Dialog...").build();
+    show_std_btn_sizer_btn.set_tooltip("Click to show a Dialog using StdDialogButtonSizer for platform-native button layout.");
+
+    grid_sizer.add(&std_btn_sizer_label, 0, label_flags, 0);
+    let std_btn_sizer_sizer = BoxSizer::builder(Orientation::Horizontal).build();
+    std_btn_sizer_sizer.add(&show_std_btn_sizer_btn, 0, SizerFlag::AlignCenterVertical | SizerFlag::All, 2);
+    grid_sizer.add_sizer(&std_btn_sizer_sizer, 1, SizerFlag::Expand, 0);
+
     main_sizer.add_sizer(&grid_sizer, 1, SizerFlag::Expand | SizerFlag::All, 10);
     dialog_panel.set_sizer(main_sizer, true);
     dialog_panel.fit(); // Fit the panel to its contents
@@ -327,6 +339,7 @@ pub fn create_dialog_tab(notebook: &Notebook, _frame: &Frame) -> DialogTabContro
         multi_choice_dialog_status_label,
         dlg_dir_button,
         show_about_dialog_btn,
+        show_std_btn_sizer_btn,
         notification_message: Arc::new(Mutex::new(None)),
     }
 }
@@ -644,6 +657,38 @@ impl DialogTabControls {
             } else {
                 println!("Directory Dialog canceled");
             }
+        });
+
+        // StdDialogButtonSizer demo
+        self.show_std_btn_sizer_btn.on_click(move |_| {
+            let dlg = Dialog::builder(&frame, "StdDialogButtonSizer Demo")
+                .with_size(400, 200)
+                .build();
+
+            let main_sizer = BoxSizer::builder(Orientation::Vertical).build();
+
+            let label = StaticText::builder(&dlg)
+                .with_label("This dialog uses StdDialogButtonSizer for\nplatform-native button ordering.")
+                .build();
+            main_sizer.add(&label, 1, SizerFlag::Expand | SizerFlag::All, 10);
+
+            let btn_sizer = StdDialogButtonSizerBuilder::new().build();
+
+            let ok_btn = Button::builder(&dlg).with_label("OK").with_id(ID_OK).build();
+            let cancel_btn = Button::builder(&dlg).with_label("Cancel").with_id(ID_CANCEL).build();
+            let help_btn = Button::builder(&dlg).with_label("Help").with_id(ID_HELP).build();
+
+            btn_sizer.add_button(&ok_btn);
+            btn_sizer.add_button(&cancel_btn);
+            btn_sizer.add_button(&help_btn);
+            btn_sizer.realize();
+
+            main_sizer.add_sizer(&btn_sizer, 0, SizerFlag::Expand | SizerFlag::All, 5);
+
+            dlg.set_sizer(main_sizer, true);
+
+            let result = dlg.show_modal();
+            println!("StdDialogButtonSizer demo: closed with code {result}");
         });
 
         // About Dialog Button

@@ -17,7 +17,7 @@ pub use crate::event::{AppEvents, ButtonEvents, MenuEvents, ScrollEvents, TextEv
 pub use crate::event::event_data::{CommandEventData, KeyEventData, MouseEventData};
 pub use crate::event::{IdleEventData, MenuEventData};
 pub use crate::geometry::{Point, Rect, Size};
-pub use crate::id::{ID_ANY, ID_CANCEL, ID_HIGHEST, ID_NO, ID_OK, ID_YES, Id};
+pub use crate::id::{ID_ANY, ID_APPLY, ID_CANCEL, ID_HELP, ID_HIGHEST, ID_NO, ID_OK, ID_YES, Id};
 pub use crate::language::Language;
 pub use crate::sizers::WxSizer;
 pub use crate::sound::{Sound, SoundFlags};
@@ -34,6 +34,7 @@ pub use crate::sizers::grid_bag_sizer::{
 };
 pub use crate::sizers::grid_sizer::{GridSizer, GridSizerBuilder};
 pub use crate::sizers::staticbox_sizer::{StaticBoxSizer, StaticBoxSizerBuilder};
+pub use crate::sizers::std_dialog_button_sizer::{StdDialogButtonSizer, StdDialogButtonSizerBuilder};
 pub use crate::sizers::wrap_sizer::{WrapSizer, WrapSizerBuilder, WrapSizerFlag};
 // Sizer Flags/Constants
 pub use crate::sizers::base::{Orientation, SizerFlag};

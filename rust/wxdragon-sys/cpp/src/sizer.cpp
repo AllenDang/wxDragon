@@ -483,6 +483,109 @@ wxd_GridBagSizer_GetCellSize(wxd_GridBagSizer_t* sizer, int row, int col)
     return result;
 }
 
+// --- StdDialogButtonSizer ---
+
+WXD_EXPORTED wxd_StdDialogButtonSizer_t*
+wxd_StdDialogButtonSizer_Create()
+{
+    wxStdDialogButtonSizer* sizer = new wxStdDialogButtonSizer();
+    return reinterpret_cast<wxd_StdDialogButtonSizer_t*>(sizer);
+}
+
+WXD_EXPORTED void
+wxd_StdDialogButtonSizer_AddButton(wxd_StdDialogButtonSizer_t* self, wxd_Button_t* button)
+{
+    if (!self || !button)
+        return;
+    wxStdDialogButtonSizer* sizer = reinterpret_cast<wxStdDialogButtonSizer*>(self);
+    wxButton* btn = reinterpret_cast<wxButton*>(button);
+    sizer->AddButton(btn);
+}
+
+WXD_EXPORTED void
+wxd_StdDialogButtonSizer_Realize(wxd_StdDialogButtonSizer_t* self)
+{
+    if (!self)
+        return;
+    wxStdDialogButtonSizer* sizer = reinterpret_cast<wxStdDialogButtonSizer*>(self);
+    sizer->Realize();
+}
+
+WXD_EXPORTED wxd_Button_t*
+wxd_StdDialogButtonSizer_GetAffirmativeButton(wxd_StdDialogButtonSizer_t* self)
+{
+    if (!self)
+        return nullptr;
+    wxStdDialogButtonSizer* sizer = reinterpret_cast<wxStdDialogButtonSizer*>(self);
+    return reinterpret_cast<wxd_Button_t*>(sizer->GetAffirmativeButton());
+}
+
+WXD_EXPORTED wxd_Button_t*
+wxd_StdDialogButtonSizer_GetApplyButton(wxd_StdDialogButtonSizer_t* self)
+{
+    if (!self)
+        return nullptr;
+    wxStdDialogButtonSizer* sizer = reinterpret_cast<wxStdDialogButtonSizer*>(self);
+    return reinterpret_cast<wxd_Button_t*>(sizer->GetApplyButton());
+}
+
+WXD_EXPORTED wxd_Button_t*
+wxd_StdDialogButtonSizer_GetNegativeButton(wxd_StdDialogButtonSizer_t* self)
+{
+    if (!self)
+        return nullptr;
+    wxStdDialogButtonSizer* sizer = reinterpret_cast<wxStdDialogButtonSizer*>(self);
+    return reinterpret_cast<wxd_Button_t*>(sizer->GetNegativeButton());
+}
+
+WXD_EXPORTED wxd_Button_t*
+wxd_StdDialogButtonSizer_GetCancelButton(wxd_StdDialogButtonSizer_t* self)
+{
+    if (!self)
+        return nullptr;
+    wxStdDialogButtonSizer* sizer = reinterpret_cast<wxStdDialogButtonSizer*>(self);
+    return reinterpret_cast<wxd_Button_t*>(sizer->GetCancelButton());
+}
+
+WXD_EXPORTED wxd_Button_t*
+wxd_StdDialogButtonSizer_GetHelpButton(wxd_StdDialogButtonSizer_t* self)
+{
+    if (!self)
+        return nullptr;
+    wxStdDialogButtonSizer* sizer = reinterpret_cast<wxStdDialogButtonSizer*>(self);
+    return reinterpret_cast<wxd_Button_t*>(sizer->GetHelpButton());
+}
+
+WXD_EXPORTED void
+wxd_StdDialogButtonSizer_SetAffirmativeButton(wxd_StdDialogButtonSizer_t* self, wxd_Button_t* button)
+{
+    if (!self || !button)
+        return;
+    wxStdDialogButtonSizer* sizer = reinterpret_cast<wxStdDialogButtonSizer*>(self);
+    wxButton* btn = reinterpret_cast<wxButton*>(button);
+    sizer->SetAffirmativeButton(btn);
+}
+
+WXD_EXPORTED void
+wxd_StdDialogButtonSizer_SetNegativeButton(wxd_StdDialogButtonSizer_t* self, wxd_Button_t* button)
+{
+    if (!self || !button)
+        return;
+    wxStdDialogButtonSizer* sizer = reinterpret_cast<wxStdDialogButtonSizer*>(self);
+    wxButton* btn = reinterpret_cast<wxButton*>(button);
+    sizer->SetNegativeButton(btn);
+}
+
+WXD_EXPORTED void
+wxd_StdDialogButtonSizer_SetCancelButton(wxd_StdDialogButtonSizer_t* self, wxd_Button_t* button)
+{
+    if (!self || !button)
+        return;
+    wxStdDialogButtonSizer* sizer = reinterpret_cast<wxStdDialogButtonSizer*>(self);
+    wxButton* btn = reinterpret_cast<wxButton*>(button);
+    sizer->SetCancelButton(btn);
+}
+
 // --- Treebook ---
 
 } // extern "C"

@@ -29,10 +29,6 @@ pub const ID_CANCEL: Id = ffi::WXD_ID_CANCEL as Id; // Typically wxID_CANCEL
 pub const ID_YES: Id = ffi::WXD_ID_YES as Id; // Typically wxID_YES
 pub const ID_NO: Id = ffi::WXD_ID_NO as Id; // Typically wxID_NO
 
-// Other standard IDs that might be useful (can be added if needed)
-// pub const ID_HELP: Id = ...;
-// pub const ID_CLOSE: Id = ...;
-// pub const ID_ABOUT: Id = ...;
-// pub const ID_EXIT: Id = ...;
-
-// ... Any other constants ...
+// Other standard IDs
+pub const ID_APPLY: Id = ffi::WXD_ID_APPLY as Id;
+pub const ID_HELP: Id = ffi::WXD_ID_HELP as Id;
