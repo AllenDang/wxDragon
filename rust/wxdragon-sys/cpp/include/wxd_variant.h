@@ -25,6 +25,9 @@ wxd_Variant_Clone(const wxd_Variant_t* variant);
 WXD_EXPORTED void
 wxd_Variant_Destroy(wxd_Variant_t* variant);
 
+WXD_EXPORTED void
+wxd_Variant_Assign(wxd_Variant_t* self, const wxd_Variant_t* other);
+
 WXD_EXPORTED bool
 wxd_Variant_IsNull(const wxd_Variant_t* variant);
 
