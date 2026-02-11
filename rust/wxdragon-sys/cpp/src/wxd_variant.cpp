@@ -142,6 +142,16 @@ wxd_Variant_Destroy(wxd_Variant_t* variant)
     delete v;
 }
 
+extern "C" WXD_EXPORTED void
+wxd_Variant_Assign(wxd_Variant_t* self, const wxd_Variant_t* other)
+{
+    wxVariant* s = as_wx_mut(self);
+    const wxVariant* o = as_wx_const(other);
+    if (s && o) {
+        *s = *o;
+    }
+}
+
 extern "C" WXD_EXPORTED bool
 wxd_Variant_IsNull(const wxd_Variant_t* variant)
 {

@@ -1,3 +1,4 @@
+use crate::accessible::Accessible;
 use crate::event::{EventType, WxEvtHandler};
 use crate::font::Font;
 use crate::geometry::{Point, Size};
@@ -1744,6 +1745,38 @@ pub trait WxWidget: std::any::Any {
             return;
         }
         unsafe { ffi::wxd_Window_PostMenuCommand(handle, id) }
+    }
+
+    /// Sets the accessible object for this window.
+    ///
+    /// The window takes ownership of the accessible object.
+    fn set_accessible(&self, accessible: Accessible) {
+        let handle = self.handle_ptr();
+        if !handle.is_null() {
+            let acc_ptr = accessible.as_ptr();
+            // Window takes ownership, so we forget the Rust wrapper
+            std::mem::forget(accessible);
+            unsafe {
+                ffi::wxd_Window_SetAccessible(handle, acc_ptr);
+            }
+        }
+    }
+
+    /// Gets the accessible object for this window.
+    ///
+    /// Note: The returned `Accessible` object is owned by the window.
+    /// It should not be dropped by the caller.
+    fn get_accessible(&self) -> Option<Accessible> {
+        let handle = self.handle_ptr();
+        if handle.is_null() {
+            return None;
+        }
+        let acc_ptr = unsafe { ffi::wxd_Window_GetAccessible(handle) };
+        if acc_ptr.is_null() {
+            None
+        } else {
+            Some(unsafe { Accessible::from_ptr(acc_ptr, false) })
+        }
     }
 }
 

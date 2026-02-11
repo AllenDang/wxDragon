@@ -437,6 +437,7 @@ typedef struct wxd_MediaCtrl_t wxd_MediaCtrl_t;
 typedef struct wxd_RearrangeList_t wxd_RearrangeList_t;
 typedef struct wxd_EditableListBox_t wxd_EditableListBox_t;
 typedef struct wxd_Clipboard_t wxd_Clipboard_t;
+typedef struct wxd_Accessible_t wxd_Accessible_t;
 
 // Translations opaque types
 typedef struct wxd_Translations_t wxd_Translations_t;
