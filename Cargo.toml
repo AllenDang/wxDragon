@@ -19,6 +19,7 @@ members = [
   "examples/rust/ipc_demo",
   "examples/rust/menu_events_demo",
   "examples/rust/neat_demo",
+  "examples/rust/printing_demo",
   "examples/rust/simple",
   "examples/rust/simplebook_test",
   "examples/rust/single_instance_demo",
