@@ -93,6 +93,7 @@ extern "C" {
 
 // Window and UI elements
 #include "widgets/wxd_frame.h"
+#include "widgets/wxd_mdi.h"
 #include "widgets/wxd_statusbar.h"
 #include "widgets/wxd_toolbar.h"
 #include "widgets/wxd_menu.h"
