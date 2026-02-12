@@ -124,6 +124,8 @@ pub use crate::widgets::list_ctrl::{
 
 pub use crate::widgets::list_ctrl::image_list_type;
 pub use crate::widgets::listbox::{ListBox, ListBoxBuilder, ListBoxStyle};
+pub use crate::widgets::mdi_child_frame::{MDIChildFrame, MDIChildFrameBuilder};
+pub use crate::widgets::mdi_parent_frame::{MDIParentFrame, MDIParentFrameBuilder};
 #[cfg(feature = "media-ctrl")]
 pub use crate::widgets::media_ctrl::{MediaCtrl, MediaCtrlBuilder, MediaCtrlPlayerControls, MediaState};
 pub use crate::widgets::notebook::{Notebook, NotebookBuilder, NotebookStyle};

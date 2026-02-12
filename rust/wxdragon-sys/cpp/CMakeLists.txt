@@ -176,6 +176,7 @@ set(WXDRAGON_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/item.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/list_ctrl.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/listbox.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/mdi.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/menu.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/message_dialog.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/multi_choice_dialog.cpp

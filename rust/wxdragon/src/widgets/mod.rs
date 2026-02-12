@@ -37,6 +37,8 @@ pub mod hyperlink_ctrl;
 pub mod item_data;
 pub mod list_ctrl;
 pub mod listbox;
+pub mod mdi_child_frame;
+pub mod mdi_parent_frame;
 #[cfg(feature = "media-ctrl")]
 pub mod media_ctrl;
 pub mod notebook;
@@ -133,6 +135,8 @@ pub use generic_static_bitmap::{GenericStaticBitmap, GenericStaticBitmapBuilder}
 pub use hyperlink_ctrl::{HyperlinkCtrl, HyperlinkCtrlBuilder};
 pub use list_ctrl::{ListCtrl, ListCtrlBuilder};
 pub use listbox::{ListBox, ListBoxBuilder};
+pub use mdi_child_frame::{MDIChildFrame, MDIChildFrameBuilder};
+pub use mdi_parent_frame::{MDIParentFrame, MDIParentFrameBuilder};
 #[cfg(feature = "media-ctrl")]
 pub use media_ctrl::{MediaCtrl, MediaCtrlBuilder, MediaCtrlPlayerControls, MediaState};
 pub use notebook::{Notebook, NotebookBuilder};
