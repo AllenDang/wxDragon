@@ -349,6 +349,48 @@ pub use paint_dc::PaintDC;
 pub use screen_dc::ScreenDC;
 pub use window_dc::WindowDC;
 
+/// A generic device context that can wrap any raw DC pointer.
+pub struct GenericDC {
+    dc_ptr: *mut wxdragon_sys::wxd_DC_t,
+    owned: bool,
+}
+
+impl GenericDC {
+    /// Create a GenericDC from a raw FFI pointer, taking ownership.
+    /// # Safety
+    /// The pointer must be valid and should be destroyed by calling wxd_DC_Destroy.
+    pub unsafe fn from_ffi_ptr(ptr: *mut wxdragon_sys::wxd_DC_t) -> Self {
+        Self {
+            dc_ptr: ptr,
+            owned: true,
+        }
+    }
+
+    /// Create a GenericDC from a raw FFI pointer without taking ownership.
+    /// # Safety
+    /// The pointer must be valid for the duration of the GenericDC's lifetime.
+    pub unsafe fn from_ffi_ptr_unowned(ptr: *mut wxdragon_sys::wxd_DC_t) -> Self {
+        Self {
+            dc_ptr: ptr,
+            owned: false,
+        }
+    }
+}
+
+impl DeviceContext for GenericDC {
+    fn dc_ptr(&self) -> *mut wxdragon_sys::wxd_DC_t {
+        self.dc_ptr
+    }
+}
+
+impl Drop for GenericDC {
+    fn drop(&mut self) {
+        if self.owned && !self.dc_ptr.is_null() {
+            unsafe { wxdragon_sys::wxd_DC_Destroy(self.dc_ptr) };
+        }
+    }
+}
+
 // Re-export for convenience
 pub use crate::bitmap::Bitmap;
 pub use crate::color::Colour;

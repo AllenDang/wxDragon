@@ -210,9 +210,12 @@ pub use crate::data_object::{BitmapDataObject, DataFormat};
 pub use crate::dnd::{DataObject, DragResult, DropSource, FileDataObject, FileDropTarget, TextDataObject, TextDropTarget};
 
 // --- Painting & DeviceContexts ---
+
 pub use crate::dc::{
-    AutoBufferedPaintDC, BackgroundMode, BrushStyle, ClientDC, DeviceContext, MemoryDC, PaintDC, PenStyle, ScreenDC, WindowDC,
+    AutoBufferedPaintDC, BackgroundMode, BrushStyle, ClientDC, DeviceContext, GenericDC, MemoryDC, PaintDC, PenStyle, ScreenDC,
+    WindowDC,
 };
+pub use crate::printing::*;
 
 // --- Application & Misc ---
 // pub use crate::app::App; // Commented out as per previous error, App is in main or app module

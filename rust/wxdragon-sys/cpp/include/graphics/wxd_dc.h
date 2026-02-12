@@ -55,6 +55,9 @@ wxd_AutoBufferedPaintDC_Destroy(wxd_AutoBufferedPaintDC_t* dc);
 
 // Common DC operations (operates on the base type)
 WXD_EXPORTED void
+wxd_DC_Destroy(wxd_DC_t* dc);
+
+WXD_EXPORTED void
 wxd_DC_Clear(wxd_DC_t* dc);
 
 WXD_EXPORTED void

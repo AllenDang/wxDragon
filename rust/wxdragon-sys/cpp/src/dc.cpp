@@ -26,6 +26,14 @@ using wxd_AutoBufferedPaintDC_t = struct wxd_AutoBufferedPaintDC_t;
 // Since wxDC is abstract, we need to ensure we only expose classes that wxWidgets actually provides
 
 // DC Creation/Destruction
+void
+wxd_DC_Destroy(wxd_DC_t* dc)
+{
+    if (dc) {
+        delete reinterpret_cast<wxDC*>(dc);
+    }
+}
+
 wxd_WindowDC_t*
 wxd_WindowDC_Create(wxd_Window_t* window)
 {

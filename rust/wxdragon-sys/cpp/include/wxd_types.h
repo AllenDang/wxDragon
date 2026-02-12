@@ -712,4 +712,23 @@ typedef struct wxd_IPCConnection_t wxd_IPCConnection_t;
 typedef struct wxd_IPCServer_t wxd_IPCServer_t;
 typedef struct wxd_IPCClient_t wxd_IPCClient_t;
 
+// Printing opaque types
+typedef struct wxd_Printer_t wxd_Printer_t;
+typedef struct wxd_Printout_t wxd_Printout_t;
+typedef struct wxd_PrintData_t wxd_PrintData_t;
+typedef struct wxd_PrintDialogData_t wxd_PrintDialogData_t;
+typedef struct wxd_PrintDialog_t wxd_PrintDialog_t;
+typedef struct wxd_PageSetupDialogData_t wxd_PageSetupDialogData_t;
+typedef struct wxd_PageSetupDialog_t wxd_PageSetupDialog_t;
+
+// Printing callback typedefs
+typedef void (*wxd_Printout_OnPreparePrinting_Callback)(void* userData);
+typedef void (*wxd_Printout_OnBeginPrinting_Callback)(void* userData);
+typedef void (*wxd_Printout_OnEndPrinting_Callback)(void* userData);
+typedef void (*wxd_Printout_OnBeginDocument_Callback)(void* userData, int startPage, int endPage);
+typedef void (*wxd_Printout_OnEndDocument_Callback)(void* userData);
+typedef bool (*wxd_Printout_OnPrintPage_Callback)(void* userData, int pageNum);
+typedef bool (*wxd_Printout_HasPage_Callback)(void* userData, int pageNum);
+typedef void (*wxd_Printout_GetPageInfo_Callback)(void* userData, int* minPage, int* maxPage, int* pageFrom, int* pageTo);
+
 #endif // WXD_TYPES_H

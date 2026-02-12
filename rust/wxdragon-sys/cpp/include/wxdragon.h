@@ -120,6 +120,9 @@ extern "C" {
 // IPC (Inter-Process Communication)
 #include "core/wxd_ipc.h"
 
+// Printing
+#include "core/wxd_print.h"
+
 // Sound support
 #include "core/wxd_sound.h"
 

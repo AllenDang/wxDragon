@@ -28,6 +28,7 @@ pub mod ipc;
 pub mod language;
 pub mod menus;
 pub mod prelude;
+pub mod printing;
 pub mod scrollable;
 pub mod single_instance_checker;
 pub mod sizers;

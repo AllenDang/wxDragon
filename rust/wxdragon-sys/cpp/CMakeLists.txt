@@ -183,6 +183,7 @@ set(WXDRAGON_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/simplebook.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/notificationmessage.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/panel.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/print.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/progressdialog.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/radio_button.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/radiobox.cpp
