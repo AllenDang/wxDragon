@@ -38,8 +38,8 @@ public:
     void
     OnIdle(wxIdleEvent& event);
 
-    // Optional: Override OnExit for cleanup if needed
-    // virtual int OnExit() override;
+    // Override OnExit to clean up IPC/DDE objects before module cleanup
+    virtual int OnExit() override;
 
 #ifdef __WXOSX__
     // macOS-specific overrides
@@ -111,6 +111,17 @@ WxdApp::OnIdle(wxIdleEvent& event)
     if (callbacks_processed > 0) {
         event.RequestMore();
     }
+}
+
+// Clean up IPC/DDE objects before wxWidgets module cleanup.
+// On Windows, wxDDECleanUp() asserts all DDE objects are gone.
+// Rust-side Drop impls may not run until after that point, so
+// we proactively destroy any remaining IPC objects here.
+int
+WxdApp::OnExit()
+{
+    wxd_IPC_CleanupAll();
+    return wxApp::OnExit();
 }
 
 // Configure command line parser to accept any parameters (no options).

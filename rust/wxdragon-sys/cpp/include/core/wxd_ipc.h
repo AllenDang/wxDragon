@@ -244,6 +244,12 @@ wxd_IPCClient_MakeConnection(
 WXD_EXPORTED void
 wxd_IPCClient_Destroy(wxd_IPCClient_t* client);
 
+// Destroy all remaining IPC server/client objects.
+// Called during app shutdown to ensure DDE objects are cleaned up
+// before wxDDECleanUp() runs (Windows DDE assertion fix).
+WXD_EXPORTED void
+wxd_IPC_CleanupAll(void);
+
 #ifdef __cplusplus
 }
 #endif

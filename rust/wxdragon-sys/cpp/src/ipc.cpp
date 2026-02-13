@@ -3,6 +3,13 @@
 #include "../include/wxdragon.h"
 #include "../include/core/wxd_ipc.h"
 #include <wx/ipc.h>
+#include <unordered_set>
+
+// Global registries of live IPC objects.
+// These are used to ensure all DDE objects are destroyed before wxDDECleanUp()
+// runs during app shutdown (Windows DDE asserts that all objects are gone).
+static std::unordered_set<void*> g_liveServers;
+static std::unordered_set<void*> g_liveClients;
 
 // --- WxdConnection: Custom connection class that wraps callbacks ---
 
@@ -436,6 +443,7 @@ wxd_IPCServer_Create(
     wxd_IPC_FreeUserData_Callback free_user_data)
 {
     WxdServer* server = new WxdServer(user_data, on_accept_connection, free_user_data);
+    g_liveServers.insert(server);
     return reinterpret_cast<wxd_IPCServer_t*>(server);
 }
 
@@ -452,6 +460,8 @@ WXD_EXPORTED void
 wxd_IPCServer_Destroy(wxd_IPCServer_t* server)
 {
     if (!server) return;
+    // Only delete if still tracked (idempotent for double-destroy safety)
+    if (g_liveServers.erase(server) == 0) return;
     WxdServer* wx_server = reinterpret_cast<WxdServer*>(server);
     delete wx_server;
 }
@@ -462,6 +472,7 @@ WXD_EXPORTED wxd_IPCClient_t*
 wxd_IPCClient_Create(void)
 {
     WxdClient* client = new WxdClient();
+    g_liveClients.insert(client);
     return reinterpret_cast<wxd_IPCClient_t*>(client);
 }
 
@@ -526,8 +537,31 @@ WXD_EXPORTED void
 wxd_IPCClient_Destroy(wxd_IPCClient_t* client)
 {
     if (!client) return;
+    // Only delete if still tracked (idempotent for double-destroy safety)
+    if (g_liveClients.erase(client) == 0) return;
     WxdClient* wx_client = reinterpret_cast<WxdClient*>(client);
     delete wx_client;
+}
+
+// Destroy all remaining IPC server/client objects.
+// Called from WxdApp::OnExit() to ensure DDE objects are cleaned up
+// before wxDDECleanUp() asserts they're gone.
+WXD_EXPORTED void
+wxd_IPC_CleanupAll(void)
+{
+    // Destroy all live servers
+    for (void* ptr : g_liveServers) {
+        WxdServer* server = reinterpret_cast<WxdServer*>(ptr);
+        delete server;
+    }
+    g_liveServers.clear();
+
+    // Destroy all live clients
+    for (void* ptr : g_liveClients) {
+        WxdClient* client = reinterpret_cast<WxdClient*>(ptr);
+        delete client;
+    }
+    g_liveClients.clear();
 }
 
 } // extern "C"
