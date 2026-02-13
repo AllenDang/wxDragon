@@ -268,6 +268,23 @@ impl WebView {
             .unwrap_or(std::ptr::null_mut())
     }
 
+    fn read_string_with_retry(initial_capacity: usize, mut getter: impl FnMut(*mut c_char, i32) -> i32) -> String {
+        let mut buffer: Vec<c_char> = vec![0; initial_capacity];
+        let mut len = getter(buffer.as_mut_ptr(), buffer.len() as i32);
+        if len < 0 {
+            return String::new();
+        }
+        if len as usize >= buffer.len() {
+            buffer = vec![0; len as usize + 1];
+            len = getter(buffer.as_mut_ptr(), buffer.len() as i32);
+            if len < 0 {
+                return String::new();
+            }
+        }
+        let byte_slice = unsafe { std::slice::from_raw_parts(buffer.as_ptr() as *const u8, len as usize) };
+        String::from_utf8_lossy(byte_slice).to_string()
+    }
+
     // --- Navigation ---
 
     /// Loads the specified URL.
@@ -370,16 +387,7 @@ impl WebView {
         if ptr.is_null() {
             return String::new();
         }
-        unsafe {
-            let mut buffer: Vec<c_char> = vec![0; 2048];
-            let len = ffi::wxd_WebView_GetCurrentURL(ptr, buffer.as_mut_ptr(), buffer.len() as i32);
-            if len >= 0 {
-                let byte_slice = std::slice::from_raw_parts(buffer.as_ptr() as *const u8, len as usize);
-                String::from_utf8_lossy(byte_slice).to_string()
-            } else {
-                String::new()
-            }
-        }
+        unsafe { Self::read_string_with_retry(2048, |buf, len| ffi::wxd_WebView_GetCurrentURL(ptr, buf, len)) }
     }
 
     /// Returns the current page title.
@@ -389,16 +397,7 @@ impl WebView {
         if ptr.is_null() {
             return String::new();
         }
-        unsafe {
-            let mut buffer: Vec<c_char> = vec![0; 1024];
-            let len = ffi::wxd_WebView_GetCurrentTitle(ptr, buffer.as_mut_ptr(), buffer.len() as i32);
-            if len >= 0 {
-                let byte_slice = std::slice::from_raw_parts(buffer.as_ptr() as *const u8, len as usize);
-                String::from_utf8_lossy(byte_slice).to_string()
-            } else {
-                String::new()
-            }
-        }
+        unsafe { Self::read_string_with_retry(1024, |buf, len| ffi::wxd_WebView_GetCurrentTitle(ptr, buf, len)) }
     }
 
     /// Returns the page source (HTML).
@@ -707,16 +706,7 @@ impl WebView {
         if ptr.is_null() {
             return String::new();
         }
-        unsafe {
-            let mut buffer: Vec<c_char> = vec![0; 4096];
-            let len = ffi::wxd_WebView_GetSelectedText(ptr, buffer.as_mut_ptr(), buffer.len() as i32);
-            if len >= 0 {
-                let byte_slice = std::slice::from_raw_parts(buffer.as_ptr() as *const u8, len as usize);
-                String::from_utf8_lossy(byte_slice).to_string()
-            } else {
-                String::new()
-            }
-        }
+        unsafe { Self::read_string_with_retry(4096, |buf, len| ffi::wxd_WebView_GetSelectedText(ptr, buf, len)) }
     }
 
     /// Returns the selected HTML source.
@@ -726,16 +716,7 @@ impl WebView {
         if ptr.is_null() {
             return String::new();
         }
-        unsafe {
-            let mut buffer: Vec<c_char> = vec![0; 4096];
-            let len = ffi::wxd_WebView_GetSelectedSource(ptr, buffer.as_mut_ptr(), buffer.len() as i32);
-            if len >= 0 {
-                let byte_slice = std::slice::from_raw_parts(buffer.as_ptr() as *const u8, len as usize);
-                String::from_utf8_lossy(byte_slice).to_string()
-            } else {
-                String::new()
-            }
-        }
+        unsafe { Self::read_string_with_retry(4096, |buf, len| ffi::wxd_WebView_GetSelectedSource(ptr, buf, len)) }
     }
 
     /// Clears the current selection.
@@ -1034,23 +1015,7 @@ impl WebView {
         if ptr.is_null() {
             return String::new();
         }
-        unsafe {
-            let mut buffer: Vec<c_char> = vec![0; 256];
-            let len = ffi::wxd_WebView_GetBackend(ptr, buffer.as_mut_ptr(), buffer.len() as i32);
-
-            if len < 0 {
-                return String::new();
-            }
-
-            // Check if we need a larger buffer
-            if len >= buffer.len() as i32 {
-                buffer = vec![0; len as usize + 1];
-                ffi::wxd_WebView_GetBackend(ptr, buffer.as_mut_ptr(), buffer.len() as i32);
-            }
-
-            let byte_slice = std::slice::from_raw_parts(buffer.as_ptr() as *const u8, len as usize);
-            String::from_utf8_lossy(byte_slice).to_string()
-        }
+        unsafe { Self::read_string_with_retry(256, |buf, len| ffi::wxd_WebView_GetBackend(ptr, buf, len)) }
     }
 
     /// Checks if a specific WebView backend is available on the current system.

@@ -261,6 +261,23 @@ impl TreeListCtrl {
             .unwrap_or(std::ptr::null_mut())
     }
 
+    fn read_string_with_retry(mut getter: impl FnMut(*mut c_char, i32) -> i32) -> String {
+        let mut buffer: Vec<c_char> = vec![0; 1024];
+        let mut len = getter(buffer.as_mut_ptr(), buffer.len() as i32);
+        if len < 0 {
+            return String::new();
+        }
+        if len as usize >= buffer.len() {
+            buffer = vec![0; len as usize + 1];
+            len = getter(buffer.as_mut_ptr(), buffer.len() as i32);
+            if len < 0 {
+                return String::new();
+            }
+        }
+        let byte_slice = unsafe { std::slice::from_raw_parts(buffer.as_ptr() as *const u8, len as usize) };
+        String::from_utf8_lossy(byte_slice).to_string()
+    }
+
     // --- Column Management ---
 
     /// Appends a new column to the control.
@@ -445,14 +462,7 @@ impl TreeListCtrl {
         if ptr.is_null() {
             return String::new();
         }
-        let mut buffer: Vec<c_char> = vec![0; 1024];
-        let len = unsafe { ffi::wxd_TreeListCtrl_GetItemText(ptr, item.id(), col, buffer.as_mut_ptr(), buffer.len() as i32) };
-        if len >= 0 {
-            let byte_slice = unsafe { std::slice::from_raw_parts(buffer.as_ptr() as *const u8, len as usize) };
-            String::from_utf8_lossy(byte_slice).to_string()
-        } else {
-            String::new()
-        }
+        unsafe { Self::read_string_with_retry(|buf, len| ffi::wxd_TreeListCtrl_GetItemText(ptr, item.id(), col, buf, len)) }
     }
 
     /// Expands the specified item.
