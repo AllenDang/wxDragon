@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.9.10
+
+### New Features
+
+- **wxGrid**: Wrapped wxGrid widget with full event support wired into the Rust event system
+- **wxMDIParentFrame/wxMDIChildFrame**: Added MDI (Multiple Document Interface) support
+- **wxPrinter/wxPrintout**: Added printing support with printing dialogs
+- **wxStdDialogButtonSizer**: Wrapped wxStdDialogButtonSizer for standard dialog button layouts
+- **wxAccessible**: Added accessibility support wrapper
+- **wxSound**: Added wxSound for WAV playback
+
+### Enhancements
+
+- **wxGrid**: Added additional grid functions beyond initial wrapping
+- **wxIPC**: Refined wxServer/wxClient/wxConn to use DDE on Windows and TCP on Linux/macOS
+- **wxTopLevelWindow**: Added `RequestUserAttention` wrapper
+
+### Bug Fixes
+
+- Fixed `get_value` and related functions returning null bytes in the middle of strings
+
 ## 0.9.9
 
 ### New Features
