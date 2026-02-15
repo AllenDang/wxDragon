@@ -278,7 +278,11 @@ fn get_app_string(
     unsafe {
         getter(app as *const ffi::wxd_App_t, buf.as_mut_ptr() as *mut c_char, buf.len());
     }
-    Some(unsafe { CStr::from_ptr(buf.as_ptr() as *const c_char) }.to_string_lossy().to_string())
+    Some(
+        unsafe { CStr::from_ptr(buf.as_ptr() as *const c_char) }
+            .to_string_lossy()
+            .to_string(),
+    )
 }
 
 unsafe impl Send for App {}
