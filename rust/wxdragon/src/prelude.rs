@@ -1,6 +1,6 @@
 // --- Core Types & Traits ---
 pub use crate::accessible::Accessible;
-pub use crate::app::{App, call_after, get_app, main, set_appearance, set_top_window};
+pub use crate::app::{App, call_after, get_app, get_app_instance, main, set_appearance, set_top_window};
 pub use crate::appearance::{
     AppAppearance, Appearance, AppearanceResult, SystemAppearance, get_app as get_app_for_appearance, get_system_appearance,
     is_system_dark_mode,
