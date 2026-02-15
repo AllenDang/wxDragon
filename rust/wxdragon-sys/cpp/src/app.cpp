@@ -237,6 +237,122 @@ wxd_App_SetTopWindow(wxd_App_t* app, wxd_Window_t* window)
     wx_app->SetTopWindow(wx_window);
 }
 
+wxd_Window_t*
+wxd_App_GetTopWindow(wxd_App_t* app)
+{
+    if (!app)
+        return nullptr;
+    wxApp* wx_app = reinterpret_cast<wxApp*>(app);
+    return reinterpret_cast<wxd_Window_t*>(wx_app->GetTopWindow());
+}
+
+bool
+wxd_App_IsMainLoopRunning(wxd_App_t* app)
+{
+    if (!app)
+        return false;
+    return wxApp::IsMainLoopRunning();
+}
+
+void
+wxd_App_ExitMainLoop(wxd_App_t* app)
+{
+    if (!app)
+        return;
+    wxApp* wx_app = reinterpret_cast<wxApp*>(app);
+    wx_app->ExitMainLoop();
+}
+
+bool
+wxd_App_GetExitOnFrameDelete(wxd_App_t* app)
+{
+    if (!app)
+        return true;
+    wxApp* wx_app = reinterpret_cast<wxApp*>(app);
+    return wx_app->GetExitOnFrameDelete();
+}
+
+void
+wxd_App_SetExitOnFrameDelete(wxd_App_t* app, bool exitOnFrameDelete)
+{
+    if (!app)
+        return;
+    wxApp* wx_app = reinterpret_cast<wxApp*>(app);
+    wx_app->SetExitOnFrameDelete(exitOnFrameDelete);
+}
+
+void
+wxd_App_SetAppName(wxd_App_t* app, const char* name)
+{
+    if (!app || !name)
+        return;
+    wxApp* wx_app = reinterpret_cast<wxApp*>(app);
+    wx_app->SetAppName(wxString::FromUTF8(name));
+}
+
+int
+wxd_App_GetAppName(const wxd_App_t* app, char* out, size_t out_len)
+{
+    if (!app)
+        return -1;
+    const wxApp* wx_app = reinterpret_cast<const wxApp*>(app);
+    return static_cast<int>(wxd_cpp_utils::copy_wxstring_to_buffer(wx_app->GetAppName(), out, out_len));
+}
+
+void
+wxd_App_SetAppDisplayName(wxd_App_t* app, const char* name)
+{
+    if (!app || !name)
+        return;
+    wxApp* wx_app = reinterpret_cast<wxApp*>(app);
+    wx_app->SetAppDisplayName(wxString::FromUTF8(name));
+}
+
+int
+wxd_App_GetAppDisplayName(const wxd_App_t* app, char* out, size_t out_len)
+{
+    if (!app)
+        return -1;
+    const wxApp* wx_app = reinterpret_cast<const wxApp*>(app);
+    return static_cast<int>(wxd_cpp_utils::copy_wxstring_to_buffer(wx_app->GetAppDisplayName(), out, out_len));
+}
+
+void
+wxd_App_SetVendorName(wxd_App_t* app, const char* name)
+{
+    if (!app || !name)
+        return;
+    wxApp* wx_app = reinterpret_cast<wxApp*>(app);
+    wx_app->SetVendorName(wxString::FromUTF8(name));
+}
+
+int
+wxd_App_GetVendorName(const wxd_App_t* app, char* out, size_t out_len)
+{
+    if (!app)
+        return -1;
+    const wxApp* wx_app = reinterpret_cast<const wxApp*>(app);
+    return static_cast<int>(wxd_cpp_utils::copy_wxstring_to_buffer(wx_app->GetVendorName(), out, out_len));
+}
+
+void
+wxd_App_SetVendorDisplayName(wxd_App_t* app, const char* name)
+{
+    if (!app || !name)
+        return;
+    wxApp* wx_app = reinterpret_cast<wxApp*>(app);
+    wx_app->SetVendorDisplayName(wxString::FromUTF8(name));
+}
+
+int
+wxd_App_GetVendorDisplayName(const wxd_App_t* app, char* out, size_t out_len)
+{
+    if (!app)
+        return -1;
+    const wxApp* wx_app = reinterpret_cast<const wxApp*>(app);
+    return static_cast<int>(wxd_cpp_utils::copy_wxstring_to_buffer(wx_app->GetVendorDisplayName(), out, out_len));
+}
+
 // Manual callback processing for cases where we need to trigger it
 void
 wxd_App_ProcessCallbacks()

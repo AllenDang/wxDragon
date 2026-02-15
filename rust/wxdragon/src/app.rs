@@ -4,8 +4,8 @@
 
 use std::collections::VecDeque;
 #[cfg(target_os = "macos")]
-use std::ffi::{CStr, c_int};
-use std::ffi::{CString, c_char, c_void};
+use std::ffi::c_int;
+use std::ffi::{CStr, CString, c_char, c_void};
 use std::sync::{Arc, LazyLock, Mutex};
 use wxdragon_sys as ffi; // Import Window and WxWidget trait
 
@@ -120,22 +120,169 @@ pub fn process_callbacks() {
 /// ```
 #[derive(Clone, Copy)]
 pub struct App {
-    #[cfg(target_os = "macos")]
     handle: *mut ffi::wxd_App_t,
 }
 
 impl App {
     pub(crate) fn new() -> Option<Self> {
-        #[cfg(target_os = "macos")]
-        {
-            let handle = unsafe { ffi::wxd_GetApp() };
-            if handle.is_null() { None } else { Some(App { handle }) }
-        }
-        #[cfg(not(target_os = "macos"))]
-        {
-            Some(App {})
+        let handle = unsafe { ffi::wxd_GetApp() };
+        if handle.is_null() { None } else { Some(App { handle }) }
+    }
+
+    /// Sets the application's top-level window.
+    pub fn set_top_window<W>(&self, window: &W)
+    where
+        W: crate::window::WxWidget + ?Sized,
+    {
+        if !self.handle.is_null() {
+            unsafe {
+                ffi::wxd_App_SetTopWindow(self.handle, window.handle_ptr());
+            }
         }
     }
+
+    /// Returns the current top-level window if one is set.
+    pub fn get_top_window(&self) -> Option<crate::window::Window> {
+        if self.handle.is_null() {
+            return None;
+        }
+        let top = unsafe { ffi::wxd_App_GetTopWindow(self.handle) };
+        if top.is_null() {
+            None
+        } else {
+            Some(unsafe { crate::window::Window::from_ptr(top) })
+        }
+    }
+
+    /// Returns true while the main loop is currently running.
+    pub fn is_main_loop_running(&self) -> bool {
+        if self.handle.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_App_IsMainLoopRunning(self.handle) }
+    }
+
+    /// Exits the main event loop at the next safe point.
+    pub fn exit_main_loop(&self) {
+        if !self.handle.is_null() {
+            unsafe { ffi::wxd_App_ExitMainLoop(self.handle) };
+        }
+    }
+
+    /// Controls whether deleting the last frame exits the app.
+    pub fn set_exit_on_frame_delete(&self, exit_on_frame_delete: bool) {
+        if !self.handle.is_null() {
+            unsafe { ffi::wxd_App_SetExitOnFrameDelete(self.handle, exit_on_frame_delete) };
+        }
+    }
+
+    /// Returns whether deleting the last frame exits the app.
+    pub fn get_exit_on_frame_delete(&self) -> bool {
+        if self.handle.is_null() {
+            return true;
+        }
+        unsafe { ffi::wxd_App_GetExitOnFrameDelete(self.handle) }
+    }
+
+    /// Sets the internal application name used by wxWidgets.
+    pub fn set_app_name(&self, name: &str) -> bool {
+        let c_name = match CString::new(name) {
+            Ok(v) => v,
+            Err(_) => return false,
+        };
+        if !self.handle.is_null() {
+            unsafe { ffi::wxd_App_SetAppName(self.handle, c_name.as_ptr()) };
+        }
+        true
+    }
+
+    /// Gets the internal application name used by wxWidgets.
+    pub fn get_app_name(&self) -> String {
+        if self.handle.is_null() {
+            return String::new();
+        }
+        get_app_string(self.handle, ffi::wxd_App_GetAppName).unwrap_or_default()
+    }
+
+    /// Sets the user-facing application display name.
+    pub fn set_app_display_name(&self, name: &str) -> bool {
+        let c_name = match CString::new(name) {
+            Ok(v) => v,
+            Err(_) => return false,
+        };
+        if !self.handle.is_null() {
+            unsafe { ffi::wxd_App_SetAppDisplayName(self.handle, c_name.as_ptr()) };
+        }
+        true
+    }
+
+    /// Gets the user-facing application display name.
+    pub fn get_app_display_name(&self) -> String {
+        if self.handle.is_null() {
+            return String::new();
+        }
+        get_app_string(self.handle, ffi::wxd_App_GetAppDisplayName).unwrap_or_default()
+    }
+
+    /// Sets the vendor name used for config paths and metadata.
+    pub fn set_vendor_name(&self, name: &str) -> bool {
+        let c_name = match CString::new(name) {
+            Ok(v) => v,
+            Err(_) => return false,
+        };
+        if !self.handle.is_null() {
+            unsafe { ffi::wxd_App_SetVendorName(self.handle, c_name.as_ptr()) };
+        }
+        true
+    }
+
+    /// Gets the vendor name used for config paths and metadata.
+    pub fn get_vendor_name(&self) -> String {
+        if self.handle.is_null() {
+            return String::new();
+        }
+        get_app_string(self.handle, ffi::wxd_App_GetVendorName).unwrap_or_default()
+    }
+
+    /// Sets the user-facing vendor display name.
+    pub fn set_vendor_display_name(&self, name: &str) -> bool {
+        let c_name = match CString::new(name) {
+            Ok(v) => v,
+            Err(_) => return false,
+        };
+        if !self.handle.is_null() {
+            unsafe { ffi::wxd_App_SetVendorDisplayName(self.handle, c_name.as_ptr()) };
+        }
+        true
+    }
+
+    /// Gets the user-facing vendor display name.
+    pub fn get_vendor_display_name(&self) -> String {
+        if self.handle.is_null() {
+            return String::new();
+        }
+        get_app_string(self.handle, ffi::wxd_App_GetVendorDisplayName).unwrap_or_default()
+    }
+}
+
+fn get_app_string(
+    app: *mut ffi::wxd_App_t,
+    getter: unsafe extern "C" fn(*const ffi::wxd_App_t, *mut c_char, usize) -> i32,
+) -> Option<String> {
+    let len = unsafe { getter(app as *const ffi::wxd_App_t, std::ptr::null_mut(), 0) };
+    if len < 0 {
+        return None;
+    }
+
+    let mut buf = vec![0u8; len as usize + 1];
+    unsafe {
+        getter(app as *const ffi::wxd_App_t, buf.as_mut_ptr() as *mut c_char, buf.len());
+    }
+    Some(
+        unsafe { CStr::from_ptr(buf.as_ptr() as *const c_char) }
+            .to_string_lossy()
+            .to_string(),
+    )
 }
 
 unsafe impl Send for App {}
@@ -149,12 +296,14 @@ pub fn set_top_window<W>(window: &W)
 where
     W: crate::window::WxWidget + ?Sized,
 {
-    let app_ptr = unsafe { ffi::wxd_GetApp() };
-    if !app_ptr.is_null() {
-        unsafe {
-            ffi::wxd_App_SetTopWindow(app_ptr, window.handle_ptr());
-        }
+    if let Some(app) = App::new() {
+        app.set_top_window(window);
     }
+}
+
+/// Gets the current wxWidgets app instance.
+pub fn get_app_instance() -> Option<App> {
+    App::new()
 }
 
 /// Gets the current application instance for appearance operations.

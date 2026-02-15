@@ -10,6 +10,34 @@ WXD_EXPORTED int
 wxd_Main(int argc, char** argv, wxd_OnInitCallback on_init, void* userData);
 WXD_EXPORTED void
 wxd_App_SetTopWindow(wxd_App_t* app, wxd_Window_t* window);
+WXD_EXPORTED wxd_Window_t*
+wxd_App_GetTopWindow(wxd_App_t* app);
+WXD_EXPORTED bool
+wxd_App_IsMainLoopRunning(wxd_App_t* app);
+WXD_EXPORTED void
+wxd_App_ExitMainLoop(wxd_App_t* app);
+WXD_EXPORTED bool
+wxd_App_GetExitOnFrameDelete(wxd_App_t* app);
+WXD_EXPORTED void
+wxd_App_SetExitOnFrameDelete(wxd_App_t* app, bool exitOnFrameDelete);
+
+// App identity helpers
+WXD_EXPORTED void
+wxd_App_SetAppName(wxd_App_t* app, const char* name);
+WXD_EXPORTED int
+wxd_App_GetAppName(const wxd_App_t* app, char* out, size_t out_len);
+WXD_EXPORTED void
+wxd_App_SetAppDisplayName(wxd_App_t* app, const char* name);
+WXD_EXPORTED int
+wxd_App_GetAppDisplayName(const wxd_App_t* app, char* out, size_t out_len);
+WXD_EXPORTED void
+wxd_App_SetVendorName(wxd_App_t* app, const char* name);
+WXD_EXPORTED int
+wxd_App_GetVendorName(const wxd_App_t* app, char* out, size_t out_len);
+WXD_EXPORTED void
+wxd_App_SetVendorDisplayName(wxd_App_t* app, const char* name);
+WXD_EXPORTED int
+wxd_App_GetVendorDisplayName(const wxd_App_t* app, char* out, size_t out_len);
 
 // Process callback queue
 WXD_EXPORTED void
