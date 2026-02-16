@@ -144,6 +144,7 @@ fn get_class_mapping() -> HashMap<&'static str, &'static str> {
     map.insert("wxRadioBox", "wxdragon::widgets::RadioBox");
     map.insert("wxToggleButton", "wxdragon::widgets::ToggleButton");
     map.insert("wxBitmapButton", "wxdragon::widgets::BitmapButton");
+    map.insert("wxBitmapToggleButton", "wxdragon::widgets::BitmapToggleButton");
 
     // StaticBitmap uses platform-aware XRC handler at C++ level
     // On Windows: creates wxGenericStaticBitmap, but we still treat it as StaticBitmap in Rust
