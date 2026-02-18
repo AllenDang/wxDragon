@@ -10,13 +10,13 @@
 
 ## Why Choose wxDragon?
 
-🎯 **Native Look & Feel** - Your apps integrate perfectly with each operating system's design language
-🚀 **Single Codebase** - Write once, run everywhere with true cross-platform compatibility
-🛡️ **Memory Safe** - All the safety guarantees of Rust with the mature wxWidgets foundation
-⚡ **High Performance** - Direct access to native GUI components with minimal overhead
-🎨 **Rich Widget Set** - Comprehensive collection of native controls and layouts
-🔧 **Two Development Styles** - Choose between programmatic creation or visual XRC design
-✨ **Ergonomic API** - Widgets implement `Copy`, so no manual cloning needed for closures
+  - 🎯 **Native Look & Feel** - Your apps integrate perfectly with each operating system's design language
+  - 🚀 **Single Codebase** - Write once, run everywhere with true cross-platform compatibility
+  - 🛡️ **Memory Safe** - All the safety guarantees of Rust with the mature wxWidgets foundation
+  - ⚡ **High Performance** - Direct access to native GUI components with minimal overhead
+  - 🎨 **Rich Widget Set** - Comprehensive collection of native controls and layouts
+  - 🔧 **Two Development Styles** - Choose between programmatic creation or visual XRC design
+  - ✨ **Ergonomic API** - Widgets implement `Copy`, so no manual cloning needed for closures
 
 ## Screenshots
 
