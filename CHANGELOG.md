@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.9.12
+
+### New Features
+
+- **wxApp Methods**: Added many new wxApp methods including `set_top_window`, `get_top_window`, `is_main_loop_running`, `exit_main_loop`, `set_exit_on_frame_delete`, `get_exit_on_frame_delete`, `set_app_name`, `get_app_name`, `set_app_display_name`, `get_app_display_name`, `set_vendor_name`, `get_vendor_name`, `set_vendor_display_name`, `get_vendor_display_name`
+- **BitmapToggleButton XRC**: Added BitmapToggleButton support in XRC macro
+
+### Bug Fixes
+
+- Fixed truncated string getters across widgets (StyledTextCtrl, TreeListCtrl, WebView) that could return corrupted text
+- Auto cleanup DDE connections on Windows to prevent resource leaks
+
 ## 0.9.10
 
 ### New Features
