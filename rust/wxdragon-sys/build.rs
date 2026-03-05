@@ -1,6 +1,6 @@
-const WX_SRC_URL: &str = "https://github.com/wxWidgets/wxWidgets/releases/download/v3.3.1/wxWidgets-3.3.1.zip";
-const WX_VERSION: &str = "3.3.1";
-const WX_SRC_URL_SHA256: &str = "c25311fecbc4b508577bdee4e90660da8d0d79f4099bc40e9cac8338879f9334";
+const WX_SRC_URL: &str = "https://github.com/wxWidgets/wxWidgets/releases/download/v3.3.2/wxWidgets-3.3.2.zip";
+const WX_VERSION: &str = "3.3.2";
+const WX_SRC_URL_SHA256: &str = "f6a56de6d8fb55317230fba4ef64f81a646ad6f8c439d2710d98750493a8a569";
 
 fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
     println!("Building wxdragon-sys...");
