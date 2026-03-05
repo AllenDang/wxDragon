@@ -325,10 +325,10 @@ fn build_wxdragon_wrapper(
     let build_dir = dst.join("build");
     let lib_search_path = build_dir.join("lib").display().to_string();
 
-    println!("info: CMake build completed. Build directory: {build_dir:?}");
-    println!("info: libwxdragon should be in: {lib_search_path:?}");
-    println!("info: wxDragon-sys build directory: {wxdragon_sys_build_dir:?}");
-    println!("info: wxWidgets build directory: {wxwidgets_build_dir:?}");
+    println!("cargo:warning=CMake build completed. Build directory: {build_dir:?}");
+    println!("cargo:warning=libwxdragon should be in: {lib_search_path:?}");
+    println!("cargo:warning=wxDragon-sys build directory: {wxdragon_sys_build_dir:?}");
+    println!("cargo:warning=wxWidgets build directory: {wxwidgets_build_dir:?}");
 
     // List library files in key directories for debugging
     for search_dir in &[
@@ -337,24 +337,24 @@ fn build_wxdragon_wrapper(
         build_dir.join("lib"),
     ] {
         if search_dir.exists() {
-            println!("info: Listing files in {search_dir:?}:");
+            println!("cargo:warning=Listing files in {search_dir:?}:");
             if let Ok(entries) = std::fs::read_dir(search_dir) {
                 for entry in entries.flatten() {
                     let path = entry.path();
                     if path.is_dir() {
-                        println!("info:   [dir] {}", entry.file_name().to_string_lossy());
+                        println!("cargo:warning=  [dir] {}", entry.file_name().to_string_lossy());
                         if let Ok(sub_entries) = std::fs::read_dir(&path) {
                             for sub_entry in sub_entries.flatten() {
-                                println!("info:     {}", sub_entry.file_name().to_string_lossy());
+                                println!("cargo:warning=    {}", sub_entry.file_name().to_string_lossy());
                             }
                         }
                     } else {
-                        println!("info:   {}", entry.file_name().to_string_lossy());
+                        println!("cargo:warning=  {}", entry.file_name().to_string_lossy());
                     }
                 }
             }
         } else {
-            println!("info: Directory does not exist: {search_dir:?}");
+            println!("cargo:warning=Directory does not exist: {search_dir:?}");
         }
     }
 
