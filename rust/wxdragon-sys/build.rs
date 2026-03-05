@@ -651,58 +651,32 @@ fn build_wxdragon_wrapper(
             // Note: For webview feature with MinGW, wxWidgets uses dynamic loading of WebView2Loader.dll
             // at runtime (wxUSE_WEBVIEW_EDGE_STATIC=OFF in CMakeLists.txt), so no compile-time linking needed.
             // The WebView2Loader.dll must be present on the target system or alongside the executable.
-        } else if target_env == "gnu" {
-            // Native MinGW build on Windows
-            // wxWidgets uses WIN32_MSVC_NAMING which strips the "lib" prefix from library files
-            // (e.g., wxmsw33u_adv.a instead of libwxmsw33u_adv.a). Use +verbatim to match
-            // the exact filenames, since the GNU linker would otherwise look for the lib prefix.
-            let debug_suffix = if is_debug { "d" } else { "" };
-
-            println!("cargo:rustc-link-lib=static:+verbatim=wxmsw33u{debug_suffix}_adv.a");
-            println!("cargo:rustc-link-lib=static:+verbatim=wxmsw33u{debug_suffix}_core.a");
-            println!("cargo:rustc-link-lib=static:+verbatim=wxmsw33u{debug_suffix}_gl.a");
-            println!("cargo:rustc-link-lib=static:+verbatim=wxmsw33u{debug_suffix}_propgrid.a");
-
-            if cfg!(feature = "aui") {
-                println!("cargo:rustc-link-lib=static:+verbatim=wxmsw33u{debug_suffix}_aui.a");
-            }
-            if cfg!(feature = "media-ctrl") {
-                println!("cargo:rustc-link-lib=static:+verbatim=wxmsw33u{debug_suffix}_media.a");
-            }
-            if cfg!(feature = "webview") {
-                println!("cargo:rustc-link-lib=static:+verbatim=wxmsw33u{debug_suffix}_webview.a");
-            }
-            if cfg!(feature = "xrc") || cfg!(feature = "webview") {
-                println!("cargo:rustc-link-lib=static:+verbatim=wxmsw33u{debug_suffix}_html.a");
-            }
-            if cfg!(feature = "stc") {
-                println!("cargo:rustc-link-lib=static:+verbatim=wxmsw33u{debug_suffix}_stc.a");
-                println!("cargo:rustc-link-lib=static:+verbatim=wxscintilla{debug_suffix}.a");
-                println!("cargo:rustc-link-lib=static:+verbatim=wxlexilla{debug_suffix}.a");
-            }
-            if cfg!(feature = "xrc") {
-                println!("cargo:rustc-link-lib=static:+verbatim=wxmsw33u{debug_suffix}_xrc.a");
-                println!("cargo:rustc-link-lib=static:+verbatim=wxbase33u{debug_suffix}_xml.a");
-            }
-            if cfg!(feature = "richtext") {
-                println!("cargo:rustc-link-lib=static:+verbatim=wxmsw33u{debug_suffix}_html.a");
-                println!("cargo:rustc-link-lib=static:+verbatim=wxbase33u{debug_suffix}_xml.a");
-                println!("cargo:rustc-link-lib=static:+verbatim=wxmsw33u{debug_suffix}_richtext.a");
-            }
-
-            println!("cargo:rustc-link-lib=static:+verbatim=wxbase33u{debug_suffix}.a");
-            println!("cargo:rustc-link-lib=static:+verbatim=wxbase33u{debug_suffix}_net.a");
-            println!("cargo:rustc-link-lib=static:+verbatim=wxtiff{debug_suffix}.a");
-            println!("cargo:rustc-link-lib=static:+verbatim=wxjpeg{debug_suffix}.a");
-            println!("cargo:rustc-link-lib=static:+verbatim=wxpng{debug_suffix}.a");
-            println!("cargo:rustc-link-lib=static:+verbatim=wxregexu{debug_suffix}.a");
-            println!("cargo:rustc-link-lib=static:+verbatim=wxzlib{debug_suffix}.a");
-            println!("cargo:rustc-link-lib=static:+verbatim=wxexpat{debug_suffix}.a");
-
-            println!("cargo:rustc-link-lib=stdc++");
         } else {
-            // Native MSVC build on Windows
             let debug_suffix = if is_debug { "d" } else { "" };
+
+            // Native MinGW (GNU) build on Windows: wxWidgets uses WIN32_MSVC_NAMING which
+            // strips the "lib" prefix (e.g., wxmsw33u_adv.a instead of libwxmsw33u_adv.a).
+            // The GNU linker expects the "lib" prefix, so rename the files.
+            if target_env == "gnu" {
+                for search_dir in &[
+                    wxdragon_sys_build_dir.join("lib/gcc_x64_lib"),
+                    wxwidgets_build_dir.join("lib/gcc_x64_lib"),
+                ] {
+                    if search_dir.exists() {
+                        if let Ok(entries) = std::fs::read_dir(search_dir) {
+                            for entry in entries.flatten() {
+                                let name = entry.file_name();
+                                let name_str = name.to_string_lossy();
+                                if name_str.ends_with(".a") && !name_str.starts_with("lib") {
+                                    let new_name = format!("lib{name_str}");
+                                    let new_path = entry.path().parent().unwrap().join(&new_name);
+                                    let _ = std::fs::rename(entry.path(), &new_path);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
 
             println!("cargo:rustc-link-lib=static=wxmsw33u{debug_suffix}_adv");
             println!("cargo:rustc-link-lib=static=wxmsw33u{debug_suffix}_core");
@@ -744,6 +718,10 @@ fn build_wxdragon_wrapper(
             println!("cargo:rustc-link-lib=static=wxregexu{debug_suffix}");
             println!("cargo:rustc-link-lib=static=wxzlib{debug_suffix}");
             println!("cargo:rustc-link-lib=static=wxexpat{debug_suffix}");
+
+            if target_env == "gnu" {
+                println!("cargo:rustc-link-lib=stdc++");
+            }
         }
 
         // System libraries (same for debug and release)
