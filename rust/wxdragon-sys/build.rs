@@ -328,6 +328,35 @@ fn build_wxdragon_wrapper(
     println!("info: CMake build completed. Build directory: {build_dir:?}");
     println!("info: libwxdragon should be in: {lib_search_path:?}");
     println!("info: wxDragon-sys build directory: {wxdragon_sys_build_dir:?}");
+    println!("info: wxWidgets build directory: {wxwidgets_build_dir:?}");
+
+    // List library files in key directories for debugging
+    for search_dir in &[
+        wxdragon_sys_build_dir.join("lib"),
+        wxwidgets_build_dir.join("lib"),
+        build_dir.join("lib"),
+    ] {
+        if search_dir.exists() {
+            println!("info: Listing files in {search_dir:?}:");
+            if let Ok(entries) = std::fs::read_dir(search_dir) {
+                for entry in entries.flatten() {
+                    let path = entry.path();
+                    if path.is_dir() {
+                        println!("info:   [dir] {}", entry.file_name().to_string_lossy());
+                        if let Ok(sub_entries) = std::fs::read_dir(&path) {
+                            for sub_entry in sub_entries.flatten() {
+                                println!("info:     {}", sub_entry.file_name().to_string_lossy());
+                            }
+                        }
+                    } else {
+                        println!("info:   {}", entry.file_name().to_string_lossy());
+                    }
+                }
+            }
+        } else {
+            println!("info: Directory does not exist: {search_dir:?}");
+        }
+    }
 
     // --- 4. Linker Instructions ---
     println!("cargo:rustc-link-search=native={lib_search_path}");
@@ -335,11 +364,21 @@ fn build_wxdragon_wrapper(
     let wx_lib = wxdragon_sys_build_dir.join("lib").display().to_string();
     println!("cargo:rustc-link-search=native={wx_lib}");
 
+    // Also add the wxWidgets build directory itself as a search path
+    // wxWidgets 3.3.2+ sets per-target ARCHIVE_OUTPUT_DIRECTORY which may differ from
+    // the parent project's CMAKE_ARCHIVE_OUTPUT_DIRECTORY
+    let wx_widgets_lib = wxwidgets_build_dir.join("lib").display().to_string();
+    println!("cargo:rustc-link-search=native={wx_widgets_lib}");
+
     // For Windows, wxWidgets libs might be in a subdirectory like gcc_x64_lib for MinGW
     if target_os == "windows" {
         if target_env == "gnu" {
             let wx_lib2 = wxdragon_sys_build_dir.join("lib/gcc_x64_lib").display().to_string();
             println!("cargo:rustc-link-search=native={wx_lib2}");
+
+            // Also search in the wxWidgets build directory (wxWidgets 3.3.2+ outputs here)
+            let wx_lib_widgets = wxwidgets_build_dir.join("lib/gcc_x64_lib").display().to_string();
+            println!("cargo:rustc-link-search=native={wx_lib_widgets}");
 
             // --- Dynamically find MinGW GCC library paths ---
             let host_os = std::env::consts::OS;
@@ -412,6 +451,10 @@ fn build_wxdragon_wrapper(
             };
             let wx_lib2 = wxdragon_sys_build_dir.join(lib_dir).display().to_string();
             println!("cargo:rustc-link-search=native={wx_lib2}");
+
+            // Also search in the wxWidgets build directory (wxWidgets 3.3.2+)
+            let wx_lib_widgets = wxwidgets_build_dir.join(lib_dir).display().to_string();
+            println!("cargo:rustc-link-search=native={wx_lib_widgets}");
 
             if target == "i686-pc-windows-msvc" {
                 // build/lib/Debug or build/lib/Release
@@ -711,6 +754,7 @@ fn build_wxdragon_wrapper(
     } else {
         // For Linux and other Unix-like systems
         println!("cargo:rustc-link-lib=xkbcommon");
+        println!("cargo:rustc-link-lib=wayland-client");
         let lib = pkg_config::Config::new().probe("gtk+-3.0").unwrap();
         for _lib in lib.libs {
             println!("cargo:rustc-link-lib={_lib}");

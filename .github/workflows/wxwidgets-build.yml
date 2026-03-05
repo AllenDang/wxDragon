@@ -32,13 +32,13 @@ jobs:
             build_type: Release
             setup_script: |
               sudo apt-get update
-              sudo apt-get install -y libgtk-3-dev libpng-dev libjpeg-dev libgl1-mesa-dev libglu1-mesa-dev libxkbcommon-dev libexpat1-dev libtiff-dev libwebkit2gtk-4.1-dev build-essential cmake
+              sudo apt-get install -y libgtk-3-dev libpng-dev libjpeg-dev libgl1-mesa-dev libglu1-mesa-dev libxkbcommon-dev libwayland-dev libexpat1-dev libtiff-dev libwebkit2gtk-4.1-dev build-essential cmake
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
             build_type: Debug
             setup_script: |
               sudo apt-get update
-              sudo apt-get install -y libgtk-3-dev libpng-dev libjpeg-dev libgl1-mesa-dev libglu1-mesa-dev libxkbcommon-dev libexpat1-dev libtiff-dev libwebkit2gtk-4.1-dev build-essential cmake
+              sudo apt-get install -y libgtk-3-dev libpng-dev libjpeg-dev libgl1-mesa-dev libglu1-mesa-dev libxkbcommon-dev libwayland-dev libexpat1-dev libtiff-dev libwebkit2gtk-4.1-dev build-essential cmake
           - os: macos-13
             target: x86_64-apple-darwin
             build_type: Release
