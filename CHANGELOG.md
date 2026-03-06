@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.13
+
+### Update wxwidgets to 3.3.2
+
 ## 0.9.12
 
 ### New Features
