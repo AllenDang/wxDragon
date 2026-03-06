@@ -662,16 +662,16 @@ fn build_wxdragon_wrapper(
                     wxdragon_sys_build_dir.join("lib/gcc_x64_lib"),
                     wxwidgets_build_dir.join("lib/gcc_x64_lib"),
                 ] {
-                    if search_dir.exists() {
-                        if let Ok(entries) = std::fs::read_dir(search_dir) {
-                            for entry in entries.flatten() {
-                                let name = entry.file_name();
-                                let name_str = name.to_string_lossy();
-                                if name_str.ends_with(".a") && !name_str.starts_with("lib") {
-                                    let new_name = format!("lib{name_str}");
-                                    let new_path = entry.path().parent().unwrap().join(&new_name);
-                                    let _ = std::fs::rename(entry.path(), &new_path);
-                                }
+                    if search_dir.exists()
+                        && let Ok(entries) = std::fs::read_dir(search_dir)
+                    {
+                        for entry in entries.flatten() {
+                            let name = entry.file_name();
+                            let name_str = name.to_string_lossy();
+                            if name_str.ends_with(".a") && !name_str.starts_with("lib") {
+                                let new_name = format!("lib{name_str}");
+                                let new_path = entry.path().parent().unwrap().join(&new_name);
+                                let _ = std::fs::rename(entry.path(), &new_path);
                             }
                         }
                     }
