@@ -58,12 +58,15 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
         .expect("Could not find destination binary directory");
 
     // wxWidgets source download location (shared per profile to avoid re-downloading)
-    let wxwidgets_dir = dest_bin_dir.join("wxWidgets");
+    let wxwidgets_dir = std::env::var("WXWIDGETS_DIR")
+        .map(std::path::PathBuf::from)
+        .unwrap_or_else(|_| dest_bin_dir.join("wxWidgets"));
 
     let wxwidgets_dir_str = wxwidgets_dir.display().to_string();
 
+    let is_custom_dir = std::env::var("WXWIDGETS_DIR").is_ok();
     let ver_matched = chk_wx_version(&wxwidgets_dir, WX_VERSION).unwrap_or(false);
-    if !ver_matched {
+    if !is_custom_dir && !ver_matched {
         std::fs::remove_dir_all(&wxwidgets_dir).ok();
 
         let archive_dest_path = std::env::temp_dir().join("wxWidgets.zip");
