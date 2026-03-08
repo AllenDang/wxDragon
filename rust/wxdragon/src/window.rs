@@ -1943,7 +1943,7 @@ mod tests {
         // use super::prelude::*;
 
         SystemOptions::set_option_by_int("msw.no-manifest-check", 1);
-        let _ = crate::main(|_| {
+        let res = crate::main(|_| {
             // create the wxWidgets application (no event loop)
             let _app = App::new().expect("unable to initialize wx app");
 
@@ -1961,5 +1961,8 @@ mod tests {
             // cleanup
             frame.destroy();
         });
+        if let Err(e) = res {
+            log::warn!("Test failed with error: {:?}", e);
+        }
     }
 }
