@@ -31,8 +31,7 @@ pub fn create_book_controls_tab(notebook: &Notebook) -> BookControlsTab {
 
     // Page 2: Settings Page
     let settings_page_panel = Panel::builder(&treebook).build();
-    let title = format!("Settings"); // Extra spaces to workaround wxTreeBook width issue
-    let _settings_page_index = treebook.add_page(&settings_page_panel, &title, false, -1);
+    let _settings_page_index = treebook.add_page(&settings_page_panel, "Settings", false, -1);
 
     let settings_label = StaticText::builder(&settings_page_panel)
         .with_label("Treebook settings would go here.")
