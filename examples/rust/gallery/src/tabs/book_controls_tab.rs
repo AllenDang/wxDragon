@@ -16,6 +16,9 @@ pub fn create_book_controls_tab(notebook: &Notebook) -> BookControlsTab {
 
     // Page 1: Info Page
     let info_page_panel = Panel::builder(&treebook).build();
+    // add the panel to the treebook immediately so the native parent exists
+    treebook.add_page(&info_page_panel, "Info", true, -1);
+
     let info_label = StaticText::builder(&info_page_panel)
         .with_label("This is the Treebook's information page.")
         .build();
@@ -25,10 +28,12 @@ pub fn create_book_controls_tab(notebook: &Notebook) -> BookControlsTab {
     info_page_sizer.add(&info_button, 0, SizerFlag::All | SizerFlag::AlignCenterHorizontal, 5);
     info_page_panel.set_sizer(info_page_sizer, true);
     info_page_panel.fit();
-    treebook.add_page(&info_page_panel, "Info", true, -1);
 
     // Page 2: Settings Page
     let settings_page_panel = Panel::builder(&treebook).build();
+    let title = format!("Settings"); // Extra spaces to workaround wxTreeBook width issue
+    let _settings_page_index = treebook.add_page(&settings_page_panel, &title, false, -1);
+
     let settings_label = StaticText::builder(&settings_page_panel)
         .with_label("Treebook settings would go here.")
         .build();
@@ -38,12 +43,12 @@ pub fn create_book_controls_tab(notebook: &Notebook) -> BookControlsTab {
     settings_page_sizer.add(&settings_button, 0, SizerFlag::All | SizerFlag::AlignCenterHorizontal, 5);
     settings_page_panel.set_sizer(settings_page_sizer, true);
     settings_page_panel.fit();
-    let padding = " ".repeat(12); // Adjust number of spaces for indentation
-    let title = format!("Settings{padding}"); // Extra spaces to workaround wxTreeBook width issue
-    let _settings_page_index = treebook.add_page(&settings_page_panel, &title, false, -1);
 
     // Sub-Page for Settings Page
     let advanced_settings_panel = Panel::builder(&treebook).build();
+    // attach before adding children
+    treebook.add_sub_page(&advanced_settings_panel, "Advanced", false, -1);
+
     let advanced_label = StaticText::builder(&advanced_settings_panel)
         .with_label("Advanced Treebook settings.")
         .build();
@@ -55,7 +60,6 @@ pub fn create_book_controls_tab(notebook: &Notebook) -> BookControlsTab {
     advanced_sizer.add(&advanced_button, 0, SizerFlag::All | SizerFlag::AlignCenterHorizontal, 5);
     advanced_settings_panel.set_sizer(advanced_sizer, true);
     advanced_settings_panel.fit();
-    treebook.add_sub_page(&advanced_settings_panel, "Advanced", false, -1);
 
     // Sizer for the main tab panel, to make the Treebook expand
     let main_tab_sizer = BoxSizer::builder(Orientation::Vertical).build();
