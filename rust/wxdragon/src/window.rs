@@ -66,8 +66,20 @@ impl WindowHandle {
         // Bind destroy event using existing event infrastructure
         // This closure runs when wxWidgets destroys the window (by any cause)
         let window = unsafe { Window::from_ptr(ptr) };
+        // Bind a destroy event handler _on the window itself_.
+        // wxWidgets bubbles destroy events from children up to parents, so without
+        // filtering we would mistakenly invalidate the parent when any child is
+        // destroyed.  Only invalidate the handle when the event's object matches the
+        // tracked window pointer.
         window.bind_internal(EventType::DESTROY, move |_event| {
-            Self::invalidate(handle_id);
+            if let Some(obj) = _event.get_event_object() {
+                // Compare the raw pointer addresses
+                if obj.as_ptr() == ptr {
+                    Self::invalidate(handle_id);
+                } else {
+                    // ignore destroys from child windows
+                }
+            }
         });
 
         WindowHandle(handle_id)
@@ -92,6 +104,7 @@ impl WindowHandle {
     fn invalidate(handle_id: u64) {
         WINDOW_REGISTRY.with(|r| {
             if let Some(ptr) = r.borrow_mut().remove(&handle_id) {
+                log::trace!("WindowHandle::invalidate id={handle_id} ptr={ptr:p}");
                 REVERSE_REGISTRY.with(|rr| {
                     rr.borrow_mut().remove(&(ptr as usize));
                 });
@@ -1912,5 +1925,41 @@ impl WxWidget for Window {
 impl WxEvtHandler for Window {
     unsafe fn get_event_handler_ptr(&self) -> *mut ffi::wxd_EvtHandler_t {
         self.0 as *mut ffi::wxd_EvtHandler_t
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Unit tests for WindowHandle behavior
+// ---------------------------------------------------------------------------
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::app::App;
+    use crate::prelude::*;
+    use crate::widgets::{Frame, Panel, StaticText};
+
+    #[test]
+    fn child_destroy_does_not_invalidate_parent() {
+        // use super::prelude::*;
+
+        SystemOptions::set_option_by_int("msw.no-manifest-check", 1);
+        let _ = crate::main(|_| {
+            // create the wxWidgets application (no event loop)
+            let _app = App::new().expect("unable to initialize wx app");
+
+            let frame = Frame::builder().with_title("test").build();
+            let panel = Panel::builder(&frame).build();
+            assert!(panel.is_valid(), "panel should start valid");
+
+            let label = StaticText::builder(&panel).with_label("temp").build();
+            // explicitly destroy child
+            label.destroy();
+
+            // if the fix is correct, the parent should still be valid
+            assert!(panel.is_valid(), "panel was invalidated by child destruction");
+
+            // cleanup
+            frame.destroy();
+        });
     }
 }
