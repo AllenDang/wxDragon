@@ -1441,14 +1441,16 @@ pub trait WxWidget: std::any::Any {
     /// * `style` - The window style flags to set
     ///
     /// # Example
-    /// ```ignore
-    /// use wxdragon::prelude::*;
-    ///
-    /// // Set window to be visible with a caption and resize border
-    /// window.set_style(WindowStyle::Visible | WindowStyle::Caption | WindowStyle::ThickFrame);
+    /// ```
+    /// # use wxdragon::prelude::*;
+    /// # use wxdragon::WindowStyle;
+    /// # fn example(window: &Window) {
+    /// // Set window to be visible with a overlapped and resize border
+    /// window.set_style(WindowStyle::Visible | WindowStyle::Overlapped | WindowStyle::ThickFrame);
     ///
     /// // Make window a popup window
     /// window.set_style(WindowStyle::Popup | WindowStyle::Visible);
+    /// # }
     /// ```
     ///
     /// # Note
@@ -1486,11 +1488,15 @@ pub trait WxWidget: std::any::Any {
     /// Use `WindowStyle` variants to check for specific flags.
     ///
     /// # Example
-    /// ```ignore
+    /// ```
+    /// # use wxdragon::prelude::*;
+    /// # use wxdragon::WindowStyle;
+    /// # fn example(window: &Window) {
     /// let current_style = window.get_style_raw();
     /// if (current_style & WindowStyle::Visible.bits()) != 0 {
     ///     println!("Window is visible");
     /// }
+    /// # }
     /// ```
     fn get_style_raw(&self) -> i64 {
         let window_ptr = self.handle_ptr();
@@ -1510,14 +1516,18 @@ pub trait WxWidget: std::any::Any {
     /// `true` if the style flag is set, `false` otherwise
     ///
     /// # Example
-    /// ```ignore
+    /// ```
+    /// # use wxdragon::prelude::*;
+    /// # use wxdragon::WindowStyle;
+    /// # fn example(window: &Window) {
     /// if window.has_style(WindowStyle::Visible) {
     ///     println!("Window is visible");
     /// }
     ///
-    /// if window.has_style(WindowStyle::Caption | WindowStyle::SysMenu) {
-    ///     println!("Window has both caption and system menu");
+    /// if window.has_style(WindowStyle::Overlapped | WindowStyle::SysMenu) {
+    ///     println!("Window has both overlapped and system menu");
     /// }
+    /// # }
     /// ```
     fn has_style(&self, style: WindowStyle) -> bool {
         let current_style = self.get_style_raw();
@@ -1685,11 +1695,14 @@ pub trait WxWidget: std::any::Any {
     /// `true` if navigation was successful, `false` otherwise
     ///
     /// # Example
-    /// ```ignore
+    /// ```
+    /// # use crate::wxdragon::WxWidget;
+    /// # fn show_menu(window: &wxdragon::Window) {
     /// // Navigate to the previously focused control
     /// if window.navigate(false) {
     ///     println!("Successfully navigated to previous control");
     /// }
+    /// # }
     /// ```
     fn navigate(&self, forward: bool) -> bool {
         let handle = self.handle_ptr();
@@ -1718,14 +1731,15 @@ pub trait WxWidget: std::any::Any {
     ///
     /// # Example
     ///
-    /// ```no_run
+    /// ```
     /// # use wxdragon::prelude::*;
-    /// # let window: wxdragon::Window = unimplemented!();
+    /// # fn show_menu(window: &wxdragon::Window) {
     /// let mut menu = Menu::builder()
     ///     .append_item(1001, "Option 1", "")
     ///     .append_item(1002, "Option 2", "")
     ///     .build();
     /// window.popup_menu(&mut menu, None);
+    /// # }
     /// ```
     fn popup_menu(&self, menu: &mut crate::Menu, screen_pos: Option<crate::geometry::Point>) -> bool {
         let handle = self.handle_ptr();
@@ -1852,16 +1866,17 @@ impl Window {
 /// `WxWidget` and `Any`, providing safe downcasting functionality.
 ///
 /// # Example
-/// ```ignore
-/// use wxdragon::window::WxWidgetDowncast;
-/// use wxdragon::widgets::TextCtrl;
+/// ```
+/// # use wxdragon::WxWidget;
+/// # use wxdragon::window::WxWidgetDowncast;
+/// # use wxdragon::widgets::TextCtrl;
 ///
-/// fn handle_widget(widget: &dyn WxWidget) {
+/// # fn handle_widget(widget: &dyn WxWidget) {
 ///     if let Some(text_ctrl) = widget.downcast_ref::<TextCtrl>() {
 ///         let value = text_ctrl.get_value();
 ///         println!("Text control value: {}", value);
 ///     }
-/// }
+/// # }
 /// ```
 pub trait WxWidgetDowncast {
     /// Attempts to downcast this widget to a specific type.
@@ -1957,9 +1972,7 @@ mod tests {
 
         let res = crate::main(move |app| {
             let frame = Frame::builder().with_title("test").build();
-            // macOS requires the window to be shown before timers or other
-            // events will fire; showing early ensures the timer works.
-            frame.show(true);
+            // frame.show(true);
 
             let panel = Panel::builder(&frame).build();
             assert!(panel.is_valid(), "panel should start valid");
