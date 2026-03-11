@@ -161,6 +161,30 @@ fn main() {
                 log::warn!("Failed to get ArtId::FileSave for toolbar");
             }
 
+            // separator before exit, and `toolbar.add_separator();` doesn't work for some reason,
+            // so add a StaticLine as a workaround
+            let sep: StaticLine = StaticLine::builder(&toolbar)
+                .with_size(Size::new(1, 28))
+                .with_style(StaticLineStyle::Vertical)
+                .build();
+            let color = colours::gray::GRAY_600;
+            sep.set_background_color(color);
+            sep.set_foreground_color(color);
+            toolbar.add_control(&sep);
+
+            // Exit Tool
+            if let Some(exit_bundle) = ArtProvider::get_bitmap_bundle(ArtId::Quit, ArtClient::Toolbar, None) {
+                toolbar.add_tool_bundle(ID_EXIT, "Exit", &exit_bundle, "Quit this program");
+                log::debug!("Using BitmapBundle for Exit tool");
+            } else if let Some(exit_icon) = ArtProvider::get_bitmap(ArtId::Quit, ArtClient::Toolbar, None) {
+                toolbar.add_tool(ID_EXIT, "Exit", &exit_icon, "Quit this program");
+                log::debug!("Fallback to Bitmap for Exit tool");
+            } else {
+                // no bitmap available, add text-only tool using the null bitmap
+                toolbar.add_tool(ID_EXIT, "Exit", &Bitmap::null_bitmap(), "Quit this program");
+                log::warn!("Failed to get ArtId::Quit for toolbar, added text-only Exit tool");
+            }
+
             toolbar.realize();
         }
 
