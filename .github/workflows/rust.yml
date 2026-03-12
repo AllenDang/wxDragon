@@ -186,3 +186,27 @@ jobs:
         env:
           CMAKE_TLS_VERIFY: "0"
         run: cargo zigbuild --target x86_64-pc-windows-gnu --features "aui,xrc,richtext,stc,webview" --release
+
+  macos-aarch64-to-x86_64-build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        - os: macos-latest
+          target: x86_64-apple-darwin
+          arch: x86_64
+
+    runs-on: ${{ matrix.os }}
+    steps:
+    - uses: dtolnay/rust-toolchain@stable
+      with:
+        components: clippy,rustfmt
+        targets: ${{ matrix.target }}
+
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Build default features
+      if: ${{ !cancelled() }}
+      run: cargo build --features "aui,xrc,richtext,stc,webview" --target ${{ matrix.target }} --release

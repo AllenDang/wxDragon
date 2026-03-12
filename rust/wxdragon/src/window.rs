@@ -1986,7 +1986,7 @@ mod tests {
 
             // schedule exit via a one-shot timer after 100ms
             let timer = Timer::new(&frame);
-            let app_clone = app.clone();
+            let app_clone = app;
             timer.on_tick(move |_evt| {
                 app_clone.exit_main_loop();
             });

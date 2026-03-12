@@ -138,13 +138,13 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
     println!("info: Successfully generated FFI bindings");
 
     // --- 4. Build wxDragon Wrapper ---
-    build_wxdragon_wrapper(&out_dir, &target, &wxwidgets_dir, &target_os, &target_env)
+    build_wxdragon_wrapper(dest_bin_dir, &target, &wxwidgets_dir, &target_os, &target_env)
         .expect("Failed to build wxDragon wrapper library");
     Ok(())
 }
 
 fn build_wxdragon_wrapper(
-    out_dir: &std::path::Path,
+    dest_bin_dir: &std::path::Path,
     target: &str,
     wxwidgets_source_path: &std::path::Path,
     target_os: &str,
@@ -153,10 +153,12 @@ fn build_wxdragon_wrapper(
     // --- 3. Configure and Build libwxdragon (and wxWidgets) using CMake ---
     let libwxdragon_cmake_source_dir = std::path::PathBuf::from("cpp");
 
-    // Use out_dir for build artifacts - this is unique per feature configuration
-    // so different feature combinations get separate builds without conflicts
-    let wxdragon_sys_build_dir = out_dir.join("wxdragon_sys_cmake_build");
-    let wxwidgets_build_dir = out_dir.join("wxwidgets_cmake_build");
+    // Use dest_bin_dir for build artifacts - this is unique per feature configuration
+    // so different feature combinations get separate builds without conflicts.
+    // Additionally append the target triple so that native vs cross builds do not
+    // stomp on each other when the same profile is reused (e.g. `debug`).
+    let wxdragon_sys_build_dir = dest_bin_dir.join("wxdragon_sys_cmake_build");
+    let wxwidgets_build_dir = dest_bin_dir.join("wxwidgets_cmake_build");
 
     let mut cmake_config = cmake::Config::new(libwxdragon_cmake_source_dir);
     cmake_config.out_dir(&wxdragon_sys_build_dir);
@@ -185,6 +187,32 @@ fn build_wxdragon_wrapper(
 
     // Disable WebP support since we'll use the image crate for image decoding
     cmake_config.define("wxUSE_LIBWEBP", "OFF");
+
+    // macOS cross-architecture support: when building on Apple Silicon for an
+    // x86_64-apple-darwin target (or vice versa), CMake must be instructed to
+    // use the correct architecture.  Otherwise it will default to the host
+    // CPU and produce arm64 libs that cannot satisfy an x86_64 Rust target.
+    if target_os == "macos" {
+        let target_arch = std::env::var("CARGO_CFG_TARGET_ARCH").unwrap_or_default();
+        if !target_arch.is_empty() {
+            // CMake expects "arm64" on macOS, but Rust uses "aarch64" for the
+            // same architecture.  Convert accordingly to avoid passing an invalid
+            // `-arch` argument (see CI failure log).
+            let cmake_arch = match target_arch.as_str() {
+                "aarch64" => "arm64",
+                other => other,
+            };
+
+            cmake_config.define("CMAKE_OSX_ARCHITECTURES", cmake_arch);
+            // propagate via environment as well for nested wxWidgets
+            cmake_config.env("CMAKE_OSX_ARCHITECTURES", cmake_arch);
+            let host_arch = std::env::consts::ARCH;
+            println!(
+                "info: macOS build (host={}, target={}), forcing CMAKE_OSX_ARCHITECTURES={}",
+                host_arch, target_arch, cmake_arch
+            );
+        }
+    }
 
     cmake_config
         .define("wxdUSE_AUI", if cfg!(feature = "aui") { "1" } else { "0" })
@@ -326,15 +354,44 @@ fn build_wxdragon_wrapper(
 
     let dst = cmake_config.build();
     let build_dir = dst.join("build");
-    let lib_search_path = build_dir.join("lib").display().to_string();
+    let default_lib_dir = build_dir.join("lib");
 
-    println!("info: CMake build completed. Build directory: {build_dir:?}");
-    println!("info: libwxdragon should be in: {lib_search_path:?}");
+    println!("info: CMake build completed. dst={dst:?}");
+    println!("info: build_dir={build_dir:?}, default_lib_dir={default_lib_dir:?}");
     println!("info: wxDragon-sys build directory: {wxdragon_sys_build_dir:?}");
     println!("info: wxWidgets build directory: {wxwidgets_build_dir:?}");
 
     // --- 4. Linker Instructions ---
-    println!("cargo:rustc-link-search=native={lib_search_path}");
+    // Recursively search for any `.a` libraries starting from both the root of
+    // the CMake destination and the build subdirectory.  This covers generators
+    // that output to `<dst>/lib` as well as `<dst>/build/lib`.
+    fn collect_lib_dirs(dir: &std::path::Path, out: &mut Vec<std::path::PathBuf>) {
+        if let Ok(entries) = std::fs::read_dir(dir) {
+            for entry in entries.flatten() {
+                let path = entry.path();
+                if path.is_dir() {
+                    collect_lib_dirs(&path, out);
+                } else if let Some(ext) = path.extension()
+                    && ext == "a"
+                    && let Some(parent) = path.parent()
+                    && !out.contains(&parent.to_path_buf())
+                {
+                    out.push(parent.to_path_buf());
+                }
+            }
+        }
+    }
+
+    let mut lib_dirs = Vec::new();
+    collect_lib_dirs(&dst, &mut lib_dirs);
+    collect_lib_dirs(&build_dir, &mut lib_dirs);
+    if lib_dirs.is_empty() {
+        lib_dirs.push(default_lib_dir.clone());
+    }
+    for dir in &lib_dirs {
+        println!("cargo:rustc-link-search=native={}", dir.display());
+        println!("info: added link search path: {}", dir.display());
+    }
 
     let wx_lib = wxdragon_sys_build_dir.join("lib").display().to_string();
     println!("cargo:rustc-link-search=native={wx_lib}");
@@ -507,43 +564,59 @@ fn build_wxdragon_wrapper(
     if target_os == "macos" {
         // macOS linking flags (assuming release build for wxWidgets library names here)
         // If macOS also has d suffix for debug, this section would need similar conditional logic
-        println!("cargo:rustc-link-lib=static=wx_osx_cocoau_core-3.3");
-        println!("cargo:rustc-link-lib=static=wx_baseu-3.3");
-        println!("cargo:rustc-link-lib=static=wx_baseu_net-3.3");
-        println!("cargo:rustc-link-lib=static=wx_osx_cocoau_adv-3.3");
-        println!("cargo:rustc-link-lib=static=wx_osx_cocoau_gl-3.3");
-        println!("cargo:rustc-link-lib=static=wx_osx_cocoau_propgrid-3.3");
+        // Some cross-compilation configurations (e.g., aarch64 target on x86_64 host)
+        // produce wxWidgets libs with a "-Darwin" suffix.
+        let resolve_wx_lib = |name: &str| {
+            let lib_dir = wxwidgets_build_dir.join("lib");
+            let plain = lib_dir.join(format!("lib{name}.a"));
+            let darwin = lib_dir.join(format!("lib{name}-Darwin.a"));
+            if plain.exists() {
+                name.to_string()
+            } else if darwin.exists() {
+                format!("{name}-Darwin")
+            } else {
+                // Fallback to the plain name; if it doesn't exist, the linker will report it.
+                name.to_string()
+            }
+        };
+
+        println!("cargo:rustc-link-lib=static={}", resolve_wx_lib("wx_osx_cocoau_core-3.3"));
+        println!("cargo:rustc-link-lib=static={}", resolve_wx_lib("wx_baseu-3.3"));
+        println!("cargo:rustc-link-lib=static={}", resolve_wx_lib("wx_baseu_net-3.3"));
+        println!("cargo:rustc-link-lib=static={}", resolve_wx_lib("wx_osx_cocoau_adv-3.3"));
+        println!("cargo:rustc-link-lib=static={}", resolve_wx_lib("wx_osx_cocoau_gl-3.3"));
+        println!("cargo:rustc-link-lib=static={}", resolve_wx_lib("wx_osx_cocoau_propgrid-3.3"));
 
         // Conditional features for macOS
         if cfg!(feature = "aui") {
-            println!("cargo:rustc-link-lib=static=wx_osx_cocoau_aui-3.3");
+            println!("cargo:rustc-link-lib=static={}", resolve_wx_lib("wx_osx_cocoau_aui-3.3"));
         }
         if cfg!(feature = "media-ctrl") {
-            println!("cargo:rustc-link-lib=static=wx_osx_cocoau_media-3.3");
+            println!("cargo:rustc-link-lib=static={}", resolve_wx_lib("wx_osx_cocoau_media-3.3"));
         }
         if cfg!(feature = "webview") {
-            println!("cargo:rustc-link-lib=static=wx_osx_cocoau_webview-3.3");
+            println!("cargo:rustc-link-lib=static={}", resolve_wx_lib("wx_osx_cocoau_webview-3.3"));
         }
         if cfg!(feature = "xrc") || cfg!(feature = "webview") {
-            println!("cargo:rustc-link-lib=static=wx_osx_cocoau_html-3.3");
+            println!("cargo:rustc-link-lib=static={}", resolve_wx_lib("wx_osx_cocoau_html-3.3"));
         }
         if cfg!(feature = "stc") {
-            println!("cargo:rustc-link-lib=static=wx_osx_cocoau_stc-3.3");
+            println!("cargo:rustc-link-lib=static={}", resolve_wx_lib("wx_osx_cocoau_stc-3.3"));
         }
         if cfg!(feature = "xrc") {
-            println!("cargo:rustc-link-lib=static=wx_osx_cocoau_xrc-3.3");
-            println!("cargo:rustc-link-lib=static=wx_baseu_xml-3.3");
+            println!("cargo:rustc-link-lib=static={}", resolve_wx_lib("wx_osx_cocoau_xrc-3.3"));
+            println!("cargo:rustc-link-lib=static={}", resolve_wx_lib("wx_baseu_xml-3.3"));
         }
         if cfg!(feature = "richtext") {
-            println!("cargo:rustc-link-lib=static=wx_osx_cocoau_html-3.3");
-            println!("cargo:rustc-link-lib=static=wx_baseu_xml-3.3");
-            println!("cargo:rustc-link-lib=static=wx_osx_cocoau_richtext-3.3");
+            println!("cargo:rustc-link-lib=static={}", resolve_wx_lib("wx_osx_cocoau_html-3.3"));
+            println!("cargo:rustc-link-lib=static={}", resolve_wx_lib("wx_baseu_xml-3.3"));
+            println!("cargo:rustc-link-lib=static={}", resolve_wx_lib("wx_osx_cocoau_richtext-3.3"));
         }
 
-        println!("cargo:rustc-link-lib=static=wxjpeg-3.3");
-        println!("cargo:rustc-link-lib=static=wxpng-3.3");
-        println!("cargo:rustc-link-lib=static=wxtiff-3.3");
-        println!("cargo:rustc-link-lib=static=wxregexu-3.3");
+        println!("cargo:rustc-link-lib=static={}", resolve_wx_lib("wxjpeg-3.3"));
+        println!("cargo:rustc-link-lib=static={}", resolve_wx_lib("wxpng-3.3"));
+        println!("cargo:rustc-link-lib=static={}", resolve_wx_lib("wxtiff-3.3"));
+        println!("cargo:rustc-link-lib=static={}", resolve_wx_lib("wxregexu-3.3"));
         println!("cargo:rustc-link-lib=expat");
         println!("cargo:rustc-link-lib=z");
         println!("cargo:rustc-link-lib=iconv");
@@ -551,8 +624,8 @@ fn build_wxdragon_wrapper(
 
         // Conditional STC support libraries for macOS
         if cfg!(feature = "stc") {
-            println!("cargo:rustc-link-lib=static=wxscintilla-3.3");
-            println!("cargo:rustc-link-lib=static=wxlexilla-3.3");
+            println!("cargo:rustc-link-lib=static={}", resolve_wx_lib("wxscintilla-3.3"));
+            println!("cargo:rustc-link-lib=static={}", resolve_wx_lib("wxlexilla-3.3"));
         }
 
         println!("cargo:rustc-link-lib=framework=AudioToolbox");
