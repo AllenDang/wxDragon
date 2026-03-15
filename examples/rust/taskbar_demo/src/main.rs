@@ -81,6 +81,18 @@ fn main() {
             }
         });
 
+        #[cfg(target_os = "windows")]
+        taskbar.on_left_double_click(move |_event| {
+            log::info!("Taskbar icon double-clicked");
+            status.set_label("Taskbar icon double-clicked!");
+        });
+
+        #[cfg(any(target_os = "windows", target_os = "linux"))]
+        taskbar.on_left_down(move |_event| {
+            log::info!("Taskbar icon clicked");
+            status.set_label("Taskbar icon clicked!");
+        });
+
         // Create system icon
         let icon = ArtProvider::get_bitmap(ArtId::Help, ArtClient::Menu, Some(Size::new(16, 16)));
 

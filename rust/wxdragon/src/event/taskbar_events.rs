@@ -7,7 +7,8 @@
 //! TaskBarIcon events have different levels of support across platforms:
 //!
 //! - **Windows**: Full support for all events including mouse movements, clicks, double-clicks, and balloon tooltips
-//! - **Linux**: Limited support - only left down and left double-click events are available
+//! - **Linux**: Limited support - tray activation is available, but GTK does not provide a
+//!   distinct native double-click event for status icons
 //! - **macOS**: ❌ Not supported - macOS uses menu-based interaction only
 //!
 //! ## Usage
@@ -45,7 +46,8 @@
 //! - Balloon tooltip events (timeout, click)
 //!
 //! ## Linux/GTK
-//! - Limited support: left down, left double-click, popup menu
+//! - Reliable support for click/activation and popup menu
+//! - No distinct native double-click event for tray icons in wxGTK
 //! - No mouse up/move events, no balloon events
 //!
 //! ## macOS

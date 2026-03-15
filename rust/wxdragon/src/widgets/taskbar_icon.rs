@@ -337,6 +337,9 @@ impl TaskBarIcon {
     where
         F: FnMut(TaskBarIconEventData) + 'static,
     {
+        #[cfg(target_os = "linux")]
+        let consume_event = matches!(event, TaskBarIconEvent::LeftDown);
+
         // Map enum variant to EventType
         let event_type = match event {
             TaskBarIconEvent::LeftDown => EventType::TASKBAR_LEFT_DOWN,
@@ -360,6 +363,11 @@ impl TaskBarIcon {
 
         // Create wrapper
         let wrapper = move |event: crate::event::Event| {
+            #[cfg(target_os = "linux")]
+            if consume_event {
+                event.skip(false);
+            }
+
             let typed_event = TaskBarIconEventData::new(event);
             callback(typed_event);
         };
@@ -382,12 +390,42 @@ impl TaskBarIcon {
     /// Binds a handler to taskbar icon left mouse button double-click
     ///
     /// Note: Only available on Windows and Linux. Not supported on macOS.
-    #[cfg(any(target_os = "windows", target_os = "linux"))]
+    #[cfg(target_os = "windows")]
     pub fn on_left_double_click<F>(&self, callback: F)
     where
         F: FnMut(TaskBarIconEventData) + 'static,
     {
         self.bind_taskbar_event(TaskBarIconEvent::LeftDoubleClick, callback)
+    }
+}
+
+#[cfg(target_os = "linux")]
+impl TaskBarIcon {
+    /// Binds a handler to taskbar icon left mouse button double-click.
+    ///
+    /// GTK tray icons don't reliably emit a native double-click event, so this
+    /// is synthesized from two taskbar click events within a short interval.
+    pub fn on_left_double_click<F>(&self, callback: F)
+    where
+        F: FnMut(TaskBarIconEventData) + 'static,
+    {
+        let callback = std::cell::RefCell::new(callback);
+        let last_click = std::cell::RefCell::new(None::<std::time::Instant>);
+        let threshold = std::time::Duration::from_millis(500);
+
+        self.bind_taskbar_event(TaskBarIconEvent::LeftDown, move |event| {
+            let now = std::time::Instant::now();
+            let is_double_click = last_click
+                .borrow()
+                .is_some_and(|previous| now.duration_since(previous) <= threshold);
+
+            *last_click.borrow_mut() = Some(now);
+
+            if is_double_click {
+                *last_click.borrow_mut() = None;
+                (callback.borrow_mut())(event);
+            }
+        });
     }
 }
 

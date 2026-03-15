@@ -30,6 +30,7 @@
 #include <wx/notifmsg.h>   // For wxNotificationMessage events
 #include <wx/dnd.h>  // ADDED: For drag and drop events (wxEVT_BEGIN_DRAG, wxEVT_DROP_TEXT, etc.)
 #include <wx/menu.h> // NEW: For wxMenuEvent and wxEVT_MENU_* events
+#include <wx/taskbar.h> // Needed for wxEVT_TASKBAR_* constants
 #include <wx/timectrl.h> // ADDED: For wxTimePickerCtrl and wxEVT_TIME_CHANGED
 #if wxdUSE_MEDIACTRL
 #include <wx/mediactrl.h> // ADDED: For MediaCtrl events
@@ -356,6 +357,12 @@ WxdEventHandler::DispatchEvent(wxEvent& event)
     wxEventType eventType = event.GetEventType();
     wxd_Id id = event.GetId(); // Get the widget ID from the event
 
+#ifdef __WXGTK__
+    const bool keep_dispatching_after_consume = eventType == wxEVT_TASKBAR_LEFT_DOWN;
+#else
+    const bool keep_dispatching_after_consume = false;
+#endif
+
     // Create keys for specific ID and wxID_ANY
     std::pair<wxEventType, wxd_Id> key_specific_id = { eventType, id };
     std::pair<wxEventType, wxd_Id> key_any_id = { eventType, wxID_ANY };
@@ -376,7 +383,9 @@ WxdEventHandler::DispatchEvent(wxEvent& event)
                 // Check if this handler consumed the event
                 if (!event.GetSkipped()) {
                     event_consumed = true;
-                    break; // Stop processing further handlers
+                    if (!keep_dispatching_after_consume) {
+                        break; // Stop processing further handlers
+                    }
                 }
             }
         }
@@ -397,7 +406,9 @@ WxdEventHandler::DispatchEvent(wxEvent& event)
                     // Check if this handler consumed the event
                     if (!event.GetSkipped()) {
                         event_consumed = true;
-                        break; // Stop processing further handlers
+                        if (!keep_dispatching_after_consume) {
+                            break; // Stop processing further handlers
+                        }
                     }
                 }
             }
@@ -996,6 +1007,14 @@ get_wx_event_type_for_c_enum(WXDEventTypeCEnum c_enum_val)
         return wxEVT_MOTION;
     case WXD_EVENT_TYPE_MOUSEWHEEL:
         return wxEVT_MOUSEWHEEL;
+
+    // TaskBarIcon events are handled later in this function (platform-specific support).
+    case WXD_EVENT_TYPE_TASKBAR_CLICK:
+#ifdef wxEVT_TASKBAR_CLICK
+        return wxEVT_TASKBAR_CLICK;
+#else
+        return wxEVT_NULL;
+#endif
     case WXD_EVENT_TYPE_ENTER_WINDOW:
         return wxEVT_ENTER_WINDOW;
     case WXD_EVENT_TYPE_LEAVE_WINDOW:
@@ -1421,63 +1440,27 @@ get_wx_event_type_for_c_enum(WXDEventTypeCEnum c_enum_val)
 
 // TaskBarIcon events - platform-specific support
 #if wxUSE_TASKBARICON
-    // Basic mouse events - available on Windows and Linux (constants defined but may not fire on macOS)
+    // Basic mouse events supported by the current wxWidgets backend.
     case WXD_EVENT_TYPE_TASKBAR_LEFT_DOWN:
-#ifdef wxEVT_TASKBAR_LEFT_DOWN
         return wxEVT_TASKBAR_LEFT_DOWN;
-#else
-        return wxEVT_NULL; // Fallback for platforms without this event
-#endif
     case WXD_EVENT_TYPE_TASKBAR_LEFT_DCLICK:
-#ifdef wxEVT_TASKBAR_LEFT_DCLICK
         return wxEVT_TASKBAR_LEFT_DCLICK;
-#else
-        return wxEVT_NULL; // Fallback for platforms without this event
-#endif
 
     // Windows-only events - check each constant individually
     case WXD_EVENT_TYPE_TASKBAR_MOVE:
-#ifdef wxEVT_TASKBAR_MOVE
         return wxEVT_TASKBAR_MOVE;
-#else
-        return wxEVT_NULL; // Event not available on this platform
-#endif
     case WXD_EVENT_TYPE_TASKBAR_LEFT_UP:
-#ifdef wxEVT_TASKBAR_LEFT_UP
         return wxEVT_TASKBAR_LEFT_UP;
-#else
-        return wxEVT_NULL; // Event not available on this platform
-#endif
     case WXD_EVENT_TYPE_TASKBAR_RIGHT_DOWN:
-#ifdef wxEVT_TASKBAR_RIGHT_DOWN
         return wxEVT_TASKBAR_RIGHT_DOWN;
-#else
-        return wxEVT_NULL; // Event not available on this platform
-#endif
     case WXD_EVENT_TYPE_TASKBAR_RIGHT_UP:
-#ifdef wxEVT_TASKBAR_RIGHT_UP
         return wxEVT_TASKBAR_RIGHT_UP;
-#else
-        return wxEVT_NULL; // Event not available on this platform
-#endif
     case WXD_EVENT_TYPE_TASKBAR_RIGHT_DCLICK:
-#ifdef wxEVT_TASKBAR_RIGHT_DCLICK
         return wxEVT_TASKBAR_RIGHT_DCLICK;
-#else
-        return wxEVT_NULL; // Event not available on this platform
-#endif
     case WXD_EVENT_TYPE_TASKBAR_BALLOON_TIMEOUT:
-#ifdef wxEVT_TASKBAR_BALLOON_TIMEOUT
         return wxEVT_TASKBAR_BALLOON_TIMEOUT;
-#else
-        return wxEVT_NULL; // Event not available on this platform
-#endif
     case WXD_EVENT_TYPE_TASKBAR_BALLOON_CLICK:
-#ifdef wxEVT_TASKBAR_BALLOON_CLICK
         return wxEVT_TASKBAR_BALLOON_CLICK;
-#else
-        return wxEVT_NULL; // Event not available on this platform
-#endif
 #endif
 
 // WebView event types - only available when webview feature is enabled
