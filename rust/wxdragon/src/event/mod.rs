@@ -440,21 +440,20 @@ pub struct EventType: ffi::WXDEventTypeCEnum { // Use the generated C enum type
 
     // TaskBarIcon Event Types - platform-specific support
 
-    // Common events supported on Windows and Linux
+    // Taskbar event identifiers exposed by the generated bindings.
+    // Runtime support is still platform-specific; Linux only exposes a subset
+    // of these as native tray events.
+    const TASKBAR_CLICK = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TASKBAR_CLICK;
     const TASKBAR_LEFT_DOWN = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TASKBAR_LEFT_DOWN;
+    const TASKBAR_LEFT_UP = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TASKBAR_LEFT_UP;
+    const TASKBAR_RIGHT_DOWN = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TASKBAR_RIGHT_DOWN;
+    const TASKBAR_RIGHT_UP = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TASKBAR_RIGHT_UP;
     const TASKBAR_LEFT_DCLICK = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TASKBAR_LEFT_DCLICK;
+    const TASKBAR_RIGHT_DCLICK = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TASKBAR_RIGHT_DCLICK;
 
     // Windows-only events
     #[cfg(target_os = "windows")]
     const TASKBAR_MOVE = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TASKBAR_MOVE;
-    #[cfg(target_os = "windows")]
-    const TASKBAR_LEFT_UP = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TASKBAR_LEFT_UP;
-    #[cfg(target_os = "windows")]
-    const TASKBAR_RIGHT_DOWN = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TASKBAR_RIGHT_DOWN;
-    #[cfg(target_os = "windows")]
-    const TASKBAR_RIGHT_UP = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TASKBAR_RIGHT_UP;
-    #[cfg(target_os = "windows")]
-    const TASKBAR_RIGHT_DCLICK = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TASKBAR_RIGHT_DCLICK;
     #[cfg(target_os = "windows")]
     const TASKBAR_BALLOON_TIMEOUT = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TASKBAR_BALLOON_TIMEOUT;
     #[cfg(target_os = "windows")]

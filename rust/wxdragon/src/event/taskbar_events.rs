@@ -7,15 +7,16 @@
 //! TaskBarIcon events have different levels of support across platforms:
 //!
 //! - **Windows**: Full support for all events including mouse movements, clicks, double-clicks, and balloon tooltips
-//! - **Linux**: Limited support - only left down and left double-click events are available
+//! - **Linux**: Limited support - tray activation is available, but GTK does not provide a
+//!   distinct native double-click event for status icons
 //! - **macOS**: ❌ Not supported - macOS uses menu-based interaction only
 //!
 //! ## Usage
 //!
 //! For maximum cross-platform compatibility, use the `popup_menu()` method to show context menus
-//! rather than relying on mouse events. The basic events (left down, left double-click) are
-//! available on Windows and Linux, while Windows-specific events are only available when
-//! compiling for Windows.
+//! rather than relying on mouse events. `on_left_down()` is available on Windows and Linux,
+//! and `on_left_double_click()` is available on both platforms, although on Linux it is
+//! synthesized from repeated tray activations rather than delivered as a native GTK event.
 //!
 //! ## Example
 //!
@@ -45,7 +46,9 @@
 //! - Balloon tooltip events (timeout, click)
 //!
 //! ## Linux/GTK
-//! - Limited support: left down, left double-click, popup menu
+//! - Reliable support for click/activation and popup menu
+//! - No distinct native double-click event for tray icons in wxGTK
+//! - `on_left_double_click()` is synthesized from two close `on_left_down()` activations
 //! - No mouse up/move events, no balloon events
 //!
 //! ## macOS
@@ -65,7 +68,7 @@ use crate::geometry::Point;
 pub enum TaskBarIconEvent {
     /// Left mouse button pressed on the taskbar icon (Windows, Linux)
     LeftDown,
-    /// Left mouse button double-clicked on the taskbar icon (Windows, Linux)
+    /// Left mouse button double-clicked on the taskbar icon (Windows, synthesized on Linux)
     LeftDoubleClick,
 
     // Windows-only events

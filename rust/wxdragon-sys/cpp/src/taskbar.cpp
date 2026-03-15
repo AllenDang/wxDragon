@@ -94,19 +94,22 @@ wxd_TaskBarIcon_Create(wxd_TaskBarIconType_t iconType)
     wxTaskBarIconType wxIconType;
     switch (iconType) {
     case WXD_TASKBAR_ICON_DEFAULT:
-        // On macOS, use CustomStatusItem for menu bar (system tray)
-        // On other platforms, use the platform's default
-#ifdef __WXOSX__
-        wxIconType = wxTBI_CUSTOM_STATUSITEM;
-#else
-        wxIconType = wxTBI_DOCK;
-#endif
+        // Use wxWidgets' own default type; on macOS this is a status item
+        // while on other platforms this is a dock/taskbar icon.
+        wxIconType = wxTBI_DEFAULT_TYPE;
         break;
     case WXD_TASKBAR_ICON_DOCK:
         wxIconType = wxTBI_DOCK;
         break;
     case WXD_TASKBAR_ICON_CUSTOM_STATUSITEM:
+        // Custom status items are only well-supported on macOS.
+        // On other platforms fall back to the normal dock/taskbar type so that
+        // click/double-click events (and menu handling) work reliably.
+    #ifdef __WXOSX__
         wxIconType = wxTBI_CUSTOM_STATUSITEM;
+    #else
+        wxIconType = wxTBI_DOCK;
+    #endif
         break;
     default:
         return nullptr;
