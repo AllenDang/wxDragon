@@ -42,9 +42,10 @@ impl BitmapBundle {
     /// This is primarily for internal use when receiving a bundle from wxWidgets.
     ///
     /// # Safety
-    /// The pointer must be a valid wxBitmapBundle pointer that can be owned
-    /// and eventually destroyed by Rust.
-    pub fn from_ptr_owned(ptr: *mut ffi::wxd_BitmapBundle_t) -> Self {
+    /// The pointer must be a valid wxBitmapBundle pointer that is uniquely owned
+    /// (not aliased) and can be eventually destroyed by Rust. The caller must ensure
+    /// no other code will use or free this pointer.
+    pub unsafe fn from_ptr_owned(ptr: *mut ffi::wxd_BitmapBundle_t) -> Self {
         BitmapBundle { ptr, is_owned: true }
     }
 

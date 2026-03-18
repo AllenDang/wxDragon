@@ -214,7 +214,7 @@ impl ArtProvider {
         if bundle_ptr.is_null() {
             None
         } else {
-            Some(BitmapBundle::from_ptr_owned(bundle_ptr))
+            Some(unsafe { BitmapBundle::from_ptr_owned(bundle_ptr) })
         }
     }
 
