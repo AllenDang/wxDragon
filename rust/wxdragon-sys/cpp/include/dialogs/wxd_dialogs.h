@@ -175,6 +175,12 @@ wxd_Font_GetUnderlined(wxd_Font_t* self);
 WXD_EXPORTED void
 wxd_Font_SetUnderlined(wxd_Font_t* self, bool underlined);
 
+WXD_EXPORTED bool
+wxd_Font_GetStrikethrough(wxd_Font_t* self);
+
+WXD_EXPORTED void
+wxd_Font_SetStrikethrough(wxd_Font_t* self, bool strikethrough);
+
 WXD_EXPORTED int
 wxd_Font_GetFaceName(wxd_Font_t* self, char* buffer, size_t buffer_len);
 

@@ -152,6 +152,11 @@ impl Font {
         unsafe { ffi::wxd_Font_GetUnderlined(self.ptr) }
     }
 
+    /// Get whether the font is strikethrough.
+    pub fn is_strikethrough(&self) -> bool {
+        unsafe { ffi::wxd_Font_GetStrikethrough(self.ptr) }
+    }
+
     /// Get the font face name.
     pub fn get_face_name(&self) -> String {
         let mut buffer = vec![0; 256];
@@ -208,6 +213,13 @@ impl Font {
         }
     }
 
+    /// Sets whether the font is strikethrough.
+    pub fn set_strikethrough(&mut self, strikethrough: bool) {
+        unsafe {
+            ffi::wxd_Font_SetStrikethrough(self.ptr, strikethrough);
+        }
+    }
+
     /// Creates an owned clone of this font.
     ///
     /// This creates a new C++ wxFont object that is a deep copy of the original,
@@ -228,7 +240,12 @@ impl Font {
         );
 
         // If for some reason we couldn't clone, return a default font
-        new_font.unwrap_or_default()
+        let mut font = new_font.unwrap_or_default();
+        // Preserve strikethrough (not part of wxFont constructor)
+        if self.is_strikethrough() {
+            font.set_strikethrough(true);
+        }
+        font
     }
 
     pub fn builder() -> FontBuilder {
@@ -262,6 +279,7 @@ pub struct FontBuilder {
     style: FontStyle,
     weight: FontWeight,
     underline: bool,
+    strikethrough: bool,
     face_name: String,
 }
 
@@ -291,6 +309,11 @@ impl FontBuilder {
         self
     }
 
+    pub fn with_strikethrough(mut self, strikethrough: bool) -> Self {
+        self.strikethrough = strikethrough;
+        self
+    }
+
     pub fn with_face_name(mut self, name: &str) -> Self {
         self.face_name = name.to_string();
         self
@@ -299,13 +322,19 @@ impl FontBuilder {
     pub fn build(self) -> Option<Font> {
         let point_size = if self.point_size == 0 { 10 } else { self.point_size };
 
-        Font::new_with_details(
+        let mut font = Font::new_with_details(
             point_size as c_int,
             self.family.as_i32(), // Convert enum to i32
             self.style.as_i32(),  // Convert enum to i32
             self.weight.as_i32(), // Convert enum to i32
             self.underline,
             &self.face_name,
-        )
+        );
+        if self.strikethrough
+            && let Some(ref mut f) = font
+        {
+            f.set_strikethrough(true);
+        }
+        font
     }
 }

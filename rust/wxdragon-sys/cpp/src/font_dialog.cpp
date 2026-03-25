@@ -213,6 +213,24 @@ wxd_Font_SetUnderlined(wxd_Font_t* self, bool underlined)
     font->SetUnderlined(underlined);
 }
 
+bool
+wxd_Font_GetStrikethrough(wxd_Font_t* self)
+{
+    if (!self)
+        return false;
+    wxFont* font = reinterpret_cast<wxFont*>(self);
+    return font->GetStrikethrough();
+}
+
+void
+wxd_Font_SetStrikethrough(wxd_Font_t* self, bool strikethrough)
+{
+    if (!self)
+        return;
+    wxFont* font = reinterpret_cast<wxFont*>(self);
+    font->SetStrikethrough(strikethrough);
+}
+
 // --- wxFontDialog Implementation ---
 
 wxd_FontDialog_t*
