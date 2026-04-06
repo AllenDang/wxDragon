@@ -132,6 +132,18 @@ wxd_FontData_GetEnableEffects(wxd_FontData_t* self);
 WXD_EXPORTED void
 wxd_FontData_SetInitialFont(wxd_FontData_t* self, const wxd_Font_t* font);
 
+WXD_EXPORTED wxd_Colour_t
+wxd_FontData_GetChosenColour(wxd_FontData_t* self);
+
+WXD_EXPORTED void
+wxd_FontData_SetColour(wxd_FontData_t* self, wxd_Colour_t colour);
+
+WXD_EXPORTED int
+wxd_FontData_GetEncoding(wxd_FontData_t* self);
+
+WXD_EXPORTED void
+wxd_FontData_SetEncoding(wxd_FontData_t* self, int encoding);
+
 WXD_EXPORTED wxd_Font_t*
 wxd_Font_Create(void);
 
@@ -174,6 +186,18 @@ wxd_Font_GetUnderlined(wxd_Font_t* self);
 
 WXD_EXPORTED void
 wxd_Font_SetUnderlined(wxd_Font_t* self, bool underlined);
+
+WXD_EXPORTED bool
+wxd_Font_GetStrikethrough(wxd_Font_t* self);
+
+WXD_EXPORTED void
+wxd_Font_SetStrikethrough(wxd_Font_t* self, bool strikethrough);
+
+WXD_EXPORTED int
+wxd_Font_GetEncoding(wxd_Font_t* self);
+
+WXD_EXPORTED void
+wxd_Font_SetEncoding(wxd_Font_t* self, int encoding);
 
 WXD_EXPORTED int
 wxd_Font_GetFaceName(wxd_Font_t* self, char* buffer, size_t buffer_len);

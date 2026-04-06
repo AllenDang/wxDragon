@@ -52,6 +52,48 @@ wxd_FontData_SetInitialFont(wxd_FontData_t* self, const wxd_Font_t* font)
     data->SetInitialFont(*wxfont);
 }
 
+wxd_Colour_t
+wxd_FontData_GetChosenColour(wxd_FontData_t* self)
+{
+    wxd_Colour_t c = {0, 0, 0, 255};
+    if (!self)
+        return c;
+    wxFontData* data = reinterpret_cast<wxFontData*>(self);
+    wxColour colour = data->GetColour();
+    c.r = colour.Red();
+    c.g = colour.Green();
+    c.b = colour.Blue();
+    c.a = colour.Alpha();
+    return c;
+}
+
+void
+wxd_FontData_SetColour(wxd_FontData_t* self, wxd_Colour_t colour)
+{
+    if (!self)
+        return;
+    wxFontData* data = reinterpret_cast<wxFontData*>(self);
+    data->SetColour(wxColour(colour.r, colour.g, colour.b, colour.a));
+}
+
+int
+wxd_FontData_GetEncoding(wxd_FontData_t* self)
+{
+    if (!self)
+        return 0; // wxFONTENCODING_SYSTEM
+    wxFontData* data = reinterpret_cast<wxFontData*>(self);
+    return static_cast<int>(data->GetEncoding());
+}
+
+void
+wxd_FontData_SetEncoding(wxd_FontData_t* self, int encoding)
+{
+    if (!self)
+        return;
+    wxFontData* data = reinterpret_cast<wxFontData*>(self);
+    data->SetEncoding(static_cast<wxFontEncoding>(encoding));
+}
+
 // --- wxFont Implementation ---
 
 wxd_Font_t*
@@ -211,6 +253,42 @@ wxd_Font_SetUnderlined(wxd_Font_t* self, bool underlined)
         return;
     wxFont* font = reinterpret_cast<wxFont*>(self);
     font->SetUnderlined(underlined);
+}
+
+bool
+wxd_Font_GetStrikethrough(wxd_Font_t* self)
+{
+    if (!self)
+        return false;
+    wxFont* font = reinterpret_cast<wxFont*>(self);
+    return font->GetStrikethrough();
+}
+
+void
+wxd_Font_SetStrikethrough(wxd_Font_t* self, bool strikethrough)
+{
+    if (!self)
+        return;
+    wxFont* font = reinterpret_cast<wxFont*>(self);
+    font->SetStrikethrough(strikethrough);
+}
+
+int
+wxd_Font_GetEncoding(wxd_Font_t* self)
+{
+    if (!self)
+        return 0; // wxFONTENCODING_SYSTEM
+    wxFont* font = reinterpret_cast<wxFont*>(self);
+    return static_cast<int>(font->GetEncoding());
+}
+
+void
+wxd_Font_SetEncoding(wxd_Font_t* self, int encoding)
+{
+    if (!self)
+        return;
+    wxFont* font = reinterpret_cast<wxFont*>(self);
+    font->SetEncoding(static_cast<wxFontEncoding>(encoding));
 }
 
 // --- wxFontDialog Implementation ---

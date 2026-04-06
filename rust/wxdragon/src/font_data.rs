@@ -1,3 +1,4 @@
+use crate::color::Colour;
 use crate::font::Font;
 use wxdragon_sys as ffi;
 
@@ -41,6 +42,31 @@ impl FontData {
     pub fn set_initial_font(&mut self, font: &Font) {
         unsafe {
             ffi::wxd_FontData_SetInitialFont(self.ptr, font.as_ptr());
+        }
+    }
+
+    /// Get the chosen colour from the font dialog
+    pub fn get_chosen_colour(&self) -> Option<Colour> {
+        let c = unsafe { ffi::wxd_FontData_GetChosenColour(self.ptr) };
+        Some(Colour::new(c.r, c.g, c.b, c.a))
+    }
+
+    /// Set the initial colour to be selected in the dialog
+    pub fn set_colour(&mut self, colour: &Colour) {
+        unsafe {
+            ffi::wxd_FontData_SetColour(self.ptr, colour.to_raw());
+        }
+    }
+
+    /// Get the encoding
+    pub fn get_encoding(&self) -> i32 {
+        unsafe { ffi::wxd_FontData_GetEncoding(self.ptr) }
+    }
+
+    /// Set the encoding
+    pub fn set_encoding(&mut self, encoding: i32) {
+        unsafe {
+            ffi::wxd_FontData_SetEncoding(self.ptr, encoding);
         }
     }
 
