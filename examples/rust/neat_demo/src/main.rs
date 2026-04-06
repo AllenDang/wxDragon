@@ -227,26 +227,28 @@ fn main() {
             menu_actions::handle_menu_command(&frame, &model_for_menu, id);
         });
 
+        let cfg_for_close = cfg_clone.clone();
         frame.on_close(move |evt| {
-            if let wxdragon::WindowEventData::General(event) = &evt
-                && event.can_veto()
-            {
+            if let wxdragon::WindowEventData::General(event) = &evt {
+                let pos = frame.get_position();
+                let size = frame.get_size();
+                let win = WindowConfig::new(pos, size);
+                cfg_for_close.borrow_mut().window = Some(win);
+
                 // If the close event is the window's default behavior (not from the taskbar menu or main menu)
                 // we veto the close and hide the window instead
                 log::debug!("Close event vetoed, hiding window instead of closing.");
-                event.veto();
-                frame.show(false);
+                if event.can_veto() {
+                    event.veto();
+                    frame.show(false);
+                }
             }
         });
 
         let model_for_destroy = model.clone();
         let cfg_for_destroy = cfg_clone.clone();
         frame.on_destroy(move |_data| {
-            let pos = frame.get_position();
-            let size = frame.get_size();
-            let win = WindowConfig::new(pos, size);
             let mut cfg = cfg_for_destroy.borrow_mut();
-            cfg.window = Some(win);
             // Persist current servers from the model back to settings
             if let Some(servers) =
                 model_for_destroy.with_userdata_mut::<Rc<RefCell<ServerList>>, Vec<server_node::ServerNode>>(|list_rc| {

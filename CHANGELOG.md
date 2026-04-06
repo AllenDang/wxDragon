@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.9.14
+
+### Enhancements
+
+- **Safety**: Marked `BitmapBundle::from_ptr_owned()` as `unsafe` (#134)
+- **Gallery**: Added separator and Exit tool to gallery toolbar
+- **Build**: Added macOS aarch64-to-x86_64 cross-compilation CI job
+- **Local Fork Support**: Made it possible to use a local fork of wxWidgets with wxDragon
+
+### Bug Fixes
+
+- Fixed taskbar icon event handling on GTK
+- Fixed `WindowHandle` invalidation and added regression test
+- Fixed gallery page addition order and Treebook title spacing
+
 ## 0.9.13
 
 ### Update wxwidgets to 3.3.2

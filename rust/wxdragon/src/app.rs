@@ -636,7 +636,7 @@ where
     };
 
     if exit_code != 0 {
-        panic!("Application exited with code: {exit_code}");
+        return Err(format!("Application exited with code: {exit_code}").into());
     }
 
     Ok(())
