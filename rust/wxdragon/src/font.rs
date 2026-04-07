@@ -220,6 +220,18 @@ impl Font {
         }
     }
 
+    /// Gets the font encoding.
+    pub fn get_encoding(&self) -> i32 {
+        unsafe { ffi::wxd_Font_GetEncoding(self.ptr) }
+    }
+
+    /// Sets the font encoding.
+    pub fn set_encoding(&mut self, encoding: i32) {
+        unsafe {
+            ffi::wxd_Font_SetEncoding(self.ptr, encoding);
+        }
+    }
+
     /// Creates an owned clone of this font.
     ///
     /// This creates a new C++ wxFont object that is a deep copy of the original,
