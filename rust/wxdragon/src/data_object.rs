@@ -40,7 +40,6 @@ pub trait TransferOwnership {
 }
 
 /// Base class for data objects.
-#[derive(Clone)]
 pub struct DataObjectBase {
     ptr: *mut ffi::wxd_DataObject_t,
     owned: bool,
@@ -89,7 +88,6 @@ impl Drop for DataObjectBase {
 }
 
 /// Data object for simple text data
-#[derive(Clone)]
 pub struct TextDataObject {
     data_object: DataObjectBase,
 }
@@ -159,7 +157,6 @@ impl TransferOwnership for TextDataObject {
 }
 
 /// Data object for file paths
-#[derive(Clone)]
 pub struct FileDataObject {
     data_object: DataObjectBase,
 }
@@ -251,7 +248,6 @@ impl TransferOwnership for FileDataObject {
 }
 
 /// Data object for bitmap data
-#[derive(Clone)]
 pub struct BitmapDataObject {
     data_object: DataObjectBase,
 }

@@ -8,6 +8,7 @@ use crate::event::taskbar_events::{TaskBarIconEvent, TaskBarIconEventData};
 
 use crate::menus::menu::Menu;
 
+use std::cell::Cell;
 use std::ffi::CString;
 use std::ptr;
 use wxdragon_sys as ffi;
@@ -85,9 +86,8 @@ impl TaskBarIconType {
 /// // Clean up when done (optional - will be cleaned up on app exit)
 /// taskbar.remove_icon();
 /// ```
-#[derive(Clone)]
 pub struct TaskBarIcon {
-    ptr: *mut ffi::wxd_TaskBarIcon_t,
+    ptr: Cell<*mut ffi::wxd_TaskBarIcon_t>,
 }
 
 impl TaskBarIcon {
@@ -104,7 +104,7 @@ impl TaskBarIcon {
             panic!("Failed to create TaskBarIcon widget");
         }
 
-        TaskBarIcon { ptr }
+        TaskBarIcon { ptr: Cell::new(ptr) }
     }
 
     /// Sets the taskbar icon and tooltip.
@@ -117,7 +117,7 @@ impl TaskBarIcon {
     /// `true` if the icon was set successfully, `false` otherwise.
     pub fn set_icon(&self, icon: &Bitmap, tooltip: &str) -> bool {
         let c_tooltip = CString::new(tooltip).expect("CString::new failed");
-        unsafe { ffi::wxd_TaskBarIcon_SetIcon(self.ptr, icon.as_const_ptr(), c_tooltip.as_ptr()) }
+        unsafe { ffi::wxd_TaskBarIcon_SetIcon(self.ptr.get(), icon.as_const_ptr(), c_tooltip.as_ptr()) }
     }
 
     /// Sets the taskbar icon using a bitmap bundle and tooltip.
@@ -130,7 +130,7 @@ impl TaskBarIcon {
     /// `true` if the icon was set successfully, `false` otherwise.
     pub fn set_icon_bundle(&self, icon_bundle: &BitmapBundle, tooltip: &str) -> bool {
         let c_tooltip = CString::new(tooltip).expect("CString::new failed");
-        unsafe { ffi::wxd_TaskBarIcon_SetIconBundle(self.ptr, icon_bundle.as_ptr(), c_tooltip.as_ptr()) }
+        unsafe { ffi::wxd_TaskBarIcon_SetIconBundle(self.ptr.get(), icon_bundle.as_ptr(), c_tooltip.as_ptr()) }
     }
 
     /// Removes the taskbar icon.
@@ -138,7 +138,7 @@ impl TaskBarIcon {
     /// # Returns
     /// `true` if the icon was removed successfully, `false` otherwise.
     pub fn remove_icon(&self) -> bool {
-        unsafe { ffi::wxd_TaskBarIcon_RemoveIcon(self.ptr) }
+        unsafe { ffi::wxd_TaskBarIcon_RemoveIcon(self.ptr.get()) }
     }
 
     /// Checks if the taskbar icon is currently installed/visible.
@@ -146,7 +146,7 @@ impl TaskBarIcon {
     /// # Returns
     /// `true` if an icon is currently installed, `false` otherwise.
     pub fn is_icon_installed(&self) -> bool {
-        unsafe { ffi::wxd_TaskBarIcon_IsIconInstalled(self.ptr) }
+        unsafe { ffi::wxd_TaskBarIcon_IsIconInstalled(self.ptr.get()) }
     }
 
     /// Shows a balloon tooltip (Windows only).
@@ -169,7 +169,7 @@ impl TaskBarIcon {
         let c_text = CString::new(text).expect("CString::new failed");
         let icon_ptr = icon.map(|i| i.as_ptr()).unwrap_or(ptr::null_mut());
 
-        unsafe { ffi::wxd_TaskBarIcon_ShowBalloon(self.ptr, c_title.as_ptr(), c_text.as_ptr(), timeout, flags, icon_ptr) }
+        unsafe { ffi::wxd_TaskBarIcon_ShowBalloon(self.ptr.get(), c_title.as_ptr(), c_text.as_ptr(), timeout, flags, icon_ptr) }
     }
 
     /// Shows a popup menu at the current mouse position.
@@ -198,7 +198,7 @@ impl TaskBarIcon {
     /// taskbar.popup_menu(&mut menu);
     /// ```
     pub fn popup_menu(&self, menu: &mut Menu) -> bool {
-        unsafe { ffi::wxd_TaskBarIcon_PopupMenu(self.ptr, menu.as_mut_ptr()) }
+        unsafe { ffi::wxd_TaskBarIcon_PopupMenu(self.ptr.get(), menu.as_mut_ptr()) }
     }
 
     /// Sets a menu that will be automatically displayed when the taskbar icon is clicked.
@@ -236,7 +236,7 @@ impl TaskBarIcon {
     /// // Now the menu will appear automatically when the taskbar icon is clicked
     /// ```
     pub fn set_popup_menu(&self, menu: &mut Menu) {
-        unsafe { ffi::wxd_TaskBarIcon_SetPopupMenu(self.ptr, menu.as_mut_ptr()) }
+        unsafe { ffi::wxd_TaskBarIcon_SetPopupMenu(self.ptr.get(), menu.as_mut_ptr()) }
     }
 
     /// Gets the currently set automatic popup menu.
@@ -248,7 +248,7 @@ impl TaskBarIcon {
     /// The returned menu is a reference to the original menu set with `set_popup_menu()`.
     /// Modifying this menu will affect the popup menu behavior.
     pub fn get_popup_menu(&self) -> Option<Menu> {
-        let menu_ptr = unsafe { ffi::wxd_TaskBarIcon_GetPopupMenu(self.ptr) };
+        let menu_ptr = unsafe { ffi::wxd_TaskBarIcon_GetPopupMenu(self.ptr.get()) };
         if menu_ptr.is_null() {
             None
         } else {
@@ -275,14 +275,15 @@ impl TaskBarIcon {
     /// taskbar.destroy();
     /// ```
     pub fn destroy(&self) {
-        if !self.ptr.is_null() {
-            unsafe { ffi::wxd_TaskBarIcon_Destroy(self.ptr) };
+        let ptr = self.ptr.replace(ptr::null_mut());
+        if !ptr.is_null() {
+            unsafe { ffi::wxd_TaskBarIcon_Destroy(ptr) };
         }
     }
 
     /// Returns the raw pointer to the underlying wxTaskBarIcon object.
     pub fn as_ptr(&self) -> *mut ffi::wxd_TaskBarIcon_t {
-        self.ptr
+        self.ptr.get()
     }
 }
 
@@ -308,7 +309,7 @@ impl Drop for TaskBarIcon {
 
 impl WxEvtHandler for TaskBarIcon {
     unsafe fn get_event_handler_ptr(&self) -> *mut ffi::wxd_EvtHandler_t {
-        unsafe { ffi::wxd_TaskBarIcon_GetEvtHandler(self.ptr) }
+        unsafe { ffi::wxd_TaskBarIcon_GetEvtHandler(self.ptr.get()) }
     }
 }
 

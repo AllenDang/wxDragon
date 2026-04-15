@@ -62,7 +62,7 @@ impl FontWeight {
 }
 
 /// Wrapper for wxFont.
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct Font {
     ptr: *mut ffi::wxd_Font_t,
     owned: bool, // Track if this instance owns the pointer
@@ -268,6 +268,15 @@ impl Font {
 impl Default for Font {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+impl Clone for Font {
+    /// Creates a deep copy of this font by allocating a new C++ wxFont object.
+    /// This avoids the use-after-free / double-free bugs that would result from
+    /// a shallow pointer copy.
+    fn clone(&self) -> Self {
+        self.to_owned()
     }
 }
 
