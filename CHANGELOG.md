@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.9.15
+
+### New Features
+
+- **Font/FontData**: Added strikethrough, encoding, and color support (#135, #137)
+
+### Bug Fixes
+
+- **Safety**: Addressed use-after-free and soundness issues in `data_object`, `font`, and `taskbar_icon` (#138)
+
 ## 0.9.14
 
 ### Enhancements
