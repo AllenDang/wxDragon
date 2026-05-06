@@ -222,6 +222,102 @@ impl TextCtrl {
         }
     }
 
+    /// Writes text into the control at the current insertion point.
+    /// No-op if the control has been destroyed.
+    pub fn write_text(&self, text: &str) {
+        let ptr = self.textctrl_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        let c_text = CString::new(text).unwrap_or_default();
+        unsafe { ffi::wxd_TextCtrl_WriteText(ptr, c_text.as_ptr()) };
+    }
+
+    /// Sets the value of the control without generating a TextChanged event.
+    /// No-op if the control has been destroyed.
+    pub fn change_value(&self, value: &str) {
+        let ptr = self.textctrl_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        let c_value = CString::new(value).unwrap_or_default();
+        unsafe { ffi::wxd_TextCtrl_ChangeValue(ptr, c_value.as_ptr()) };
+    }
+
+    /// Removes the text in the given range.
+    /// No-op if the control has been destroyed.
+    pub fn remove(&self, from: i64, to: i64) {
+        let ptr = self.textctrl_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_TextCtrl_Remove(ptr, from, to) };
+    }
+
+    /// Replaces the text in the given range with the new value.
+    /// No-op if the control has been destroyed.
+    pub fn replace(&self, from: i64, to: i64, value: &str) {
+        let ptr = self.textctrl_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        let c_value = CString::new(value).unwrap_or_default();
+        unsafe { ffi::wxd_TextCtrl_Replace(ptr, from, to, c_value.as_ptr()) };
+    }
+
+    /// Converts given text position to client coordinates in pixels.
+    /// Returns (x, y) if successful, or None if the position is invalid or the control is destroyed.
+    pub fn position_to_xy(&self, pos: i64) -> Option<(i64, i64)> {
+        let ptr = self.textctrl_ptr();
+        if ptr.is_null() {
+            return None;
+        }
+        let mut x: i64 = 0;
+        let mut y: i64 = 0;
+        let result = unsafe { ffi::wxd_TextCtrl_PositionToXY(ptr, pos, &mut x, &mut y) };
+        if result { Some((x, y)) } else { None }
+    }
+
+    /// Converts given client coordinates in pixels to text position.
+    /// Returns 0 if the coordinates are invalid or the control is destroyed.
+    pub fn xy_to_position(&self, x: i64, y: i64) -> i64 {
+        let ptr = self.textctrl_ptr();
+        if ptr.is_null() {
+            return 0;
+        }
+        unsafe { ffi::wxd_TextCtrl_XYToPosition(ptr, x, y) }
+    }
+
+    /// Returns the number of lines in the text control.
+    /// Returns 0 if the control has been destroyed.
+    pub fn get_number_of_lines(&self) -> i32 {
+        let ptr = self.textctrl_ptr();
+        if ptr.is_null() {
+            return 0;
+        }
+        unsafe { ffi::wxd_TextCtrl_GetNumberOfLines(ptr) }
+    }
+
+    /// Returns the length of the specified line (not including the trailing newline character).
+    /// Returns 0 if the line number is invalid or the control is destroyed.
+    pub fn get_line_length(&self, line_no: i64) -> i32 {
+        let ptr = self.textctrl_ptr();
+        if ptr.is_null() {
+            return 0;
+        }
+        unsafe { ffi::wxd_TextCtrl_GetLineLength(ptr, line_no) }
+    }
+
+    /// Returns the contents of the given line.
+    /// Returns an empty string if the control has been destroyed.
+    pub fn get_line_text(&self, line_no: i64) -> String {
+        let ptr = self.textctrl_ptr();
+        if ptr.is_null() {
+            return String::new();
+        }
+        unsafe { Self::read_string_with_retry(|buf, len| ffi::wxd_TextCtrl_GetLineText(ptr, line_no, buf, len)) }
+    }
+
     /// Returns whether the text control has been modified by the user since the last
     /// time MarkDirty() or DiscardEdits() was called.
     /// Returns false if the control has been destroyed.
@@ -390,9 +486,91 @@ impl TextCtrl {
         unsafe { ffi::wxd_TextCtrl_SetInsertionPointEnd(ptr) };
     }
 
+    /// Sets the style for the given text range.
+    /// No-op if the control has been destroyed.
+    pub fn set_style(&self, start: i64, end: i64, style: &TextAttr) {
+        let ptr = self.textctrl_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_TextCtrl_SetStyle(ptr, start, end, style.as_ptr()) };
+    }
+
+    /// Returns the default style currently used for new text.
+    /// Returns None if the control has been destroyed.
+    pub fn get_default_style(&self) -> Option<TextAttr> {
+        let ptr = self.textctrl_ptr();
+        if ptr.is_null() {
+            return None;
+        }
+        let attr_ptr = unsafe { ffi::wxd_TextCtrl_GetDefaultStyle(ptr) };
+        if attr_ptr.is_null() {
+            return None;
+        }
+        Some(TextAttr { ptr: attr_ptr })
+    }
+
+    /// Sets the default style used for new text.
+    /// No-op if the control has been destroyed.
+    pub fn set_default_style(&self, style: &TextAttr) {
+        let ptr = self.textctrl_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_TextCtrl_SetDefaultStyle(ptr, style.as_ptr()) };
+    }
+
     /// Returns the underlying WindowHandle for this textctrl.
     pub fn window_handle(&self) -> WindowHandle {
         self.handle
+    }
+}
+
+/// Represents text attributes such as colors and fonts.
+pub struct TextAttr {
+    ptr: *mut ffi::wxd_TextAttr_t,
+}
+
+impl Default for TextAttr {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl TextAttr {
+    /// Creates a new default TextAttr.
+    pub fn new() -> Self {
+        Self {
+            ptr: unsafe { ffi::wxd_TextAttr_Create() },
+        }
+    }
+
+    /// Sets the text color.
+    pub fn set_text_colour(&mut self, color: crate::color::Colour) {
+        unsafe { ffi::wxd_TextAttr_SetTextColour(self.ptr, color.to_raw()) };
+    }
+
+    /// Sets the background color.
+    pub fn set_background_colour(&mut self, color: crate::color::Colour) {
+        unsafe { ffi::wxd_TextAttr_SetBackgroundColour(self.ptr, color.to_raw()) };
+    }
+
+    /// Sets the font.
+    pub fn set_font(&mut self, font: &crate::font::Font) {
+        unsafe { ffi::wxd_TextAttr_SetFont(self.ptr, font.as_ptr()) };
+    }
+
+    pub(crate) fn as_ptr(&self) -> *mut ffi::wxd_TextAttr_t {
+        self.ptr
+    }
+}
+
+impl Drop for TextAttr {
+    fn drop(&mut self) {
+        if !self.ptr.is_null() {
+            unsafe { ffi::wxd_TextAttr_Delete(self.ptr) };
+            self.ptr = null_mut();
+        }
     }
 }
 

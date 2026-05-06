@@ -423,6 +423,7 @@ typedef struct wxd_ColourData wxd_ColourData_t;
 typedef struct wxd_ColourDialog wxd_ColourDialog_t;
 typedef struct wxd_FontData wxd_FontData_t;
 typedef struct wxd_Font_t wxd_Font_t;
+typedef struct wxd_TextAttr_t wxd_TextAttr_t;
 typedef struct wxd_FontDialog wxd_FontDialog_t;
 typedef struct wxd_TextEntryDialog wxd_TextEntryDialog_t;
 typedef struct wxd_ProgressDialog wxd_ProgressDialog_t;
