@@ -476,10 +476,10 @@ fn build_wxdragon_wrapper(
             }
             // --- End dynamic path finding ---
         } else {
-            let lib_dir = if target == "i686-pc-windows-msvc" {
-                "lib/vc_lib"
-            } else {
-                "lib/vc_x64_lib"
+            let lib_dir = match target {
+                "i686-pc-windows-msvc" => "lib/vc_lib",
+                "aarch64-pc-windows-msvc" => "lib/vc_arm64_lib",
+                _ => "lib/vc_x64_lib",
             };
             let wx_lib2 = wxdragon_sys_build_dir.join(lib_dir).display().to_string();
             println!("cargo:rustc-link-search=native={wx_lib2}");
@@ -499,7 +499,11 @@ fn build_wxdragon_wrapper(
             // wxWidgets downloads WebView2 NuGet package during CMake configuration
             // The libraries are typically in build/packages/Microsoft.Web.WebView2.*/build/native/
             if cfg!(feature = "webview") {
-                let webview2_arch = if target == "i686-pc-windows-msvc" { "x86" } else { "x64" };
+                let webview2_arch = match target {
+                    "i686-pc-windows-msvc" => "x86",
+                    "aarch64-pc-windows-msvc" => "arm64",
+                    _ => "x64",
+                };
 
                 // wxWidgets downloads WebView2 to CMAKE_CURRENT_BINARY_DIR/packages in build/cmake/lib/webview/CMakeLists.txt
                 // The wxWidgets CMake uses add_subdirectory(build/cmake/lib libs), so the binary dir is "libs" (plural)
