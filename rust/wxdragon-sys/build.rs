@@ -344,6 +344,12 @@ fn build_wxdragon_wrapper(
                 .define("CMAKE_GENERATOR_PLATFORM", "Win32")
                 .define("--config", &profile)
                 .cxxflag("/EHsc");
+        } else if target == "aarch64-pc-windows-msvc" {
+            cmake_config
+                .generator("Visual Studio 17 2022")
+                .define("CMAKE_GENERATOR_PLATFORM", "ARM64")
+                .define("--config", &profile)
+                .cxxflag("/EHsc");
         }
     }
 
