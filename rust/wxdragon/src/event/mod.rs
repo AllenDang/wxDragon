@@ -255,6 +255,7 @@ pub struct EventType: ffi::WXDEventTypeCEnum { // Use the generated C enum type
     const ERASE = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_ERASE;
     const SET_FOCUS = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_SET_FOCUS;
     const KILL_FOCUS = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_KILL_FOCUS;
+    const ACTIVATE = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_ACTIVATE;
 
     // DataView events
     const DATAVIEW_SELECTION_CHANGED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_DATAVIEW_SELECTION_CHANGED;
