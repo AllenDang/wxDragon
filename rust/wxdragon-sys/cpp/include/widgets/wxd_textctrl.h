@@ -98,6 +98,50 @@ wxd_TextAttr_SetParagraphSpacingBefore(wxd_TextAttr_t* attr, int spacing);
 WXD_EXPORTED void
 wxd_TextAttr_SetBulletStyle(wxd_TextAttr_t* attr, int style);
 
+WXD_EXPORTED void wxd_TextAttr_SetFlags(wxd_TextAttr_t* attr, wxd_Long_t flags);
+WXD_EXPORTED wxd_Long_t wxd_TextAttr_GetFlags(wxd_TextAttr_t* attr);
+WXD_EXPORTED bool wxd_TextAttr_HasFlag(wxd_TextAttr_t* attr, wxd_Long_t flag);
+
+WXD_EXPORTED void wxd_TextAttr_SetFontSize(wxd_TextAttr_t* attr, int pointSize);
+WXD_EXPORTED int wxd_TextAttr_GetFontSize(wxd_TextAttr_t* attr);
+
+WXD_EXPORTED void wxd_TextAttr_SetFontStyle(wxd_TextAttr_t* attr, int fontStyle);
+WXD_EXPORTED int wxd_TextAttr_GetFontStyle(wxd_TextAttr_t* attr);
+
+WXD_EXPORTED void wxd_TextAttr_SetFontWeight(wxd_TextAttr_t* attr, int fontWeight);
+WXD_EXPORTED int wxd_TextAttr_GetFontWeight(wxd_TextAttr_t* attr);
+
+WXD_EXPORTED void wxd_TextAttr_SetFontFaceName(wxd_TextAttr_t* attr, const char* faceName);
+WXD_EXPORTED void wxd_TextAttr_SetFontUnderlined(wxd_TextAttr_t* attr, bool underlined);
+WXD_EXPORTED void wxd_TextAttr_SetFontStrikethrough(wxd_TextAttr_t* attr, bool strikethrough);
+WXD_EXPORTED void wxd_TextAttr_SetFontEncoding(wxd_TextAttr_t* attr, int encoding);
+WXD_EXPORTED void wxd_TextAttr_SetFontFamily(wxd_TextAttr_t* attr, int family);
+
+WXD_EXPORTED void wxd_TextAttr_SetCharacterStyleName(wxd_TextAttr_t* attr, const char* name);
+WXD_EXPORTED void wxd_TextAttr_SetParagraphStyleName(wxd_TextAttr_t* attr, const char* name);
+WXD_EXPORTED void wxd_TextAttr_SetListStyleName(wxd_TextAttr_t* attr, const char* name);
+
+WXD_EXPORTED void wxd_TextAttr_SetBulletNumber(wxd_TextAttr_t* attr, int n);
+WXD_EXPORTED void wxd_TextAttr_SetBulletText(wxd_TextAttr_t* attr, const char* text);
+WXD_EXPORTED void wxd_TextAttr_SetBulletFont(wxd_TextAttr_t* attr, const char* bulletFont);
+WXD_EXPORTED void wxd_TextAttr_SetBulletName(wxd_TextAttr_t* attr, const char* name);
+WXD_EXPORTED void wxd_TextAttr_SetURL(wxd_TextAttr_t* attr, const char* url);
+WXD_EXPORTED void wxd_TextAttr_SetPageBreak(wxd_TextAttr_t* attr, bool pageBreak);
+WXD_EXPORTED void wxd_TextAttr_SetTextEffects(wxd_TextAttr_t* attr, int effects);
+WXD_EXPORTED void wxd_TextAttr_SetTextEffectFlags(wxd_TextAttr_t* attr, int effects);
+WXD_EXPORTED void wxd_TextAttr_SetOutlineLevel(wxd_TextAttr_t* attr, int level);
+
+WXD_EXPORTED wxd_Colour_t wxd_TextAttr_GetTextColour(wxd_TextAttr_t* attr);
+WXD_EXPORTED wxd_Colour_t wxd_TextAttr_GetBackgroundColour(wxd_TextAttr_t* attr);
+WXD_EXPORTED int wxd_TextAttr_GetAlignment(wxd_TextAttr_t* attr);
+WXD_EXPORTED int wxd_TextAttr_GetLeftIndent(wxd_TextAttr_t* attr);
+WXD_EXPORTED int wxd_TextAttr_GetLeftSubIndent(wxd_TextAttr_t* attr);
+WXD_EXPORTED int wxd_TextAttr_GetRightIndent(wxd_TextAttr_t* attr);
+WXD_EXPORTED int wxd_TextAttr_GetLineSpacing(wxd_TextAttr_t* attr);
+WXD_EXPORTED int wxd_TextAttr_GetParagraphSpacingAfter(wxd_TextAttr_t* attr);
+WXD_EXPORTED int wxd_TextAttr_GetParagraphSpacingBefore(wxd_TextAttr_t* attr);
+WXD_EXPORTED int wxd_TextAttr_GetBulletStyle(wxd_TextAttr_t* attr);
+
 // --- TextCtrl Style Functions ---
 WXD_EXPORTED void
 wxd_TextCtrl_SetStyle(wxd_TextCtrl_t* textCtrl, wxd_Long_t start, wxd_Long_t end, const wxd_TextAttr_t* style);
