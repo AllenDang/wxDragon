@@ -33,6 +33,7 @@ pub enum WindowEvent {
     Erase,     // Now implemented in C++ layer
     SetFocus,  // Now implemented in C++ layer
     KillFocus, // Now implemented in C++ layer
+    Activate,  // Now implemented in C++ layer
 
     // Misc events
     Idle,
@@ -50,6 +51,7 @@ pub enum WindowEventData {
     Keyboard(KeyboardEvent),
     Size(WindowSizeEvent),
     Idle(IdleEventData),
+    Activate(ActivateEventData),
     General(Event),
 }
 
@@ -87,6 +89,8 @@ impl WindowEventData {
                 return WindowEventData::MouseLeave(MouseLeaveEvent::new(event));
             } else if event_type == EventType::IDLE {
                 return WindowEventData::Idle(IdleEventData::new(event));
+            } else if event_type == EventType::ACTIVATE {
+                return WindowEventData::Activate(ActivateEventData::new(event));
             }
         }
 
@@ -104,6 +108,7 @@ impl WindowEventData {
             WindowEventData::Keyboard(event) => event.event.skip(skip),
             WindowEventData::Size(event) => event.event.skip(skip),
             WindowEventData::Idle(event) => event.event.skip(skip),
+            WindowEventData::Activate(event) => event.event.skip(skip),
             WindowEventData::General(event) => event.skip(skip),
         }
     }
@@ -278,6 +283,26 @@ impl IdleEventData {
     }
 }
 
+/// Activate events (window gaining or losing focus at the OS level)
+#[derive(Debug)]
+pub struct ActivateEventData {
+    pub event: Event,
+}
+
+impl ActivateEventData {
+    pub fn new(event: Event) -> Self {
+        Self { event }
+    }
+
+    /// Returns true if the window is being activated, false if deactivated.
+    pub fn is_active(&self) -> bool {
+        if self.event.is_null() {
+            return false;
+        }
+        unsafe { wxdragon_sys::wxd_ActivateEvent_IsActive(self.event._as_ptr()) }
+    }
+}
+
 // Use the macro to implement the trait
 crate::implement_category_event_handlers!(
     WindowEvents, WindowEvent, WindowEventData,
@@ -300,6 +325,7 @@ crate::implement_category_event_handlers!(
     Erase => erase_background, EventType::ERASE,
     SetFocus => set_focus, EventType::SET_FOCUS,
     KillFocus => kill_focus, EventType::KILL_FOCUS,
+    Activate => activate, EventType::ACTIVATE,
     Idle => idle, EventType::IDLE,
     Close => close, EventType::CLOSE_WINDOW,
     Destroy => destroy, EventType::DESTROY

@@ -240,6 +240,10 @@ wxd_SizeEvent_GetSize(wxd_Event_t* event);
 WXD_EXPORTED bool
 wxd_CollapsiblePaneEvent_GetCollapsed(wxd_Event_t* event);
 
+// ActivateEvent specific accessors
+WXD_EXPORTED bool
+wxd_ActivateEvent_IsActive(wxd_Event_t* event);
+
 #ifdef __cplusplus
 }
 #endif

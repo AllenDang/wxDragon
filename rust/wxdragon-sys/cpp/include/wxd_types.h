@@ -205,6 +205,7 @@ typedef enum {
     WXD_EVENT_TYPE_ERASE = 128,      // Window erase background event
     WXD_EVENT_TYPE_SET_FOCUS = 129,  // Window set focus event
     WXD_EVENT_TYPE_KILL_FOCUS = 130, // Window kill focus event
+    WXD_EVENT_TYPE_ACTIVATE = 388,   // Window activate/deactivate event
 
 // AUI Manager event types
 #if wxdUSE_AUI

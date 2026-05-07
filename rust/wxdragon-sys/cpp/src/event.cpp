@@ -1184,6 +1184,8 @@ get_wx_event_type_for_c_enum(WXDEventTypeCEnum c_enum_val)
         return wxEVT_SET_FOCUS;
     case WXD_EVENT_TYPE_KILL_FOCUS:
         return wxEVT_KILL_FOCUS;
+    case WXD_EVENT_TYPE_ACTIVATE:
+        return wxEVT_ACTIVATE;
     case WXD_EVENT_TYPE_PAINT:
         return wxEVT_PAINT;
 
@@ -2212,4 +2214,17 @@ wxd_CollapsiblePaneEvent_GetCollapsed(wxd_Event_t* event)
         return false;
 
     return cp_event->GetCollapsed();
+}
+
+// --- ActivateEvent specific ---
+
+extern "C" bool
+wxd_ActivateEvent_IsActive(wxd_Event_t* event)
+{
+    if (!event)
+        return false;
+    wxActivateEvent* activate_event = dynamic_cast<wxActivateEvent*>(reinterpret_cast<wxEvent*>(event));
+    if (!activate_event)
+        return false;
+    return activate_event->GetActive();
 }
