@@ -177,6 +177,8 @@ jobs:
       - run: rustup component add rustfmt clippy
 
       - uses: mlugg/setup-zig@v2
+        with:
+          version: "0.14.0"
 
       - run: cargo install --locked cargo-zigbuild
 
