@@ -55,6 +55,37 @@ wxd_ColourData_GetColour(wxd_ColourData_t* self)
     return to_wxd(data->GetColour());
 }
 
+WXD_EXPORTED void
+wxd_ColourData_SetChooseFull(wxd_ColourData_t* self, bool flag)
+{
+    wxColourData* data = reinterpret_cast<wxColourData*>(self);
+    if (data) data->SetChooseFull(flag);
+}
+
+WXD_EXPORTED bool
+wxd_ColourData_GetChooseFull(wxd_ColourData_t* self)
+{
+    wxColourData* data = reinterpret_cast<wxColourData*>(self);
+    if (!data) return false;
+    return data->GetChooseFull();
+}
+
+WXD_EXPORTED void
+wxd_ColourData_SetCustomColour(wxd_ColourData_t* self, int i, wxd_Colour_t colour)
+{
+    wxColourData* data = reinterpret_cast<wxColourData*>(self);
+    if (data) data->SetCustomColour(i, to_wx(colour));
+}
+
+WXD_EXPORTED wxd_Colour_t
+wxd_ColourData_GetCustomColour(wxd_ColourData_t* self, int i)
+{
+    wxColourData* data = reinterpret_cast<wxColourData*>(self);
+    if (!data) return wxd_Colour_t{0, 0, 0, 0};
+    wxColour c = data->GetCustomColour(i);
+    return to_wxd(c);
+}
+
 void
 wxd_ColourData_Destroy(wxd_ColourData_t* self)
 {

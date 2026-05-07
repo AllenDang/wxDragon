@@ -15,6 +15,8 @@ pub struct ColourDialogBuilder<'a, W: WxWidget> {
     parent: &'a W,
     title: String,
     initial_colour: Option<Colour>,
+    choose_full: bool,
+    custom_colours: std::collections::HashMap<i32, Colour>,
 }
 
 impl ColourDialog {
@@ -24,6 +26,8 @@ impl ColourDialog {
             parent,
             title: "Choose a colour".to_string(),
             initial_colour: None,
+            choose_full: false,
+            custom_colours: std::collections::HashMap::new(),
         }
     }
 
@@ -75,16 +79,40 @@ impl<'a, W: WxWidget> ColourDialogBuilder<'a, W> {
         self
     }
 
+    /// Under Windows, determines whether the Windows colour dialog will display
+    /// the full dialog with custom colour selection controls when it is first shown.
+    pub fn with_choose_full(mut self, choose_full: bool) -> Self {
+        self.choose_full = choose_full;
+        self
+    }
+
+    /// Sets custom colours (index from 0 to 15) to be displayed in the
+    /// bottom row of custom colour swatches.
+    pub fn with_custom_colour(mut self, index: i32, colour: Colour) -> Self {
+        self.custom_colours.insert(index, colour);
+        self
+    }
+
     /// Build the ColourDialog
     pub fn build(self) -> ColourDialog {
         let c_title = CString::new(self.title).expect("CString::new failed for title");
 
-        // Create a temporary ColourData if we have an initial colour
-        let colour_data_ptr = if let Some(colour) = self.initial_colour {
+        // Create a temporary ColourData if we have an initial colour, choose_full flag or custom colours
+        let has_custom_data = self.initial_colour.is_some() || self.choose_full || !self.custom_colours.is_empty();
+
+        let colour_data_ptr = if has_custom_data {
             let data_ptr = unsafe { ffi::wxd_ColourData_Create() };
             if !data_ptr.is_null() {
-                unsafe {
-                    ffi::wxd_ColourData_SetColour(data_ptr, colour.into());
+                if let Some(colour) = self.initial_colour {
+                    unsafe { ffi::wxd_ColourData_SetColour(data_ptr, colour.into()) };
+                }
+
+                if self.choose_full {
+                    unsafe { ffi::wxd_ColourData_SetChooseFull(data_ptr, true) };
+                }
+
+                for (index, colour) in self.custom_colours {
+                    unsafe { ffi::wxd_ColourData_SetCustomColour(data_ptr, index, colour.into()) };
                 }
             }
             data_ptr

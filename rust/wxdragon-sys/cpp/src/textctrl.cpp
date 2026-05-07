@@ -62,6 +62,60 @@ wxd_TextCtrl_Clear(wxd_TextCtrl_t* textCtrl)
     }
 }
 
+WXD_EXPORTED void
+wxd_TextCtrl_WriteText(wxd_TextCtrl_t* textCtrl, const char* text)
+{
+    wxTextCtrl* ctrl = (wxTextCtrl*)textCtrl;
+    if (ctrl && text) {
+        ctrl->WriteText(wxString::FromUTF8(text));
+    }
+}
+
+WXD_EXPORTED void
+wxd_TextCtrl_ChangeValue(wxd_TextCtrl_t* textCtrl, const char* value)
+{
+    wxTextCtrl* ctrl = (wxTextCtrl*)textCtrl;
+    if (ctrl) {
+        ctrl->ChangeValue(wxString::FromUTF8(value ? value : ""));
+    }
+}
+
+WXD_EXPORTED void
+wxd_TextCtrl_Remove(wxd_TextCtrl_t* textCtrl, wxd_Long_t from, wxd_Long_t to)
+{
+    wxTextCtrl* ctrl = (wxTextCtrl*)textCtrl;
+    if (ctrl) {
+        ctrl->Remove(from, to);
+    }
+}
+
+WXD_EXPORTED void
+wxd_TextCtrl_Replace(wxd_TextCtrl_t* textCtrl, wxd_Long_t from, wxd_Long_t to, const char* value)
+{
+    wxTextCtrl* ctrl = (wxTextCtrl*)textCtrl;
+    if (ctrl && value) {
+        ctrl->Replace(from, to, wxString::FromUTF8(value));
+    }
+}
+
+WXD_EXPORTED int
+wxd_TextCtrl_GetNumberOfLines(wxd_TextCtrl_t* textCtrl)
+{
+    wxTextCtrl* ctrl = (wxTextCtrl*)textCtrl;
+    if (!ctrl) return 0;
+    return ctrl->GetNumberOfLines();
+}
+
+WXD_EXPORTED int
+wxd_TextCtrl_GetLineText(wxd_TextCtrl_t* textCtrl, wxd_Long_t lineNo, char* buffer, int buffer_len)
+{
+    if (!textCtrl || !buffer || buffer_len <= 0)
+        return -1;
+    wxTextCtrl* ctrl = (wxTextCtrl*)textCtrl;
+    wxString text = ctrl->GetLineText(lineNo);
+    return wxd_cpp_utils::copy_wxstring_to_buffer(text, buffer, (size_t)buffer_len);
+}
+
 // Check if the wxTextCtrl has been modified
 WXD_EXPORTED bool
 wxd_TextCtrl_IsModified(wxd_TextCtrl_t* textCtrl)
@@ -210,6 +264,159 @@ wxd_TextCtrl_SetInsertionPointEnd(wxd_TextCtrl_t* textCtrl)
     if (ctrl) {
         ctrl->SetInsertionPointEnd();
     }
+}
+
+// Helper to convert wxd_Colour_t to wxColour
+static inline wxColour
+to_wx(wxd_Colour_t c_col)
+{
+    return wxColour(c_col.r, c_col.g, c_col.b, c_col.a);
+}
+
+WXD_EXPORTED wxd_TextAttr_t*
+wxd_TextAttr_Create()
+{
+    return reinterpret_cast<wxd_TextAttr_t*>(new wxTextAttr());
+}
+
+WXD_EXPORTED void
+wxd_TextAttr_Delete(wxd_TextAttr_t* attr)
+{
+    delete reinterpret_cast<wxTextAttr*>(attr);
+}
+
+WXD_EXPORTED void
+wxd_TextAttr_SetTextColour(wxd_TextAttr_t* attr, wxd_Colour_t colText)
+{
+    if (attr) {
+        reinterpret_cast<wxTextAttr*>(attr)->SetTextColour(to_wx(colText));
+    }
+}
+
+WXD_EXPORTED void
+wxd_TextAttr_SetBackgroundColour(wxd_TextAttr_t* attr, wxd_Colour_t colBack)
+{
+    if (attr) {
+        reinterpret_cast<wxTextAttr*>(attr)->SetBackgroundColour(to_wx(colBack));
+    }
+}
+
+WXD_EXPORTED void
+wxd_TextAttr_SetFont(wxd_TextAttr_t* attr, const wxd_Font_t* font)
+{
+    if (attr && font) {
+        reinterpret_cast<wxTextAttr*>(attr)->SetFont(*reinterpret_cast<const wxFont*>(font));
+    }
+}
+
+WXD_EXPORTED void
+wxd_TextAttr_SetAlignment(wxd_TextAttr_t* attr, int alignment)
+{
+    if (attr) {
+        reinterpret_cast<wxTextAttr*>(attr)->SetAlignment(static_cast<wxTextAttrAlignment>(alignment));
+    }
+}
+
+WXD_EXPORTED void
+wxd_TextAttr_SetLeftIndent(wxd_TextAttr_t* attr, int indent, int subIndent)
+{
+    if (attr) {
+        reinterpret_cast<wxTextAttr*>(attr)->SetLeftIndent(indent, subIndent);
+    }
+}
+
+WXD_EXPORTED void
+wxd_TextAttr_SetRightIndent(wxd_TextAttr_t* attr, int indent)
+{
+    if (attr) {
+        reinterpret_cast<wxTextAttr*>(attr)->SetRightIndent(indent);
+    }
+}
+
+WXD_EXPORTED void
+wxd_TextAttr_SetLineSpacing(wxd_TextAttr_t* attr, int spacing)
+{
+    if (attr) {
+        reinterpret_cast<wxTextAttr*>(attr)->SetLineSpacing(spacing);
+    }
+}
+
+WXD_EXPORTED void
+wxd_TextAttr_SetParagraphSpacingAfter(wxd_TextAttr_t* attr, int spacing)
+{
+    if (attr) {
+        reinterpret_cast<wxTextAttr*>(attr)->SetParagraphSpacingAfter(spacing);
+    }
+}
+
+WXD_EXPORTED void
+wxd_TextAttr_SetParagraphSpacingBefore(wxd_TextAttr_t* attr, int spacing)
+{
+    if (attr) {
+        reinterpret_cast<wxTextAttr*>(attr)->SetParagraphSpacingBefore(spacing);
+    }
+}
+
+WXD_EXPORTED void
+wxd_TextAttr_SetBulletStyle(wxd_TextAttr_t* attr, int style)
+{
+    if (attr) {
+        reinterpret_cast<wxTextAttr*>(attr)->SetBulletStyle(style);
+    }
+}
+
+WXD_EXPORTED void
+wxd_TextCtrl_SetStyle(wxd_TextCtrl_t* textCtrl, wxd_Long_t start, wxd_Long_t end, const wxd_TextAttr_t* style)
+{
+    wxTextCtrl* ctrl = reinterpret_cast<wxTextCtrl*>(textCtrl);
+    if (ctrl && style) {
+        ctrl->SetStyle(start, end, *reinterpret_cast<const wxTextAttr*>(style));
+    }
+}
+
+WXD_EXPORTED wxd_TextAttr_t*
+wxd_TextCtrl_GetDefaultStyle(wxd_TextCtrl_t* textCtrl)
+{
+    wxTextCtrl* ctrl = reinterpret_cast<wxTextCtrl*>(textCtrl);
+    if (!ctrl) return nullptr;
+    return reinterpret_cast<wxd_TextAttr_t*>(new wxTextAttr(ctrl->GetDefaultStyle()));
+}
+
+WXD_EXPORTED void
+wxd_TextCtrl_SetDefaultStyle(wxd_TextCtrl_t* textCtrl, const wxd_TextAttr_t* style)
+{
+    wxTextCtrl* ctrl = reinterpret_cast<wxTextCtrl*>(textCtrl);
+    if (ctrl && style) {
+        ctrl->SetDefaultStyle(*reinterpret_cast<const wxTextAttr*>(style));
+    }
+}
+
+WXD_EXPORTED bool
+wxd_TextCtrl_PositionToXY(wxd_TextCtrl_t* textCtrl, wxd_Long_t pos, wxd_Long_t* x, wxd_Long_t* y)
+{
+    wxTextCtrl* ctrl = reinterpret_cast<wxTextCtrl*>(textCtrl);
+    if (!ctrl || !x || !y) return false;
+    long lx, ly;
+    bool res = ctrl->PositionToXY(static_cast<long>(pos), &lx, &ly);
+    *x = static_cast<wxd_Long_t>(lx);
+    *y = static_cast<wxd_Long_t>(ly);
+    return res;
+}
+
+WXD_EXPORTED wxd_Long_t
+wxd_TextCtrl_XYToPosition(wxd_TextCtrl_t* textCtrl, wxd_Long_t x, wxd_Long_t y)
+{
+    wxTextCtrl* ctrl = reinterpret_cast<wxTextCtrl*>(textCtrl);
+    if (!ctrl) return 0;
+    return static_cast<wxd_Long_t>(ctrl->XYToPosition(static_cast<long>(x), static_cast<long>(y)));
+}
+
+WXD_EXPORTED int
+wxd_TextCtrl_GetLineLength(wxd_TextCtrl_t* textCtrl, wxd_Long_t lineNo)
+{
+    wxTextCtrl* ctrl = reinterpret_cast<wxTextCtrl*>(textCtrl);
+    if (!ctrl) return 0;
+    return ctrl->GetLineLength(static_cast<long>(lineNo));
 }
 
 } // extern "C"

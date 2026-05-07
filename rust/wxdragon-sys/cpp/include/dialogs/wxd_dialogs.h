@@ -108,6 +108,18 @@ WXD_EXPORTED wxd_Colour_t
 wxd_ColourData_GetColour(wxd_ColourData_t* self);
 
 WXD_EXPORTED void
+wxd_ColourData_SetChooseFull(wxd_ColourData_t* self, bool flag);
+
+WXD_EXPORTED bool
+wxd_ColourData_GetChooseFull(wxd_ColourData_t* self);
+
+WXD_EXPORTED void
+wxd_ColourData_SetCustomColour(wxd_ColourData_t* self, int i, wxd_Colour_t colour);
+
+WXD_EXPORTED wxd_Colour_t
+wxd_ColourData_GetCustomColour(wxd_ColourData_t* self, int i);
+
+WXD_EXPORTED void
 wxd_ColourData_Destroy(wxd_ColourData_t* self);
 
 WXD_EXPORTED wxd_ColourDialog_t*
