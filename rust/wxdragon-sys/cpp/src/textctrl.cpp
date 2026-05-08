@@ -365,6 +365,55 @@ wxd_TextAttr_SetBulletStyle(wxd_TextAttr_t* attr, int style)
     }
 }
 
+WXD_EXPORTED void wxd_TextAttr_SetFlags(wxd_TextAttr_t* attr, wxd_Long_t flags) { reinterpret_cast<wxTextAttr*>(attr)->SetFlags(flags); }
+WXD_EXPORTED wxd_Long_t wxd_TextAttr_GetFlags(wxd_TextAttr_t* attr) { return reinterpret_cast<wxTextAttr*>(attr)->GetFlags(); }
+WXD_EXPORTED bool wxd_TextAttr_HasFlag(wxd_TextAttr_t* attr, wxd_Long_t flag) { return reinterpret_cast<wxTextAttr*>(attr)->HasFlag(flag); }
+
+WXD_EXPORTED void wxd_TextAttr_SetFontSize(wxd_TextAttr_t* attr, int pointSize) { reinterpret_cast<wxTextAttr*>(attr)->SetFontSize(pointSize); }
+WXD_EXPORTED int wxd_TextAttr_GetFontSize(wxd_TextAttr_t* attr) { return reinterpret_cast<wxTextAttr*>(attr)->GetFontSize(); }
+
+WXD_EXPORTED void wxd_TextAttr_SetFontStyle(wxd_TextAttr_t* attr, int fontStyle) { reinterpret_cast<wxTextAttr*>(attr)->SetFontStyle(static_cast<wxFontStyle>(fontStyle)); }
+WXD_EXPORTED int wxd_TextAttr_GetFontStyle(wxd_TextAttr_t* attr) { return static_cast<int>(reinterpret_cast<wxTextAttr*>(attr)->GetFontStyle()); }
+
+WXD_EXPORTED void wxd_TextAttr_SetFontWeight(wxd_TextAttr_t* attr, int fontWeight) { reinterpret_cast<wxTextAttr*>(attr)->SetFontWeight(static_cast<wxFontWeight>(fontWeight)); }
+WXD_EXPORTED int wxd_TextAttr_GetFontWeight(wxd_TextAttr_t* attr) { return static_cast<int>(reinterpret_cast<wxTextAttr*>(attr)->GetFontWeight()); }
+
+WXD_EXPORTED void wxd_TextAttr_SetFontFaceName(wxd_TextAttr_t* attr, const char* faceName) { reinterpret_cast<wxTextAttr*>(attr)->SetFontFaceName(wxString::FromUTF8(faceName ? faceName : "")); }
+WXD_EXPORTED void wxd_TextAttr_SetFontUnderlined(wxd_TextAttr_t* attr, bool underlined) { reinterpret_cast<wxTextAttr*>(attr)->SetFontUnderlined(underlined); }
+WXD_EXPORTED void wxd_TextAttr_SetFontStrikethrough(wxd_TextAttr_t* attr, bool strikethrough) { reinterpret_cast<wxTextAttr*>(attr)->SetFontStrikethrough(strikethrough); }
+WXD_EXPORTED void wxd_TextAttr_SetFontEncoding(wxd_TextAttr_t* attr, int encoding) { reinterpret_cast<wxTextAttr*>(attr)->SetFontEncoding(static_cast<wxFontEncoding>(encoding)); }
+WXD_EXPORTED void wxd_TextAttr_SetFontFamily(wxd_TextAttr_t* attr, int family) { reinterpret_cast<wxTextAttr*>(attr)->SetFontFamily(static_cast<wxFontFamily>(family)); }
+
+WXD_EXPORTED void wxd_TextAttr_SetCharacterStyleName(wxd_TextAttr_t* attr, const char* name) { reinterpret_cast<wxTextAttr*>(attr)->SetCharacterStyleName(wxString::FromUTF8(name ? name : "")); }
+WXD_EXPORTED void wxd_TextAttr_SetParagraphStyleName(wxd_TextAttr_t* attr, const char* name) { reinterpret_cast<wxTextAttr*>(attr)->SetParagraphStyleName(wxString::FromUTF8(name ? name : "")); }
+WXD_EXPORTED void wxd_TextAttr_SetListStyleName(wxd_TextAttr_t* attr, const char* name) { reinterpret_cast<wxTextAttr*>(attr)->SetListStyleName(wxString::FromUTF8(name ? name : "")); }
+
+WXD_EXPORTED void wxd_TextAttr_SetBulletNumber(wxd_TextAttr_t* attr, int n) { reinterpret_cast<wxTextAttr*>(attr)->SetBulletNumber(n); }
+WXD_EXPORTED void wxd_TextAttr_SetBulletText(wxd_TextAttr_t* attr, const char* text) { reinterpret_cast<wxTextAttr*>(attr)->SetBulletText(wxString::FromUTF8(text ? text : "")); }
+WXD_EXPORTED void wxd_TextAttr_SetBulletFont(wxd_TextAttr_t* attr, const char* bulletFont) { reinterpret_cast<wxTextAttr*>(attr)->SetBulletFont(wxString::FromUTF8(bulletFont ? bulletFont : "")); }
+WXD_EXPORTED void wxd_TextAttr_SetBulletName(wxd_TextAttr_t* attr, const char* name) { reinterpret_cast<wxTextAttr*>(attr)->SetBulletName(wxString::FromUTF8(name ? name : "")); }
+WXD_EXPORTED void wxd_TextAttr_SetURL(wxd_TextAttr_t* attr, const char* url) { reinterpret_cast<wxTextAttr*>(attr)->SetURL(wxString::FromUTF8(url ? url : "")); }
+WXD_EXPORTED void wxd_TextAttr_SetPageBreak(wxd_TextAttr_t* attr, bool pageBreak) { reinterpret_cast<wxTextAttr*>(attr)->SetPageBreak(pageBreak); }
+WXD_EXPORTED void wxd_TextAttr_SetTextEffects(wxd_TextAttr_t* attr, int effects) { reinterpret_cast<wxTextAttr*>(attr)->SetTextEffects(effects); }
+WXD_EXPORTED void wxd_TextAttr_SetTextEffectFlags(wxd_TextAttr_t* attr, int effects) { reinterpret_cast<wxTextAttr*>(attr)->SetTextEffectFlags(effects); }
+WXD_EXPORTED void wxd_TextAttr_SetOutlineLevel(wxd_TextAttr_t* attr, int level) { reinterpret_cast<wxTextAttr*>(attr)->SetOutlineLevel(level); }
+
+static inline wxd_Colour_t from_wx(const wxColour& col) {
+    wxd_Colour_t c = { col.Red(), col.Green(), col.Blue(), col.Alpha() };
+    return c;
+}
+
+WXD_EXPORTED wxd_Colour_t wxd_TextAttr_GetTextColour(wxd_TextAttr_t* attr) { return from_wx(reinterpret_cast<wxTextAttr*>(attr)->GetTextColour()); }
+WXD_EXPORTED wxd_Colour_t wxd_TextAttr_GetBackgroundColour(wxd_TextAttr_t* attr) { return from_wx(reinterpret_cast<wxTextAttr*>(attr)->GetBackgroundColour()); }
+WXD_EXPORTED int wxd_TextAttr_GetAlignment(wxd_TextAttr_t* attr) { return static_cast<int>(reinterpret_cast<wxTextAttr*>(attr)->GetAlignment()); }
+WXD_EXPORTED int wxd_TextAttr_GetLeftIndent(wxd_TextAttr_t* attr) { return static_cast<int>(reinterpret_cast<wxTextAttr*>(attr)->GetLeftIndent()); }
+WXD_EXPORTED int wxd_TextAttr_GetLeftSubIndent(wxd_TextAttr_t* attr) { return static_cast<int>(reinterpret_cast<wxTextAttr*>(attr)->GetLeftSubIndent()); }
+WXD_EXPORTED int wxd_TextAttr_GetRightIndent(wxd_TextAttr_t* attr) { return static_cast<int>(reinterpret_cast<wxTextAttr*>(attr)->GetRightIndent()); }
+WXD_EXPORTED int wxd_TextAttr_GetLineSpacing(wxd_TextAttr_t* attr) { return reinterpret_cast<wxTextAttr*>(attr)->GetLineSpacing(); }
+WXD_EXPORTED int wxd_TextAttr_GetParagraphSpacingAfter(wxd_TextAttr_t* attr) { return reinterpret_cast<wxTextAttr*>(attr)->GetParagraphSpacingAfter(); }
+WXD_EXPORTED int wxd_TextAttr_GetParagraphSpacingBefore(wxd_TextAttr_t* attr) { return reinterpret_cast<wxTextAttr*>(attr)->GetParagraphSpacingBefore(); }
+WXD_EXPORTED int wxd_TextAttr_GetBulletStyle(wxd_TextAttr_t* attr) { return reinterpret_cast<wxTextAttr*>(attr)->GetBulletStyle(); }
+
 WXD_EXPORTED void
 wxd_TextCtrl_SetStyle(wxd_TextCtrl_t* textCtrl, wxd_Long_t start, wxd_Long_t end, const wxd_TextAttr_t* style)
 {

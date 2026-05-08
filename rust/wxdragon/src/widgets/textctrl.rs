@@ -560,6 +560,165 @@ impl TextAttr {
         unsafe { ffi::wxd_TextAttr_SetFont(self.ptr, font.as_ptr()) };
     }
 
+    /// Sets the text alignment.
+    pub fn set_alignment(&mut self, alignment: i32) {
+        unsafe { ffi::wxd_TextAttr_SetAlignment(self.ptr, alignment) };
+    }
+
+    /// Sets the left indent and sub-indent in tenths of a millimetre.
+    pub fn set_left_indent(&mut self, indent: i32, sub_indent: i32) {
+        unsafe { ffi::wxd_TextAttr_SetLeftIndent(self.ptr, indent, sub_indent) };
+    }
+
+    /// Sets the right indent in tenths of a millimetre.
+    pub fn set_right_indent(&mut self, indent: i32) {
+        unsafe { ffi::wxd_TextAttr_SetRightIndent(self.ptr, indent) };
+    }
+
+    /// Sets the line spacing. 10 is normal, 15 is 1.5, 20 is double.
+    pub fn set_line_spacing(&mut self, spacing: i32) {
+        unsafe { ffi::wxd_TextAttr_SetLineSpacing(self.ptr, spacing) };
+    }
+
+    /// Sets the paragraph spacing after in tenths of a millimetre.
+    pub fn set_paragraph_spacing_after(&mut self, spacing: i32) {
+        unsafe { ffi::wxd_TextAttr_SetParagraphSpacingAfter(self.ptr, spacing) };
+    }
+
+    /// Sets the paragraph spacing before in tenths of a millimetre.
+    pub fn set_paragraph_spacing_before(&mut self, spacing: i32) {
+        unsafe { ffi::wxd_TextAttr_SetParagraphSpacingBefore(self.ptr, spacing) };
+    }
+
+    /// Sets the bullet style.
+    pub fn set_bullet_style(&mut self, style: i32) {
+        unsafe { ffi::wxd_TextAttr_SetBulletStyle(self.ptr, style) };
+    }
+
+    pub fn set_flags(&mut self, flags: i64) {
+        unsafe { ffi::wxd_TextAttr_SetFlags(self.ptr, flags) };
+    }
+    pub fn get_flags(&self) -> i64 {
+        unsafe { ffi::wxd_TextAttr_GetFlags(self.ptr) }
+    }
+    pub fn has_flag(&self, flag: i64) -> bool {
+        unsafe { ffi::wxd_TextAttr_HasFlag(self.ptr, flag) }
+    }
+
+    pub fn set_font_size(&mut self, point_size: i32) {
+        unsafe { ffi::wxd_TextAttr_SetFontSize(self.ptr, point_size) };
+    }
+    pub fn get_font_size(&self) -> i32 {
+        unsafe { ffi::wxd_TextAttr_GetFontSize(self.ptr) }
+    }
+
+    pub fn set_font_style(&mut self, font_style: crate::font::FontStyle) {
+        unsafe { ffi::wxd_TextAttr_SetFontStyle(self.ptr, font_style as i32) };
+    }
+    pub fn get_font_style(&self) -> crate::font::FontStyle {
+        unsafe { std::mem::transmute(ffi::wxd_TextAttr_GetFontStyle(self.ptr)) }
+    }
+
+    pub fn set_font_weight(&mut self, font_weight: crate::font::FontWeight) {
+        unsafe { ffi::wxd_TextAttr_SetFontWeight(self.ptr, font_weight as i32) };
+    }
+    pub fn get_font_weight(&self) -> crate::font::FontWeight {
+        unsafe { std::mem::transmute(ffi::wxd_TextAttr_GetFontWeight(self.ptr)) }
+    }
+
+    pub fn set_font_face_name(&mut self, face_name: &str) {
+        let c_str = std::ffi::CString::new(face_name).unwrap();
+        unsafe { ffi::wxd_TextAttr_SetFontFaceName(self.ptr, c_str.as_ptr()) };
+    }
+    pub fn set_font_underlined(&mut self, underlined: bool) {
+        unsafe { ffi::wxd_TextAttr_SetFontUnderlined(self.ptr, underlined) };
+    }
+    pub fn set_font_strikethrough(&mut self, strikethrough: bool) {
+        unsafe { ffi::wxd_TextAttr_SetFontStrikethrough(self.ptr, strikethrough) };
+    }
+    pub fn set_font_encoding(&mut self, encoding: i32) {
+        unsafe { ffi::wxd_TextAttr_SetFontEncoding(self.ptr, encoding) };
+    }
+    pub fn set_font_family(&mut self, family: crate::font::FontFamily) {
+        unsafe { ffi::wxd_TextAttr_SetFontFamily(self.ptr, family as i32) };
+    }
+
+    pub fn set_character_style_name(&mut self, name: &str) {
+        let c_str = std::ffi::CString::new(name).unwrap();
+        unsafe { ffi::wxd_TextAttr_SetCharacterStyleName(self.ptr, c_str.as_ptr()) };
+    }
+    pub fn set_paragraph_style_name(&mut self, name: &str) {
+        let c_str = std::ffi::CString::new(name).unwrap();
+        unsafe { ffi::wxd_TextAttr_SetParagraphStyleName(self.ptr, c_str.as_ptr()) };
+    }
+    pub fn set_list_style_name(&mut self, name: &str) {
+        let c_str = std::ffi::CString::new(name).unwrap();
+        unsafe { ffi::wxd_TextAttr_SetListStyleName(self.ptr, c_str.as_ptr()) };
+    }
+
+    pub fn set_bullet_number(&mut self, n: i32) {
+        unsafe { ffi::wxd_TextAttr_SetBulletNumber(self.ptr, n) };
+    }
+    pub fn set_bullet_text(&mut self, text: &str) {
+        let c_str = std::ffi::CString::new(text).unwrap();
+        unsafe { ffi::wxd_TextAttr_SetBulletText(self.ptr, c_str.as_ptr()) };
+    }
+    pub fn set_bullet_font(&mut self, bullet_font: &str) {
+        let c_str = std::ffi::CString::new(bullet_font).unwrap();
+        unsafe { ffi::wxd_TextAttr_SetBulletFont(self.ptr, c_str.as_ptr()) };
+    }
+    pub fn set_bullet_name(&mut self, name: &str) {
+        let c_str = std::ffi::CString::new(name).unwrap();
+        unsafe { ffi::wxd_TextAttr_SetBulletName(self.ptr, c_str.as_ptr()) };
+    }
+    pub fn set_url(&mut self, url: &str) {
+        let c_str = std::ffi::CString::new(url).unwrap();
+        unsafe { ffi::wxd_TextAttr_SetURL(self.ptr, c_str.as_ptr()) };
+    }
+    pub fn set_page_break(&mut self, page_break: bool) {
+        unsafe { ffi::wxd_TextAttr_SetPageBreak(self.ptr, page_break) };
+    }
+    pub fn set_text_effects(&mut self, effects: i32) {
+        unsafe { ffi::wxd_TextAttr_SetTextEffects(self.ptr, effects) };
+    }
+    pub fn set_text_effect_flags(&mut self, effects: i32) {
+        unsafe { ffi::wxd_TextAttr_SetTextEffectFlags(self.ptr, effects) };
+    }
+    pub fn set_outline_level(&mut self, level: i32) {
+        unsafe { ffi::wxd_TextAttr_SetOutlineLevel(self.ptr, level) };
+    }
+
+    pub fn get_text_colour(&self) -> crate::color::Colour {
+        crate::color::Colour::from(unsafe { ffi::wxd_TextAttr_GetTextColour(self.ptr) })
+    }
+    pub fn get_background_colour(&self) -> crate::color::Colour {
+        crate::color::Colour::from(unsafe { ffi::wxd_TextAttr_GetBackgroundColour(self.ptr) })
+    }
+    pub fn get_alignment(&self) -> i32 {
+        unsafe { ffi::wxd_TextAttr_GetAlignment(self.ptr) }
+    }
+    pub fn get_left_indent(&self) -> i32 {
+        unsafe { ffi::wxd_TextAttr_GetLeftIndent(self.ptr) }
+    }
+    pub fn get_left_sub_indent(&self) -> i32 {
+        unsafe { ffi::wxd_TextAttr_GetLeftSubIndent(self.ptr) }
+    }
+    pub fn get_right_indent(&self) -> i32 {
+        unsafe { ffi::wxd_TextAttr_GetRightIndent(self.ptr) }
+    }
+    pub fn get_line_spacing(&self) -> i32 {
+        unsafe { ffi::wxd_TextAttr_GetLineSpacing(self.ptr) }
+    }
+    pub fn get_paragraph_spacing_after(&self) -> i32 {
+        unsafe { ffi::wxd_TextAttr_GetParagraphSpacingAfter(self.ptr) }
+    }
+    pub fn get_paragraph_spacing_before(&self) -> i32 {
+        unsafe { ffi::wxd_TextAttr_GetParagraphSpacingBefore(self.ptr) }
+    }
+    pub fn get_bullet_style(&self) -> i32 {
+        unsafe { ffi::wxd_TextAttr_GetBulletStyle(self.ptr) }
+    }
+
     pub(crate) fn as_ptr(&self) -> *mut ffi::wxd_TextAttr_t {
         self.ptr
     }
