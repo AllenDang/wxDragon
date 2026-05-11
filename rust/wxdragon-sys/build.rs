@@ -1111,7 +1111,6 @@ where
     Ok(())
 }
 
-
 fn chk_wx_version<P: AsRef<std::path::Path>>(wxwidgets_dir: P, expected_version: &str) -> std::io::Result<bool> {
     use std::io::{BufRead, BufReader};
     let cfg = wxwidgets_dir.as_ref().join("configure");
