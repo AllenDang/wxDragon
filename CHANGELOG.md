@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.9.16
+
+### New Features
+
+- **TextCtrl / TextAttr**: Added `wxTextAttr` wrapper for native RTF-style character and paragraph formatting, plus `TextCtrl::set_style`, `write_text`, `change_value`, `replace`, and `remove` (#142)
+- **TextCtrl positional API**: Added `position_to_xy`, `xy_to_position`, and `get_line_length` (#142)
+- **TextAttr coverage**: Added missing getters/setters across font, formatting, bullet, list, and style name methods (#144)
+- **ColourDialog**: Added `choose_full` and `custom_colour` options to `ColourDialogBuilder` for fully expanded native colour pickers (#142)
+- **Activate event**: Wrapped the `wxActivateEvent` to Rust (#143)
+
+### Bug Fixes
+
+- **WebView**: Fixed WebView linking on ARM64 Windows (#140, #141)
+
 ## 0.9.15
 
 ### New Features
