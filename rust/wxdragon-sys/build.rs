@@ -494,7 +494,7 @@ fn build_wxdragon_wrapper(
             let wx_lib_widgets = wxwidgets_build_dir.join(lib_dir).display().to_string();
             println!("cargo:rustc-link-search=native={wx_lib_widgets}");
 
-            if target == "i686-pc-windows-msvc" {
+            if target == "i686-pc-windows-msvc" || target == "aarch64-pc-windows-msvc" {
                 // build/lib/Debug or build/lib/Release
                 let sub_dir = format!("build/lib/{profile}");
                 let wx_lib3 = wxdragon_sys_build_dir.join(sub_dir).display().to_string();
