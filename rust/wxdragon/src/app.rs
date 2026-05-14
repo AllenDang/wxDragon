@@ -301,6 +301,14 @@ where
     }
 }
 
+/// Wakes up the application's idle event loop.
+///
+/// This function forces the application to process pending idle events
+/// and wakes up the event loop from a sleep state.
+pub fn wake_up_idle() {
+    unsafe { ffi::wxd_WakeUpIdle() };
+}
+
 /// Gets the current wxWidgets app instance.
 pub fn get_app_instance() -> Option<App> {
     App::new()

@@ -263,6 +263,12 @@ wxd_App_ExitMainLoop(wxd_App_t* app)
     wx_app->ExitMainLoop();
 }
 
+void
+wxd_WakeUpIdle()
+{
+    wxWakeUpIdle();
+}
+
 bool
 wxd_App_GetExitOnFrameDelete(wxd_App_t* app)
 {
