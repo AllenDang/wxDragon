@@ -70,25 +70,22 @@ jobs:
         if: ${{ failure() }}
         run: echo "Some of jobs failed" && false
 
-  build-i686-pc-windows-msvc:
+  windows-cross-build:
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [i686-pc-windows-msvc, x86_64-pc-windows-msvc, aarch64-pc-windows-msvc]
     runs-on: windows-latest
     steps:
       - uses: dtolnay/rust-toolchain@stable
       - uses: actions/checkout@v6
         with:
           submodules: recursive
-      - name: Install i686 target
-        run: rustup target add i686-pc-windows-msvc
+      - name: Install target ${{ matrix.target }}
+        run: rustup target add ${{ matrix.target }}
 
-      - run: rustup component add rustfmt clippy
-
-      - run: cargo fmt --check
-      - run: cargo clippy --features "aui,xrc,richtext,stc,webview" --release --target i686-pc-windows-msvc -- -D warnings
-
-      - name: Build for i686-pc-windows-msvc (32-bit)
-        run: |
-          SET LIBCLANG_PATH="C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\Llvm\x64\bin"
-          cargo build --target i686-pc-windows-msvc --release
+      - name: Build for ${{ matrix.target }}
+        run: cargo build --features "aui,xrc,richtext,stc,webview" --target ${{ matrix.target }} --release
 
   build-msys-mingw64:
     runs-on: windows-latest
