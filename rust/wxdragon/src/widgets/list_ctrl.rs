@@ -11,9 +11,14 @@ use crate::window::{WindowHandle, WxWidget};
 use crate::window::Window;
 use std::any::Any;
 use std::ffi::{CStr, CString};
-use std::os::raw::{c_int, c_longlong};
+use std::os::raw::{c_char, c_int, c_longlong, c_void};
+use std::panic::{self, AssertUnwindSafe};
 use std::sync::Arc;
 use wxdragon_sys as ffi;
+
+struct ListCtrlVirtualTextCallback {
+    callback: Box<dyn Fn(i64, i32) -> String>,
+}
 
 // --- ListCtrl Styles ---
 widget_style_enum!(
@@ -791,6 +796,54 @@ impl ListCtrl {
         unsafe { ffi::wxd_ListCtrl_RefreshItems(ptr, item_from as c_longlong, item_to as c_longlong) }
     }
 
+    /// Sets the callback used by a virtual list control to provide cell text on demand.
+    ///
+    /// The list control must be created with `ListCtrlStyle::Virtual`. The callback is called
+    /// from wxWidgets whenever visible rows need text. Calling this method replaces any previous
+    /// virtual text callback for this control.
+    ///
+    /// Returns `false` if the list control has been destroyed or was not created by wxDragon.
+    pub fn set_virtual_text_callback<F>(&self, callback: F) -> bool
+    where
+        F: Fn(i64, i32) -> String + 'static,
+    {
+        let ptr = self.listctrl_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+
+        let callback_data = Box::new(ListCtrlVirtualTextCallback {
+            callback: Box::new(callback),
+        });
+        let raw_callback_data = Box::into_raw(callback_data);
+        let result = unsafe {
+            ffi::wxd_ListCtrl_SetVirtualTextCallback(
+                ptr,
+                raw_callback_data as *mut c_void,
+                Some(listctrl_virtual_text_callback),
+                Some(listctrl_free_virtual_text),
+                Some(listctrl_drop_virtual_text_callback),
+            )
+        };
+
+        if !result {
+            unsafe {
+                drop(Box::from_raw(raw_callback_data));
+            }
+        }
+
+        result
+    }
+
+    /// Clears the virtual text callback, if one is registered.
+    pub fn clear_virtual_text_callback(&self) {
+        let ptr = self.listctrl_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_ListCtrl_ClearVirtualTextCallback(ptr) }
+    }
+
     // --- ImageList Methods ---
 
     /// Sets the image list for the control.
@@ -1003,6 +1056,47 @@ impl ListCtrl {
     /// This can be called explicitly when needed.
     pub fn cleanup_custom_data(&self) {
         self.cleanup_all_custom_data();
+    }
+}
+
+unsafe extern "C" fn listctrl_virtual_text_callback(userdata: *mut c_void, item: i64, col: i32) -> *mut c_char {
+    if userdata.is_null() {
+        return std::ptr::null_mut();
+    }
+
+    let callback_data = unsafe { &*(userdata as *const ListCtrlVirtualTextCallback) };
+    let result = panic::catch_unwind(AssertUnwindSafe(|| (callback_data.callback)(item, col)));
+    match result {
+        Ok(text) => string_to_c_ptr(text),
+        Err(_) => string_to_c_ptr(String::new()),
+    }
+}
+
+unsafe extern "C" fn listctrl_free_virtual_text(text: *mut c_char) {
+    if !text.is_null() {
+        unsafe {
+            let _ = CString::from_raw(text);
+        }
+    }
+}
+
+unsafe extern "C" fn listctrl_drop_virtual_text_callback(userdata: *mut c_void) {
+    if !userdata.is_null() {
+        unsafe {
+            let _ = Box::from_raw(userdata as *mut ListCtrlVirtualTextCallback);
+        }
+    }
+}
+
+fn string_to_c_ptr(text: String) -> *mut c_char {
+    match CString::new(text) {
+        Ok(c_string) => c_string.into_raw(),
+        Err(err) => {
+            let sanitized = err.into_vec().into_iter().filter(|byte| *byte != 0).collect::<Vec<_>>();
+            CString::new(sanitized)
+                .unwrap_or_else(|_| CString::new("").expect("empty CString"))
+                .into_raw()
+        }
     }
 }
 

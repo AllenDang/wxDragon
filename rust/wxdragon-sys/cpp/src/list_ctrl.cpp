@@ -8,6 +8,77 @@
 
 // --- wxListCtrl ---
 
+class WxdListCtrl : public wxListCtrl {
+public:
+    WxdListCtrl(wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size,
+                long style)
+        : wxListCtrl(parent, id, pos, size, style), m_userdata(nullptr), m_textCallback(nullptr),
+          m_freeString(nullptr), m_freeUserdata(nullptr)
+    {
+    }
+
+    ~WxdListCtrl() override
+    {
+        ClearVirtualTextCallback();
+    }
+
+    void SetVirtualTextCallback(void* userdata, wxd_listctrl_virtual_text_callback callback,
+                                wxd_listctrl_free_string_callback freeString,
+                                wxd_listctrl_free_userdata_callback freeUserdata)
+    {
+        ClearVirtualTextCallback();
+        m_userdata = userdata;
+        m_textCallback = callback;
+        m_freeString = freeString;
+        m_freeUserdata = freeUserdata;
+    }
+
+    void ClearVirtualTextCallback()
+    {
+        if (m_userdata && m_freeUserdata) {
+            m_freeUserdata(m_userdata);
+        }
+        m_userdata = nullptr;
+        m_textCallback = nullptr;
+        m_freeString = nullptr;
+        m_freeUserdata = nullptr;
+    }
+
+protected:
+    wxString OnGetItemText(long item, long column) const override
+    {
+        if (!m_textCallback) {
+            return wxListCtrl::OnGetItemText(item, column);
+        }
+
+        char* text = m_textCallback(m_userdata, static_cast<int64_t>(item),
+                                    static_cast<int32_t>(column));
+        if (!text) {
+            return wxString();
+        }
+
+        wxString result = wxString::FromUTF8(text);
+        if (m_freeString) {
+            m_freeString(text);
+        }
+        return result;
+    }
+
+private:
+    void* m_userdata;
+    wxd_listctrl_virtual_text_callback m_textCallback;
+    wxd_listctrl_free_string_callback m_freeString;
+    wxd_listctrl_free_userdata_callback m_freeUserdata;
+};
+
+static WxdListCtrl*
+wxd_as_custom_list_ctrl(wxd_ListCtrl_t* self)
+{
+    if (!self)
+        return nullptr;
+    return dynamic_cast<WxdListCtrl*>(reinterpret_cast<wxListCtrl*>(self));
+}
+
 extern "C" {
 
 // --- ListCtrl Functions ---
@@ -18,7 +89,7 @@ wxd_ListCtrl_Create(wxd_Window_t* parent, wxd_Id id, wxd_Point pos, wxd_Size siz
 {
     wxWindow* p = (wxWindow*)parent;
     wxListCtrl* lc =
-        new wxListCtrl(p, id, wxPoint(pos.x, pos.y), wxSize(size.width, size.height), style);
+        new WxdListCtrl(p, id, wxPoint(pos.x, pos.y), wxSize(size.width, size.height), style);
     return (wxd_ListCtrl_t*)lc;
 }
 
@@ -391,6 +462,30 @@ wxd_ListCtrl_RefreshItems(wxd_ListCtrl_t* self, int64_t itemFrom, int64_t itemTo
     if (!self)
         return;
     reinterpret_cast<wxListCtrl*>(self)->RefreshItems(itemFrom, itemTo);
+}
+
+WXD_EXPORTED bool
+wxd_ListCtrl_SetVirtualTextCallback(wxd_ListCtrl_t* self, void* userdata,
+                                    wxd_listctrl_virtual_text_callback callback,
+                                    wxd_listctrl_free_string_callback freeString,
+                                    wxd_listctrl_free_userdata_callback freeUserdata)
+{
+    WxdListCtrl* listCtrl = wxd_as_custom_list_ctrl(self);
+    if (!listCtrl || !userdata || !callback)
+        return false;
+
+    listCtrl->SetVirtualTextCallback(userdata, callback, freeString, freeUserdata);
+    return true;
+}
+
+WXD_EXPORTED void
+wxd_ListCtrl_ClearVirtualTextCallback(wxd_ListCtrl_t* self)
+{
+    WxdListCtrl* listCtrl = wxd_as_custom_list_ctrl(self);
+    if (!listCtrl)
+        return;
+
+    listCtrl->ClearVirtualTextCallback();
 }
 
 // Sorting - This is a bit tricky because of the callback

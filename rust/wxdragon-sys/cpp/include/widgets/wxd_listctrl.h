@@ -3,6 +3,10 @@
 
 #include "../wxd_types.h"
 
+typedef char* (*wxd_listctrl_virtual_text_callback)(void* userdata, int64_t item, int32_t col);
+typedef void (*wxd_listctrl_free_string_callback)(char* text);
+typedef void (*wxd_listctrl_free_userdata_callback)(void* userdata);
+
 // --- ListCtrl Functions ---
 WXD_EXPORTED wxd_ListCtrl_t*
 wxd_ListCtrl_Create(wxd_Window_t* parent, wxd_Id id, wxd_Point pos, wxd_Size size,
@@ -87,6 +91,13 @@ WXD_EXPORTED void
 wxd_ListCtrl_RefreshItem(wxd_ListCtrl_t* self, int64_t item);
 WXD_EXPORTED void
 wxd_ListCtrl_RefreshItems(wxd_ListCtrl_t* self, int64_t itemFrom, int64_t itemTo);
+WXD_EXPORTED bool
+wxd_ListCtrl_SetVirtualTextCallback(wxd_ListCtrl_t* self, void* userdata,
+                                    wxd_listctrl_virtual_text_callback callback,
+                                    wxd_listctrl_free_string_callback free_string,
+                                    wxd_listctrl_free_userdata_callback free_userdata);
+WXD_EXPORTED void
+wxd_ListCtrl_ClearVirtualTextCallback(wxd_ListCtrl_t* self);
 
 // Sorting
 WXD_EXPORTED bool

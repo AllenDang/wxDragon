@@ -32,6 +32,7 @@ members = [
   "examples/rust/translations_demo",
   "examples/rust/treectrl_demo",
   "examples/rust/uiactionsimulator_demo",
+  "examples/rust/virtual_listctrl_demo",
   "examples/rust/virtual_list_demo",
   "examples/rust/window_features_test",
   "examples/rust/wrapsizer_test",
