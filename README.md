@@ -166,7 +166,7 @@ Cross-compilation is supported, including building Windows executables from macO
 **Linux Additional Requirements:**
 ```bash
 # Ubuntu/Debian
-sudo apt-get install libclang-dev pkg-config libgtk-3-dev libpng-dev libjpeg-dev libgl1-mesa-dev libglu1-mesa-dev libxkbcommon-dev libexpat1-dev libtiff-dev
+sudo apt-get install libclang-dev pkg-config libgtk-3-dev libpng-dev libjpeg-dev libgl1-mesa-dev libglu1-mesa-dev libxkbcommon-dev libexpat1-dev libtiff-dev cmake libssl-dev libwebkit2gtk-4.1-dev
 
 # Fedora/RHEL
 sudo dnf install clang-devel pkg-config gtk3-devel libpng-devel libjpeg-devel mesa-libGL-devel mesa-libGLU-devel libxkbcommon-devel expat-devel libtiff-devel

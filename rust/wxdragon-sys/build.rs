@@ -842,7 +842,13 @@ fn build_wxdragon_wrapper(
         println!("cargo:rustc-link-lib=jpeg");
         println!("cargo:rustc-link-lib=expat");
         println!("cargo:rustc-link-lib=tiff");
-        println!("cargo:rustc-link-lib=static=wx_gtk3u_propgrid-3.3");
+        if lib_dirs.iter().any(|dir| dir.join("libwx_gtk3u_propgrid-3.3.a").exists()) {
+            println!("cargo:rustc-link-lib=static=wx_gtk3u_propgrid-3.3");
+        } else {
+            println!(
+                "cargo::warning=Skipping wx_gtk3u_propgrid-3.3 because the archive was not found in the wxWidgets output directories"
+            );
+        }
         println!("cargo:rustc-link-lib=static=wx_gtk3u_gl-3.3");
         println!("cargo:rustc-link-lib=static=wx_gtk3u_adv-3.3");
         println!("cargo:rustc-link-lib=static=wx_gtk3u_core-3.3");
@@ -854,19 +860,20 @@ fn build_wxdragon_wrapper(
             println!("cargo:rustc-link-lib=static=wx_gtk3u_aui-3.3");
         }
         if cfg!(feature = "webview") {
-            println!("cargo:rustc-link-lib=static=wx_gtk3u_webview-3.3");
-
-            // Link WebKitGTK for Linux WebView support
-            // Try webkit2gtk-4.1 first (newer), fall back to webkit2gtk-4.0 if not available
+            // Link WebView support only when WebKitGTK is actually present.
+            // wxWidgets can be configured with wxUSE_WEBVIEW on, but without a
+            // backend it will not ship the webview archive for linking.
             if let Ok(webkit) = pkg_config::Config::new().probe("webkit2gtk-4.1") {
                 for lib in webkit.libs {
                     println!("cargo:rustc-link-lib={lib}");
                 }
+                println!("cargo:rustc-link-lib=static=wx_gtk3u_webview-3.3");
                 println!("info: Using webkit2gtk-4.1 for WebView support");
             } else if let Ok(webkit) = pkg_config::Config::new().probe("webkit2gtk-4.0") {
                 for lib in webkit.libs {
                     println!("cargo:rustc-link-lib={lib}");
                 }
+                println!("cargo:rustc-link-lib=static=wx_gtk3u_webview-3.3");
                 println!("info: Using webkit2gtk-4.0 for WebView support");
             } else {
                 println!("cargo:warning=WebKitGTK not found. WebView feature may not work on Linux.");
