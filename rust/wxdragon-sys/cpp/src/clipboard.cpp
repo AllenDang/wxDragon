@@ -155,7 +155,7 @@ wxd_Clipboard_GetText(const wxd_Clipboard_t* clipboard, char* buffer, size_t buf
     }
 
     int len = -1;
-    if (cb->IsSupported(wxDF_TEXT)) {
+    if (cb->IsSupported(wxDF_TEXT) || cb->IsSupported(wxDF_UNICODETEXT)) {
         wxTextDataObject data;
         if (cb->GetData(data)) {
             wxString text = data.GetText();
