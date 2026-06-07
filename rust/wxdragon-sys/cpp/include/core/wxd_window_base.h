@@ -240,6 +240,19 @@ WXD_EXPORTED void
 wxd_Window_MSWDisableComposited(wxd_Window_t* window);
 #endif
 
+#ifdef __WXOSX__
+/// Sets the VoiceOver accessibility label for the window (macOS only).
+/// VoiceOver announces this label before the control's value and role,
+/// e.g. "Language, English, pop up button".
+WXD_EXPORTED void
+wxd_Window_SetAccessibilityLabel(wxd_Window_t* window, const char* label);
+
+/// Hides the window from the VoiceOver cursor (macOS only).
+/// The window remains visible on screen but assistive technologies skip it.
+WXD_EXPORTED void
+wxd_Window_HideFromAccessibility(wxd_Window_t* window);
+#endif
+
 // --- Popup Menu Functions ---
 /// Shows a popup menu at the specified position (or current mouse position if
 /// NULL) Returns true if a menu item was selected, false otherwise

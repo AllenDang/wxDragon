@@ -1601,6 +1601,38 @@ pub trait WxWidget: std::any::Any {
         }
     }
 
+    /// Sets the VoiceOver accessibility label for the window (macOS only).
+    ///
+    /// VoiceOver announces this label before the control's value and role.
+    /// For example, setting "Language" on a popup button showing "English" causes
+    /// VoiceOver to read "Language, English, pop up button" as a single cursor stop,
+    /// rather than navigating a separate label and control.
+    ///
+    /// Use this together with [`hide_from_accessibility`] on the adjacent `StaticText`
+    /// label to avoid redundant announcements.
+    #[cfg(target_os = "macos")]
+    fn set_accessibility_label(&self, label: &str) {
+        let handle = self.handle_ptr();
+        if handle.is_null() {
+            return;
+        }
+        let c_label = std::ffi::CString::new(label).unwrap_or_default();
+        unsafe { ffi::wxd_Window_SetAccessibilityLabel(handle, c_label.as_ptr()) }
+    }
+
+    /// Hides the window from the VoiceOver cursor (macOS only).
+    ///
+    /// The window remains visible on screen but assistive technologies skip it.
+    /// Typically used on a `StaticText` label whose text has been transferred to
+    /// a nearby control via [`set_accessibility_label`].
+    #[cfg(target_os = "macos")]
+    fn hide_from_accessibility(&self) {
+        let handle = self.handle_ptr();
+        if !handle.is_null() {
+            unsafe { ffi::wxd_Window_HideFromAccessibility(handle) }
+        }
+    }
+
     // --- Tab Order Functions ---
 
     /// Moves this window to appear after the specified window in the tab order.

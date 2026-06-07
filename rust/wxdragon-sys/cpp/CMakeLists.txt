@@ -228,6 +228,13 @@ set(WXDRAGON_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/misc.cpp
 )
 
+# Add macOS-specific sources (Objective-C++ files)
+if(PLATFORM_NAME STREQUAL "macos")
+    list(APPEND WXDRAGON_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/window_osx.mm)
+    set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/src/window_osx.mm
+        PROPERTIES COMPILE_FLAGS "-fobjc-arc")
+endif()
+
 # Add Linux compatibility layer for older systems
 if(PLATFORM_NAME STREQUAL "linux")
     list(APPEND WXDRAGON_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/linux_compat.cpp)
