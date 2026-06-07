@@ -91,6 +91,8 @@ add_subdirectory(${WXWIDGETS_LIB_DIR} ${WXWIDGETS_BUILD_DIR})
 if(CMAKE_SYSTEM_NAME MATCHES "Darwin")
     message(STATUS "Building for macOS")
     set(PLATFORM_NAME "macos")
+    # Enable Objective-C++ for .mm files
+    enable_language(OBJCXX)
     # Define platform-specific preprocessor macros
     add_compile_definitions(__WXOSX_COCOA__ __WXMAC__ __WXOSX__ _FILE_OFFSET_BITS=64 NDEBUG)
 elseif(CMAKE_SYSTEM_NAME MATCHES "Windows")

@@ -19,6 +19,6 @@ wxd_Window_HideFromAccessibility(wxd_Window_t* window)
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
     NSView* view = wx_window->GetHandle();
     if (view) {
-        [view setAccessibilityElement:NO];
+        [view setAccessibilityHidden:YES];
     }
 }

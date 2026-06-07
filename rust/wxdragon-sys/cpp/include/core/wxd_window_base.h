@@ -248,7 +248,8 @@ WXD_EXPORTED void
 wxd_Window_SetAccessibilityLabel(wxd_Window_t* window, const char* label);
 
 /// Hides the window from the VoiceOver cursor (macOS only).
-/// The window remains visible on screen but assistive technologies skip it.
+/// Sets NSAccessibility accessibilityHidden = YES. The window remains visible
+/// on screen but assistive technologies skip it.
 WXD_EXPORTED void
 wxd_Window_HideFromAccessibility(wxd_Window_t* window);
 #endif
