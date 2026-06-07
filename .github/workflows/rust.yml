@@ -70,6 +70,40 @@ jobs:
         if: ${{ failure() }}
         run: echo "Some of jobs failed" && false
 
+  linux-cross-build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: aarch64-unknown-linux-gnu
+            use_cross: true
+          - target: x86_64-unknown-linux-gnu
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Install ${{ matrix.target }} deps
+        if: matrix.target == 'x86_64-unknown-linux-gnu'
+        run: sudo apt-get update && sudo apt-get install -y libgtk-3-dev libpng-dev libjpeg-dev libgl1-mesa-dev libglu1-mesa-dev libxkbcommon-dev libwayland-dev libexpat1-dev libtiff-dev libwebkit2gtk-4.1-dev libxtst-dev libssl-dev
+
+      - name: Install target ${{ matrix.target }}
+        run: rustup target add ${{ matrix.target }}
+
+      - name: Install cross tool
+        if: matrix.use_cross
+        run: cargo install cross --git https://github.com/cross-rs/cross.git --rev 29d00c7
+
+      - name: Build for ${{ matrix.target }}
+        shell: bash
+        run: |
+          if [ "${{ matrix.use_cross }}" = "true" ]; then
+            cross build --features "aui,xrc,richtext,stc,webview" --target ${{ matrix.target }} --release
+          else
+            cargo build --features "aui,xrc,richtext,stc,webview" --target ${{ matrix.target }} --release
+          fi
+
   windows-cross-build:
     strategy:
       fail-fast: false
