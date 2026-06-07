@@ -246,6 +246,11 @@ wxd_Window_MSWDisableComposited(wxd_Window_t* window);
 /// e.g. "Language, English, pop up button".
 WXD_EXPORTED void
 wxd_Window_SetAccessibilityLabel(wxd_Window_t* window, const char* label);
+
+/// Activates the application, bringing it in front of all other apps (macOS only).
+/// Equivalent to [NSRunningApplication activateWithOptions:NSApplicationActivateIgnoringOtherApps].
+WXD_EXPORTED void
+wxd_App_ActivateMac(void);
 #endif
 
 // --- Popup Menu Functions ---

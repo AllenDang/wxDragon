@@ -134,6 +134,8 @@ unsafe extern "C" {
     unsafe fn wxd_Window_MSWDisableComposited(window: *mut ffi::wxd_Window_t);
     #[cfg(target_os = "macos")]
     unsafe fn wxd_Window_SetAccessibilityLabel(window: *mut ffi::wxd_Window_t, label: *const std::os::raw::c_char);
+    #[cfg(target_os = "macos")]
+    unsafe fn wxd_App_ActivateMac();
 }
 
 // Use the widget_style_enum macro to define ExtraWindowStyle

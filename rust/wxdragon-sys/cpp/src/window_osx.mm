@@ -11,3 +11,10 @@ wxd_Window_SetAccessibilityLabel(wxd_Window_t* window, const char* label)
         [view setAccessibilityLabel:[NSString stringWithUTF8String:label]];
     }
 }
+
+void
+wxd_App_ActivateMac(void)
+{
+    [[NSRunningApplication currentApplication]
+        activateWithOptions:NSApplicationActivateIgnoringOtherApps];
+}
