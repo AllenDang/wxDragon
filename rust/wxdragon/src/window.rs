@@ -134,8 +134,6 @@ unsafe extern "C" {
     unsafe fn wxd_Window_MSWDisableComposited(window: *mut ffi::wxd_Window_t);
     #[cfg(target_os = "macos")]
     unsafe fn wxd_Window_SetAccessibilityLabel(window: *mut ffi::wxd_Window_t, label: *const std::os::raw::c_char);
-    #[cfg(target_os = "macos")]
-    unsafe fn wxd_Window_HideFromAccessibility(window: *mut ffi::wxd_Window_t);
 }
 
 // Use the widget_style_enum macro to define ExtraWindowStyle
@@ -1622,19 +1620,6 @@ pub trait WxWidget: std::any::Any {
         }
         let c_label = std::ffi::CString::new(label).unwrap_or_default();
         unsafe { wxd_Window_SetAccessibilityLabel(handle, c_label.as_ptr()) }
-    }
-
-    /// Hides the window from the VoiceOver cursor (macOS only).
-    ///
-    /// The window remains visible on screen but assistive technologies skip it.
-    /// Typically used on a `StaticText` label whose text has been transferred to
-    /// a nearby control via [`set_accessibility_label`].
-    #[cfg(target_os = "macos")]
-    fn hide_from_accessibility(&self) {
-        let handle = self.handle_ptr();
-        if !handle.is_null() {
-            unsafe { wxd_Window_HideFromAccessibility(handle) }
-        }
     }
 
     // --- Tab Order Functions ---
