@@ -132,6 +132,10 @@ unsafe extern "C" {
     unsafe fn wxd_Window_FindWindowById(window: *mut ffi::wxd_Window_t, id: std::os::raw::c_int) -> *mut ffi::wxd_Window_t;
     #[cfg(target_os = "windows")]
     unsafe fn wxd_Window_MSWDisableComposited(window: *mut ffi::wxd_Window_t);
+    #[cfg(target_os = "macos")]
+    unsafe fn wxd_Window_SetAccessibilityLabel(window: *mut ffi::wxd_Window_t, label: *const std::os::raw::c_char);
+    #[cfg(target_os = "macos")]
+    unsafe fn wxd_Window_HideFromAccessibility(window: *mut ffi::wxd_Window_t);
 }
 
 // Use the widget_style_enum macro to define ExtraWindowStyle
@@ -1617,7 +1621,7 @@ pub trait WxWidget: std::any::Any {
             return;
         }
         let c_label = std::ffi::CString::new(label).unwrap_or_default();
-        unsafe { ffi::wxd_Window_SetAccessibilityLabel(handle, c_label.as_ptr()) }
+        unsafe { wxd_Window_SetAccessibilityLabel(handle, c_label.as_ptr()) }
     }
 
     /// Hides the window from the VoiceOver cursor (macOS only).
@@ -1629,7 +1633,7 @@ pub trait WxWidget: std::any::Any {
     fn hide_from_accessibility(&self) {
         let handle = self.handle_ptr();
         if !handle.is_null() {
-            unsafe { ffi::wxd_Window_HideFromAccessibility(handle) }
+            unsafe { wxd_Window_HideFromAccessibility(handle) }
         }
     }
 
