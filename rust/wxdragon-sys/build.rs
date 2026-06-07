@@ -178,12 +178,58 @@ fn build_wxdragon_wrapper(
             _ => "",
         };
 
+        let (sys_include_path, sys_library_path) = match target_arch.as_str() {
+            "aarch64" => (
+                "/usr/include:/usr/lib/aarch64-linux-gnu/include",
+                "/usr/lib/aarch64-linux-gnu:/usr/lib",
+            ),
+            "arm" => (
+                "/usr/include:/usr/lib/arm-linux-gnueabihf/include",
+                "/usr/lib/arm-linux-gnueabihf:/usr/lib",
+            ),
+            "x86_64" => (
+                "/usr/include:/usr/lib/x86_64-linux-gnu/include",
+                "/usr/lib/x86_64-linux-gnu:/usr/lib",
+            ),
+            "i686" => (
+                "/usr/include:/usr/lib/i386-linux-gnu/include",
+                "/usr/lib/i386-linux-gnu:/usr/lib",
+            ),
+            _ => ("/usr/include", "/usr/lib:/usr/lib64"),
+        };
+
+        let (x11_include_path, x11_library_path) = match target_arch.as_str() {
+            "aarch64" => ("/usr/include/X11", "/usr/lib/aarch64-linux-gnu/libX11.so"),
+            "arm" => ("/usr/include/X11", "/usr/lib/arm-linux-gnueabihf/libX11.so"),
+            "x86_64" => ("/usr/include/X11", "/usr/lib/x86_64-linux-gnu/libX11.so"),
+            "i686" => ("/usr/include/X11", "/usr/lib/i386-linux-gnu/libX11.so"),
+            _ => ("/usr/include/X11", "/usr/lib/libX11.so"),
+        };
+
+        let (zlib_include_path, zlib_library_path) = match target_arch.as_str() {
+            "aarch64" => ("/usr/include", "/usr/lib/aarch64-linux-gnu/libz.so"),
+            "arm" => ("/usr/include", "/usr/lib/arm-linux-gnueabihf/libz.so"),
+            "x86_64" => ("/usr/include", "/usr/lib/x86_64-linux-gnu/libz.so"),
+            "i686" => ("/usr/include", "/usr/lib/i386-linux-gnu/libz.so"),
+            _ => ("/usr/include", "/usr/lib/libz.so"),
+        };
+
         if !pkg_config_libdir.is_empty() {
             cmake_config.env("PKG_CONFIG_ALLOW_CROSS", "1");
             cmake_config.env("PKG_CONFIG_LIBDIR", pkg_config_libdir);
             cmake_config.env("PKG_CONFIG_SYSROOT_DIR", "/");
             cmake_config.env("PKG_CONFIG_PATH", pkg_config_libdir);
-            println!("info: configured pkg-config for Linux cross build (target_arch={target_arch}, libdir={pkg_config_libdir})");
+            cmake_config.define("CMAKE_INCLUDE_PATH", sys_include_path);
+            cmake_config.define("CMAKE_LIBRARY_PATH", sys_library_path);
+            cmake_config.define("CMAKE_SYSTEM_INCLUDE_PATH", sys_include_path);
+            cmake_config.define("CMAKE_SYSTEM_LIBRARY_PATH", sys_library_path);
+            cmake_config.define("X11_X11_INCLUDE_PATH", x11_include_path);
+            cmake_config.define("X11_X11_LIB", x11_library_path);
+            cmake_config.define("ZLIB_INCLUDE_DIR", zlib_include_path);
+            cmake_config.define("ZLIB_LIBRARY", zlib_library_path);
+            println!(
+                "info: configured Linux cross build paths (target_arch={target_arch}, include_path={sys_include_path}, library_path={sys_library_path}, x11_include_path={x11_include_path}, x11_library_path={x11_library_path}, zlib_include_path={zlib_include_path}, zlib_library_path={zlib_library_path})"
+            );
         }
     }
 
