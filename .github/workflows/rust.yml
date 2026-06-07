@@ -70,6 +70,90 @@ jobs:
         if: ${{ failure() }}
         run: echo "Some of jobs failed" && false
 
+  linux-cross-build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: aarch64-unknown-linux-gnu
+            use_cross: true
+          - target: x86_64-unknown-linux-gnu
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Install ${{ matrix.target }} deps
+        if: matrix.target == 'x86_64-unknown-linux-gnu'
+        run: sudo apt-get update && sudo apt-get install -y libgtk-3-dev libpng-dev libjpeg-dev libgl1-mesa-dev libglu1-mesa-dev libxkbcommon-dev libwayland-dev libexpat1-dev libtiff-dev libwebkit2gtk-4.1-dev libxtst-dev libssl-dev
+
+      - name: Install ${{ matrix.target }} cross deps
+        if: matrix.target == 'aarch64-unknown-linux-gnu'
+        run: |
+          sudo dpkg --add-architecture arm64
+          . /etc/os-release
+          codename="$VERSION_CODENAME"
+          sudo rm -f /etc/apt/sources.list /etc/apt/sources.list.d/ubuntu.sources /etc/apt/sources.list.d/ubuntu*.list /etc/apt/sources.list.d/ubuntu*.sources
+          sudo tee /etc/apt/sources.list >/dev/null <<EOF
+          deb [arch=amd64] http://azure.archive.ubuntu.com/ubuntu ${codename} main restricted universe multiverse
+          deb [arch=amd64] http://azure.archive.ubuntu.com/ubuntu ${codename}-updates main restricted universe multiverse
+          deb [arch=amd64] http://azure.archive.ubuntu.com/ubuntu ${codename}-backports main restricted universe multiverse
+          deb [arch=amd64] http://security.ubuntu.com/ubuntu ${codename}-security main restricted universe multiverse
+          deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports ${codename} main restricted universe multiverse
+          deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports ${codename}-updates main restricted universe multiverse
+          deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports ${codename}-backports main restricted universe multiverse
+          deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports ${codename}-security main restricted universe multiverse
+          EOF
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            gcc-aarch64-linux-gnu \
+            g++-aarch64-linux-gnu \
+            libc6-dev-arm64-cross \
+            pkg-config \
+            libgtk-3-dev:arm64 \
+            libpng-dev:arm64 \
+            libjpeg-dev:arm64 \
+            libgl1-mesa-dev:arm64 \
+            libglu1-mesa-dev:arm64 \
+            libxkbcommon-dev:arm64 \
+            libwayland-dev:arm64 \
+            libexpat1-dev:arm64 \
+            libglib2.0-dev:arm64 \
+            libtiff-dev:arm64 \
+            libwebkit2gtk-4.1-dev:arm64 \
+            libssl-dev:arm64 \
+            libxtst-dev:arm64
+
+      - name: Install target ${{ matrix.target }}
+        run: rustup target add ${{ matrix.target }}
+
+      - name: Install cross tool
+        if: matrix.use_cross
+        run: cargo install cross --git https://github.com/cross-rs/cross.git --rev 29d00c7
+
+      - name: Configure aarch64 cross toolchain
+        if: matrix.target == 'aarch64-unknown-linux-gnu'
+        run: |
+          echo "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc" >> "$GITHUB_ENV"
+          echo "CC_aarch64_unknown_linux_gnu=aarch64-linux-gnu-gcc" >> "$GITHUB_ENV"
+          echo "CXX_aarch64_unknown_linux_gnu=aarch64-linux-gnu-g++" >> "$GITHUB_ENV"
+          echo "AR_aarch64_unknown_linux_gnu=aarch64-linux-gnu-ar" >> "$GITHUB_ENV"
+          echo "RANLIB_aarch64_unknown_linux_gnu=aarch64-linux-gnu-ranlib" >> "$GITHUB_ENV"
+          echo "PKG_CONFIG_ALLOW_CROSS=1" >> "$GITHUB_ENV"
+          echo "PKG_CONFIG_SYSROOT_DIR_aarch64_unknown_linux_gnu=/usr/aarch64-linux-gnu" >> "$GITHUB_ENV"
+          echo "PKG_CONFIG_LIBDIR_aarch64_unknown_linux_gnu=/usr/aarch64-linux-gnu/lib/aarch64-linux-gnu/pkgconfig:/usr/lib/aarch64-linux-gnu/pkgconfig:/usr/share/pkgconfig" >> "$GITHUB_ENV"
+          echo "BINDGEN_EXTRA_CLANG_ARGS_aarch64_unknown_linux_gnu=--sysroot=/usr/aarch64-linux-gnu" >> "$GITHUB_ENV"
+
+      - name: Build for ${{ matrix.target }}
+        shell: bash
+        run: |
+          if [ "${{ matrix.use_cross }}" = "true" ]; then
+            cross build --features "aui,xrc,richtext,stc,webview" --target ${{ matrix.target }} --release
+          else
+            cargo build --features "aui,xrc,richtext,stc,webview" --target ${{ matrix.target }} --release
+          fi
+
   windows-cross-build:
     strategy:
       fail-fast: false
