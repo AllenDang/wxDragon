@@ -165,6 +165,28 @@ fn build_wxdragon_wrapper(
     cmake_config.define("WXWIDGETS_LIB_DIR", wxwidgets_source_path);
     cmake_config.define("WXWIDGETS_BUILD_DIR", &wxwidgets_build_dir);
 
+    // Ensure pkg-config can resolve target libraries for Linux cross-compilation.
+    // This is required by wxWidgets' FindGTK3.cmake when the build uses a
+    // cross toolchain (for example the aarch64 job in CI).
+    if target_os == "linux" {
+        let target_arch = std::env::var("CARGO_CFG_TARGET_ARCH").unwrap_or_default();
+        let pkg_config_libdir = match target_arch.as_str() {
+            "aarch64" => "/usr/lib/aarch64-linux-gnu/pkgconfig:/usr/share/pkgconfig",
+            "arm" => "/usr/lib/arm-linux-gnueabihf/pkgconfig:/usr/share/pkgconfig",
+            "x86_64" => "/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/share/pkgconfig",
+            "i686" => "/usr/lib/i386-linux-gnu/pkgconfig:/usr/share/pkgconfig",
+            _ => "",
+        };
+
+        if !pkg_config_libdir.is_empty() {
+            cmake_config.env("PKG_CONFIG_ALLOW_CROSS", "1");
+            cmake_config.env("PKG_CONFIG_LIBDIR", pkg_config_libdir);
+            cmake_config.env("PKG_CONFIG_SYSROOT_DIR", "/");
+            cmake_config.env("PKG_CONFIG_PATH", pkg_config_libdir);
+            println!("info: configured pkg-config for Linux cross build (target_arch={target_arch}, libdir={pkg_config_libdir})");
+        }
+    }
+
     // Handle CMAKE_TLS_VERIFY for SSL certificate verification during downloads
     // On Windows with webview feature, we need to download WebView2 SDK from NuGet
     // Some environments have SSL certificate issues, so we automatically disable verification
