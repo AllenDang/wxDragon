@@ -79,7 +79,7 @@ pub fn create_dataview_tree_tab(parent: &impl WxWidget) -> DataViewTreeTabContro
 
     let cat_b = dvc_tree.append_container(&root_item, "Category B", idx_folder, idx_folder);
     let sub_cat_b1 = dvc_tree.append_container(&cat_b, "Sub-Category B.1", idx_folder, idx_folder);
-    dvc_tree.append_item(&sub_cat_b1, "Item B.1.1 (File)", idx_file);
+    let item_b11 = dvc_tree.append_item(&sub_cat_b1, "Item B.1.1 (File)", idx_file);
     dvc_tree.append_item(&cat_b, "Item B.2 (File)", idx_file);
 
     let _cat_c = dvc_tree.append_container(&root_item, "Category C (Empty)", idx_folder, idx_folder);
@@ -145,6 +145,15 @@ pub fn create_dataview_tree_tab(parent: &impl WxWidget) -> DataViewTreeTabContro
     });
 
     sizer.add(&dvc_tree, 1, SizerFlag::All | SizerFlag::Expand, 10);
+
+    // Demonstrate select() + ensure_visible() on a deeply-nested item.
+    let select_btn = Button::builder(&panel).with_label("Select && Reveal Item B.1.1").build();
+    select_btn.on_click(move |_| {
+        dvc_tree.select(&item_b11);
+        dvc_tree.ensure_visible(&item_b11);
+    });
+    sizer.add(&select_btn, 0, SizerFlag::All, 10);
+
     panel.set_sizer(sizer, true);
 
     DataViewTreeTabControls { panel }

@@ -409,6 +409,21 @@ impl DataViewTreeCtrl {
 
         items
     }
+
+    /// Selects a specific item.
+    pub fn select(&self, item: &DataViewItem) {
+        unsafe { ffi::wxd_DataViewCtrl_Select(self.dvtc_ptr(), **item) };
+    }
+
+    /// Unselects a specific item.
+    pub fn unselect(&self, item: &DataViewItem) {
+        unsafe { ffi::wxd_DataViewCtrl_Unselect(self.dvtc_ptr(), **item) };
+    }
+
+    /// Ensures that the given item is visible, scrolling the control if necessary.
+    pub fn ensure_visible(&self, item: &DataViewItem) {
+        unsafe { ffi::wxd_DataViewCtrl_EnsureVisible(self.dvtc_ptr(), **item) };
+    }
 }
 
 // Manual WxWidget implementation for DataViewTreeCtrl (using WindowHandle)
