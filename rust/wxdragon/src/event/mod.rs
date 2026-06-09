@@ -482,6 +482,13 @@ pub struct EventType: ffi::WXDEventTypeCEnum { // Use the generated C enum type
 }
 }
 
+impl EventType {
+    fn is_recognized(self) -> bool {
+        use bitflags::Flags;
+        self.iter_equal_names().next().is_some() && self != EventType::NONE && self != EventType::INVALID
+    }
+}
+
 /// Idle event processing modes
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum IdleMode {
@@ -577,11 +584,11 @@ impl Event {
         }
         #[allow(clippy::useless_conversion)]
         let event_type_c = unsafe { ffi::wxd_Event_GetEventType(self.0) } as WXDEventTypeCEnum;
-        // If event_type_c is WXD_EVENT_TYPE_NULL or an invalid value, return None
-        use bitflags::Flags;
-        EventType::iter_defined_names()
-            .find(|&(_, val)| val.bits() == event_type_c && val != EventType::NONE && val != EventType::INVALID)
-            .map(|(_, val)| val)
+        let evt = EventType::from_bits_retain(event_type_c);
+        if !evt.is_recognized() {
+            return None;
+        }
+        Some(evt)
     }
 
     /// Controls whether the event is processed further.
