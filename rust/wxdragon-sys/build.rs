@@ -143,6 +143,51 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
     Ok(())
 }
 
+fn detect_visual_studio_generator() -> Option<String> {
+    if std::env::consts::OS != "windows" {
+        return None;
+    }
+
+    let vswhere_candidates = [
+        "vswhere",
+        r"C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe",
+    ];
+
+    for vswhere in vswhere_candidates {
+        let output = std::process::Command::new(vswhere)
+            .args([
+                "-latest",
+                "-products",
+                "*",
+                "-requires",
+                "Microsoft.Component.MSBuild",
+                "-property",
+                "installationVersion",
+            ])
+            .output();
+
+        let Ok(output) = output else {
+            continue;
+        };
+
+        if !output.status.success() {
+            continue;
+        }
+
+        let version = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        let major = version.split('.').next()?.parse::<u32>().ok()?;
+
+        return match major {
+            16 => Some("Visual Studio 16 2019".to_string()),
+            17 => Some("Visual Studio 17 2022".to_string()),
+            18 => Some("Visual Studio 18 2026".to_string()),
+            _ => None,
+        };
+    }
+
+    None
+}
+
 fn build_wxdragon_wrapper(
     dest_bin_dir: &std::path::Path,
     target: &str,
@@ -339,14 +384,22 @@ fn build_wxdragon_wrapper(
         }
 
         if target == "i686-pc-windows-msvc" {
+            let generator = detect_visual_studio_generator().unwrap_or_else(|| {
+                println!("cargo::warning=vswhere did not report an installed Visual Studio version; falling back to Visual Studio 17 2022");
+                "Visual Studio 17 2022".to_string()
+            });
             cmake_config
-                .generator("Visual Studio 17 2022")
+                .generator(&generator)
                 .define("CMAKE_GENERATOR_PLATFORM", "Win32")
                 .define("--config", &profile)
                 .cxxflag("/EHsc");
         } else if target == "aarch64-pc-windows-msvc" {
+            let generator = detect_visual_studio_generator().unwrap_or_else(|| {
+                println!("cargo::warning=vswhere did not report an installed Visual Studio version; falling back to Visual Studio 17 2022");
+                "Visual Studio 17 2022".to_string()
+            });
             cmake_config
-                .generator("Visual Studio 17 2022")
+                .generator(&generator)
                 .define("CMAKE_GENERATOR_PLATFORM", "ARM64")
                 .define("--config", &profile)
                 .cxxflag("/EHsc");
