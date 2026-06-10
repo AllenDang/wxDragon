@@ -54,8 +54,6 @@ typedef enum {
 } wxd_AccObjectType;
 
 // Roles matching wxAccRole's alphabetical order so direct casts are correct.
-// wxd_AccStatus and wxd_NavDir already match their wx counterparts; this enum
-// was originally in MSAA numerical order, causing a mismatch.
 typedef enum {
     WXD_ROLE_NONE,
     WXD_ROLE_SYSTEM_ALERT,
