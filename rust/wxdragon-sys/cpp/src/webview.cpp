@@ -10,6 +10,67 @@
 #if wxdUSE_WEBVIEW
 
 #include "wx/webview.h"
+#include "wx/mstream.h"
+#include "wx/filesys.h"
+
+// Custom scheme handler that bridges wxWebViewHandler::GetFile to a Rust callback.
+// We override GetFile rather than StartRequest because the base StartRequest
+// already wraps the returned wxFSFile in a response and finishes it correctly.
+class WxdRustWebViewHandler : public wxWebViewHandler
+{
+public:
+    WxdRustWebViewHandler(const wxString& scheme,
+                          wxd_WebViewHandler_Callback callback,
+                          wxd_WebViewHandler_FreeData free_data,
+                          wxd_WebViewHandler_DropUserdata drop_userdata,
+                          void* userdata)
+        : wxWebViewHandler(scheme), m_callback(callback), m_freeData(free_data),
+          m_dropUserdata(drop_userdata), m_userdata(userdata)
+    {
+    }
+
+    ~WxdRustWebViewHandler() override
+    {
+        if (m_dropUserdata)
+            m_dropUserdata(m_userdata);
+    }
+
+    wxFSFile* GetFile(const wxString& uri) override
+    {
+        if (!m_callback)
+            return nullptr;
+
+        unsigned char* data = nullptr;
+        size_t len = 0;
+        char* mime = nullptr;
+        if (!m_callback(uri.utf8_str(), m_userdata, &data, &len, &mime))
+            return nullptr;
+
+        // Copy the Rust-owned bytes into a stream that owns its buffer, then
+        // hand the Rust bytes back so Rust frees what Rust allocated.
+        wxMemoryOutputStream out;
+        if (data && len > 0)
+            out.Write(data, len);
+        wxMemoryInputStream* stream = new wxMemoryInputStream(out);
+
+        wxString mimeStr = mime ? wxString::FromUTF8(mime) : wxString();
+
+        if (m_freeData)
+            m_freeData(data, len, mime);
+
+        return new wxFSFile(stream, uri, mimeStr, wxString()
+#if wxUSE_DATETIME
+                            , wxDateTime::Now()
+#endif
+        );
+    }
+
+private:
+    wxd_WebViewHandler_Callback m_callback;
+    wxd_WebViewHandler_FreeData m_freeData;
+    wxd_WebViewHandler_DropUserdata m_dropUserdata;
+    void* m_userdata;
+};
 
 extern "C" {
 
@@ -589,6 +650,26 @@ wxd_WebView_RemoveAllUserScripts(wxd_WebView_t* self)
     wxWebView* webview = (wxWebView*)self;
     if (webview)
         webview->RemoveAllUserScripts();
+}
+
+// Custom Scheme Handler
+WXD_EXPORTED void
+wxd_WebView_RegisterHandler(wxd_WebView_t* self, const char* scheme,
+                            wxd_WebViewHandler_Callback callback,
+                            wxd_WebViewHandler_FreeData free_data,
+                            wxd_WebViewHandler_DropUserdata drop_userdata, void* userdata)
+{
+    wxWebView* webview = (wxWebView*)self;
+    if (!webview || !scheme || !callback) {
+        // Nothing will own the closure, so drop it immediately to avoid a leak.
+        if (drop_userdata)
+            drop_userdata(userdata);
+        return;
+    }
+
+    wxString schemeStr = wxString::FromUTF8(scheme);
+    webview->RegisterHandler(wxSharedPtr<wxWebViewHandler>(
+        new WxdRustWebViewHandler(schemeStr, callback, free_data, drop_userdata, userdata)));
 }
 
 // Native Backend

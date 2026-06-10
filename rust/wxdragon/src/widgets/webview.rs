@@ -1039,9 +1039,137 @@ impl WebView {
         unsafe { ffi::wxd_WebView_IsBackendAvailable(c_backend.as_ptr()) }
     }
 
+    // --- Custom Scheme Handler ---
+
+    /// Registers a custom URI scheme handler that serves resources from memory.
+    ///
+    /// When the webview requests a resource whose scheme matches `scheme`, the
+    /// closure is invoked with the full requested URI and should return the bytes
+    /// (and optional MIME type) to serve, or `None` to produce an error response.
+    ///
+    /// This is primarily useful with the Edge (WebView2) backend to serve fonts,
+    /// images, or other assets to pages loaded via [`set_page`](Self::set_page),
+    /// which would otherwise be blocked or require large base64 data URIs.
+    ///
+    /// # Platform limitations
+    /// - **Windows (Edge/WebView2)**: fully supported. The handler can be registered
+    ///   at any time after the webview is built.
+    /// - **macOS (WebKit)**: the underlying WebKit backend only reads registered
+    ///   handlers when the native control is created, which happens during
+    ///   [`WebView::builder`]`.build()`. Because this method runs afterward, custom
+    ///   handlers currently have no effect on macOS.
+    ///
+    /// No-op if the webview has been destroyed.
+    ///
+    /// # Example
+    /// ```ignore
+    /// webview.register_handler("assets", |uri| {
+    ///     if uri.ends_with("/logo.png") {
+    ///         Some(WebViewHandlerResponse {
+    ///             data: std::fs::read("logo.png").ok()?,
+    ///             mime_type: Some("image/png".to_string()),
+    ///         })
+    ///     } else {
+    ///         None
+    ///     }
+    /// });
+    /// ```
+    pub fn register_handler<F>(&self, scheme: &str, handler: F)
+    where
+        F: Fn(&str) -> Option<WebViewHandlerResponse> + 'static,
+    {
+        let ptr = self.webview_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        let c_scheme = CString::new(scheme).unwrap_or_default();
+        // Box the closure twice: the inner Box<F> is hidden behind a Box<dyn Fn>
+        // so the trampoline has a single, sized type to recover from the void*.
+        let boxed: Box<HandlerClosure> = Box::new(Box::new(handler));
+        let userdata = Box::into_raw(boxed) as *mut std::os::raw::c_void;
+        unsafe {
+            ffi::wxd_WebView_RegisterHandler(
+                ptr,
+                c_scheme.as_ptr(),
+                Some(handler_callback_trampoline),
+                Some(handler_free_data_trampoline),
+                Some(handler_drop_userdata_trampoline),
+                userdata,
+            );
+        }
+    }
+
     /// Returns the underlying WindowHandle for this webview.
     pub fn window_handle(&self) -> WindowHandle {
         self.handle
+    }
+}
+
+/// The resource returned by a [`WebView::register_handler`] closure.
+pub struct WebViewHandlerResponse {
+    /// The raw bytes of the resource to serve.
+    pub data: Vec<u8>,
+    /// The MIME type (e.g. `"image/png"`). If `None`, wxWidgets infers it from the URI.
+    pub mime_type: Option<String>,
+}
+
+type HandlerClosure = Box<dyn Fn(&str) -> Option<WebViewHandlerResponse>>;
+
+extern "C" fn handler_callback_trampoline(
+    uri: *const c_char,
+    userdata: *mut std::os::raw::c_void,
+    out_data: *mut *mut u8,
+    out_len: *mut usize,
+    out_mime: *mut *mut c_char,
+) -> bool {
+    if userdata.is_null() || uri.is_null() {
+        return false;
+    }
+    let closure = unsafe { &*(userdata as *const HandlerClosure) };
+    let uri_str = unsafe { std::ffi::CStr::from_ptr(uri) }.to_string_lossy();
+
+    match closure(&uri_str) {
+        Some(response) => {
+            // Leak the bytes and MIME string to C++; freed via the free_data trampoline.
+            let mut data = response.data.into_boxed_slice();
+            let len = data.len();
+            let data_ptr = data.as_mut_ptr();
+            std::mem::forget(data);
+
+            let mime_ptr = match response.mime_type {
+                Some(m) => CString::new(m).map(|c| c.into_raw()).unwrap_or(std::ptr::null_mut()),
+                None => std::ptr::null_mut(),
+            };
+
+            unsafe {
+                *out_data = data_ptr;
+                *out_len = len;
+                *out_mime = mime_ptr;
+            }
+            true
+        }
+        None => false,
+    }
+}
+
+extern "C" fn handler_free_data_trampoline(data: *mut u8, len: usize, mime: *mut c_char) {
+    if !data.is_null() {
+        unsafe {
+            drop(Box::from_raw(std::ptr::slice_from_raw_parts_mut(data, len)));
+        }
+    }
+    if !mime.is_null() {
+        unsafe {
+            drop(CString::from_raw(mime));
+        }
+    }
+}
+
+extern "C" fn handler_drop_userdata_trampoline(userdata: *mut std::os::raw::c_void) {
+    if !userdata.is_null() {
+        unsafe {
+            drop(Box::from_raw(userdata as *mut HandlerClosure));
+        }
     }
 }
 

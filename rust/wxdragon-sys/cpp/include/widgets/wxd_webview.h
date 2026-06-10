@@ -100,6 +100,28 @@ WXD_EXPORTED bool wxd_WebView_RemoveScriptMessageHandler(wxd_WebView_t* self, co
 WXD_EXPORTED bool wxd_WebView_AddUserScript(wxd_WebView_t* self, const char* javascript, int injectionTime);
 WXD_EXPORTED void wxd_WebView_RemoveAllUserScripts(wxd_WebView_t* self);
 
+// Custom Scheme Handler
+// Invoked when the webview requests a resource served by a registered handler.
+// `uri` is the full requested URI. On success, return true and set:
+//   *out_data  - pointer to bytes for the resource (allocated on the Rust side)
+//   *out_len   - number of bytes
+//   *out_mime  - MIME type as a UTF-8 C string, or null to let wxWidgets infer it
+// (also allocated on the Rust side). Return false to serve an error response.
+typedef bool (*wxd_WebViewHandler_Callback)(const char* uri, void* userdata,
+                                            unsigned char** out_data, size_t* out_len,
+                                            char** out_mime);
+// Frees the buffers handed back by the callback. Called by C++ once the bytes
+// have been copied, so allocation and freeing both stay on the Rust side.
+typedef void (*wxd_WebViewHandler_FreeData)(unsigned char* data, size_t len, char* mime);
+// Called when the handler is destroyed so Rust can drop the boxed closure.
+typedef void (*wxd_WebViewHandler_DropUserdata)(void* userdata);
+
+WXD_EXPORTED void wxd_WebView_RegisterHandler(wxd_WebView_t* self, const char* scheme,
+                                              wxd_WebViewHandler_Callback callback,
+                                              wxd_WebViewHandler_FreeData free_data,
+                                              wxd_WebViewHandler_DropUserdata drop_userdata,
+                                              void* userdata);
+
 // Native Backend
 WXD_EXPORTED void* wxd_WebView_GetNativeBackend(wxd_WebView_t* self);
 WXD_EXPORTED int wxd_WebView_GetBackend(wxd_WebView_t* self, char* buffer, int len);
