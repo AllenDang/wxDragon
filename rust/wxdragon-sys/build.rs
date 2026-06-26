@@ -637,10 +637,10 @@ fn build_wxdragon_wrapper(
             for line in cache.lines() {
                 if let Some(iconv_lib) = line.strip_prefix("ICONV_LIBRARIES:FILEPATH=") {
                     let iconv_path = std::path::Path::new(iconv_lib.trim());
-                    if let Some(dir) = iconv_path.parent() {
-                        if dir.exists() {
-                            println!("cargo:rustc-link-search=native={}", dir.display());
-                        }
+                    if let Some(dir) = iconv_path.parent()
+                        && dir.exists()
+                    {
+                        println!("cargo:rustc-link-search=native={}", dir.display());
                     }
                     break;
                 }
