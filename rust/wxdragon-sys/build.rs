@@ -682,6 +682,23 @@ fn build_wxdragon_wrapper(
         println!("cargo:rustc-link-lib=static={}", resolve_wx_lib("wxregexu-3.3"));
         println!("cargo:rustc-link-lib=expat");
         println!("cargo:rustc-link-lib=z");
+        // If cmake found iconv in a non-standard location (e.g. MacPorts /opt/local,
+        // Homebrew /opt/homebrew), add that directory to the linker search path so
+        // -liconv resolves to the same library cmake compiled against.
+        let cmake_cache_path = wxdragon_sys_build_dir.join("build/CMakeCache.txt");
+        if let Ok(cache) = std::fs::read_to_string(&cmake_cache_path) {
+            for line in cache.lines() {
+                if let Some(iconv_lib) = line.strip_prefix("ICONV_LIBRARIES:FILEPATH=") {
+                    let iconv_path = std::path::Path::new(iconv_lib.trim());
+                    if let Some(dir) = iconv_path.parent()
+                        && dir.exists()
+                    {
+                        println!("cargo:rustc-link-search=native={}", dir.display());
+                    }
+                    break;
+                }
+            }
+        }
         println!("cargo:rustc-link-lib=iconv");
         println!("cargo:rustc-link-lib=c++");
 

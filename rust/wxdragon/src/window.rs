@@ -132,6 +132,10 @@ unsafe extern "C" {
     unsafe fn wxd_Window_FindWindowById(window: *mut ffi::wxd_Window_t, id: std::os::raw::c_int) -> *mut ffi::wxd_Window_t;
     #[cfg(target_os = "windows")]
     unsafe fn wxd_Window_MSWDisableComposited(window: *mut ffi::wxd_Window_t);
+    #[cfg(target_os = "macos")]
+    unsafe fn wxd_Window_SetAccessibilityLabel(window: *mut ffi::wxd_Window_t, label: *const std::os::raw::c_char);
+    #[cfg(target_os = "macos")]
+    pub(crate) unsafe fn wxd_App_ActivateMac();
 }
 
 // Use the widget_style_enum macro to define ExtraWindowStyle
@@ -1599,6 +1603,25 @@ pub trait WxWidget: std::any::Any {
         if !handle.is_null() {
             unsafe { wxd_Window_MSWDisableComposited(handle) }
         }
+    }
+
+    /// Sets the VoiceOver accessibility label for the window (macOS only).
+    ///
+    /// VoiceOver announces this label before the control's value and role.
+    /// For example, setting "Language" on a popup button showing "English" causes
+    /// VoiceOver to read "Language, English, pop up button" as a single cursor stop,
+    /// rather than navigating a separate label and control.
+    ///
+    /// Use this together with [`hide_from_accessibility`] on the adjacent `StaticText`
+    /// label to avoid redundant announcements.
+    #[cfg(target_os = "macos")]
+    fn set_accessibility_label(&self, label: &str) {
+        let handle = self.handle_ptr();
+        if handle.is_null() {
+            return;
+        }
+        let c_label = std::ffi::CString::new(label).unwrap_or_default();
+        unsafe { wxd_Window_SetAccessibilityLabel(handle, c_label.as_ptr()) }
     }
 
     // --- Tab Order Functions ---

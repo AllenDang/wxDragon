@@ -301,6 +301,16 @@ where
     }
 }
 
+/// Activates the application, bringing it in front of all other apps (macOS only).
+///
+/// Call this when showing a previously-hidden window in response to a dock click
+/// so the app becomes the frontmost application.
+#[cfg(target_os = "macos")]
+pub fn activate_app() {
+    use crate::window::wxd_App_ActivateMac;
+    unsafe { wxd_App_ActivateMac() };
+}
+
 /// Wakes up the application's idle event loop.
 ///
 /// This function forces the application to process pending idle events

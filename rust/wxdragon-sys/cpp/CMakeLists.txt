@@ -91,6 +91,8 @@ add_subdirectory(${WXWIDGETS_LIB_DIR} ${WXWIDGETS_BUILD_DIR})
 if(CMAKE_SYSTEM_NAME MATCHES "Darwin")
     message(STATUS "Building for macOS")
     set(PLATFORM_NAME "macos")
+    # Enable Objective-C++ for .mm files
+    enable_language(OBJCXX)
     # Define platform-specific preprocessor macros
     add_compile_definitions(__WXOSX_COCOA__ __WXMAC__ __WXOSX__ _FILE_OFFSET_BITS=64 NDEBUG)
 elseif(CMAKE_SYSTEM_NAME MATCHES "Windows")
@@ -227,6 +229,13 @@ set(WXDRAGON_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/wxd_variant.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/misc.cpp
 )
+
+# Add macOS-specific sources (Objective-C++ files)
+if(PLATFORM_NAME STREQUAL "macos")
+    list(APPEND WXDRAGON_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/window_osx.mm)
+    set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/src/window_osx.mm
+        PROPERTIES COMPILE_FLAGS "-fobjc-arc")
+endif()
 
 # Add Linux compatibility layer for older systems
 if(PLATFORM_NAME STREQUAL "linux")

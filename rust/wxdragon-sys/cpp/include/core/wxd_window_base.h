@@ -240,6 +240,19 @@ WXD_EXPORTED void
 wxd_Window_MSWDisableComposited(wxd_Window_t* window);
 #endif
 
+#ifdef __WXOSX__
+/// Sets the VoiceOver accessibility label for the window (macOS only).
+/// VoiceOver announces this label before the control's value and role,
+/// e.g. "Language, English, pop up button".
+WXD_EXPORTED void
+wxd_Window_SetAccessibilityLabel(wxd_Window_t* window, const char* label);
+
+/// Activates the application, bringing it in front of all other apps (macOS only).
+/// Equivalent to [NSRunningApplication activateWithOptions:NSApplicationActivateIgnoringOtherApps].
+WXD_EXPORTED void
+wxd_App_ActivateMac(void);
+#endif
+
 // --- Popup Menu Functions ---
 /// Shows a popup menu at the specified position (or current mouse position if
 /// NULL) Returns true if a menu item was selected, false otherwise
