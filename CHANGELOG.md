@@ -1,5 +1,29 @@
 # Changelog
 
+## 0.9.17
+
+### New Features
+
+- **WebView**: Exposed `wxWebViewHandler` / `RegisterHandler` for serving custom URI scheme resources (#152)
+- **DataView**: Exposed `select`, `unselect`, and `ensure_visible` (#149)
+- **VirtualList**: Added text callback support with a demo (#148)
+- **macOS Accessibility**: Added VoiceOver accessibility helpers and label support to `WxWidget` (#150)
+- **wxWakeUpIdle**: Wrapped `wxWakeUpIdle` (#146)
+- **macOS**: Added `wxd_App_ActivateMac` to bring the app to the front on dock click
+
+### Enhancements
+
+- **Clipboard**: Extended clipboard text support to include Unicode text
+- **Build**: Switched `wxdragon-sys` reqwest TLS from rustls to native-tls (#154)
+- **Build**: Detect the Visual Studio generator dynamically
+- **CI**: Added Windows ARM64 workflow coverage and upgraded checkout actions to v6
+
+### Bug Fixes
+
+- **Enums**: Reordered `wxd_AccRole` to match `wxAccRole`'s alphabetical order (#155)
+- **Build**: Fixed ARM64 MSVC library search path handling
+- **Build**: Fixed Linux build issues and iconv link path resolution
+
 ## 0.9.16
 
 ### New Features
