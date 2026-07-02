@@ -99,6 +99,47 @@ wxd_Translations_GetAvailableTranslations(wxd_Translations_t* translations,
                                           size_t buffer_count,
                                           size_t string_buffer_len);
 
+// --- Custom (Rust-backed) translations loader ---
+
+// A set of callbacks that back a custom wxTranslationsLoader implemented on the
+// Rust side. The C++ trampoline only constructs the wxWidgets objects the
+// callbacks cannot (wxMsgCatalog / wxArrayString); all loader policy lives in
+// Rust.
+// Sink used by load_catalog to hand catalog bytes to C++. `emit` must be called
+// (at most once) while the bytes are still alive; C++ parses them synchronously.
+typedef void (*wxd_TranslationsCatalogSink)(void* sink, const uint8_t* data, size_t len);
+
+typedef struct wxd_RustTranslationsLoader_vtable {
+    // Provide the raw .mo catalog bytes for (domain, lang) by calling
+    // `emit(sink, data, len)` exactly once with the bytes while they are alive;
+    // C++ builds the catalog synchronously inside `emit`. Return true if a
+    // catalog was emitted, false if unavailable. Passing bytes through `emit`
+    // (rather than out-params C++ reads after the call) lets a loader return
+    // freshly-computed/owned bytes (e.g. decompressed) as well as borrowed ones;
+    // the bytes only need to outlive the `emit` call.
+    bool (*load_catalog)(void* user_data,
+                         const char* domain,
+                         const char* lang,
+                         void* sink,
+                         wxd_TranslationsCatalogSink emit);
+
+    // Append every available language for `domain` to `out` (a wxArrayString)
+    // via wxd_ArrayString_Add.
+    void (*available)(void* user_data, const char* domain, wxd_ArrayString_t* out);
+
+    // Release user_data. Called from the loader's destructor.
+    void (*destroy)(void* user_data);
+} wxd_RustTranslationsLoader_vtable;
+
+// Install a Rust-backed loader on `translations`, replacing any existing loader.
+// wxTranslations takes ownership of the loader; the vtable is copied, so it need
+// not outlive this call. `user_data` is owned by the loader and released via
+// vtable.destroy when the loader is destroyed.
+WXD_EXPORTED void
+wxd_Translations_SetRustLoader(wxd_Translations_t* translations,
+                               const wxd_RustTranslationsLoader_vtable* vtable,
+                               void* user_data);
+
 // --- FileTranslationsLoader Functions ---
 
 // Add a catalog lookup path prefix (static method)
