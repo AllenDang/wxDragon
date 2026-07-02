@@ -1682,8 +1682,7 @@ pub trait WxWidget: std::any::Any {
 
     /// Sets the accessible role for the window.
     ///
-    /// The role uses the MSAA role set — pass a value from
-    /// [`crate::accessible::acc_role`] (e.g. `acc_role::SYSTEM_TEXT`). This is
+    /// The role uses the MSAA role set ([`AccRole`], e.g. `AccRole::SystemText`). This is
     /// **Windows-only** (stored on a built-in accessible object where `wxUSE_ACCESSIBILITY`
     /// is compiled in); it is a no-op on macOS and GTK, whose native accessibility roles do
     /// not map to this enum.
@@ -1692,7 +1691,7 @@ pub trait WxWidget: std::any::Any {
         if handle.is_null() {
             return;
         }
-        unsafe { ffi::wxd_Window_SetAccessibleRole(handle, role) }
+        unsafe { ffi::wxd_Window_SetAccessibleRole(handle, role.to_ffi()) }
     }
 
     /// Sets the accessible state for the window.
