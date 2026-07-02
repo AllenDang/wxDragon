@@ -178,6 +178,10 @@ private:
     void* m_userData;
 };
 
+// The wxAccessible child id that refers to the object (window) itself, as opposed
+// to one of its children. (wxWidgets maps this onto MSAA's CHILDID_SELF on Windows.)
+static constexpr int ACC_ID_SELF = 0;
+
 // A lightweight built-in accessible that simply stores a handful of properties.
 // Used by the wxd_Window_SetAccessible* setters so callers can set an accessible
 // name/role/etc. without implementing the full callback interface.
@@ -192,23 +196,23 @@ public:
     void SetStateProp(long v, bool has)            { m_state = v; m_hasState = has; }
 
     wxAccStatus GetName(int childId, wxString* name) override {
-        if (childId == 0 && m_hasName) { *name = m_name; return wxACC_OK; }
+        if (childId == ACC_ID_SELF && m_hasName) { *name = m_name; return wxACC_OK; }
         return wxACC_NOT_IMPLEMENTED;
     }
     wxAccStatus GetRole(int childId, wxAccRole* role) override {
-        if (childId == 0 && m_hasRole) { *role = m_role; return wxACC_OK; }
+        if (childId == ACC_ID_SELF && m_hasRole) { *role = m_role; return wxACC_OK; }
         return wxACC_NOT_IMPLEMENTED;
     }
     wxAccStatus GetDescription(int childId, wxString* description) override {
-        if (childId == 0 && m_hasDesc) { *description = m_desc; return wxACC_OK; }
+        if (childId == ACC_ID_SELF && m_hasDesc) { *description = m_desc; return wxACC_OK; }
         return wxACC_NOT_IMPLEMENTED;
     }
     wxAccStatus GetValue(int childId, wxString* value) override {
-        if (childId == 0 && m_hasValue) { *value = m_value; return wxACC_OK; }
+        if (childId == ACC_ID_SELF && m_hasValue) { *value = m_value; return wxACC_OK; }
         return wxACC_NOT_IMPLEMENTED;
     }
     wxAccStatus GetState(int childId, long* state) override {
-        if (childId == 0 && m_hasState) { *state = m_state; return wxACC_OK; }
+        if (childId == ACC_ID_SELF && m_hasState) { *state = m_state; return wxACC_OK; }
         return wxACC_NOT_IMPLEMENTED;
     }
 
