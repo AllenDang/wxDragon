@@ -1625,15 +1625,18 @@ pub trait WxWidget: std::any::Any {
         if handle.is_null() {
             return;
         }
-        let c_label = std::ffi::CString::new(label).unwrap_or_default();
         #[cfg(target_os = "macos")]
         unsafe {
-            wxd_Window_SetAccessibilityLabel(handle, c_label.as_ptr())
+            let c_label = std::ffi::CString::new(label).unwrap_or_default();
+            wxd_Window_SetAccessibilityLabel(handle, c_label.as_ptr());
         }
-        #[cfg(not(target_os = "macos"))]
+        #[cfg(target_os = "windows")]
         unsafe {
-            ffi::wxd_Window_SetAccessibleName(handle, c_label.as_ptr())
+            let c_label = std::ffi::CString::new(label).unwrap_or_default();
+            ffi::wxd_Window_SetAccessibleName(handle, c_label.as_ptr());
         }
+        #[cfg(not(any(target_os = "macos", target_os = "windows")))]
+        let _ = label;
     }
 
     /// Sets the accessible description for the window.
@@ -1647,15 +1650,18 @@ pub trait WxWidget: std::any::Any {
         if handle.is_null() {
             return;
         }
-        let c_desc = std::ffi::CString::new(description).unwrap_or_default();
         #[cfg(target_os = "macos")]
         unsafe {
-            wxd_Window_SetAccessibilityHelp(handle, c_desc.as_ptr())
+            let c_desc = std::ffi::CString::new(description).unwrap_or_default();
+            wxd_Window_SetAccessibilityHelp(handle, c_desc.as_ptr());
         }
-        #[cfg(not(target_os = "macos"))]
+        #[cfg(target_os = "windows")]
         unsafe {
-            ffi::wxd_Window_SetAccessibleDescription(handle, c_desc.as_ptr())
+            let c_desc = std::ffi::CString::new(description).unwrap_or_default();
+            ffi::wxd_Window_SetAccessibleDescription(handle, c_desc.as_ptr());
         }
+        #[cfg(not(any(target_os = "macos", target_os = "windows")))]
+        let _ = description;
     }
 
     /// Sets the accessible value for the window.
@@ -1669,20 +1675,23 @@ pub trait WxWidget: std::any::Any {
         if handle.is_null() {
             return;
         }
-        let c_value = std::ffi::CString::new(value).unwrap_or_default();
         #[cfg(target_os = "macos")]
         unsafe {
-            wxd_Window_SetAccessibilityValue(handle, c_value.as_ptr())
+            let c_value = std::ffi::CString::new(value).unwrap_or_default();
+            wxd_Window_SetAccessibilityValue(handle, c_value.as_ptr());
         }
-        #[cfg(not(target_os = "macos"))]
+        #[cfg(target_os = "windows")]
         unsafe {
-            ffi::wxd_Window_SetAccessibleValue(handle, c_value.as_ptr())
+            let c_value = std::ffi::CString::new(value).unwrap_or_default();
+            ffi::wxd_Window_SetAccessibleValue(handle, c_value.as_ptr());
         }
+        #[cfg(not(any(target_os = "macos", target_os = "windows")))]
+        let _ = value;
     }
 
     /// Sets the accessible role for the window.
     ///
-    /// The role uses the MSAA role set ([`AccRole`], e.g. `AccRole::SystemText`). This is
+    /// The role uses the MSAA role set ([`AccRole`], e.g. `AccRole::Text`). This is
     /// **Windows-only** (stored on a built-in accessible object where `wxUSE_ACCESSIBILITY`
     /// is compiled in); it is a no-op on macOS and GTK, whose native accessibility roles do
     /// not map to this enum.
@@ -1691,7 +1700,12 @@ pub trait WxWidget: std::any::Any {
         if handle.is_null() {
             return;
         }
-        unsafe { ffi::wxd_Window_SetAccessibleRole(handle, role.to_ffi()) }
+        #[cfg(target_os = "windows")]
+        unsafe {
+            ffi::wxd_Window_SetAccessibleRole(handle, role.to_ffi());
+        }
+        #[cfg(not(target_os = "windows"))]
+        let _ = role;
     }
 
     /// Sets the accessible state for the window.
@@ -1705,7 +1719,12 @@ pub trait WxWidget: std::any::Any {
         if handle.is_null() {
             return;
         }
-        unsafe { ffi::wxd_Window_SetAccessibleState(handle, state.bits() as std::os::raw::c_long) }
+        #[cfg(target_os = "windows")]
+        unsafe {
+            ffi::wxd_Window_SetAccessibleState(handle, state.bits() as std::os::raw::c_long);
+        }
+        #[cfg(not(target_os = "windows"))]
+        let _ = state;
     }
 
     // --- Tab Order Functions ---
