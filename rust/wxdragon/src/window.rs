@@ -1,4 +1,4 @@
-use crate::accessible::{AccRole, Accessible};
+use crate::accessible::{AccRole, AccState, Accessible};
 use crate::event::{EventType, WxEvtHandler};
 use crate::font::Font;
 use crate::geometry::{Point, Size};
@@ -1695,18 +1695,18 @@ pub trait WxWidget: std::any::Any {
         unsafe { ffi::wxd_Window_SetAccessibleRole(handle, role) }
     }
 
-    /// Sets the accessible state bitmask for the window.
+    /// Sets the accessible state for the window.
     ///
-    /// The bitmask is built from the MSAA state flags in
-    /// [`crate::accessible::acc_state`]. This is **Windows-only** (stored on a built-in
-    /// accessible object where `wxUSE_ACCESSIBILITY` is compiled in); it is a no-op on
-    /// macOS and GTK, which have no equivalent state bitmask.
-    fn set_accessibility_state(&self, state: i64) {
+    /// The state is a bitmask of MSAA state flags ([`AccState`]), e.g.
+    /// `AccState::FOCUSED | AccState::SELECTED`. This is **Windows-only** (stored on a
+    /// built-in accessible object where `wxUSE_ACCESSIBILITY` is compiled in); it is a
+    /// no-op on macOS and GTK, which have no equivalent state bitmask.
+    fn set_accessibility_state(&self, state: AccState) {
         let handle = self.handle_ptr();
         if handle.is_null() {
             return;
         }
-        unsafe { ffi::wxd_Window_SetAccessibleState(handle, state as std::os::raw::c_long) }
+        unsafe { ffi::wxd_Window_SetAccessibleState(handle, state.bits() as std::os::raw::c_long) }
     }
 
     // --- Tab Order Functions ---

@@ -5,36 +5,43 @@ pub type AccStatus = ffi::wxd_AccStatus;
 pub type NavDir = ffi::wxd_NavDir;
 pub type AccRole = ffi::wxd_AccRole;
 
-/// State flags for accessibility objects.
-pub mod acc_state {
-    use wxdragon_sys as ffi;
-    pub const UNAVAILABLE: i64 = ffi::WXD_ACC_STATE_SYSTEM_UNAVAILABLE as i64;
-    pub const SELECTED: i64 = ffi::WXD_ACC_STATE_SYSTEM_SELECTED as i64;
-    pub const FOCUSED: i64 = ffi::WXD_ACC_STATE_SYSTEM_FOCUSED as i64;
-    pub const PRESSED: i64 = ffi::WXD_ACC_STATE_SYSTEM_PRESSED as i64;
-    pub const CHECKED: i64 = ffi::WXD_ACC_STATE_SYSTEM_CHECKED as i64;
-    pub const MIXED: i64 = ffi::WXD_ACC_STATE_SYSTEM_MIXED as i64;
-    pub const READONLY: i64 = ffi::WXD_ACC_STATE_SYSTEM_READONLY as i64;
-    pub const HOTTRACKED: i64 = ffi::WXD_ACC_STATE_SYSTEM_HOTTRACKED as i64;
-    pub const DEFAULT: i64 = ffi::WXD_ACC_STATE_SYSTEM_DEFAULT as i64;
-    pub const EXPANDED: i64 = ffi::WXD_ACC_STATE_SYSTEM_EXPANDED as i64;
-    pub const COLLAPSED: i64 = ffi::WXD_ACC_STATE_SYSTEM_COLLAPSED as i64;
-    pub const BUSY: i64 = ffi::WXD_ACC_STATE_SYSTEM_BUSY as i64;
-    pub const FLOATING: i64 = ffi::WXD_ACC_STATE_SYSTEM_FLOATING as i64;
-    pub const MARQUEED: i64 = ffi::WXD_ACC_STATE_SYSTEM_MARQUEED as i64;
-    pub const ANIMATED: i64 = ffi::WXD_ACC_STATE_SYSTEM_ANIMATED as i64;
-    pub const INVISIBLE: i64 = ffi::WXD_ACC_STATE_SYSTEM_INVISIBLE as i64;
-    pub const OFFSCREEN: i64 = ffi::WXD_ACC_STATE_SYSTEM_OFFSCREEN as i64;
-    pub const SIZEABLE: i64 = ffi::WXD_ACC_STATE_SYSTEM_SIZEABLE as i64;
-    pub const MOVEABLE: i64 = ffi::WXD_ACC_STATE_SYSTEM_MOVEABLE as i64;
-    pub const SELFVOICING: i64 = ffi::WXD_ACC_STATE_SYSTEM_SELFVOICING as i64;
-    pub const FOCUSABLE: i64 = ffi::WXD_ACC_STATE_SYSTEM_FOCUSABLE as i64;
-    pub const SELECTABLE: i64 = ffi::WXD_ACC_STATE_SYSTEM_SELECTABLE as i64;
-    pub const LINKED: i64 = ffi::WXD_ACC_STATE_SYSTEM_LINKED as i64;
-    pub const TRAVERSED: i64 = ffi::WXD_ACC_STATE_SYSTEM_TRAVERSED as i64;
-    pub const MULTISELECTABLE: i64 = ffi::WXD_ACC_STATE_SYSTEM_MULTISELECTABLE as i64;
-    pub const EXTSELECTABLE: i64 = ffi::WXD_ACC_STATE_SYSTEM_EXTSELECTABLE as i64;
-    pub const HASPOPUP: i64 = ffi::WXD_ACC_STATE_SYSTEM_HASPOPUP as i64;
+bitflags::bitflags! {
+    /// Accessibility state flags (the MSAA `STATE_SYSTEM_*` set).
+    ///
+    /// A state is a bitmask, so values are combined with `|`, e.g.
+    /// `AccState::FOCUSED | AccState::SELECTED`. Used by
+    /// [`crate::window::WxWidget::set_accessibility_state`] and returned from
+    /// [`AccessibleImpl::get_state`].
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    pub struct AccState: i64 {
+        const UNAVAILABLE = ffi::WXD_ACC_STATE_SYSTEM_UNAVAILABLE as i64;
+        const SELECTED = ffi::WXD_ACC_STATE_SYSTEM_SELECTED as i64;
+        const FOCUSED = ffi::WXD_ACC_STATE_SYSTEM_FOCUSED as i64;
+        const PRESSED = ffi::WXD_ACC_STATE_SYSTEM_PRESSED as i64;
+        const CHECKED = ffi::WXD_ACC_STATE_SYSTEM_CHECKED as i64;
+        const MIXED = ffi::WXD_ACC_STATE_SYSTEM_MIXED as i64;
+        const READONLY = ffi::WXD_ACC_STATE_SYSTEM_READONLY as i64;
+        const HOTTRACKED = ffi::WXD_ACC_STATE_SYSTEM_HOTTRACKED as i64;
+        const DEFAULT = ffi::WXD_ACC_STATE_SYSTEM_DEFAULT as i64;
+        const EXPANDED = ffi::WXD_ACC_STATE_SYSTEM_EXPANDED as i64;
+        const COLLAPSED = ffi::WXD_ACC_STATE_SYSTEM_COLLAPSED as i64;
+        const BUSY = ffi::WXD_ACC_STATE_SYSTEM_BUSY as i64;
+        const FLOATING = ffi::WXD_ACC_STATE_SYSTEM_FLOATING as i64;
+        const MARQUEED = ffi::WXD_ACC_STATE_SYSTEM_MARQUEED as i64;
+        const ANIMATED = ffi::WXD_ACC_STATE_SYSTEM_ANIMATED as i64;
+        const INVISIBLE = ffi::WXD_ACC_STATE_SYSTEM_INVISIBLE as i64;
+        const OFFSCREEN = ffi::WXD_ACC_STATE_SYSTEM_OFFSCREEN as i64;
+        const SIZEABLE = ffi::WXD_ACC_STATE_SYSTEM_SIZEABLE as i64;
+        const MOVEABLE = ffi::WXD_ACC_STATE_SYSTEM_MOVEABLE as i64;
+        const SELFVOICING = ffi::WXD_ACC_STATE_SYSTEM_SELFVOICING as i64;
+        const FOCUSABLE = ffi::WXD_ACC_STATE_SYSTEM_FOCUSABLE as i64;
+        const SELECTABLE = ffi::WXD_ACC_STATE_SYSTEM_SELECTABLE as i64;
+        const LINKED = ffi::WXD_ACC_STATE_SYSTEM_LINKED as i64;
+        const TRAVERSED = ffi::WXD_ACC_STATE_SYSTEM_TRAVERSED as i64;
+        const MULTISELECTABLE = ffi::WXD_ACC_STATE_SYSTEM_MULTISELECTABLE as i64;
+        const EXTSELECTABLE = ffi::WXD_ACC_STATE_SYSTEM_EXTSELECTABLE as i64;
+        const HASPOPUP = ffi::WXD_ACC_STATE_SYSTEM_HASPOPUP as i64;
+    }
 }
 
 /// Named [`AccRole`] values (the MSAA role set).
@@ -123,8 +130,8 @@ pub trait AccessibleImpl {
     fn get_role(&self, _child_id: i32) -> (AccStatus, AccRole) {
         (ffi::wxd_AccStatus_WXD_ACC_NOT_IMPLEMENTED, ffi::wxd_AccRole_WXD_ROLE_NONE)
     }
-    fn get_state(&self, _child_id: i32) -> (AccStatus, i64) {
-        (ffi::wxd_AccStatus_WXD_ACC_NOT_IMPLEMENTED, 0)
+    fn get_state(&self, _child_id: i32) -> (AccStatus, AccState) {
+        (ffi::wxd_AccStatus_WXD_ACC_NOT_IMPLEMENTED, AccState::empty())
     }
     fn get_name(&self, _child_id: i32) -> (AccStatus, Option<String>) {
         (ffi::wxd_AccStatus_WXD_ACC_NOT_IMPLEMENTED, None)
@@ -298,7 +305,7 @@ unsafe extern "C" fn accessible_get_state<T: AccessibleImpl>(
 ) -> ffi::wxd_AccStatus {
     let impl_ptr = user_data as *const T;
     let (status, s) = unsafe { (*impl_ptr).get_state(child_id) };
-    unsafe { *state = s as c_long };
+    unsafe { *state = s.bits() as c_long };
     status
 }
 
