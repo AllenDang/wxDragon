@@ -1,4 +1,4 @@
-use crate::accessible::{AccRole, AccState, Accessible};
+use crate::accessible::{AccRole, Accessible};
 use crate::event::{EventType, WxEvtHandler};
 use crate::font::Font;
 use crate::geometry::{Point, Size};
@@ -1691,10 +1691,10 @@ pub trait WxWidget: std::any::Any {
 
     /// Sets the accessible role for the window.
     ///
-    /// The role uses the MSAA role set ([`AccRole`], e.g. `AccRole::Text`). This is
-    /// **Windows-only** (stored on a built-in accessible object where `wxUSE_ACCESSIBILITY`
-    /// is compiled in); it is a no-op on macOS and GTK, whose native accessibility roles do
-    /// not map to this enum.
+    /// The role uses the MSAA role set ([`AccRole`]); pass a value from
+    /// [`crate::accessible::acc_role`] (e.g. `acc_role::TEXT`). This is **Windows-only**
+    /// (stored on a built-in accessible object where `wxUSE_ACCESSIBILITY` is compiled in);
+    /// it is a no-op on macOS and GTK, whose native accessibility roles do not map to it.
     fn set_accessibility_role(&self, role: AccRole) {
         let handle = self.handle_ptr();
         if handle.is_null() {
@@ -1702,7 +1702,7 @@ pub trait WxWidget: std::any::Any {
         }
         #[cfg(target_os = "windows")]
         unsafe {
-            ffi::wxd_Window_SetAccessibleRole(handle, role.to_ffi());
+            ffi::wxd_Window_SetAccessibleRole(handle, role);
         }
         #[cfg(not(target_os = "windows"))]
         let _ = role;
@@ -1710,18 +1710,18 @@ pub trait WxWidget: std::any::Any {
 
     /// Sets the accessible state for the window.
     ///
-    /// The state is a bitmask of MSAA state flags ([`AccState`]), e.g.
-    /// `AccState::FOCUSED | AccState::SELECTED`. This is **Windows-only** (stored on a
-    /// built-in accessible object where `wxUSE_ACCESSIBILITY` is compiled in); it is a
+    /// The state is a bitmask of MSAA state flags from [`crate::accessible::acc_state`],
+    /// e.g. `acc_state::FOCUSED | acc_state::SELECTED`. This is **Windows-only** (stored on
+    /// a built-in accessible object where `wxUSE_ACCESSIBILITY` is compiled in); it is a
     /// no-op on macOS and GTK, which have no equivalent state bitmask.
-    fn set_accessibility_state(&self, state: AccState) {
+    fn set_accessibility_state(&self, state: i64) {
         let handle = self.handle_ptr();
         if handle.is_null() {
             return;
         }
         #[cfg(target_os = "windows")]
         unsafe {
-            ffi::wxd_Window_SetAccessibleState(handle, state.bits() as std::os::raw::c_long);
+            ffi::wxd_Window_SetAccessibleState(handle, state as std::os::raw::c_long);
         }
         #[cfg(not(target_os = "windows"))]
         let _ = state;
