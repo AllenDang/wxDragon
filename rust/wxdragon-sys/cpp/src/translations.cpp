@@ -4,6 +4,77 @@
 #include <wx/translation.h>
 #include <wx/intl.h>
 #include <wx/uilocale.h>
+#include <wx/arrstr.h>
+
+// A wxTranslationsLoader that forwards to Rust callbacks. The C++ side is a
+// dumb trampoline: it only builds the wxWidgets objects the callbacks cannot
+// (wxMsgCatalog / wxArrayString); all loader policy lives in Rust.
+class WxdRustTranslationsLoader : public wxTranslationsLoader
+{
+public:
+    WxdRustTranslationsLoader(const wxd_RustTranslationsLoader_vtable* vtable,
+                              void* user_data)
+        : m_vtable(*vtable), m_user_data(user_data)
+    {
+    }
+
+    ~WxdRustTranslationsLoader() override
+    {
+        if (m_vtable.destroy)
+            m_vtable.destroy(m_user_data);
+    }
+
+    // Context passed as the `sink` to the Rust load_catalog callback. Rust calls
+    // emit_catalog(sink, data, len) while the bytes are alive; we build the
+    // catalog right there.
+    struct CatalogSink
+    {
+        const wxString* domain;
+        wxMsgCatalog* catalog;
+    };
+
+    static void emit_catalog(void* sink, const uint8_t* data, size_t len)
+    {
+        if (!sink || !data)
+            return;
+        CatalogSink* s = reinterpret_cast<CatalogSink*>(sink);
+        // Bytes are consumed synchronously; wxMsgCatalog parses into its own
+        // hash and does not retain the buffer, so a non-owned view is safe even
+        // when the Rust side owns (and will drop) the bytes after this returns.
+        s->catalog = wxMsgCatalog::CreateFromData(
+            wxScopedCharBuffer::CreateNonOwned(
+                reinterpret_cast<const char*>(data), len),
+            *s->domain);
+    }
+
+    wxMsgCatalog* LoadCatalog(const wxString& domain,
+                              const wxString& lang) override
+    {
+        if (!m_vtable.load_catalog)
+            return nullptr;
+        const wxScopedCharBuffer domainUtf8 = domain.utf8_str();
+        const wxScopedCharBuffer langUtf8 = lang.utf8_str();
+        CatalogSink sink{ &domain, nullptr };
+        m_vtable.load_catalog(m_user_data, domainUtf8.data(), langUtf8.data(),
+                              &sink, &emit_catalog);
+        return sink.catalog;
+    }
+
+    wxArrayString GetAvailableTranslations(const wxString& domain) const override
+    {
+        wxArrayString langs;
+        if (m_vtable.available) {
+            const wxScopedCharBuffer domainUtf8 = domain.utf8_str();
+            m_vtable.available(m_user_data, domainUtf8.data(),
+                               reinterpret_cast<wxd_ArrayString_t*>(&langs));
+        }
+        return langs;
+    }
+
+private:
+    wxd_RustTranslationsLoader_vtable m_vtable;
+    void* m_user_data;
+};
 
 extern "C" {
 
@@ -245,6 +316,21 @@ wxd_Translations_GetAvailableTranslations(wxd_Translations_t* translations,
     }
 
     return count;
+}
+
+void
+wxd_Translations_SetRustLoader(wxd_Translations_t* translations,
+                               const wxd_RustTranslationsLoader_vtable* vtable,
+                               void* user_data)
+{
+    if (!translations || !vtable)
+        return;
+    wxTranslations* wx_translations =
+        reinterpret_cast<wxTranslations*>(translations);
+    // wxTranslations takes ownership of the loader and deletes it (calling our
+    // destructor, which releases user_data via vtable.destroy).
+    wx_translations->SetLoader(
+        new WxdRustTranslationsLoader(vtable, user_data));
 }
 
 void

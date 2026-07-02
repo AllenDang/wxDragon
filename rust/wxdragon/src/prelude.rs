@@ -225,7 +225,10 @@ pub use crate::appprogress::AppProgressIndicator;
 pub use crate::ipc::{IPCClient, IPCConnection, IPCConnectionBuilder, IPCFormat, IPCServer};
 pub use crate::single_instance_checker::SingleInstanceChecker;
 pub use crate::timer::Timer;
-pub use crate::translations::{LanguageInfo, Locale, Translations, add_catalog_lookup_path_prefix, translate, translate_plural};
+pub use crate::translations::{
+    LanguageInfo, Locale, Translations, TranslationsLoader, add_catalog_lookup_path_prefix, translate,
+    translate_plural,
+};
 pub use crate::uiactionsimulator::{KeyModifier, MouseButton, UIActionSimulator};
 
 // --- Constants for specific widgets that might be commonly used ---
