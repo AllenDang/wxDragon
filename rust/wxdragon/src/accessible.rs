@@ -37,6 +37,78 @@ pub mod acc_state {
     pub const HASPOPUP: i64 = ffi::WXD_ACC_STATE_SYSTEM_HASPOPUP as i64;
 }
 
+/// Named [`AccRole`] values (the MSAA role set).
+///
+/// Use these with [`crate::window::WxWidget::set_accessibility_role`] instead of the raw
+/// FFI constants, e.g. `widget.set_accessibility_role(acc_role::SYSTEM_TEXT)`.
+pub mod acc_role {
+    use super::AccRole;
+    use wxdragon_sys as ffi;
+
+    pub const NONE: AccRole = ffi::wxd_AccRole_WXD_ROLE_NONE;
+    pub const SYSTEM_ALERT: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_ALERT;
+    pub const SYSTEM_ANIMATION: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_ANIMATION;
+    pub const SYSTEM_APPLICATION: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_APPLICATION;
+    pub const SYSTEM_BORDER: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_BORDER;
+    pub const SYSTEM_BUTTONDROPDOWN: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_BUTTONDROPDOWN;
+    pub const SYSTEM_BUTTONDROPDOWNGRID: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_BUTTONDROPDOWNGRID;
+    pub const SYSTEM_BUTTONMENU: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_BUTTONMENU;
+    pub const SYSTEM_CARET: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_CARET;
+    pub const SYSTEM_CELL: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_CELL;
+    pub const SYSTEM_CHARACTER: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_CHARACTER;
+    pub const SYSTEM_CHART: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_CHART;
+    pub const SYSTEM_CHECKBUTTON: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_CHECKBUTTON;
+    pub const SYSTEM_CLIENT: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_CLIENT;
+    pub const SYSTEM_CLOCK: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_CLOCK;
+    pub const SYSTEM_COLUMN: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_COLUMN;
+    pub const SYSTEM_COLUMNHEADER: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_COLUMNHEADER;
+    pub const SYSTEM_COMBOBOX: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_COMBOBOX;
+    pub const SYSTEM_CURSOR: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_CURSOR;
+    pub const SYSTEM_DIAGRAM: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_DIAGRAM;
+    pub const SYSTEM_DIAL: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_DIAL;
+    pub const SYSTEM_DIALOG: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_DIALOG;
+    pub const SYSTEM_DOCUMENT: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_DOCUMENT;
+    pub const SYSTEM_DROPLIST: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_DROPLIST;
+    pub const SYSTEM_EQUATION: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_EQUATION;
+    pub const SYSTEM_GRAPHIC: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_GRAPHIC;
+    pub const SYSTEM_GRIP: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_GRIP;
+    pub const SYSTEM_GROUPING: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_GROUPING;
+    pub const SYSTEM_HELPBALLOON: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_HELPBALLOON;
+    pub const SYSTEM_HOTKEYFIELD: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_HOTKEYFIELD;
+    pub const SYSTEM_INDICATOR: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_INDICATOR;
+    pub const SYSTEM_LINK: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_LINK;
+    pub const SYSTEM_LIST: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_LIST;
+    pub const SYSTEM_LISTITEM: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_LISTITEM;
+    pub const SYSTEM_MENUBAR: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_MENUBAR;
+    pub const SYSTEM_MENUITEM: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_MENUITEM;
+    pub const SYSTEM_MENUPOPUP: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_MENUPOPUP;
+    pub const SYSTEM_OUTLINE: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_OUTLINE;
+    pub const SYSTEM_OUTLINEITEM: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_OUTLINEITEM;
+    pub const SYSTEM_PAGETAB: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_PAGETAB;
+    pub const SYSTEM_PAGETABLIST: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_PAGETABLIST;
+    pub const SYSTEM_PANE: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_PANE;
+    pub const SYSTEM_PROGRESSBAR: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_PROGRESSBAR;
+    pub const SYSTEM_PROPERTYPAGE: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_PROPERTYPAGE;
+    pub const SYSTEM_PUSHBUTTON: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_PUSHBUTTON;
+    pub const SYSTEM_RADIOBUTTON: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_RADIOBUTTON;
+    pub const SYSTEM_ROW: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_ROW;
+    pub const SYSTEM_ROWHEADER: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_ROWHEADER;
+    pub const SYSTEM_SCROLLBAR: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_SCROLLBAR;
+    pub const SYSTEM_SEPARATOR: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_SEPARATOR;
+    pub const SYSTEM_SLIDER: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_SLIDER;
+    pub const SYSTEM_SOUND: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_SOUND;
+    pub const SYSTEM_SPINBUTTON: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_SPINBUTTON;
+    pub const SYSTEM_STATICTEXT: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_STATICTEXT;
+    pub const SYSTEM_STATUSBAR: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_STATUSBAR;
+    pub const SYSTEM_TABLE: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_TABLE;
+    pub const SYSTEM_TEXT: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_TEXT;
+    pub const SYSTEM_TITLEBAR: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_TITLEBAR;
+    pub const SYSTEM_TOOLBAR: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_TOOLBAR;
+    pub const SYSTEM_TOOLTIP: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_TOOLTIP;
+    pub const SYSTEM_WHITESPACE: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_WHITESPACE;
+    pub const SYSTEM_WINDOW: AccRole = ffi::wxd_AccRole_WXD_ROLE_SYSTEM_WINDOW;
+}
+
 /// A trait that can be implemented to provide custom accessibility information.
 pub trait AccessibleImpl {
     fn get_child_count(&self) -> (AccStatus, i32) {

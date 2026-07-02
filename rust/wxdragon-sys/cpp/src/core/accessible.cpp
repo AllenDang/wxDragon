@@ -177,6 +177,58 @@ private:
     wxd_AccessibleCallbacks m_callbacks;
     void* m_userData;
 };
+
+// A lightweight built-in accessible that simply stores a handful of properties.
+// Used by the wxd_Window_SetAccessible* setters so callers can set an accessible
+// name/role/etc. without implementing the full callback interface.
+class WxdSimpleAccessible : public wxAccessible {
+public:
+    explicit WxdSimpleAccessible(wxWindow* win) : wxAccessible(win) {}
+
+    void SetNameProp(const wxString& s, bool has)  { m_name = s;  m_hasName = has; }
+    void SetRoleProp(wxAccRole r, bool has)        { m_role = r;  m_hasRole = has; }
+    void SetDescProp(const wxString& s, bool has)  { m_desc = s;  m_hasDesc = has; }
+    void SetValueProp(const wxString& s, bool has) { m_value = s; m_hasValue = has; }
+    void SetStateProp(long v, bool has)            { m_state = v; m_hasState = has; }
+
+    wxAccStatus GetName(int childId, wxString* name) override {
+        if (childId == 0 && m_hasName) { *name = m_name; return wxACC_OK; }
+        return wxACC_NOT_IMPLEMENTED;
+    }
+    wxAccStatus GetRole(int childId, wxAccRole* role) override {
+        if (childId == 0 && m_hasRole) { *role = m_role; return wxACC_OK; }
+        return wxACC_NOT_IMPLEMENTED;
+    }
+    wxAccStatus GetDescription(int childId, wxString* description) override {
+        if (childId == 0 && m_hasDesc) { *description = m_desc; return wxACC_OK; }
+        return wxACC_NOT_IMPLEMENTED;
+    }
+    wxAccStatus GetValue(int childId, wxString* value) override {
+        if (childId == 0 && m_hasValue) { *value = m_value; return wxACC_OK; }
+        return wxACC_NOT_IMPLEMENTED;
+    }
+    wxAccStatus GetState(int childId, long* state) override {
+        if (childId == 0 && m_hasState) { *state = m_state; return wxACC_OK; }
+        return wxACC_NOT_IMPLEMENTED;
+    }
+
+private:
+    wxString m_name, m_desc, m_value;
+    wxAccRole m_role = wxROLE_NONE;
+    long m_state = 0;
+    bool m_hasName = false, m_hasRole = false, m_hasDesc = false, m_hasValue = false, m_hasState = false;
+};
+
+// Returns the window's WxdSimpleAccessible, creating and attaching one if the window
+// does not already have one of this type. The window takes ownership.
+static WxdSimpleAccessible* wxd_GetOrCreateSimpleAccessible(wxWindow* window) {
+    WxdSimpleAccessible* simple = dynamic_cast<WxdSimpleAccessible*>(window->GetAccessible());
+    if (!simple) {
+        simple = new WxdSimpleAccessible(window);
+        window->SetAccessible(simple);
+    }
+    return simple;
+}
 #endif
 
 extern "C" {
@@ -232,6 +284,75 @@ wxd_Window_GetAccessible(wxd_Window_t* self)
     }
 #endif
     return nullptr;
+}
+
+void
+wxd_Window_SetAccessibleName(wxd_Window_t* self, const char* name)
+{
+#if wxUSE_ACCESSIBILITY
+    wxWindow* window = reinterpret_cast<wxWindow*>(self);
+    if (window) {
+        wxd_GetOrCreateSimpleAccessible(window)
+            ->SetNameProp(name ? wxString::FromUTF8(name) : wxString(), name != nullptr);
+    }
+#else
+    (void)self; (void)name;
+#endif
+}
+
+void
+wxd_Window_SetAccessibleRole(wxd_Window_t* self, wxd_AccRole role)
+{
+#if wxUSE_ACCESSIBILITY
+    wxWindow* window = reinterpret_cast<wxWindow*>(self);
+    if (window) {
+        wxd_GetOrCreateSimpleAccessible(window)
+            ->SetRoleProp(static_cast<wxAccRole>(role), true);
+    }
+#else
+    (void)self; (void)role;
+#endif
+}
+
+void
+wxd_Window_SetAccessibleDescription(wxd_Window_t* self, const char* description)
+{
+#if wxUSE_ACCESSIBILITY
+    wxWindow* window = reinterpret_cast<wxWindow*>(self);
+    if (window) {
+        wxd_GetOrCreateSimpleAccessible(window)
+            ->SetDescProp(description ? wxString::FromUTF8(description) : wxString(), description != nullptr);
+    }
+#else
+    (void)self; (void)description;
+#endif
+}
+
+void
+wxd_Window_SetAccessibleValue(wxd_Window_t* self, const char* value)
+{
+#if wxUSE_ACCESSIBILITY
+    wxWindow* window = reinterpret_cast<wxWindow*>(self);
+    if (window) {
+        wxd_GetOrCreateSimpleAccessible(window)
+            ->SetValueProp(value ? wxString::FromUTF8(value) : wxString(), value != nullptr);
+    }
+#else
+    (void)self; (void)value;
+#endif
+}
+
+void
+wxd_Window_SetAccessibleState(wxd_Window_t* self, long state)
+{
+#if wxUSE_ACCESSIBILITY
+    wxWindow* window = reinterpret_cast<wxWindow*>(self);
+    if (window) {
+        wxd_GetOrCreateSimpleAccessible(window)->SetStateProp(state, true);
+    }
+#else
+    (void)self; (void)state;
+#endif
 }
 
 } // extern "C"

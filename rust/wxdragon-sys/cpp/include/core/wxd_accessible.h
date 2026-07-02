@@ -203,6 +203,28 @@ wxd_Window_SetAccessible(wxd_Window_t* self, wxd_Accessible_t* accessible);
 WXD_EXPORTED wxd_Accessible_t*
 wxd_Window_GetAccessible(wxd_Window_t* self);
 
+// --- Built-in Accessible Property Setters ---
+//
+// These attach a lightweight built-in wxAccessible to the window (created on first
+// use, owned by the window) and store the given property on it. Each setter updates
+// only its own property, leaving the others untouched. They are no-ops where
+// wxUSE_ACCESSIBILITY is not compiled in. Passing NULL for a string clears that property.
+
+WXD_EXPORTED void
+wxd_Window_SetAccessibleName(wxd_Window_t* self, const char* name);
+
+WXD_EXPORTED void
+wxd_Window_SetAccessibleRole(wxd_Window_t* self, wxd_AccRole role);
+
+WXD_EXPORTED void
+wxd_Window_SetAccessibleDescription(wxd_Window_t* self, const char* description);
+
+WXD_EXPORTED void
+wxd_Window_SetAccessibleValue(wxd_Window_t* self, const char* value);
+
+WXD_EXPORTED void
+wxd_Window_SetAccessibleState(wxd_Window_t* self, long state);
+
 #ifdef __cplusplus
 }
 #endif
