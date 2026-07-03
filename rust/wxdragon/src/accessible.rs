@@ -55,6 +55,32 @@ impl NavDir {
     }
 }
 
+/// Object type identifying the target of [`Accessible::notify_event`], mirroring the
+/// MSAA `OBJID_*` values (`wxd_AccObjectType`).
+#[repr(i32)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum AccObjectType {
+    Window = ffi::wxd_AccObjectType_WXD_ACC_OBJ_WINDOW,
+    SysMenu = ffi::wxd_AccObjectType_WXD_ACC_OBJ_SYSMENU,
+    TitleBar = ffi::wxd_AccObjectType_WXD_ACC_OBJ_TITLEBAR,
+    Menu = ffi::wxd_AccObjectType_WXD_ACC_OBJ_MENU,
+    Client = ffi::wxd_AccObjectType_WXD_ACC_OBJ_CLIENT,
+    VScroll = ffi::wxd_AccObjectType_WXD_ACC_OBJ_VSCROLL,
+    HScroll = ffi::wxd_AccObjectType_WXD_ACC_OBJ_HSCROLL,
+    SizeGrip = ffi::wxd_AccObjectType_WXD_ACC_OBJ_SIZEGRIP,
+    Caret = ffi::wxd_AccObjectType_WXD_ACC_OBJ_CARET,
+    Cursor = ffi::wxd_AccObjectType_WXD_ACC_OBJ_CURSOR,
+    Alert = ffi::wxd_AccObjectType_WXD_ACC_OBJ_ALERT,
+    Sound = ffi::wxd_AccObjectType_WXD_ACC_OBJ_SOUND,
+}
+
+impl AccObjectType {
+    /// The raw object-type value (an MSAA `OBJID_*`) for `wxd_Accessible_NotifyEvent`.
+    pub(crate) fn to_ffi(self) -> i32 {
+        self as i32
+    }
+}
+
 /// Accessibility role of an object (the MSAA `ROLE_SYSTEM_*` set).
 ///
 /// Used by [`crate::window::WxWidget::set_accessibility_role`] and returned from
@@ -174,6 +200,22 @@ bitflags::bitflags! {
     }
 }
 
+bitflags::bitflags! {
+    /// Selection flags passed to [`AccessibleImpl::select`] (the MSAA `SELFLAG_*` set).
+    ///
+    /// A selection request is a bitmask, so values are combined with `|`, e.g.
+    /// `AccSelectFlags::TAKEFOCUS | AccSelectFlags::TAKESELECTION`. An empty set
+    /// ([`AccSelectFlags::empty`]) corresponds to `SELFLAG_NONE`.
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    pub struct AccSelectFlags: i32 {
+        const TAKEFOCUS = ffi::WXD_ACC_SEL_TAKEFOCUS as i32;
+        const TAKESELECTION = ffi::WXD_ACC_SEL_TAKESELECTION as i32;
+        const EXTENDSELECTION = ffi::WXD_ACC_SEL_EXTENDSELECTION as i32;
+        const ADDSELECTION = ffi::WXD_ACC_SEL_ADDSELECTION as i32;
+        const REMOVESELECTION = ffi::WXD_ACC_SEL_REMOVESELECTION as i32;
+    }
+}
+
 /// A trait that can be implemented to provide custom accessibility information.
 pub trait AccessibleImpl {
     fn get_child_count(&self) -> (AccStatus, i32) {
@@ -209,14 +251,11 @@ pub trait AccessibleImpl {
     fn get_value(&self, _child_id: i32) -> (AccStatus, Option<String>) {
         (AccStatus::NotImplemented, None)
     }
-    fn select(&self, _child_id: i32, _select_flags: i32) -> AccStatus {
+    fn select(&self, _child_id: i32, _select_flags: AccSelectFlags) -> AccStatus {
         AccStatus::NotImplemented
     }
     fn get_selections(&self) -> (AccStatus, crate::widgets::dataview::Variant) {
-        (
-            AccStatus::NotImplemented,
-            crate::widgets::dataview::Variant::new(),
-        )
+        (AccStatus::NotImplemented, crate::widgets::dataview::Variant::new())
     }
     fn get_focus(&self) -> (AccStatus, i32, Option<Accessible>) {
         (AccStatus::NotImplemented, 0, None)
@@ -285,9 +324,9 @@ impl Accessible {
     }
 
     /// Notifies the accessibility system of an event.
-    pub fn notify_event(event_type: u32, window: &dyn crate::window::WxWidget, object_type: i32, object_id: i32) {
+    pub fn notify_event(event_type: u32, window: &dyn crate::window::WxWidget, object_type: AccObjectType, object_id: i32) {
         unsafe {
-            ffi::wxd_Accessible_NotifyEvent(event_type, window.handle_ptr(), object_type, object_id);
+            ffi::wxd_Accessible_NotifyEvent(event_type, window.handle_ptr(), object_type.to_ffi(), object_id);
         }
     }
 }
@@ -457,7 +496,8 @@ unsafe extern "C" fn accessible_select<T: AccessibleImpl>(
     select_flags: c_int,
 ) -> ffi::wxd_AccStatus {
     let impl_ptr = user_data as *const T;
-    unsafe { (*impl_ptr).select(child_id, select_flags) }.to_ffi()
+    let flags = AccSelectFlags::from_bits_retain(select_flags);
+    unsafe { (*impl_ptr).select(child_id, flags) }.to_ffi()
 }
 
 unsafe extern "C" fn accessible_get_selections<T: AccessibleImpl>(
