@@ -1,8 +1,59 @@
 use std::os::raw::{c_char, c_int, c_long, c_void};
 use wxdragon_sys as ffi;
 
-pub type AccStatus = ffi::wxd_AccStatus;
-pub type NavDir = ffi::wxd_NavDir;
+/// Status returned from every [`AccessibleImpl`] method, mirroring `wxAccStatus`.
+///
+/// The default trait methods return [`AccStatus::NotImplemented`], letting wxWidgets
+/// fall back to its built-in accessible behaviour.
+#[repr(i32)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum AccStatus {
+    Fail = ffi::wxd_AccStatus_WXD_ACC_FAIL,
+    False = ffi::wxd_AccStatus_WXD_ACC_FALSE,
+    Ok = ffi::wxd_AccStatus_WXD_ACC_OK,
+    NotImplemented = ffi::wxd_AccStatus_WXD_ACC_NOT_IMPLEMENTED,
+    NotSupported = ffi::wxd_AccStatus_WXD_ACC_NOT_SUPPORTED,
+    InvalidArg = ffi::wxd_AccStatus_WXD_ACC_INVALID_ARG,
+}
+
+impl AccStatus {
+    /// The raw `wxd_AccStatus` FFI value for this status.
+    pub(crate) fn to_ffi(self) -> ffi::wxd_AccStatus {
+        self as ffi::wxd_AccStatus
+    }
+}
+
+/// Direction passed to [`AccessibleImpl::navigate`], mirroring `wxNavDir`.
+#[repr(i32)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum NavDir {
+    Down = ffi::wxd_NavDir_WXD_NAVDIR_DOWN,
+    FirstChild = ffi::wxd_NavDir_WXD_NAVDIR_FIRSTCHILD,
+    LastChild = ffi::wxd_NavDir_WXD_NAVDIR_LASTCHILD,
+    Left = ffi::wxd_NavDir_WXD_NAVDIR_LEFT,
+    Next = ffi::wxd_NavDir_WXD_NAVDIR_NEXT,
+    Previous = ffi::wxd_NavDir_WXD_NAVDIR_PREVIOUS,
+    Right = ffi::wxd_NavDir_WXD_NAVDIR_RIGHT,
+    Up = ffi::wxd_NavDir_WXD_NAVDIR_UP,
+}
+
+impl NavDir {
+    /// Converts a raw `wxd_NavDir` from wxWidgets into a [`NavDir`], or `None` if the
+    /// value is not a recognised direction.
+    pub(crate) fn from_ffi(v: ffi::wxd_NavDir) -> Option<NavDir> {
+        match v {
+            ffi::wxd_NavDir_WXD_NAVDIR_DOWN => Some(NavDir::Down),
+            ffi::wxd_NavDir_WXD_NAVDIR_FIRSTCHILD => Some(NavDir::FirstChild),
+            ffi::wxd_NavDir_WXD_NAVDIR_LASTCHILD => Some(NavDir::LastChild),
+            ffi::wxd_NavDir_WXD_NAVDIR_LEFT => Some(NavDir::Left),
+            ffi::wxd_NavDir_WXD_NAVDIR_NEXT => Some(NavDir::Next),
+            ffi::wxd_NavDir_WXD_NAVDIR_PREVIOUS => Some(NavDir::Previous),
+            ffi::wxd_NavDir_WXD_NAVDIR_RIGHT => Some(NavDir::Right),
+            ffi::wxd_NavDir_WXD_NAVDIR_UP => Some(NavDir::Up),
+            _ => None,
+        }
+    }
+}
 
 /// Accessibility role of an object (the MSAA `ROLE_SYSTEM_*` set).
 ///
@@ -126,61 +177,61 @@ bitflags::bitflags! {
 /// A trait that can be implemented to provide custom accessibility information.
 pub trait AccessibleImpl {
     fn get_child_count(&self) -> (AccStatus, i32) {
-        (ffi::wxd_AccStatus_WXD_ACC_OK, 0)
+        (AccStatus::Ok, 0)
     }
     fn get_child(&self, _child_id: i32) -> (AccStatus, Option<Accessible>) {
-        (ffi::wxd_AccStatus_WXD_ACC_NOT_IMPLEMENTED, None)
+        (AccStatus::NotImplemented, None)
     }
     fn get_parent(&self) -> (AccStatus, Option<Accessible>) {
-        (ffi::wxd_AccStatus_WXD_ACC_NOT_IMPLEMENTED, None)
+        (AccStatus::NotImplemented, None)
     }
     fn get_role(&self, _child_id: i32) -> (AccStatus, AccRole) {
-        (ffi::wxd_AccStatus_WXD_ACC_NOT_IMPLEMENTED, AccRole::None)
+        (AccStatus::NotImplemented, AccRole::None)
     }
     fn get_state(&self, _child_id: i32) -> (AccStatus, AccState) {
-        (ffi::wxd_AccStatus_WXD_ACC_NOT_IMPLEMENTED, AccState::empty())
+        (AccStatus::NotImplemented, AccState::empty())
     }
     fn get_name(&self, _child_id: i32) -> (AccStatus, Option<String>) {
-        (ffi::wxd_AccStatus_WXD_ACC_NOT_IMPLEMENTED, None)
+        (AccStatus::NotImplemented, None)
     }
     fn get_description(&self, _child_id: i32) -> (AccStatus, Option<String>) {
-        (ffi::wxd_AccStatus_WXD_ACC_NOT_IMPLEMENTED, None)
+        (AccStatus::NotImplemented, None)
     }
     fn get_help_text(&self, _child_id: i32) -> (AccStatus, Option<String>) {
-        (ffi::wxd_AccStatus_WXD_ACC_NOT_IMPLEMENTED, None)
+        (AccStatus::NotImplemented, None)
     }
     fn get_keyboard_shortcut(&self, _child_id: i32) -> (AccStatus, Option<String>) {
-        (ffi::wxd_AccStatus_WXD_ACC_NOT_IMPLEMENTED, None)
+        (AccStatus::NotImplemented, None)
     }
     fn get_default_action(&self, _child_id: i32) -> (AccStatus, Option<String>) {
-        (ffi::wxd_AccStatus_WXD_ACC_NOT_IMPLEMENTED, None)
+        (AccStatus::NotImplemented, None)
     }
     fn get_value(&self, _child_id: i32) -> (AccStatus, Option<String>) {
-        (ffi::wxd_AccStatus_WXD_ACC_NOT_IMPLEMENTED, None)
+        (AccStatus::NotImplemented, None)
     }
     fn select(&self, _child_id: i32, _select_flags: i32) -> AccStatus {
-        ffi::wxd_AccStatus_WXD_ACC_NOT_IMPLEMENTED
+        AccStatus::NotImplemented
     }
     fn get_selections(&self) -> (AccStatus, crate::widgets::dataview::Variant) {
         (
-            ffi::wxd_AccStatus_WXD_ACC_NOT_IMPLEMENTED,
+            AccStatus::NotImplemented,
             crate::widgets::dataview::Variant::new(),
         )
     }
     fn get_focus(&self) -> (AccStatus, i32, Option<Accessible>) {
-        (ffi::wxd_AccStatus_WXD_ACC_NOT_IMPLEMENTED, 0, None)
+        (AccStatus::NotImplemented, 0, None)
     }
     fn do_default_action(&self, _child_id: i32) -> AccStatus {
-        ffi::wxd_AccStatus_WXD_ACC_NOT_IMPLEMENTED
+        AccStatus::NotImplemented
     }
     fn get_location(&self, _child_id: i32) -> (AccStatus, crate::geometry::Rect) {
-        (ffi::wxd_AccStatus_WXD_ACC_NOT_IMPLEMENTED, crate::geometry::Rect::default())
+        (AccStatus::NotImplemented, crate::geometry::Rect::default())
     }
     fn hit_test(&self, _pt: crate::geometry::Point) -> (AccStatus, i32, Option<Accessible>) {
-        (ffi::wxd_AccStatus_WXD_ACC_NOT_IMPLEMENTED, 0, None)
+        (AccStatus::NotImplemented, 0, None)
     }
     fn navigate(&self, _nav_dir: NavDir, _from_id: i32) -> (AccStatus, i32, Option<Accessible>) {
-        (ffi::wxd_AccStatus_WXD_ACC_NOT_IMPLEMENTED, 0, None)
+        (AccStatus::NotImplemented, 0, None)
     }
 }
 
@@ -260,7 +311,7 @@ unsafe extern "C" fn accessible_get_child_count<T: AccessibleImpl>(
     let impl_ptr = user_data as *const T;
     let (status, c) = unsafe { (*impl_ptr).get_child_count() };
     unsafe { *count = c };
-    status
+    status.to_ffi()
 }
 
 unsafe extern "C" fn accessible_get_child<T: AccessibleImpl>(
@@ -276,7 +327,7 @@ unsafe extern "C" fn accessible_get_child<T: AccessibleImpl>(
     } else {
         unsafe { *child = std::ptr::null_mut() };
     }
-    status
+    status.to_ffi()
 }
 
 unsafe extern "C" fn accessible_get_parent<T: AccessibleImpl>(
@@ -291,7 +342,7 @@ unsafe extern "C" fn accessible_get_parent<T: AccessibleImpl>(
     } else {
         unsafe { *parent = std::ptr::null_mut() };
     }
-    status
+    status.to_ffi()
 }
 
 unsafe extern "C" fn accessible_get_role<T: AccessibleImpl>(
@@ -302,7 +353,7 @@ unsafe extern "C" fn accessible_get_role<T: AccessibleImpl>(
     let impl_ptr = user_data as *const T;
     let (status, r) = unsafe { (*impl_ptr).get_role(child_id) };
     unsafe { *role = r.to_ffi() };
-    status
+    status.to_ffi()
 }
 
 unsafe extern "C" fn accessible_get_state<T: AccessibleImpl>(
@@ -313,7 +364,7 @@ unsafe extern "C" fn accessible_get_state<T: AccessibleImpl>(
     let impl_ptr = user_data as *const T;
     let (status, s) = unsafe { (*impl_ptr).get_state(child_id) };
     unsafe { *state = s.bits() as c_long };
-    status
+    status.to_ffi()
 }
 
 unsafe extern "C" fn accessible_get_name<T: AccessibleImpl>(
@@ -327,7 +378,7 @@ unsafe extern "C" fn accessible_get_name<T: AccessibleImpl>(
     if let Some(n) = name {
         copy_string_to_c(n, out_name, max_len);
     }
-    status
+    status.to_ffi()
 }
 
 unsafe extern "C" fn accessible_get_description<T: AccessibleImpl>(
@@ -341,7 +392,7 @@ unsafe extern "C" fn accessible_get_description<T: AccessibleImpl>(
     if let Some(d) = desc {
         copy_string_to_c(d, out_description, max_len);
     }
-    status
+    status.to_ffi()
 }
 
 unsafe extern "C" fn accessible_get_help_text<T: AccessibleImpl>(
@@ -355,7 +406,7 @@ unsafe extern "C" fn accessible_get_help_text<T: AccessibleImpl>(
     if let Some(t) = text {
         copy_string_to_c(t, out_help_text, max_len);
     }
-    status
+    status.to_ffi()
 }
 
 unsafe extern "C" fn accessible_get_keyboard_shortcut<T: AccessibleImpl>(
@@ -369,7 +420,7 @@ unsafe extern "C" fn accessible_get_keyboard_shortcut<T: AccessibleImpl>(
     if let Some(s) = shortcut {
         copy_string_to_c(s, out_shortcut, max_len);
     }
-    status
+    status.to_ffi()
 }
 
 unsafe extern "C" fn accessible_get_default_action<T: AccessibleImpl>(
@@ -383,7 +434,7 @@ unsafe extern "C" fn accessible_get_default_action<T: AccessibleImpl>(
     if let Some(a) = action {
         copy_string_to_c(a, out_action, max_len);
     }
-    status
+    status.to_ffi()
 }
 
 unsafe extern "C" fn accessible_get_value<T: AccessibleImpl>(
@@ -397,7 +448,7 @@ unsafe extern "C" fn accessible_get_value<T: AccessibleImpl>(
     if let Some(v) = value {
         copy_string_to_c(v, out_value, max_len);
     }
-    status
+    status.to_ffi()
 }
 
 unsafe extern "C" fn accessible_select<T: AccessibleImpl>(
@@ -406,7 +457,7 @@ unsafe extern "C" fn accessible_select<T: AccessibleImpl>(
     select_flags: c_int,
 ) -> ffi::wxd_AccStatus {
     let impl_ptr = user_data as *const T;
-    unsafe { (*impl_ptr).select(child_id, select_flags) }
+    unsafe { (*impl_ptr).select(child_id, select_flags) }.to_ffi()
 }
 
 unsafe extern "C" fn accessible_get_selections<T: AccessibleImpl>(
@@ -415,10 +466,10 @@ unsafe extern "C" fn accessible_get_selections<T: AccessibleImpl>(
 ) -> ffi::wxd_AccStatus {
     let impl_ptr = user_data as *const T;
     let (status, sel) = unsafe { (*impl_ptr).get_selections() };
-    if status == ffi::wxd_AccStatus_WXD_ACC_OK && !selections.is_null() {
+    if status == AccStatus::Ok && !selections.is_null() {
         unsafe { ffi::wxd_Variant_Assign(selections, sel.as_const_ptr()) };
     }
-    status
+    status.to_ffi()
 }
 
 unsafe extern "C" fn accessible_get_focus<T: AccessibleImpl>(
@@ -435,7 +486,7 @@ unsafe extern "C" fn accessible_get_focus<T: AccessibleImpl>(
     } else {
         unsafe { *child = std::ptr::null_mut() };
     }
-    status
+    status.to_ffi()
 }
 
 unsafe extern "C" fn accessible_do_default_action<T: AccessibleImpl>(
@@ -443,7 +494,7 @@ unsafe extern "C" fn accessible_do_default_action<T: AccessibleImpl>(
     child_id: c_int,
 ) -> ffi::wxd_AccStatus {
     let impl_ptr = user_data as *const T;
-    unsafe { (*impl_ptr).do_default_action(child_id) }
+    unsafe { (*impl_ptr).do_default_action(child_id) }.to_ffi()
 }
 
 unsafe extern "C" fn accessible_get_location<T: AccessibleImpl>(
@@ -454,7 +505,7 @@ unsafe extern "C" fn accessible_get_location<T: AccessibleImpl>(
     let impl_ptr = user_data as *const T;
     let (status, r) = unsafe { (*impl_ptr).get_location(child_id) };
     unsafe { *rect = r.into() };
-    status
+    status.to_ffi()
 }
 
 unsafe extern "C" fn accessible_hit_test<T: AccessibleImpl>(
@@ -472,7 +523,7 @@ unsafe extern "C" fn accessible_hit_test<T: AccessibleImpl>(
     } else {
         unsafe { *child_object = std::ptr::null_mut() };
     }
-    status
+    status.to_ffi()
 }
 
 unsafe extern "C" fn accessible_navigate<T: AccessibleImpl>(
@@ -483,7 +534,14 @@ unsafe extern "C" fn accessible_navigate<T: AccessibleImpl>(
     to_object: *mut *mut ffi::wxd_Accessible_t,
 ) -> ffi::wxd_AccStatus {
     let impl_ptr = user_data as *const T;
-    let (status, id, acc) = unsafe { (*impl_ptr).navigate(nav_dir, from_id) };
+    let Some(dir) = NavDir::from_ffi(nav_dir) else {
+        unsafe {
+            *to_id = 0;
+            *to_object = std::ptr::null_mut();
+        }
+        return AccStatus::InvalidArg.to_ffi();
+    };
+    let (status, id, acc) = unsafe { (*impl_ptr).navigate(dir, from_id) };
     unsafe { *to_id = id };
     if let Some(a) = acc {
         unsafe { *to_object = a.as_ptr() };
@@ -491,7 +549,7 @@ unsafe extern "C" fn accessible_navigate<T: AccessibleImpl>(
     } else {
         unsafe { *to_object = std::ptr::null_mut() };
     }
-    status
+    status.to_ffi()
 }
 
 fn copy_string_to_c(s: String, out_buf: *mut c_char, max_len: usize) {
