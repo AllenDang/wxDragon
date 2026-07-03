@@ -1,4 +1,4 @@
-use wxdragon::accessible::acc_role;
+use wxdragon::accessible::AccRole;
 use wxdragon::prelude::*;
 
 fn main() {
@@ -24,7 +24,7 @@ fn main() {
         // cross-platform; role uses the MSAA role set and is Windows-only.
         text_ctrl.set_accessibility_label("Example text input");
         text_ctrl.set_accessibility_description("Type any example text here.");
-        text_ctrl.set_accessibility_role(acc_role::TEXT);
+        text_ctrl.set_accessibility_role(AccRole::Text);
 
         let button = Button::builder(&frame).with_label("Click me").build();
 
