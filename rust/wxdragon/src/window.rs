@@ -1,3 +1,4 @@
+#[cfg(target_os = "windows")]
 use crate::accessible::{AccRole, AccState, Accessible};
 use crate::event::{EventType, WxEvtHandler};
 use crate::font::Font;
@@ -1687,38 +1688,34 @@ pub trait WxWidget: std::any::Any {
     ///
     /// The role uses the MSAA role set ([`AccRole`], e.g. `AccRole::Text`). This is
     /// **Windows-only** (stored on a built-in accessible object where `wxUSE_ACCESSIBILITY`
-    /// is compiled in); it is a no-op on macOS and GTK, whose native accessibility roles do
-    /// not map to this enum.
+    /// is compiled in); the method is unavailable on macOS and GTK, whose native
+    /// accessibility roles do not map to this enum.
+    #[cfg(target_os = "windows")]
     fn set_accessibility_role(&self, role: AccRole) {
         let handle = self.handle_ptr();
         if handle.is_null() {
             return;
         }
-        #[cfg(target_os = "windows")]
         unsafe {
             ffi::wxd_Window_SetAccessibleRole(handle, role.to_ffi());
         }
-        #[cfg(not(target_os = "windows"))]
-        let _ = role;
     }
 
     /// Sets the accessible state for the window.
     ///
     /// The state is a bitmask of MSAA state flags ([`AccState`]), e.g.
     /// `AccState::FOCUSED | AccState::SELECTED`. This is **Windows-only** (stored on a
-    /// built-in accessible object where `wxUSE_ACCESSIBILITY` is compiled in); it is a
-    /// no-op on macOS and GTK, which have no equivalent state bitmask.
+    /// built-in accessible object where `wxUSE_ACCESSIBILITY` is compiled in); the method
+    /// is unavailable on macOS and GTK, which have no equivalent state bitmask.
+    #[cfg(target_os = "windows")]
     fn set_accessibility_state(&self, state: AccState) {
         let handle = self.handle_ptr();
         if handle.is_null() {
             return;
         }
-        #[cfg(target_os = "windows")]
         unsafe {
             ffi::wxd_Window_SetAccessibleState(handle, state.bits() as std::os::raw::c_long);
         }
-        #[cfg(not(target_os = "windows"))]
-        let _ = state;
     }
 
     // --- Tab Order Functions ---
@@ -1897,6 +1894,10 @@ pub trait WxWidget: std::any::Any {
     /// Sets the accessible object for this window.
     ///
     /// The window takes ownership of the accessible object.
+    ///
+    /// **Windows-only**: backed by `wxAccessible`/MSAA, which wxWidgets only supports
+    /// under `__WXMSW__`. Unavailable on macOS and GTK.
+    #[cfg(target_os = "windows")]
     fn set_accessible(&self, accessible: Accessible) {
         let handle = self.handle_ptr();
         if !handle.is_null() {
@@ -1913,6 +1914,9 @@ pub trait WxWidget: std::any::Any {
     ///
     /// Note: The returned `Accessible` object is owned by the window.
     /// It should not be dropped by the caller.
+    ///
+    /// **Windows-only**: see [`WxWidget::set_accessible`].
+    #[cfg(target_os = "windows")]
     fn get_accessible(&self) -> Option<Accessible> {
         let handle = self.handle_ptr();
         if handle.is_null() {
