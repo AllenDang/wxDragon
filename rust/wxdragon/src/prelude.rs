@@ -226,8 +226,7 @@ pub use crate::ipc::{IPCClient, IPCConnection, IPCConnectionBuilder, IPCFormat, 
 pub use crate::single_instance_checker::SingleInstanceChecker;
 pub use crate::timer::Timer;
 pub use crate::translations::{
-    LanguageInfo, Locale, Translations, TranslationsLoader, add_catalog_lookup_path_prefix, translate,
-    translate_plural,
+    LanguageInfo, Locale, Translations, TranslationsLoader, add_catalog_lookup_path_prefix, translate, translate_plural,
 };
 pub use crate::uiactionsimulator::{KeyModifier, MouseButton, UIActionSimulator};
 

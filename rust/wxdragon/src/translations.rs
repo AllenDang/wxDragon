@@ -191,9 +191,7 @@ impl Translations {
         // Double-box: `Box<dyn Trait>` is a fat pointer, so box it again to get
         // a thin `*mut c_void` we can hand across FFI. Freed by `loader_destroy`.
         let user_data = Box::into_raw(Box::new(Box::new(loader) as Box<dyn TranslationsLoader>)) as *mut c_void;
-        unsafe {
-            ffi::wxd_Translations_SetRustLoader(self.ptr, &LOADER_VTABLE as *const _, user_data)
-        };
+        unsafe { ffi::wxd_Translations_SetRustLoader(self.ptr, &LOADER_VTABLE as *const _, user_data) };
     }
 
     /// Check if a catalog for the given domain is loaded.
@@ -476,11 +474,7 @@ unsafe extern "C" fn loader_load_catalog(
     }
 }
 
-unsafe extern "C" fn loader_available(
-    user_data: *mut c_void,
-    domain: *const c_char,
-    out: *mut ffi::wxd_ArrayString_t,
-) {
+unsafe extern "C" fn loader_available(user_data: *mut c_void, domain: *const c_char, out: *mut ffi::wxd_ArrayString_t) {
     if user_data.is_null() || domain.is_null() || out.is_null() {
         return;
     }
@@ -841,10 +835,7 @@ mod tests {
     fn rust_loader_serves_embedded_catalog() {
         // Include the gettext metadata header ("") so the charset is declared;
         // originals must stay sorted ("" sorts before "Hello").
-        let mo = make_mo(&[
-            ("", "Content-Type: text/plain; charset=UTF-8\n"),
-            ("Hello", "Bonjour"),
-        ]);
+        let mo = make_mo(&[("", "Content-Type: text/plain; charset=UTF-8\n"), ("Hello", "Bonjour")]);
 
         let translations = Translations::new();
         translations.set_loader(FixtureLoader { mo });
