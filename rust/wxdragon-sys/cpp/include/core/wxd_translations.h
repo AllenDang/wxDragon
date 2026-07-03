@@ -105,18 +105,19 @@ wxd_Translations_GetAvailableTranslations(wxd_Translations_t* translations,
 // Rust side. The C++ trampoline only constructs the wxWidgets objects the
 // callbacks cannot (wxMsgCatalog / wxArrayString); all loader policy lives in
 // Rust.
-// Sink used by load_catalog to hand catalog bytes to C++. `emit` must be called
-// (at most once) while the bytes are still alive; C++ parses them synchronously.
+
+// Sink handed to load_catalog. CATALOG-BYTES CONTRACT (single source of truth,
+// referenced from the C++ and Rust trampolines): load_catalog calls
+// emit(sink, data, len) exactly once with the bytes still alive; C++ wraps them
+// non-owning and parses synchronously inside emit (wxMsgCatalog does not retain
+// the buffer), so the bytes need only outlive the emit call — borrowed or
+// freshly-owned bytes both work.
 typedef void (*wxd_TranslationsCatalogSink)(void* sink, const uint8_t* data, size_t len);
 
 typedef struct wxd_RustTranslationsLoader_vtable {
-    // Provide the raw .mo catalog bytes for (domain, lang) by calling
-    // `emit(sink, data, len)` exactly once with the bytes while they are alive;
-    // C++ builds the catalog synchronously inside `emit`. Return true if a
-    // catalog was emitted, false if unavailable. Passing bytes through `emit`
-    // (rather than out-params C++ reads after the call) lets a loader return
-    // freshly-computed/owned bytes (e.g. decompressed) as well as borrowed ones;
-    // the bytes only need to outlive the `emit` call.
+    // Provide the raw .mo catalog bytes for (domain, lang) via `emit` (see the
+    // wxd_TranslationsCatalogSink contract above). Return true if a catalog was
+    // emitted, false if unavailable.
     bool (*load_catalog)(void* user_data,
                          const char* domain,
                          const char* lang,

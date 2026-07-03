@@ -24,9 +24,8 @@ public:
             m_vtable.destroy(m_user_data);
     }
 
-    // Context passed as the `sink` to the Rust load_catalog callback. Rust calls
-    // emit_catalog(sink, data, len) while the bytes are alive; we build the
-    // catalog right there.
+    // Context passed as the `sink` to load_catalog; see the
+    // wxd_TranslationsCatalogSink contract in wxd_translations.h.
     struct CatalogSink
     {
         const wxString* domain;
@@ -38,9 +37,8 @@ public:
         if (!sink || !data)
             return;
         CatalogSink* s = reinterpret_cast<CatalogSink*>(sink);
-        // Bytes are consumed synchronously; wxMsgCatalog parses into its own
-        // hash and does not retain the buffer, so a non-owned view is safe even
-        // when the Rust side owns (and will drop) the bytes after this returns.
+        // Non-owning view is safe per the contract: consumed synchronously here,
+        // wxMsgCatalog does not retain the buffer.
         s->catalog = wxMsgCatalog::CreateFromData(
             wxScopedCharBuffer::CreateNonOwned(
                 reinterpret_cast<const char*>(data), len),

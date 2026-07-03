@@ -25,6 +25,7 @@
 //! ```
 
 use crate::language::Language;
+use crate::utils::ArrayString;
 use std::borrow::Cow;
 use std::ffi::{CStr, CString};
 use std::marker::PhantomData;
@@ -464,8 +465,8 @@ unsafe extern "C" fn loader_load_catalog(
         let lang = CStr::from_ptr(lang).to_string_lossy();
         match loader.load_catalog(&domain, &lang) {
             Some(bytes) => {
-                // `bytes` (borrowed or owned) is alive across this call; C++
-                // parses it inside `emit` before we return and drop it.
+                // `bytes` alive across the call; C++ consumes them inside `emit`
+                // (see the wxd_TranslationsCatalogSink contract).
                 emit(sink, bytes.as_ptr(), bytes.len());
                 true
             }
@@ -481,11 +482,10 @@ unsafe extern "C" fn loader_available(user_data: *mut c_void, domain: *const c_c
     unsafe {
         let loader = &**(user_data as *mut Box<dyn TranslationsLoader>);
         let domain = CStr::from_ptr(domain).to_string_lossy();
-        for lang in loader.available_translations(&domain) {
-            if let Ok(c_lang) = CString::new(lang) {
-                ffi::wxd_ArrayString_Add(out, c_lang.as_ptr());
-            }
-        }
+        // Borrow (non-owning) the C++-owned array and reuse the shared wrapper's
+        // CString + Add loop instead of hand-rolling it.
+        ArrayString::from(out as *const ffi::wxd_ArrayString_t)
+            .add_many(&loader.available_translations(&domain));
     }
 }
 
