@@ -142,6 +142,18 @@ unsafe extern "C" {
     pub(crate) unsafe fn wxd_App_ActivateMac();
 }
 
+/// Marshals `s` to a C string and passes it to a `(window, *const c_char)` FFI setter.
+/// Shared by the platform arms of the `set_accessibility_*` string setters.
+#[cfg(any(target_os = "macos", target_os = "windows"))]
+fn set_accessibility_string(
+    handle: *mut ffi::wxd_Window_t,
+    s: &str,
+    setter: unsafe extern "C" fn(*mut ffi::wxd_Window_t, *const std::os::raw::c_char),
+) {
+    let c_string = std::ffi::CString::new(s).unwrap_or_default();
+    unsafe { setter(handle, c_string.as_ptr()) };
+}
+
 // Use the widget_style_enum macro to define ExtraWindowStyle
 crate::widget_style_enum!(
     name: ExtraWindowStyle,
@@ -1626,15 +1638,9 @@ pub trait WxWidget: std::any::Any {
             return;
         }
         #[cfg(target_os = "macos")]
-        unsafe {
-            let c_label = std::ffi::CString::new(label).unwrap_or_default();
-            wxd_Window_SetAccessibilityLabel(handle, c_label.as_ptr());
-        }
+        set_accessibility_string(handle, label, wxd_Window_SetAccessibilityLabel);
         #[cfg(target_os = "windows")]
-        unsafe {
-            let c_label = std::ffi::CString::new(label).unwrap_or_default();
-            ffi::wxd_Window_SetAccessibleName(handle, c_label.as_ptr());
-        }
+        set_accessibility_string(handle, label, ffi::wxd_Window_SetAccessibleName);
         #[cfg(not(any(target_os = "macos", target_os = "windows")))]
         let _ = label;
     }
@@ -1651,15 +1657,9 @@ pub trait WxWidget: std::any::Any {
             return;
         }
         #[cfg(target_os = "macos")]
-        unsafe {
-            let c_desc = std::ffi::CString::new(description).unwrap_or_default();
-            wxd_Window_SetAccessibilityHelp(handle, c_desc.as_ptr());
-        }
+        set_accessibility_string(handle, description, wxd_Window_SetAccessibilityHelp);
         #[cfg(target_os = "windows")]
-        unsafe {
-            let c_desc = std::ffi::CString::new(description).unwrap_or_default();
-            ffi::wxd_Window_SetAccessibleDescription(handle, c_desc.as_ptr());
-        }
+        set_accessibility_string(handle, description, ffi::wxd_Window_SetAccessibleDescription);
         #[cfg(not(any(target_os = "macos", target_os = "windows")))]
         let _ = description;
     }
@@ -1676,15 +1676,9 @@ pub trait WxWidget: std::any::Any {
             return;
         }
         #[cfg(target_os = "macos")]
-        unsafe {
-            let c_value = std::ffi::CString::new(value).unwrap_or_default();
-            wxd_Window_SetAccessibilityValue(handle, c_value.as_ptr());
-        }
+        set_accessibility_string(handle, value, wxd_Window_SetAccessibilityValue);
         #[cfg(target_os = "windows")]
-        unsafe {
-            let c_value = std::ffi::CString::new(value).unwrap_or_default();
-            ffi::wxd_Window_SetAccessibleValue(handle, c_value.as_ptr());
-        }
+        set_accessibility_string(handle, value, ffi::wxd_Window_SetAccessibleValue);
         #[cfg(not(any(target_os = "macos", target_os = "windows")))]
         let _ = value;
     }

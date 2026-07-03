@@ -190,10 +190,10 @@ public:
     explicit WxdSimpleAccessible(wxWindow* win) : wxAccessible(win) {}
 
     void SetNameProp(const wxString& s, bool has)  { m_name = s;  m_hasName = has; }
-    void SetRoleProp(wxAccRole r, bool has)        { m_role = r;  m_hasRole = has; }
+    void SetRoleProp(wxAccRole r)                  { m_role = r;  m_hasRole = true; }
     void SetDescProp(const wxString& s, bool has)  { m_desc = s;  m_hasDesc = has; }
     void SetValueProp(const wxString& s, bool has) { m_value = s; m_hasValue = has; }
-    void SetStateProp(long v, bool has)            { m_state = v; m_hasState = has; }
+    void SetStateProp(long v)                      { m_state = v; m_hasState = true; }
 
     wxAccStatus GetName(int childId, wxString* name) override {
         if (childId == ACC_ID_SELF && m_hasName) { *name = m_name; return wxACC_OK; }
@@ -297,7 +297,7 @@ wxd_Window_SetAccessibleName(wxd_Window_t* self, const char* name)
     wxWindow* window = reinterpret_cast<wxWindow*>(self);
     if (window) {
         wxd_GetOrCreateSimpleAccessible(window)
-            ->SetNameProp(name ? wxString::FromUTF8(name) : wxString(), name != nullptr);
+            ->SetNameProp(WXD_STR_TO_WX_STRING_UTF8_NULL_OK(name), name != nullptr);
     }
 #else
     (void)self; (void)name;
@@ -311,7 +311,7 @@ wxd_Window_SetAccessibleRole(wxd_Window_t* self, wxd_AccRole role)
     wxWindow* window = reinterpret_cast<wxWindow*>(self);
     if (window) {
         wxd_GetOrCreateSimpleAccessible(window)
-            ->SetRoleProp(static_cast<wxAccRole>(role), true);
+            ->SetRoleProp(static_cast<wxAccRole>(role));
     }
 #else
     (void)self; (void)role;
@@ -325,7 +325,7 @@ wxd_Window_SetAccessibleDescription(wxd_Window_t* self, const char* description)
     wxWindow* window = reinterpret_cast<wxWindow*>(self);
     if (window) {
         wxd_GetOrCreateSimpleAccessible(window)
-            ->SetDescProp(description ? wxString::FromUTF8(description) : wxString(), description != nullptr);
+            ->SetDescProp(WXD_STR_TO_WX_STRING_UTF8_NULL_OK(description), description != nullptr);
     }
 #else
     (void)self; (void)description;
@@ -339,7 +339,7 @@ wxd_Window_SetAccessibleValue(wxd_Window_t* self, const char* value)
     wxWindow* window = reinterpret_cast<wxWindow*>(self);
     if (window) {
         wxd_GetOrCreateSimpleAccessible(window)
-            ->SetValueProp(value ? wxString::FromUTF8(value) : wxString(), value != nullptr);
+            ->SetValueProp(WXD_STR_TO_WX_STRING_UTF8_NULL_OK(value), value != nullptr);
     }
 #else
     (void)self; (void)value;
@@ -352,7 +352,7 @@ wxd_Window_SetAccessibleState(wxd_Window_t* self, long state)
 #if wxUSE_ACCESSIBILITY
     wxWindow* window = reinterpret_cast<wxWindow*>(self);
     if (window) {
-        wxd_GetOrCreateSimpleAccessible(window)->SetStateProp(state, true);
+        wxd_GetOrCreateSimpleAccessible(window)->SetStateProp(state);
     }
 #else
     (void)self; (void)state;
