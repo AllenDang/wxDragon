@@ -484,8 +484,7 @@ unsafe extern "C" fn loader_available(user_data: *mut c_void, domain: *const c_c
         let domain = CStr::from_ptr(domain).to_string_lossy();
         // Borrow (non-owning) the C++-owned array and reuse the shared wrapper's
         // CString + Add loop instead of hand-rolling it.
-        ArrayString::from(out as *const ffi::wxd_ArrayString_t)
-            .add_many(&loader.available_translations(&domain));
+        ArrayString::from(out as *const ffi::wxd_ArrayString_t).add_many(&loader.available_translations(&domain));
     }
 }
 
