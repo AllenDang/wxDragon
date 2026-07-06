@@ -302,6 +302,8 @@ widget_builder!(
 pub enum NotebookEvent {
     /// A notebook page has been changed.
     PageChanged,
+    /// A notebook page is about to change. This event can be vetoed.
+    PageChanging,
 }
 
 /// Event data for a `Notebook::PageChanged` event.
@@ -341,7 +343,8 @@ impl NotebookPageChangedEvent {
 // Use the implement_widget_local_event_handlers macro for notebook events
 crate::implement_widget_local_event_handlers!(
     Notebook, NotebookEvent, NotebookPageChangedEvent,
-    PageChanged => page_changed, EventType::NOTEBOOK_PAGE_CHANGED
+    PageChanged => page_changed, EventType::NOTEBOOK_PAGE_CHANGED,
+    PageChanging => page_changing, EventType::NOTEBOOK_PAGE_CHANGING
 );
 
 // XRC Support - enables Notebook to be created from XRC-managed pointers

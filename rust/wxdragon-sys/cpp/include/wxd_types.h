@@ -345,6 +345,7 @@ typedef enum {
     WXD_EVENT_TYPE_GRID_COL_SIZE = 385,             // wxEVT_GRID_COL_SIZE
     WXD_EVENT_TYPE_GRID_RANGE_SELECTED = 386,       // wxEVT_GRID_RANGE_SELECTED
     WXD_EVENT_TYPE_GRID_TABBING = 387,              // wxEVT_GRID_TABBING
+    WXD_EVENT_TYPE_NOTEBOOK_PAGE_CHANGING = 389,    // wxEVT_NOTEBOOK_PAGE_CHANGING
 
     WXD_EVENT_TYPE_MAX // Keep this last for count if needed, or remove if not used for iteration
 } WXDEventTypeCEnum;

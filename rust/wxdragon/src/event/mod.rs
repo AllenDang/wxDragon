@@ -158,8 +158,9 @@ pub struct EventType: ffi::WXDEventTypeCEnum { // Use the generated C enum type
     const SPIN_UP = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_SPIN_UP;
     const SPIN_DOWN = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_SPIN_DOWN;
     const SPIN = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_SPIN;
-    // ADDED: Notebook event type
+    // ADDED: Notebook event types
     const NOTEBOOK_PAGE_CHANGED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_NOTEBOOK_PAGE_CHANGED;
+    const NOTEBOOK_PAGE_CHANGING = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_NOTEBOOK_PAGE_CHANGING;
     // ADDED: Splitter event types
     const SPLITTER_SASH_POS_CHANGED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_SPLITTER_SASH_POS_CHANGED;
     const SPLITTER_SASH_POS_CHANGING = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_SPLITTER_SASH_POS_CHANGING;
