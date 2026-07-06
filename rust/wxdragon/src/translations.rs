@@ -25,9 +25,11 @@
 //! ```
 
 use crate::language::Language;
+use crate::utils::ArrayString;
+use std::borrow::Cow;
 use std::ffi::{CStr, CString};
 use std::marker::PhantomData;
-use std::os::raw::c_char;
+use std::os::raw::{c_char, c_void};
 use wxdragon_sys as ffi;
 
 /// A translations manager for internationalization support.
@@ -168,6 +170,29 @@ impl Translations {
             return false;
         }
         unsafe { ffi::wxd_Translations_AddStdCatalog(self.ptr) }
+    }
+
+    /// Install a custom [`TranslationsLoader`], replacing the default
+    /// file-based loader.
+    ///
+    /// This lets an application supply catalog data from anywhere (e.g. bytes
+    /// embedded in the binary) instead of `.mo` files on disk. wxWidgets uses a
+    /// single loader, so this replaces any previously installed one; ownership
+    /// of `loader` is transferred to wxWidgets, which drops it when the
+    /// translations object is destroyed or another loader is installed.
+    ///
+    /// Call this before [`add_catalog`](Self::add_catalog) /
+    /// [`add_std_catalog`](Self::add_std_catalog): loading a catalog first
+    /// consults [`TranslationsLoader::available_translations`] to pick the best
+    /// language, then calls [`TranslationsLoader::load_catalog`].
+    pub fn set_loader<L: TranslationsLoader + 'static>(&self, loader: L) {
+        if self.ptr.is_null() {
+            return;
+        }
+        // Double-box: `Box<dyn Trait>` is a fat pointer, so box it again to get
+        // a thin `*mut c_void` we can hand across FFI. Freed by `loader_destroy`.
+        let user_data = Box::into_raw(Box::new(Box::new(loader) as Box<dyn TranslationsLoader>)) as *mut c_void;
+        unsafe { ffi::wxd_Translations_SetRustLoader(self.ptr, &LOADER_VTABLE as *const _, user_data) };
     }
 
     /// Check if a catalog for the given domain is loaded.
@@ -394,6 +419,87 @@ impl Drop for Translations {
         }
     }
 }
+
+/// A source of translation catalogs for [`Translations::set_loader`].
+///
+/// Implement this to feed wxWidgets catalog data from somewhere other than
+/// `.mo` files on disk — for example bytes embedded in the binary. wxWidgets
+/// asks the loader for the languages a domain supports before requesting the
+/// catalog bytes for the chosen language.
+pub trait TranslationsLoader {
+    /// Return the raw `.mo` catalog bytes for `(domain, lang)`, or `None` if
+    /// unavailable.
+    ///
+    /// Returns a [`Cow`] so a loader can hand back either borrowed bytes it
+    /// already holds (e.g. `Cow::Borrowed(b)` over `&'static` embedded data —
+    /// zero-copy) or freshly-computed owned bytes (e.g. `Cow::Owned(vec)` after
+    /// decompressing/decrypting). The bytes only need to live until this call
+    /// returns; wxWidgets parses them synchronously and does not retain the
+    /// buffer.
+    fn load_catalog(&self, domain: &str, lang: &str) -> Option<Cow<'_, [u8]>>;
+
+    /// Return the language codes for which `domain` has a catalog. Consulted
+    /// before [`load_catalog`](Self::load_catalog) to pick the best language;
+    /// returning an empty list means the domain resolves to nothing.
+    fn available_translations(&self, domain: &str) -> Vec<String>;
+}
+
+// The `user_data` handed to the C++ trampoline is a `*mut Box<dyn TranslationsLoader>`
+// (a thin pointer to the fat trait-object box). These trampolines recover it and
+// forward to the trait methods.
+
+unsafe extern "C" fn loader_load_catalog(
+    user_data: *mut c_void,
+    domain: *const c_char,
+    lang: *const c_char,
+    sink: *mut c_void,
+    emit: Option<unsafe extern "C" fn(*mut c_void, *const u8, usize)>,
+) -> bool {
+    if user_data.is_null() || domain.is_null() || lang.is_null() {
+        return false;
+    }
+    let Some(emit) = emit else { return false };
+    unsafe {
+        let loader = &**(user_data as *mut Box<dyn TranslationsLoader>);
+        let domain = CStr::from_ptr(domain).to_string_lossy();
+        let lang = CStr::from_ptr(lang).to_string_lossy();
+        match loader.load_catalog(&domain, &lang) {
+            Some(bytes) => {
+                // `bytes` alive across the call; C++ consumes them inside `emit`
+                // (see the wxd_TranslationsCatalogSink contract).
+                emit(sink, bytes.as_ptr(), bytes.len());
+                true
+            }
+            None => false,
+        }
+    }
+}
+
+unsafe extern "C" fn loader_available(user_data: *mut c_void, domain: *const c_char, out: *mut ffi::wxd_ArrayString_t) {
+    if user_data.is_null() || domain.is_null() || out.is_null() {
+        return;
+    }
+    unsafe {
+        let loader = &**(user_data as *mut Box<dyn TranslationsLoader>);
+        let domain = CStr::from_ptr(domain).to_string_lossy();
+        // Borrow (non-owning) the C++-owned array and reuse the shared wrapper's
+        // CString + Add loop instead of hand-rolling it.
+        ArrayString::from(out as *const ffi::wxd_ArrayString_t).add_many(&loader.available_translations(&domain));
+    }
+}
+
+unsafe extern "C" fn loader_destroy(user_data: *mut c_void) {
+    if user_data.is_null() {
+        return;
+    }
+    drop(unsafe { Box::from_raw(user_data as *mut Box<dyn TranslationsLoader>) });
+}
+
+static LOADER_VTABLE: ffi::wxd_RustTranslationsLoader_vtable = ffi::wxd_RustTranslationsLoader_vtable {
+    load_catalog: Some(loader_load_catalog),
+    available: Some(loader_available),
+    destroy: Some(loader_destroy),
+};
 
 /// Add a catalog lookup path prefix.
 ///
@@ -648,5 +754,109 @@ impl Drop for UILocale {
         if !self.ptr.is_null() {
             unsafe { ffi::wxd_UILocale_Destroy(self.ptr) };
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Build a minimal little-endian gettext `.mo` catalog from `entries`
+    /// (which must be sorted by original string). Enough for wxWidgets to parse
+    /// and look up messages.
+    fn make_mo(entries: &[(&str, &str)]) -> Vec<u8> {
+        let n = entries.len();
+        let header_size = 28usize; // 7 * u32
+        let orig_table = header_size;
+        let trans_table = orig_table + n * 8;
+        let data_start = trans_table + n * 8;
+
+        let mut strings: Vec<u8> = Vec::new();
+        let mut orig_tab: Vec<(usize, usize)> = Vec::new();
+        for (o, _) in entries {
+            let off = data_start + strings.len();
+            orig_tab.push((o.len(), off));
+            strings.extend_from_slice(o.as_bytes());
+            strings.push(0);
+        }
+        let mut trans_tab: Vec<(usize, usize)> = Vec::new();
+        for (_, t) in entries {
+            let off = data_start + strings.len();
+            trans_tab.push((t.len(), off));
+            strings.extend_from_slice(t.as_bytes());
+            strings.push(0);
+        }
+
+        let mut out: Vec<u8> = Vec::new();
+        let mut w = |v: usize| out.extend_from_slice(&(v as u32).to_le_bytes());
+        w(0x950412de); // magic
+        w(0); // revision
+        w(n); // number of strings
+        w(orig_table);
+        w(trans_table);
+        w(0); // hash table size
+        w(0); // hash table offset
+        for (len, off) in orig_tab.iter().chain(trans_tab.iter()) {
+            out.extend_from_slice(&(*len as u32).to_le_bytes());
+            out.extend_from_slice(&(*off as u32).to_le_bytes());
+        }
+        out.extend_from_slice(&strings);
+        out
+    }
+
+    struct FixtureLoader {
+        mo: Vec<u8>,
+    }
+
+    impl TranslationsLoader for FixtureLoader {
+        fn load_catalog(&self, domain: &str, lang: &str) -> Option<Cow<'_, [u8]>> {
+            if domain == "wxdtest" && lang == "fr" {
+                // Return freshly-owned bytes (not a borrow of `self.mo`) so the
+                // test also proves the owned/compute-on-demand path: the Vec is
+                // dropped right after this returns, so it must be consumed
+                // inside the emit call, not after.
+                Some(Cow::Owned(self.mo.clone()))
+            } else {
+                None
+            }
+        }
+
+        fn available_translations(&self, domain: &str) -> Vec<String> {
+            if domain == "wxdtest" {
+                vec!["fr".to_string()]
+            } else {
+                Vec::new()
+            }
+        }
+    }
+
+    #[test]
+    fn rust_loader_serves_embedded_catalog() {
+        // Include the gettext metadata header ("") so the charset is declared;
+        // originals must stay sorted ("" sorts before "Hello").
+        let mo = make_mo(&[("", "Content-Type: text/plain; charset=UTF-8\n"), ("Hello", "Bonjour")]);
+
+        let translations = Translations::new();
+        translations.set_loader(FixtureLoader { mo });
+        translations.set_language_str("fr");
+
+        // The loader's available_translations must flow through so AddCatalog
+        // can select "fr".
+        let avail = translations.get_available_translations("wxdtest");
+        assert!(avail.contains(&"fr".to_string()), "available translations: {avail:?}");
+
+        // Loading the catalog goes through load_catalog -> CreateFromData.
+        assert!(
+            translations.add_catalog("wxdtest"),
+            "add_catalog should load the catalog supplied by the Rust loader"
+        );
+        assert_eq!(
+            translations.get_string("Hello", "wxdtest").as_deref(),
+            Some("Bonjour"),
+            "string should be translated via the embedded catalog"
+        );
+
+        // A domain the loader doesn't serve resolves to nothing.
+        assert!(translations.get_available_translations("other").is_empty());
     }
 }
