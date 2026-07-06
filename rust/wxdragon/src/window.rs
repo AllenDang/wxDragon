@@ -1,4 +1,5 @@
-use crate::accessible::Accessible;
+#[cfg(target_os = "windows")]
+use crate::accessible::{AccRole, AccState, Accessible};
 use crate::event::{EventType, WxEvtHandler};
 use crate::font::Font;
 use crate::geometry::{Point, Size};
@@ -135,7 +136,23 @@ unsafe extern "C" {
     #[cfg(target_os = "macos")]
     unsafe fn wxd_Window_SetAccessibilityLabel(window: *mut ffi::wxd_Window_t, label: *const std::os::raw::c_char);
     #[cfg(target_os = "macos")]
+    unsafe fn wxd_Window_SetAccessibilityHelp(window: *mut ffi::wxd_Window_t, help: *const std::os::raw::c_char);
+    #[cfg(target_os = "macos")]
+    unsafe fn wxd_Window_SetAccessibilityValue(window: *mut ffi::wxd_Window_t, value: *const std::os::raw::c_char);
+    #[cfg(target_os = "macos")]
     pub(crate) unsafe fn wxd_App_ActivateMac();
+}
+
+/// Marshals `s` to a C string and passes it to a `(window, *const c_char)` FFI setter.
+/// Shared by the platform arms of the `set_accessibility_*` string setters.
+#[cfg(any(target_os = "macos", target_os = "windows"))]
+fn set_accessibility_string(
+    handle: *mut ffi::wxd_Window_t,
+    s: &str,
+    setter: unsafe extern "C" fn(*mut ffi::wxd_Window_t, *const std::os::raw::c_char),
+) {
+    let c_string = std::ffi::CString::new(s).unwrap_or_default();
+    unsafe { setter(handle, c_string.as_ptr()) };
 }
 
 // Use the widget_style_enum macro to define ExtraWindowStyle
@@ -1605,23 +1622,100 @@ pub trait WxWidget: std::any::Any {
         }
     }
 
-    /// Sets the VoiceOver accessibility label for the window (macOS only).
+    /// Sets the accessible name (label) for the window.
     ///
-    /// VoiceOver announces this label before the control's value and role.
-    /// For example, setting "Language" on a popup button showing "English" causes
-    /// VoiceOver to read "Language, English, pop up button" as a single cursor stop,
-    /// rather than navigating a separate label and control.
+    /// This is the primary string a screen reader announces for the control.
     ///
-    /// Use this together with [`hide_from_accessibility`] on the adjacent `StaticText`
-    /// label to avoid redundant announcements.
-    #[cfg(target_os = "macos")]
+    /// - **Windows:** stored on a built-in accessible object (active where
+    ///   `wxUSE_ACCESSIBILITY` is compiled in).
+    /// - **macOS:** applied via the native VoiceOver label. VoiceOver announces this
+    ///   before the control's value and role, e.g. "Language, English, pop up button".
+    ///   Use together with `hide_from_accessibility` on the adjacent `StaticText`
+    ///   label to avoid redundant announcements.
+    /// - **GTK/other:** currently a no-op.
     fn set_accessibility_label(&self, label: &str) {
         let handle = self.handle_ptr();
         if handle.is_null() {
             return;
         }
-        let c_label = std::ffi::CString::new(label).unwrap_or_default();
-        unsafe { wxd_Window_SetAccessibilityLabel(handle, c_label.as_ptr()) }
+        #[cfg(target_os = "macos")]
+        set_accessibility_string(handle, label, wxd_Window_SetAccessibilityLabel);
+        #[cfg(target_os = "windows")]
+        set_accessibility_string(handle, label, ffi::wxd_Window_SetAccessibleName);
+        #[cfg(not(any(target_os = "macos", target_os = "windows")))]
+        let _ = label;
+    }
+
+    /// Sets the accessible description for the window.
+    ///
+    /// - **Windows:** stored on a built-in accessible object (active where
+    ///   `wxUSE_ACCESSIBILITY` is compiled in).
+    /// - **macOS:** applied via the native accessibility help.
+    /// - **GTK/other:** currently a no-op.
+    fn set_accessibility_description(&self, description: &str) {
+        let handle = self.handle_ptr();
+        if handle.is_null() {
+            return;
+        }
+        #[cfg(target_os = "macos")]
+        set_accessibility_string(handle, description, wxd_Window_SetAccessibilityHelp);
+        #[cfg(target_os = "windows")]
+        set_accessibility_string(handle, description, ffi::wxd_Window_SetAccessibleDescription);
+        #[cfg(not(any(target_os = "macos", target_os = "windows")))]
+        let _ = description;
+    }
+
+    /// Sets the accessible value for the window.
+    ///
+    /// - **Windows:** stored on a built-in accessible object (active where
+    ///   `wxUSE_ACCESSIBILITY` is compiled in).
+    /// - **macOS:** applied via the native accessibility value.
+    /// - **GTK/other:** currently a no-op.
+    fn set_accessibility_value(&self, value: &str) {
+        let handle = self.handle_ptr();
+        if handle.is_null() {
+            return;
+        }
+        #[cfg(target_os = "macos")]
+        set_accessibility_string(handle, value, wxd_Window_SetAccessibilityValue);
+        #[cfg(target_os = "windows")]
+        set_accessibility_string(handle, value, ffi::wxd_Window_SetAccessibleValue);
+        #[cfg(not(any(target_os = "macos", target_os = "windows")))]
+        let _ = value;
+    }
+
+    /// Sets the accessible role for the window.
+    ///
+    /// The role uses the MSAA role set ([`AccRole`], e.g. `AccRole::Text`). This is
+    /// **Windows-only** (stored on a built-in accessible object where `wxUSE_ACCESSIBILITY`
+    /// is compiled in); the method is unavailable on macOS and GTK, whose native
+    /// accessibility roles do not map to this enum.
+    #[cfg(target_os = "windows")]
+    fn set_accessibility_role(&self, role: AccRole) {
+        let handle = self.handle_ptr();
+        if handle.is_null() {
+            return;
+        }
+        unsafe {
+            ffi::wxd_Window_SetAccessibleRole(handle, role.to_ffi());
+        }
+    }
+
+    /// Sets the accessible state for the window.
+    ///
+    /// The state is a bitmask of MSAA state flags ([`AccState`]), e.g.
+    /// `AccState::FOCUSED | AccState::SELECTED`. This is **Windows-only** (stored on a
+    /// built-in accessible object where `wxUSE_ACCESSIBILITY` is compiled in); the method
+    /// is unavailable on macOS and GTK, which have no equivalent state bitmask.
+    #[cfg(target_os = "windows")]
+    fn set_accessibility_state(&self, state: AccState) {
+        let handle = self.handle_ptr();
+        if handle.is_null() {
+            return;
+        }
+        unsafe {
+            ffi::wxd_Window_SetAccessibleState(handle, state.bits() as std::os::raw::c_long);
+        }
     }
 
     // --- Tab Order Functions ---
@@ -1800,6 +1894,10 @@ pub trait WxWidget: std::any::Any {
     /// Sets the accessible object for this window.
     ///
     /// The window takes ownership of the accessible object.
+    ///
+    /// **Windows-only**: backed by `wxAccessible`/MSAA, which wxWidgets only supports
+    /// under `__WXMSW__`. Unavailable on macOS and GTK.
+    #[cfg(target_os = "windows")]
     fn set_accessible(&self, accessible: Accessible) {
         let handle = self.handle_ptr();
         if !handle.is_null() {
@@ -1816,6 +1914,9 @@ pub trait WxWidget: std::any::Any {
     ///
     /// Note: The returned `Accessible` object is owned by the window.
     /// It should not be dropped by the caller.
+    ///
+    /// **Windows-only**: see [`WxWidget::set_accessible`].
+    #[cfg(target_os = "windows")]
     fn get_accessible(&self) -> Option<Accessible> {
         let handle = self.handle_ptr();
         if handle.is_null() {

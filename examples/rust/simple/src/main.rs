@@ -1,3 +1,5 @@
+#[cfg(target_os = "windows")]
+use wxdragon::accessible::AccRole;
 use wxdragon::prelude::*;
 
 fn main() {
@@ -18,6 +20,13 @@ fn main() {
         let long_text = "x".repeat(1500);
         text_ctrl.set_value(&long_text);
         debug_assert_eq!(text_ctrl.get_value(), long_text);
+
+        // Accessibility props: screen readers announce these. Label and description work
+        // cross-platform; role uses the MSAA role set and is Windows-only.
+        text_ctrl.set_accessibility_label("Example text input");
+        text_ctrl.set_accessibility_description("Type any example text here.");
+        #[cfg(target_os = "windows")]
+        text_ctrl.set_accessibility_role(AccRole::Text);
 
         let button = Button::builder(&frame).with_label("Click me").build();
 

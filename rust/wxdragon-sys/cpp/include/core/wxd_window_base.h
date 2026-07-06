@@ -247,6 +247,14 @@ wxd_Window_MSWDisableComposited(wxd_Window_t* window);
 WXD_EXPORTED void
 wxd_Window_SetAccessibilityLabel(wxd_Window_t* window, const char* label);
 
+/// Sets the VoiceOver accessibility help (supplementary description) for the window (macOS only).
+WXD_EXPORTED void
+wxd_Window_SetAccessibilityHelp(wxd_Window_t* window, const char* help);
+
+/// Sets the VoiceOver accessibility value for the window (macOS only).
+WXD_EXPORTED void
+wxd_Window_SetAccessibilityValue(wxd_Window_t* window, const char* value);
+
 /// Activates the application, bringing it in front of all other apps (macOS only).
 /// Equivalent to [NSRunningApplication activateWithOptions:NSApplicationActivateIgnoringOtherApps].
 WXD_EXPORTED void

@@ -1,4 +1,5 @@
 // --- Core Types & Traits ---
+#[cfg(target_os = "windows")]
 pub use crate::accessible::Accessible;
 pub use crate::app::{App, call_after, get_app, get_app_instance, main, set_appearance, set_top_window, wake_up_idle};
 pub use crate::appearance::{
