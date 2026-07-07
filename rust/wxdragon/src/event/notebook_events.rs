@@ -7,6 +7,8 @@ use crate::event::{Event, EventType, WxEvtHandler};
 pub enum NotebookEvent {
     /// A notebook page has been changed.
     PageChanged,
+    /// A notebook page is about to change. This event can be vetoed.
+    PageChanging,
 }
 
 /// Event data for notebook events.
@@ -39,5 +41,6 @@ pub trait NotebookEvents: WxEvtHandler {}
 // Use the macro to implement the trait
 crate::implement_category_event_handlers!(
     NotebookEvents, NotebookEvent, NotebookEventData,
-    PageChanged => page_changed, EventType::NOTEBOOK_PAGE_CHANGED
-); 
+    PageChanged => page_changed, EventType::NOTEBOOK_PAGE_CHANGED,
+    PageChanging => page_changing, EventType::NOTEBOOK_PAGE_CHANGING
+);

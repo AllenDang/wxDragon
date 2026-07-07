@@ -1082,6 +1082,8 @@ get_wx_event_type_for_c_enum(WXDEventTypeCEnum c_enum_val)
     // Notebook events
     case WXD_EVENT_TYPE_NOTEBOOK_PAGE_CHANGED:
         return wxEVT_NOTEBOOK_PAGE_CHANGED;
+    case WXD_EVENT_TYPE_NOTEBOOK_PAGE_CHANGING:
+        return wxEVT_NOTEBOOK_PAGE_CHANGING;
 
     // Splitter events
     case WXD_EVENT_TYPE_SPLITTER_SASH_POS_CHANGED:
