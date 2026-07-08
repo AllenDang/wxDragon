@@ -908,6 +908,8 @@ fn build_wxdragon_wrapper(
         }
         println!("cargo:rustc-link-lib=X11");
         println!("cargo:rustc-link-lib=Xtst"); // XTest extension for wxUIActionSimulator
+        println!("cargo:rustc-link-lib=SM"); // X11 Session Management (wxWidgets 3.3.3 apptraits GetSM)
+        println!("cargo:rustc-link-lib=ICE"); // libSM dependency
         println!("cargo:rustc-link-lib=png");
         println!("cargo:rustc-link-lib=jpeg");
         println!("cargo:rustc-link-lib=expat");
