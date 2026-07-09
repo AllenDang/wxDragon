@@ -84,7 +84,10 @@ jobs:
       - name: Install target ${{ matrix.target }}
         run: rustup target add ${{ matrix.target }}
 
-      - name: Build for ${{ matrix.target }}
+      - name: Debug build for ${{ matrix.target }}
+        run: cargo build --features "aui,xrc,richtext,stc,webview" --target ${{ matrix.target }}
+
+      - name: Release build for ${{ matrix.target }}
         run: cargo build --features "aui,xrc,richtext,stc,webview" --target ${{ matrix.target }} --release
 
   build-msys-mingw64:

@@ -281,6 +281,9 @@ fn build_wxdragon_wrapper(
     let profile = std::env::var("PROFILE").unwrap_or_else(|_| "debug".to_string());
 
     let mut is_debug = profile == "debug";
+    // Cargo PROFILE can be "debug" while MSVC CMake builds intentionally use
+    // RelWithDebInfo to avoid debug CRT and wx library suffix mismatches.
+    let mut cmake_profile = profile.clone();
 
     let mut toolchain_file: Option<String> = None;
 
@@ -371,8 +374,10 @@ fn build_wxdragon_wrapper(
             };
 
             let build_type = if is_debug { "Debug" } else { "RelWithDebInfo" };
+            cmake_profile = build_type.to_string();
             cmake_config
                 .generator("Ninja")
+                .profile(build_type)
                 .define("CMAKE_BUILD_TYPE", build_type)
                 .define("CMAKE_MSVC_RUNTIME_LIBRARY", rt_lib)
                 .define("CMAKE_POLICY_DEFAULT_CMP0091", "NEW")
@@ -391,7 +396,6 @@ fn build_wxdragon_wrapper(
             cmake_config
                 .generator(&generator)
                 .define("CMAKE_GENERATOR_PLATFORM", "Win32")
-                .define("--config", &profile)
                 .cxxflag("/EHsc");
         } else if target == "aarch64-pc-windows-msvc" {
             let generator = detect_visual_studio_generator().unwrap_or_else(|| {
@@ -401,7 +405,6 @@ fn build_wxdragon_wrapper(
             cmake_config
                 .generator(&generator)
                 .define("CMAKE_GENERATOR_PLATFORM", "ARM64")
-                .define("--config", &profile)
                 .cxxflag("/EHsc");
         }
     }
@@ -548,8 +551,8 @@ fn build_wxdragon_wrapper(
             println!("cargo:rustc-link-search=native={wx_lib_widgets}");
 
             if target == "i686-pc-windows-msvc" || target == "aarch64-pc-windows-msvc" {
-                // build/lib/Debug or build/lib/Release
-                let sub_dir = format!("build/lib/{profile}");
+                // Visual Studio generators place wrapper archives under the active CMake config.
+                let sub_dir = format!("build/lib/{cmake_profile}");
                 let wx_lib3 = wxdragon_sys_build_dir.join(sub_dir).display().to_string();
                 println!("cargo:rustc-link-search=native={wx_lib3}");
             }
