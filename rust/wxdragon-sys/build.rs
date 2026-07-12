@@ -917,6 +917,7 @@ fn build_wxdragon_wrapper(
         println!("cargo:rustc-link-lib=jpeg");
         println!("cargo:rustc-link-lib=expat");
         println!("cargo:rustc-link-lib=tiff");
+        println!("cargo:rustc-link-lib=notify");
         if lib_dirs.iter().any(|dir| dir.join("libwx_gtk3u_propgrid-3.3.a").exists()) {
             println!("cargo:rustc-link-lib=static=wx_gtk3u_propgrid-3.3");
         } else {
