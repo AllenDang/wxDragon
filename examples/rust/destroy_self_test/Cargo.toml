@@ -1,0 +1,8 @@
+[package]
+name = "destroy_self_test"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+wxdragon = { path = "../../../rust/wxdragon" }

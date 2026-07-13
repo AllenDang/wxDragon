@@ -70,19 +70,26 @@ wxd_Window_GetId(wxd_Window_t* window)
     return wx_window->GetId();
 }
 
-// Placeholder for wxd_Window_Destroy if needed later
 WXD_EXPORTED void
 wxd_Window_Destroy(wxd_Window_t* window)
 {
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
-    if (wx_window) {
-        // For non-top-level windows, Destroy() schedules deletion.
-        // For top-level windows (wxFrame, wxDialog), it tries to close them first.
-        // If the window is a child of another, its parent will typically manage its actual deletion
-        // from memory after it's Destroy()'d (removed from window hierarchy and pending deletion).
-        // If it's a dynamically allocated top-level window not managed by wxApp, direct deletion
-        // might be considered but Destroy() is safer for proper cleanup.
+    if (!wx_window) {
+        return;
+    }
+
+    if (wx_window->IsTopLevel()) {
+        // Top-level windows (wxFrame, wxDialog) already defer deletion: Destroy()
+        // appends them to wxPendingDelete and the actual delete happens at idle time.
         wx_window->Destroy();
+    }
+    else {
+        // wxWindowBase::Destroy() deletes child windows *immediately*. Calling it from
+        // the widget's own event handler frees the window (and its WxdEventHandler client
+        // data) while it is still on the dispatch call stack -> use-after-free crash.
+        // Defer the Destroy() to idle time so it runs after dispatch unwinds, matching
+        // top-level window behavior and making destroy() safe to call from any handler.
+        wx_window->GetEventHandler()->CallAfter([wx_window] { wx_window->Destroy(); });
     }
 }
 
