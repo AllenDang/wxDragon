@@ -416,6 +416,9 @@ fn build_wxdragon_wrapper(
 
     let dst = cmake_config.build();
     let build_dir = dst.join("build");
+    let cmake_cache = std::fs::read_to_string(build_dir.join("CMakeCache.txt")).unwrap_or_default();
+    let use_libnotify = cmake_cache.contains("wxUSE_LIBNOTIFY:BOOL=ON");
+
     let default_lib_dir = build_dir.join("lib");
 
     println!("info: CMake build completed. dst={dst:?}");
@@ -688,20 +691,18 @@ fn build_wxdragon_wrapper(
         // If cmake found iconv in a non-standard location (e.g. MacPorts /opt/local,
         // Homebrew /opt/homebrew), add that directory to the linker search path so
         // -liconv resolves to the same library cmake compiled against.
-        let cmake_cache_path = wxdragon_sys_build_dir.join("build/CMakeCache.txt");
-        if let Ok(cache) = std::fs::read_to_string(&cmake_cache_path) {
-            for line in cache.lines() {
-                if let Some(iconv_lib) = line.strip_prefix("ICONV_LIBRARIES:FILEPATH=") {
-                    let iconv_path = std::path::Path::new(iconv_lib.trim());
-                    if let Some(dir) = iconv_path.parent()
-                        && dir.exists()
-                    {
-                        println!("cargo:rustc-link-search=native={}", dir.display());
-                    }
-                    break;
+        for line in cmake_cache.lines() {
+            if let Some(iconv_lib) = line.strip_prefix("ICONV_LIBRARIES:FILEPATH=") {
+                let iconv_path = std::path::Path::new(iconv_lib.trim());
+                if let Some(dir) = iconv_path.parent()
+                    && dir.exists()
+                {
+                    println!("cargo:rustc-link-search=native={}", dir.display());
                 }
+                break;
             }
         }
+
         println!("cargo:rustc-link-lib=iconv");
         println!("cargo:rustc-link-lib=c++");
 
@@ -917,6 +918,9 @@ fn build_wxdragon_wrapper(
         println!("cargo:rustc-link-lib=jpeg");
         println!("cargo:rustc-link-lib=expat");
         println!("cargo:rustc-link-lib=tiff");
+        if use_libnotify {
+            println!("cargo:rustc-link-lib=notify");
+        }
         if lib_dirs.iter().any(|dir| dir.join("libwx_gtk3u_propgrid-3.3.a").exists()) {
             println!("cargo:rustc-link-lib=static=wx_gtk3u_propgrid-3.3");
         } else {
