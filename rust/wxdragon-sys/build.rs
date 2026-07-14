@@ -417,7 +417,6 @@ fn build_wxdragon_wrapper(
     let dst = cmake_config.build();
     let build_dir = dst.join("build");
     let cmake_cache = std::fs::read_to_string(build_dir.join("CMakeCache.txt")).unwrap_or_default();
-    let use_libnotify = cmake_cache.contains("wxUSE_LIBNOTIFY:BOOL=ON");
 
     let default_lib_dir = build_dir.join("lib");
 
@@ -918,9 +917,14 @@ fn build_wxdragon_wrapper(
         println!("cargo:rustc-link-lib=jpeg");
         println!("cargo:rustc-link-lib=expat");
         println!("cargo:rustc-link-lib=tiff");
-        if use_libnotify {
+
+        if cmake_cache.contains("wxUSE_LIBNOTIFY:BOOL=ON") {
             println!("cargo:rustc-link-lib=notify");
         }
+        if cmake_cache.contains("wxUSE_LIBSDL:BOOL=ON") {
+            println!("cargo:rustc-link-lib=SDL2");
+        }
+
         if lib_dirs.iter().any(|dir| dir.join("libwx_gtk3u_propgrid-3.3.a").exists()) {
             println!("cargo:rustc-link-lib=static=wx_gtk3u_propgrid-3.3");
         } else {
