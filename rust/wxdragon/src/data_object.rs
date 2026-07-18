@@ -109,7 +109,7 @@ impl TextDataObject {
         if len <= 0 {
             return String::new();
         }
-        let mut buf: Vec<i8> = vec![0; len as usize + 1];
+        let mut buf: Vec<core::ffi::c_char> = vec![0; len as usize + 1];
         unsafe { ffi::wxd_TextDataObject_GetText(ptr, buf.as_mut_ptr(), buf.len()) };
         unsafe { CStr::from_ptr(buf.as_ptr()).to_string_lossy().to_string() }
     }

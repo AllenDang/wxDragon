@@ -239,7 +239,7 @@ impl Treebook {
             let mut buffer: Vec<u8> = Vec::with_capacity(buffer_size);
 
             // Second call to actually get the string
-            let copied_len_with_null = ffi::wxd_Treebook_GetPageText(ptr, n, buffer.as_mut_ptr() as *mut i8, buffer_size as i32);
+            let copied_len_with_null = ffi::wxd_Treebook_GetPageText(ptr, n, buffer.as_mut_ptr() as *mut core::ffi::c_char, buffer_size as i32);
 
             if copied_len_with_null <= 0 {
                 // Check for error on second call

@@ -197,7 +197,7 @@ impl EditableListBox {
 
         let c_strings: Vec<CString> = strings.iter().map(|s| CString::new(*s).unwrap_or_default()).collect();
 
-        let mut c_ptrs: Vec<*const i8> = c_strings.iter().map(|s| s.as_ptr()).collect();
+        let mut c_ptrs: Vec<*const core::ffi::c_char> = c_strings.iter().map(|s| s.as_ptr()).collect();
 
         unsafe { ffi::wxd_EditableListBox_SetStrings(ptr, c_ptrs.as_mut_ptr(), c_strings.len() as i32) }
     }

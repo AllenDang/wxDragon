@@ -360,8 +360,8 @@ impl Grid {
                 return String::new();
             }
             let mut buffer = vec![0u8; len as usize + 1];
-            ffi::wxd_Grid_GetCellValue(ptr, row, col, buffer.as_mut_ptr() as *mut i8, buffer.len() as i32);
-            CStr::from_ptr(buffer.as_ptr() as *const i8).to_string_lossy().into_owned()
+            ffi::wxd_Grid_GetCellValue(ptr, row, col, buffer.as_mut_ptr() as *mut core::ffi::c_char, buffer.len() as i32);
+            CStr::from_ptr(buffer.as_ptr() as *const core::ffi::c_char).to_string_lossy().into_owned()
         }
     }
 
@@ -389,8 +389,8 @@ impl Grid {
                 return String::new();
             }
             let mut buffer = vec![0u8; len as usize + 1];
-            ffi::wxd_Grid_GetRowLabelValue(ptr, row, buffer.as_mut_ptr() as *mut i8, buffer.len() as i32);
-            CStr::from_ptr(buffer.as_ptr() as *const i8).to_string_lossy().into_owned()
+            ffi::wxd_Grid_GetRowLabelValue(ptr, row, buffer.as_mut_ptr() as *mut core::ffi::c_char, buffer.len() as i32);
+            CStr::from_ptr(buffer.as_ptr() as *const core::ffi::c_char).to_string_lossy().into_owned()
         }
     }
 
@@ -416,8 +416,8 @@ impl Grid {
                 return String::new();
             }
             let mut buffer = vec![0u8; len as usize + 1];
-            ffi::wxd_Grid_GetColLabelValue(ptr, col, buffer.as_mut_ptr() as *mut i8, buffer.len() as i32);
-            CStr::from_ptr(buffer.as_ptr() as *const i8).to_string_lossy().into_owned()
+            ffi::wxd_Grid_GetColLabelValue(ptr, col, buffer.as_mut_ptr() as *mut core::ffi::c_char, buffer.len() as i32);
+            CStr::from_ptr(buffer.as_ptr() as *const core::ffi::c_char).to_string_lossy().into_owned()
         }
     }
 
@@ -1557,8 +1557,8 @@ impl Grid {
             return String::new();
         }
         let mut buf = vec![0u8; (needed + 1) as usize];
-        unsafe { ffi::wxd_Grid_GetCornerLabelValue(ptr, buf.as_mut_ptr() as *mut i8, buf.len() as i32) };
-        let c_str = unsafe { CStr::from_ptr(buf.as_ptr() as *const i8) };
+        unsafe { ffi::wxd_Grid_GetCornerLabelValue(ptr, buf.as_mut_ptr() as *mut core::ffi::c_char, buf.len() as i32) };
+        let c_str = unsafe { CStr::from_ptr(buf.as_ptr() as *const core::ffi::c_char) };
         c_str.to_string_lossy().into_owned()
     }
 
