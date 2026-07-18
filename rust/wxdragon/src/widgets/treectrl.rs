@@ -622,7 +622,9 @@ impl TreeCtrl {
         let mut buffer: Vec<u8> = vec![0; buffer_size];
 
         // Second call to get the actual text
-        let result = unsafe { ffi::wxd_TreeCtrl_GetItemText(ptr, item.as_ptr(), buffer.as_mut_ptr() as *mut core::ffi::c_char, buffer_size) };
+        let result = unsafe {
+            ffi::wxd_TreeCtrl_GetItemText(ptr, item.as_ptr(), buffer.as_mut_ptr() as *mut core::ffi::c_char, buffer_size)
+        };
 
         if result < 0 {
             return None;

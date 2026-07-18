@@ -66,10 +66,6 @@ jobs:
           cargo clean
           cargo build --package gallery
 
-      - name: Abort on error
-        if: ${{ failure() }}
-        run: echo "Some of jobs failed" && false
-
   windows-cross-build:
     strategy:
       fail-fast: false

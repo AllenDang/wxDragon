@@ -235,7 +235,11 @@ unsafe extern "C" fn on_poke_trampoline(
 }
 
 #[allow(unsafe_op_in_unsafe_fn)]
-unsafe extern "C" fn on_start_advise_trampoline(user_data: *mut c_void, topic: *const core::ffi::c_char, item: *const core::ffi::c_char) -> bool {
+unsafe extern "C" fn on_start_advise_trampoline(
+    user_data: *mut c_void,
+    topic: *const core::ffi::c_char,
+    item: *const core::ffi::c_char,
+) -> bool {
     if user_data.is_null() {
         return false;
     }
@@ -257,7 +261,11 @@ unsafe extern "C" fn on_start_advise_trampoline(user_data: *mut c_void, topic: *
 }
 
 #[allow(unsafe_op_in_unsafe_fn)]
-unsafe extern "C" fn on_stop_advise_trampoline(user_data: *mut c_void, topic: *const core::ffi::c_char, item: *const core::ffi::c_char) -> bool {
+unsafe extern "C" fn on_stop_advise_trampoline(
+    user_data: *mut c_void,
+    topic: *const core::ffi::c_char,
+    item: *const core::ffi::c_char,
+) -> bool {
     if user_data.is_null() {
         return false;
     }
@@ -617,7 +625,10 @@ struct ServerCallbacks {
 }
 
 #[allow(unsafe_op_in_unsafe_fn)]
-unsafe extern "C" fn on_accept_connection_trampoline(user_data: *mut c_void, topic: *const core::ffi::c_char) -> *mut ffi::wxd_IPCConnection_t {
+unsafe extern "C" fn on_accept_connection_trampoline(
+    user_data: *mut c_void,
+    topic: *const core::ffi::c_char,
+) -> *mut ffi::wxd_IPCConnection_t {
     if user_data.is_null() {
         return ptr::null_mut();
     }
