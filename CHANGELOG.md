@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### New Features
+
+- **PropertyGrid**: Wrapped wxPropertyGrid widget with standard property types and full event support wired into the Rust event system
+
 ## 0.9.17
 
 ### New Features
