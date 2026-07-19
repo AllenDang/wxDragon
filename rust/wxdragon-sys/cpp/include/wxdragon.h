@@ -76,6 +76,7 @@ extern "C" {
 #include "widgets/wxd_listctrl.h"
 #include "widgets/wxd_treelistctrl.h"
 #include "widgets/wxd_grid.h"
+#include "widgets/wxd_propertygrid.h"
 #include "widgets/wxd_dataview.h"
 
 // Include ImageList FFI

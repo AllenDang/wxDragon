@@ -40,6 +40,7 @@
 #endif
 #include <wx/dataview.h> // ADDED: For DataView events
 #include <wx/grid.h>
+#include <wx/propgrid/propgrid.h>
 #if wxdUSE_STC
 #include <wx/stc/stc.h> // ADDED: For StyledTextCtrl events
 #endif
@@ -1545,6 +1546,36 @@ get_wx_event_type_for_c_enum(WXDEventTypeCEnum c_enum_val)
         return wxEVT_GRID_RANGE_SELECTED;
     case WXD_EVENT_TYPE_GRID_TABBING:
         return wxEVT_GRID_TABBING;
+
+    // PropertyGrid event types
+    case WXD_EVENT_TYPE_PG_SELECTED:
+        return wxEVT_PG_SELECTED;
+    case WXD_EVENT_TYPE_PG_CHANGING:
+        return wxEVT_PG_CHANGING;
+    case WXD_EVENT_TYPE_PG_CHANGED:
+        return wxEVT_PG_CHANGED;
+    case WXD_EVENT_TYPE_PG_HIGHLIGHTED:
+        return wxEVT_PG_HIGHLIGHTED;
+    case WXD_EVENT_TYPE_PG_RIGHT_CLICK:
+        return wxEVT_PG_RIGHT_CLICK;
+    case WXD_EVENT_TYPE_PG_PAGE_CHANGED:
+        return wxEVT_PG_PAGE_CHANGED;
+    case WXD_EVENT_TYPE_PG_ITEM_COLLAPSED:
+        return wxEVT_PG_ITEM_COLLAPSED;
+    case WXD_EVENT_TYPE_PG_ITEM_EXPANDED:
+        return wxEVT_PG_ITEM_EXPANDED;
+    case WXD_EVENT_TYPE_PG_DOUBLE_CLICK:
+        return wxEVT_PG_DOUBLE_CLICK;
+    case WXD_EVENT_TYPE_PG_LABEL_EDIT_BEGIN:
+        return wxEVT_PG_LABEL_EDIT_BEGIN;
+    case WXD_EVENT_TYPE_PG_LABEL_EDIT_ENDING:
+        return wxEVT_PG_LABEL_EDIT_ENDING;
+    case WXD_EVENT_TYPE_PG_COL_BEGIN_DRAG:
+        return wxEVT_PG_COL_BEGIN_DRAG;
+    case WXD_EVENT_TYPE_PG_COL_DRAGGING:
+        return wxEVT_PG_COL_DRAGGING;
+    case WXD_EVENT_TYPE_PG_COL_END_DRAG:
+        return wxEVT_PG_COL_END_DRAG;
 
     default:
         return wxEVT_NULL;

@@ -53,6 +53,9 @@ WXD_EXPORTED void
 wxd_Variant_SetInt64(wxd_Variant_t* variant, int64_t value);
 
 WXD_EXPORTED void
+wxd_Variant_SetUInt64(wxd_Variant_t* variant, uint64_t value);
+
+WXD_EXPORTED void
 wxd_Variant_SetDouble(wxd_Variant_t* variant, double value);
 
 /**
@@ -77,6 +80,9 @@ wxd_Variant_GetInt32(const wxd_Variant_t* variant, int32_t* out_value);
 
 WXD_EXPORTED bool
 wxd_Variant_GetInt64(const wxd_Variant_t* variant, int64_t* out_value);
+
+WXD_EXPORTED bool
+wxd_Variant_GetUInt64(const wxd_Variant_t* variant, uint64_t* out_value);
 
 WXD_EXPORTED bool
 wxd_Variant_GetDouble(const wxd_Variant_t* variant, double* out_value);

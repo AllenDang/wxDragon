@@ -347,6 +347,22 @@ typedef enum {
     WXD_EVENT_TYPE_GRID_TABBING = 387,              // wxEVT_GRID_TABBING
     WXD_EVENT_TYPE_NOTEBOOK_PAGE_CHANGING = 389,    // wxEVT_NOTEBOOK_PAGE_CHANGING
 
+    // PropertyGrid event types
+    WXD_EVENT_TYPE_PG_SELECTED = 390,          // wxEVT_PG_SELECTED
+    WXD_EVENT_TYPE_PG_CHANGING = 391,          // wxEVT_PG_CHANGING
+    WXD_EVENT_TYPE_PG_CHANGED = 392,           // wxEVT_PG_CHANGED
+    WXD_EVENT_TYPE_PG_HIGHLIGHTED = 393,       // wxEVT_PG_HIGHLIGHTED
+    WXD_EVENT_TYPE_PG_RIGHT_CLICK = 394,       // wxEVT_PG_RIGHT_CLICK
+    WXD_EVENT_TYPE_PG_PAGE_CHANGED = 395,      // wxEVT_PG_PAGE_CHANGED
+    WXD_EVENT_TYPE_PG_ITEM_COLLAPSED = 396,    // wxEVT_PG_ITEM_COLLAPSED
+    WXD_EVENT_TYPE_PG_ITEM_EXPANDED = 397,     // wxEVT_PG_ITEM_EXPANDED
+    WXD_EVENT_TYPE_PG_DOUBLE_CLICK = 398,      // wxEVT_PG_DOUBLE_CLICK
+    WXD_EVENT_TYPE_PG_LABEL_EDIT_BEGIN = 399,  // wxEVT_PG_LABEL_EDIT_BEGIN
+    WXD_EVENT_TYPE_PG_LABEL_EDIT_ENDING = 400, // wxEVT_PG_LABEL_EDIT_ENDING
+    WXD_EVENT_TYPE_PG_COL_BEGIN_DRAG = 401,    // wxEVT_PG_COL_BEGIN_DRAG
+    WXD_EVENT_TYPE_PG_COL_DRAGGING = 402,      // wxEVT_PG_COL_DRAGGING
+    WXD_EVENT_TYPE_PG_COL_END_DRAG = 403,      // wxEVT_PG_COL_END_DRAG
+
     WXD_EVENT_TYPE_MAX // Keep this last for count if needed, or remove if not used for iteration
 } WXDEventTypeCEnum;
 
@@ -707,6 +723,7 @@ typedef struct wxd_TreeListCtrl_t wxd_TreeListCtrl_t;
 
 // Grid types
 typedef struct wxd_Grid_t wxd_Grid_t;
+typedef struct wxd_PropertyGrid_t wxd_PropertyGrid_t;
 
 // AboutDialogInfo type
 typedef struct wxd_AboutDialogInfo_t wxd_AboutDialogInfo_t;
