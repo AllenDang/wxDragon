@@ -24,7 +24,7 @@ fn main() {
                 let panel = Panel::builder(&child).build();
                 let sizer = BoxSizer::builder(Orientation::Vertical).build();
                 let text = StaticText::builder(&panel).with_label("This is an MDI child frame.").build();
-                sizer.add(&text, 0, SizerFlag::all(), 10);
+                sizer.add(&text, 0, SizerFlag::All, 10);
                 panel.set_sizer_and_fit(sizer, true);
 
                 child.show(true);
