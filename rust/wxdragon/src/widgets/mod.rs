@@ -44,6 +44,7 @@ pub mod media_ctrl;
 pub mod notebook;
 pub mod notification_message;
 pub mod panel;
+pub mod property_grid;
 pub mod radio_button;
 pub mod radiobox;
 pub mod rearrangelist;
@@ -141,6 +142,10 @@ pub use mdi_parent_frame::{MDIParentFrame, MDIParentFrameBuilder};
 pub use media_ctrl::{MediaCtrl, MediaCtrlBuilder, MediaCtrlPlayerControls, MediaState};
 pub use notebook::{Notebook, NotebookBuilder};
 pub use panel::{Panel, PanelBuilder};
+pub use property_grid::{
+    Property, PropertyChoice, PropertyGrid, PropertyGridBuilder, PropertyGridEvent, PropertyGridEventData, PropertyGridStyle,
+    PropertyId, PropertyKind,
+};
 pub use radio_button::{RadioButton, RadioButtonBuilder, RadioButtonStyle};
 pub use radiobox::RadioBox;
 pub use rearrangelist::{RearrangeList, RearrangeListEvent, RearrangeListEventData, RearrangeListStyle};

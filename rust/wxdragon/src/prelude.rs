@@ -139,6 +139,10 @@ pub use crate::widgets::notification_message::{
     TIMEOUT_NEVER,
 }; // Added Events
 pub use crate::widgets::panel::{Panel, PanelBuilder, PanelStyle};
+pub use crate::widgets::property_grid::{
+    Property, PropertyChoice, PropertyGrid, PropertyGridBuilder, PropertyGridEvent, PropertyGridEventData, PropertyGridStyle,
+    PropertyId, PropertyKind,
+};
 pub use crate::widgets::radio_button::{RadioButton, RadioButtonBuilder, RadioButtonStyle};
 pub use crate::widgets::radiobox::{RadioBox, RadioBoxBuilder, RadioBoxStyle};
 // Added RearrangeList

@@ -13,6 +13,7 @@ pub enum VariantType {
     Bool,
     Int32,
     Int64,
+    UInt64,
     Double,
     String,
     DateTime,
@@ -28,6 +29,7 @@ impl VariantType {
             VariantType::Bool => "bool",
             VariantType::Int32 => "long",
             VariantType::Int64 => "longlong",
+            VariantType::UInt64 => "ulonglong",
             VariantType::Double => "double",
             VariantType::String => "string",
             VariantType::DateTime => "datetime",
@@ -83,6 +85,12 @@ impl Variant {
     pub fn from_i64(v: i64) -> Self {
         let var = Self::new();
         unsafe { ffi::wxd_Variant_SetInt64(var.ptr, v) };
+        var
+    }
+
+    pub fn from_u64(v: u64) -> Self {
+        let var = Self::new();
+        unsafe { ffi::wxd_Variant_SetUInt64(var.ptr, v) };
         var
     }
 
@@ -205,6 +213,12 @@ impl Variant {
     pub fn get_i64(&self) -> Option<i64> {
         let mut out = 0_i64;
         let ok = unsafe { ffi::wxd_Variant_GetInt64(self.as_const_ptr(), &mut out) };
+        if ok { Some(out) } else { None }
+    }
+
+    pub fn get_u64(&self) -> Option<u64> {
+        let mut out = 0_u64;
+        let ok = unsafe { ffi::wxd_Variant_GetUInt64(self.as_const_ptr(), &mut out) };
         if ok { Some(out) } else { None }
     }
 
@@ -350,6 +364,12 @@ impl From<i32> for Variant {
 impl From<i64> for Variant {
     fn from(value: i64) -> Self {
         Self::from_i64(value)
+    }
+}
+
+impl From<u64> for Variant {
+    fn from(value: u64) -> Self {
+        Self::from_u64(value)
     }
 }
 
