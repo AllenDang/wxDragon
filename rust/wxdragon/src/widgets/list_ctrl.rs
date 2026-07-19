@@ -441,7 +441,7 @@ impl ListCtrl {
                 ptr,
                 index as c_longlong,
                 col,
-                buffer.as_mut_ptr() as *mut i8,
+                buffer.as_mut_ptr() as *mut core::ffi::c_char,
                 needed_len as i32,
             );
             if actual_len <= 0 {

@@ -137,7 +137,7 @@ impl ConnectionCallbacks {
 #[allow(unsafe_op_in_unsafe_fn)]
 unsafe extern "C" fn on_execute_trampoline(
     user_data: *mut c_void,
-    topic: *const i8,
+    topic: *const core::ffi::c_char,
     data: *const c_void,
     size: usize,
     format: ffi::wxd_IPCFormat,
@@ -165,8 +165,8 @@ unsafe extern "C" fn on_execute_trampoline(
 #[allow(unsafe_op_in_unsafe_fn)]
 unsafe extern "C" fn on_request_trampoline(
     user_data: *mut c_void,
-    topic: *const i8,
-    item: *const i8,
+    topic: *const core::ffi::c_char,
+    item: *const core::ffi::c_char,
     out_size: *mut usize,
     format: ffi::wxd_IPCFormat,
 ) -> *const c_void {
@@ -203,8 +203,8 @@ unsafe extern "C" fn on_request_trampoline(
 #[allow(unsafe_op_in_unsafe_fn)]
 unsafe extern "C" fn on_poke_trampoline(
     user_data: *mut c_void,
-    topic: *const i8,
-    item: *const i8,
+    topic: *const core::ffi::c_char,
+    item: *const core::ffi::c_char,
     data: *const c_void,
     size: usize,
     format: ffi::wxd_IPCFormat,
@@ -235,7 +235,11 @@ unsafe extern "C" fn on_poke_trampoline(
 }
 
 #[allow(unsafe_op_in_unsafe_fn)]
-unsafe extern "C" fn on_start_advise_trampoline(user_data: *mut c_void, topic: *const i8, item: *const i8) -> bool {
+unsafe extern "C" fn on_start_advise_trampoline(
+    user_data: *mut c_void,
+    topic: *const core::ffi::c_char,
+    item: *const core::ffi::c_char,
+) -> bool {
     if user_data.is_null() {
         return false;
     }
@@ -257,7 +261,11 @@ unsafe extern "C" fn on_start_advise_trampoline(user_data: *mut c_void, topic: *
 }
 
 #[allow(unsafe_op_in_unsafe_fn)]
-unsafe extern "C" fn on_stop_advise_trampoline(user_data: *mut c_void, topic: *const i8, item: *const i8) -> bool {
+unsafe extern "C" fn on_stop_advise_trampoline(
+    user_data: *mut c_void,
+    topic: *const core::ffi::c_char,
+    item: *const core::ffi::c_char,
+) -> bool {
     if user_data.is_null() {
         return false;
     }
@@ -281,8 +289,8 @@ unsafe extern "C" fn on_stop_advise_trampoline(user_data: *mut c_void, topic: *c
 #[allow(unsafe_op_in_unsafe_fn)]
 unsafe extern "C" fn on_advise_trampoline(
     user_data: *mut c_void,
-    topic: *const i8,
-    item: *const i8,
+    topic: *const core::ffi::c_char,
+    item: *const core::ffi::c_char,
     data: *const c_void,
     size: usize,
     format: ffi::wxd_IPCFormat,
@@ -617,7 +625,10 @@ struct ServerCallbacks {
 }
 
 #[allow(unsafe_op_in_unsafe_fn)]
-unsafe extern "C" fn on_accept_connection_trampoline(user_data: *mut c_void, topic: *const i8) -> *mut ffi::wxd_IPCConnection_t {
+unsafe extern "C" fn on_accept_connection_trampoline(
+    user_data: *mut c_void,
+    topic: *const core::ffi::c_char,
+) -> *mut ffi::wxd_IPCConnection_t {
     if user_data.is_null() {
         return ptr::null_mut();
     }
