@@ -214,6 +214,15 @@ wxd_Variant_SetInt64(wxd_Variant_t* variant, int64_t value)
 }
 
 extern "C" WXD_EXPORTED void
+wxd_Variant_SetUInt64(wxd_Variant_t* variant, uint64_t value)
+{
+    wxVariant* v = as_wx_mut(variant);
+    if (!v)
+        return;
+    *v = wxULongLong(value);
+}
+
+extern "C" WXD_EXPORTED void
 wxd_Variant_SetDouble(wxd_Variant_t* variant, double value)
 {
     wxVariant* v = as_wx_mut(variant);
@@ -319,6 +328,19 @@ wxd_Variant_GetInt64(const wxd_Variant_t* variant, int64_t* out_value)
     if (!v->Convert(&ll))
         return false;
     *out_value = static_cast<int64_t>(ll.GetValue());
+    return true;
+}
+
+extern "C" WXD_EXPORTED bool
+wxd_Variant_GetUInt64(const wxd_Variant_t* variant, uint64_t* out_value)
+{
+    if (!variant || !out_value)
+        return false;
+    const wxVariant* v = as_wx_const(variant);
+    wxULongLong ull;
+    if (!v->Convert(&ull))
+        return false;
+    *out_value = static_cast<uint64_t>(ull.GetValue());
     return true;
 }
 
