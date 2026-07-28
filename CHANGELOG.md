@@ -1,10 +1,26 @@
 # Changelog
 
-## [Unreleased]
+## 0.9.18
 
 ### New Features
 
-- **PropertyGrid**: Wrapped wxPropertyGrid widget with standard property types and full event support wired into the Rust event system
+- **PropertyGrid**: Wrapped wxPropertyGrid widget with standard property types and full event support wired into the Rust event system (#169)
+- **Accessibility**: Added accessible name/role/description/value/state setters to `WxWidget`, with `AccRole`, `AccState`, `AccStatus`, `NavDir`, and `AccObjectType` modeled as real Rust types instead of raw FFI aliases (#158)
+- **Translations**: Added a custom Rust-backed translations loader, so message catalogs can be supplied from anywhere (for example `.mo` bytes embedded in the binary) instead of only from files on disk (#159)
+- **Notebook**: Added the `NOTEBOOK_PAGE_CHANGING` event (#161)
+
+### Enhancements
+
+- **wxWidgets**: Updated the bundled wxWidgets from 3.3.2 to 3.3.3 and refreshed its SHA256 (#165)
+- **Build**: Made libnotify linking on Linux optional, and link libSDL when it is enabled in the CMake cache (#166, #167)
+- **Build**: Aligned the MSVC CMake profile with wxDragon link outputs and added debug builds to CI (#163)
+- **Build**: Added the X11 session management library to fix Ubuntu CI builds
+
+### Bug Fixes
+
+- **Window**: Fixed a crash when calling `destroy()` on a widget from its own event handler (#164)
+- **Build**: Fixed aarch64/ARM builds by using `c_char` instead of a hardcoded `i8` for FFI char pointers (#168)
+- **Examples**: Fixed conflicting wxSizer flags in `mdi_demo` by using `SizerFlag::All` instead of `SizerFlag::all()`
 
 ## 0.9.17
 
