@@ -1477,6 +1477,15 @@ impl StyledTextCtrl {
         unsafe { ffi::wxd_StyledTextCtrl_EmptyUndoBuffer(ptr) };
     }
 
+    /// Set whether undo history should be collected
+    pub fn set_undo_collection(&self, collect: bool) {
+        let ptr = self.stc_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_StyledTextCtrl_SetUndoCollection(ptr, collect) };
+    }
+
     // --- Autocompletion ---
 
     /// Display an auto-completion list

@@ -988,6 +988,15 @@ wxd_StyledTextCtrl_EmptyUndoBuffer(wxd_StyledTextCtrl_t* self)
     }
 }
 
+WXD_EXPORTED void
+wxd_StyledTextCtrl_SetUndoCollection(wxd_StyledTextCtrl_t* self, bool collect)
+{
+    wxStyledTextCtrl* ctrl = (wxStyledTextCtrl*)self;
+    if (ctrl) {
+        ctrl->SetUndoCollection(collect);
+    }
+}
+
 // Autocompletion
 WXD_EXPORTED void
 wxd_StyledTextCtrl_AutoCompShow(wxd_StyledTextCtrl_t* self, int length_entered,

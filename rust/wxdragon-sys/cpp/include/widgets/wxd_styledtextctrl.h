@@ -251,6 +251,8 @@ WXD_EXPORTED bool
 wxd_StyledTextCtrl_CanRedo(wxd_StyledTextCtrl_t* self);
 WXD_EXPORTED void
 wxd_StyledTextCtrl_EmptyUndoBuffer(wxd_StyledTextCtrl_t* self);
+WXD_EXPORTED void
+wxd_StyledTextCtrl_SetUndoCollection(wxd_StyledTextCtrl_t* self, bool collect);
 
 // Autocompletion
 WXD_EXPORTED void
