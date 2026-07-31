@@ -166,7 +166,7 @@ pub use static_bitmap::{ScaleMode, StaticBitmap, StaticBitmapBuilder};
 pub use static_line::{StaticLine, StaticLineBuilder, StaticLineStyle};
 pub use static_text::{StaticText, StaticTextBuilder, StaticTextStyle};
 pub use staticbox::{StaticBox, StaticBoxBuilder};
-pub use statusbar::{StatusBar, StatusBarBuilder};
+pub use statusbar::{FieldStyle, StatusBar, StatusBarBuilder};
 #[cfg(feature = "stc")]
 pub use styledtextctrl::{
     EolMode, FindFlags, Lexer, MarginType, MarkerSymbol, SelectionMode, StyledTextCtrl, StyledTextCtrlBuilder,
