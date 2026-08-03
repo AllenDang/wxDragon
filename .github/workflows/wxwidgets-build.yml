@@ -4,12 +4,12 @@ on:
   workflow_dispatch:
     inputs:
       wx_version:
-        description: 'wxWidgets version to build'
+        description: "wxWidgets version to build"
         required: true
-        default: '3.3.0'
+        default: "3.3.0"
         type: string
       force_rebuild:
-        description: 'Force rebuild even if release exists'
+        description: "Force rebuild even if release exists"
         required: false
         default: false
         type: boolean
@@ -107,53 +107,53 @@ jobs:
             target: x86_64-pc-windows-gnu
             build_type: Debug
             setup_script: ""
-    
+
     runs-on: ${{ matrix.os }}
-    
+
     defaults:
       run:
         shell: bash
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup MinGW64 (Windows GNU only)
         if: matrix.target == 'x86_64-pc-windows-gnu'
         run: |
           # Install CMake first
           choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System'
-          
+
           # Download WinLibs GCC 15.1.0 to match the user's local environment
           echo "Downloading WinLibs GCC 15.1.0 (POSIX threads, UCRT)..."
           curl -L -o winlibs-x86_64.zip "https://github.com/brechtsanders/winlibs_mingw/releases/download/15.1.0posix-13.0.0-ucrt-r2/winlibs-x86_64-posix-seh-gcc-15.1.0-mingw-w64ucrt-13.0.0-r2.zip"
-          
+
           echo "Extracting MinGW..."
           7z x winlibs-x86_64.zip -o"C:\mingw64" -y
-          
+
           # Find the actual mingw64 directory (may be nested)
           MINGW_DIR=$(find /c/mingw64 -name "mingw64" -type d | head -1)
           if [ -z "$MINGW_DIR" ]; then
             # If not found, use the first directory that contains bin/gcc.exe
             MINGW_DIR=$(find /c/mingw64 -name "gcc.exe" -type f | head -1 | xargs dirname | xargs dirname)
           fi
-          
+
           echo "Found MinGW at: $MINGW_DIR"
-          
+
           # Add to PATH
           echo "$MINGW_DIR/bin" >> $GITHUB_PATH
-          
+
           # Set environment variables for CMake
           echo "CMAKE_C_COMPILER=$MINGW_DIR/bin/gcc.exe" >> $GITHUB_ENV
           echo "CMAKE_CXX_COMPILER=$MINGW_DIR/bin/g++.exe" >> $GITHUB_ENV
           echo "CMAKE_MAKE_PROGRAM=$MINGW_DIR/bin/mingw32-make.exe" >> $GITHUB_ENV
-          
+
           # Verify installation
           "$MINGW_DIR/bin/gcc.exe" --version
 
       - name: Setup MSVC (Windows MSVC only)
         if: endsWith(matrix.target, '-windows-msvc')
         uses: microsoft/setup-msbuild@v2
-        
+
       - name: Configure MSVC Environment (Windows MSVC only)
         if: endsWith(matrix.target, '-windows-msvc')
         uses: ilammy/msvc-dev-cmd@v1
@@ -163,7 +163,7 @@ jobs:
       - name: Install platform dependencies (Non-Windows)
         if: matrix.setup_script != '' && matrix.target != 'x86_64-pc-windows-gnu'
         run: ${{ matrix.setup_script }}
-        
+
       - name: Install platform dependencies (Windows GNU)
         if: matrix.setup_script != '' && matrix.target == 'x86_64-pc-windows-gnu'
         run: ${{ matrix.setup_script }}
@@ -174,10 +174,10 @@ jobs:
         run: |
           RELEASE_TAG="wxwidgets-${{ inputs.wx_version }}"
           echo "Checking for existing release: $RELEASE_TAG"
-          
+
           # Check if release exists and has our artifact
           RELEASE_EXISTS=$(gh release view "$RELEASE_TAG" --json assets --jq '.assets[] | select(.name=="${{ matrix.target }}-${{ matrix.build_type }}.tar.gz") | .name' 2>/dev/null || echo "")
-          
+
           if [ -n "$RELEASE_EXISTS" ]; then
             echo "Release $RELEASE_TAG already has ${{ matrix.target }}-${{ matrix.build_type }}.tar.gz"
             echo "skip_build=true" >> $GITHUB_OUTPUT
@@ -195,28 +195,28 @@ jobs:
           WX_VERSION="${{ inputs.wx_version }}"
           WX_TARBALL="wxWidgets-${WX_VERSION}.tar.bz2"
           WX_URL="https://github.com/wxWidgets/wxWidgets/releases/download/v${WX_VERSION}/${WX_TARBALL}"
-          
+
           echo "Downloading wxWidgets ${WX_VERSION} from ${WX_URL}"
           curl -L -o "${WX_TARBALL}" "${WX_URL}"
-          
+
           echo "Extracting ${WX_TARBALL}"
           tar -xjf "${WX_TARBALL}"
-          
+
           echo "WX_SOURCE_DIR=wxWidgets-${WX_VERSION}" >> $GITHUB_ENV
-          
+
       - name: Download wxWidgets source (Windows GNU)
         if: steps.check_release.outputs.skip_build != 'true' && matrix.target == 'x86_64-pc-windows-gnu'
         run: |
           WX_VERSION="${{ inputs.wx_version }}"
           WX_TARBALL="wxWidgets-${WX_VERSION}.tar.bz2"
           WX_URL="https://github.com/wxWidgets/wxWidgets/releases/download/v${WX_VERSION}/${WX_TARBALL}"
-          
+
           echo "Downloading wxWidgets ${WX_VERSION} from ${WX_URL}"
           curl -L -o "${WX_TARBALL}" "${WX_URL}"
-          
+
           echo "Extracting ${WX_TARBALL}"
           tar -xjf "${WX_TARBALL}"
-          
+
           echo "WX_SOURCE_DIR=wxWidgets-${WX_VERSION}" >> $GITHUB_ENV
 
       - name: Configure wxWidgets build (Non-Windows GNU)
@@ -226,7 +226,7 @@ jobs:
         run: |
           mkdir -p build
           cd build
-          
+
           # Configure wxWidgets with all features enabled for static linking
           CMAKE_ARGS=(
             -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
@@ -248,7 +248,7 @@ jobs:
             -DwxUSE_PROPGRID=ON
             -DwxUSE_LIBWEBP=OFF
           )
-          
+
           # Platform-specific configuration
           case "${{ matrix.target }}" in
             "x86_64-apple-darwin")
@@ -330,10 +330,10 @@ jobs:
               )
               ;;
           esac
-          
+
           echo "Configuring with: cmake ${CMAKE_ARGS[@]} ../${WX_SOURCE_DIR}"
           cmake "${CMAKE_ARGS[@]}" "../${WX_SOURCE_DIR}"
-          
+
       - name: Configure wxWidgets build (Windows GNU)
         if: steps.check_release.outputs.skip_build != 'true' && matrix.target == 'x86_64-pc-windows-gnu'
         env:
@@ -345,10 +345,10 @@ jobs:
           gcc --version
           make --version
           cmake --version
-          
+
           mkdir -p build
           cd build
-          
+
           # Configure wxWidgets with all features enabled for static linking
           CMAKE_ARGS=(
             -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
@@ -373,13 +373,13 @@ jobs:
             -DwxUSE_PROPGRID=ON
             -DwxUSE_LIBWEBP=OFF
           )
-          
+
           CMAKE_ARGS+=(
             -G "MinGW Makefiles"
             -DwxBUILD_TOOLKIT=msw
             -DwxUSE_WEBVIEW_EDGE=ON
           )
-          
+
           echo "Configuring with: cmake ${CMAKE_ARGS[@]} ../${WX_SOURCE_DIR}"
           cmake "${CMAKE_ARGS[@]}" "../${WX_SOURCE_DIR}"
 
@@ -389,11 +389,11 @@ jobs:
           CMAKE_TLS_VERIFY: "0"
         run: |
           cd build
-          
+
           # Build with all available CPU cores
           NPROC=$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4)
           echo "Building with ${NPROC} parallel jobs"
-          
+
           # For Windows MSVC, we need to specify the config explicitly
           if [[ "${{ matrix.target }}" == *"-windows-msvc" ]]; then
             echo "Building Windows MSVC with config: ${{ matrix.build_type }}"
@@ -401,18 +401,18 @@ jobs:
           else
             cmake --build . --parallel ${NPROC}
           fi
-          
+
       - name: Build wxWidgets (Windows GNU)
         if: steps.check_release.outputs.skip_build != 'true' && matrix.target == 'x86_64-pc-windows-gnu'
         env:
           CMAKE_TLS_VERIFY: "0"
         run: |
           cd build
-          
+
           # Build with reduced parallelism to avoid memory issues
           NPROC=2
           echo "Building with ${NPROC} parallel jobs"
-          
+
           cmake --build . --parallel ${NPROC}
 
       - name: Package libraries (Non-Windows GNU)
@@ -420,7 +420,7 @@ jobs:
         run: |
           # Create packaging directory
           mkdir -p "dist/${{ matrix.target }}-${{ matrix.build_type }}"
-          
+
           # Platform-specific library packaging
           case "${{ matrix.target }}" in
             "x86_64-pc-windows-msvc")
@@ -514,20 +514,20 @@ jobs:
               fi
               ;;
           esac
-          
+
           # Copy wxWidgets headers (source headers + generated headers)
           echo "Packaging wxWidgets headers..."
           if [ -d "${WX_SOURCE_DIR}/include" ]; then
             mkdir -p "dist/${{ matrix.target }}-${{ matrix.build_type }}/include"
             cp -r "${WX_SOURCE_DIR}/include/"* "dist/${{ matrix.target }}-${{ matrix.build_type }}/include/"
           fi
-          
+
           # Copy generated headers from build directory
           if [ -d "build/lib/wx" ]; then
             mkdir -p "dist/${{ matrix.target }}-${{ matrix.build_type }}/wx"
             cp -r build/lib/wx/* "dist/${{ matrix.target }}-${{ matrix.build_type }}/wx/"
           fi
-          
+
           # Special handling for Windows MSVC setup.h
           if [[ "${{ matrix.target }}" == *"-windows-msvc" ]]; then
             echo "Creating MSVC-specific setup.h patch..."
@@ -562,7 +562,7 @@ jobs:
               echo "Warning: setup.h not found in package"
             fi
           fi
-          
+
           # Create version info file
           echo "wxWidgets Version: ${{ inputs.wx_version }}" > "dist/${{ matrix.target }}-${{ matrix.build_type }}/VERSION.txt"
           echo "Build Target: ${{ matrix.target }}" >> "dist/${{ matrix.target }}-${{ matrix.build_type }}/VERSION.txt"
@@ -575,36 +575,36 @@ jobs:
             echo "Windows 7 Compatible: Yes (official Rust target)" >> "dist/${{ matrix.target }}-${{ matrix.build_type }}/VERSION.txt"
             echo "Architecture: x86_64 (64-bit)" >> "dist/${{ matrix.target }}-${{ matrix.build_type }}/VERSION.txt"
           fi
-          
+
           # List contents for debugging
           echo "Packaged libraries:"
           find "dist/${{ matrix.target }}-${{ matrix.build_type }}" -name "*.a" -o -name "*.lib" 2>/dev/null | head -20 || true
           echo "Packaged headers:"
           find "dist/${{ matrix.target }}-${{ matrix.build_type }}" -name "*.h" 2>/dev/null | head -10 || true
-          
+
           # Create tarball
           cd dist
           ARTIFACT_NAME="wxwidgets-${{ inputs.wx_version }}-${{ matrix.target }}-$(echo "${{ matrix.build_type }}" | tr '[:upper:]' '[:lower:]')"
           mv "${{ matrix.target }}-${{ matrix.build_type }}" "${ARTIFACT_NAME}"
           tar -czf "${ARTIFACT_NAME}.tar.gz" "${ARTIFACT_NAME}"
-          
+
           # Verify tarball
           echo "Created tarball: $(ls -lh ${ARTIFACT_NAME}.tar.gz)"
           cd ..
-          
+
       - name: Package libraries (Windows GNU)
         if: steps.check_release.outputs.skip_build != 'true' && matrix.target == 'x86_64-pc-windows-gnu'
         run: |
           # Create packaging directory
           mkdir -p "dist/${{ matrix.target }}-${{ matrix.build_type }}"
-          
+
           # Windows GNU: organize libraries in gcc_x64_lib subdirectory only (no duplicates)
           if [ -d "build/lib/gcc_x64_lib" ]; then
             mkdir -p "dist/${{ matrix.target }}-${{ matrix.build_type }}/gcc_x64_lib"
             cp -r build/lib/gcc_x64_lib/* "dist/${{ matrix.target }}-${{ matrix.build_type }}/gcc_x64_lib/"
             echo "Copied libraries to gcc_x64_lib subdirectory"
           fi
-          
+
           # Copy additional files from root lib directory (excluding library duplicates)
           if [ -d "build/lib" ]; then
             find build/lib -maxdepth 1 -name "*.exe" -exec cp {} "dist/${{ matrix.target }}-${{ matrix.build_type }}/" \; 2>/dev/null || true
@@ -612,39 +612,39 @@ jobs:
             find build/lib -maxdepth 1 -name "*.cmake" -exec cp {} "dist/${{ matrix.target }}-${{ matrix.build_type }}/" \; 2>/dev/null || true
             echo "Copied additional files (exe, dll, cmake) to root directory"
           fi
-          
+
           # Copy wxWidgets headers (source headers + generated headers)
           echo "Packaging wxWidgets headers..."
           if [ -d "${WX_SOURCE_DIR}/include" ]; then
             mkdir -p "dist/${{ matrix.target }}-${{ matrix.build_type }}/include"
             cp -r "${WX_SOURCE_DIR}/include/"* "dist/${{ matrix.target }}-${{ matrix.build_type }}/include/"
           fi
-          
+
           # Copy generated headers from build directory
           if [ -d "build/lib/wx" ]; then
             mkdir -p "dist/${{ matrix.target }}-${{ matrix.build_type }}/wx"
             cp -r build/lib/wx/* "dist/${{ matrix.target }}-${{ matrix.build_type }}/wx/"
           fi
-          
+
           # Create version info file with compiler info
           echo "wxWidgets Version: ${{ inputs.wx_version }}" > "dist/${{ matrix.target }}-${{ matrix.build_type }}/VERSION.txt"
           echo "Build Target: ${{ matrix.target }}" >> "dist/${{ matrix.target }}-${{ matrix.build_type }}/VERSION.txt"
           echo "Build Date: $(date -u)" >> "dist/${{ matrix.target }}-${{ matrix.build_type }}/VERSION.txt"
           echo "Build OS: ${{ matrix.os }}" >> "dist/${{ matrix.target }}-${{ matrix.build_type }}/VERSION.txt"
           echo "Compiler: WinLibs GCC 15.1.0 (POSIX threads, UCRT)" >> "dist/${{ matrix.target }}-${{ matrix.build_type }}/VERSION.txt"
-          
+
           # List contents for debugging
           echo "Packaged libraries:"
           find "dist/${{ matrix.target }}-${{ matrix.build_type }}" -name "*.a" -o -name "*.lib" 2>/dev/null | head -20 || true
           echo "Packaged headers:"
           find "dist/${{ matrix.target }}-${{ matrix.build_type }}" -name "*.h" 2>/dev/null | head -10 || true
-          
+
           # Create tarball
           cd dist
           ARTIFACT_NAME="wxwidgets-${{ inputs.wx_version }}-${{ matrix.target }}-$(echo "${{ matrix.build_type }}" | tr '[:upper:]' '[:lower:]')"
           mv "${{ matrix.target }}-${{ matrix.build_type }}" "${ARTIFACT_NAME}"
           tar -czf "${ARTIFACT_NAME}.tar.gz" "${ARTIFACT_NAME}"
-          
+
           # Verify tarball
           echo "Created tarball: $(ls -lh ${ARTIFACT_NAME}.tar.gz)"
           cd ..
@@ -661,10 +661,10 @@ jobs:
     needs: build-wxwidgets
     runs-on: ubuntu-latest
     if: always() && (needs.build-wxwidgets.result == 'success' || needs.build-wxwidgets.result == 'skipped')
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
@@ -673,7 +673,7 @@ jobs:
       - name: Create or update release
         run: |
           RELEASE_TAG="wxwidgets-${{ inputs.wx_version }}"
-          
+
           # Check if release exists
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
             echo "Release $RELEASE_TAG already exists, updating with new artifacts"
@@ -714,7 +714,7 @@ jobs:
               --title "wxWidgets ${{ inputs.wx_version }} Pre-built Libraries" \
               --notes-file release_notes.md
           fi
-          
+
           # Upload all new artifacts
           for artifact_dir in artifacts/*/; do
             if [ -d "$artifact_dir" ]; then
@@ -727,4 +727,4 @@ jobs:
             fi
           done
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

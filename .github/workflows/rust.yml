@@ -70,7 +70,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [i686-pc-windows-msvc, x86_64-pc-windows-msvc, aarch64-pc-windows-msvc]
+        target:
+          [
+            i686-pc-windows-msvc,
+            x86_64-pc-windows-msvc,
+            aarch64-pc-windows-msvc,
+          ]
     runs-on: windows-latest
     steps:
       - uses: dtolnay/rust-toolchain@stable
@@ -193,15 +198,15 @@ jobs:
 
     runs-on: macos-latest
     steps:
-    - uses: dtolnay/rust-toolchain@stable
-      with:
-        components: clippy,rustfmt
-        targets: ${{ matrix.target }}
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy,rustfmt
+          targets: ${{ matrix.target }}
 
-    - uses: actions/checkout@v6
-      with:
-        submodules: recursive
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
 
-    - name: Build default features
-      if: ${{ !cancelled() }}
-      run: cargo build --features "aui,xrc,richtext,stc,webview" --target ${{ matrix.target }} --release
+      - name: Build default features
+        if: ${{ !cancelled() }}
+        run: cargo build --features "aui,xrc,richtext,stc,webview" --target ${{ matrix.target }} --release
