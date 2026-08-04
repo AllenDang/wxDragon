@@ -66,6 +66,22 @@ jobs:
           cargo clean
           cargo build --package gallery
 
+  linux-aarch64-build:
+    runs-on: ubuntu-22.04-arm
+    steps:
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+      - name: Install ARM64 dependencies
+        run: sudo apt-get update && sudo apt-get install -y build-essential cmake pkg-config libgtk-3-dev libglib2.0-dev libpng-dev libjpeg-dev libgl1-mesa-dev libglu1-mesa-dev x11proto-dev libx11-dev libx11-xcb-dev libxext-dev libxrender-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libxcomposite-dev libxdamage-dev libxfixes-dev libxcb1-dev libxkbcommon-dev libwayland-dev libexpat1-dev zlib1g-dev libtiff-dev libwebkit2gtk-4.0-dev libxtst-dev libssl-dev
+
+      - name: Debug native build
+        run: cargo build --features "aui,xrc,richtext,stc,webview"
+
+      - name: Release native build
+        run: cargo build --features "aui,xrc,richtext,stc,webview" --release
+
   windows-cross-build:
     strategy:
       fail-fast: false
