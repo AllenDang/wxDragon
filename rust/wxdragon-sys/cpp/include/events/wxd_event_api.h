@@ -211,6 +211,12 @@ WXD_EXPORTED int
 wxd_MouseEvent_GetWheelRotation(wxd_Event_t* event);
 WXD_EXPORTED int
 wxd_MouseEvent_GetWheelDelta(wxd_Event_t* event);
+WXD_EXPORTED int
+wxd_MouseEvent_GetWheelAxis(wxd_Event_t* event);
+
+// Magnify (pinch-to-zoom) event function
+WXD_EXPORTED float
+wxd_MouseEvent_GetMagnification(wxd_Event_t* event);
 
 // General veto support for all event types (replaces old close event specific functions)
 WXD_EXPORTED bool

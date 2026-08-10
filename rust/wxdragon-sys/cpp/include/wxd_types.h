@@ -362,6 +362,7 @@ typedef enum {
     WXD_EVENT_TYPE_PG_COL_BEGIN_DRAG = 401,    // wxEVT_PG_COL_BEGIN_DRAG
     WXD_EVENT_TYPE_PG_COL_DRAGGING = 402,      // wxEVT_PG_COL_DRAGGING
     WXD_EVENT_TYPE_PG_COL_END_DRAG = 403,      // wxEVT_PG_COL_END_DRAG
+    WXD_EVENT_TYPE_MAGNIFY = 404,              // wxEVT_MAGNIFY
 
     WXD_EVENT_TYPE_MAX // Keep this last for count if needed, or remove if not used for iteration
 } WXDEventTypeCEnum;

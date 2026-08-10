@@ -18,6 +18,7 @@ pub enum WindowEvent {
     MiddleUp,
     Motion,
     MouseWheel,
+    Magnify,
     EnterWindow,
     LeaveWindow,
 
@@ -48,6 +49,7 @@ pub enum WindowEventData {
     MouseMotion(MouseMotionEvent),
     MouseEnter(MouseEnterEvent),
     MouseLeave(MouseLeaveEvent),
+    Magnify(MagnifyEvent),
     Keyboard(KeyboardEvent),
     Size(WindowSizeEvent),
     Idle(IdleEventData),
@@ -87,6 +89,8 @@ impl WindowEventData {
                 return WindowEventData::MouseEnter(MouseEnterEvent::new(event));
             } else if event_type == EventType::LEAVE_WINDOW {
                 return WindowEventData::MouseLeave(MouseLeaveEvent::new(event));
+            } else if event_type == EventType::MAGNIFY {
+                return WindowEventData::Magnify(MagnifyEvent::new(event));
             } else if event_type == EventType::IDLE {
                 return WindowEventData::Idle(IdleEventData::new(event));
             } else if event_type == EventType::ACTIVATE {
@@ -105,6 +109,7 @@ impl WindowEventData {
             WindowEventData::MouseMotion(event) => event.event.skip(skip),
             WindowEventData::MouseEnter(event) => event.event.skip(skip),
             WindowEventData::MouseLeave(event) => event.event.skip(skip),
+            WindowEventData::Magnify(event) => event.event.skip(skip),
             WindowEventData::Keyboard(event) => event.event.skip(skip),
             WindowEventData::Size(event) => event.event.skip(skip),
             WindowEventData::Idle(event) => event.event.skip(skip),
@@ -183,6 +188,29 @@ impl MouseLeaveEvent {
 
     pub fn get_position(&self) -> Option<crate::geometry::Point> {
         self.event.get_position()
+    }
+}
+
+/// Pinch-to-zoom (magnify) events, e.g. from a trackpad gesture.
+#[derive(Debug)]
+pub struct MagnifyEvent {
+    pub event: MouseEventData,
+}
+
+impl MagnifyEvent {
+    pub fn new(event: Event) -> Self {
+        Self {
+            event: MouseEventData::new(event),
+        }
+    }
+
+    pub fn get_position(&self) -> Option<crate::geometry::Point> {
+        self.event.get_position()
+    }
+
+    /// The magnification factor. Positive means zoom in, negative means zoom out.
+    pub fn get_magnification(&self) -> f32 {
+        self.event.get_magnification()
     }
 }
 
@@ -314,6 +342,7 @@ crate::implement_category_event_handlers!(
     MiddleUp => mouse_middle_up, EventType::MIDDLE_UP,
     Motion => mouse_motion, EventType::MOTION,
     MouseWheel => mouse_wheel, EventType::MOUSEWHEEL,
+    Magnify => magnify, EventType::MAGNIFY,
     EnterWindow => mouse_enter, EventType::ENTER_WINDOW,
     LeaveWindow => mouse_leave, EventType::LEAVE_WINDOW,
     KeyDown => key_down, EventType::KEY_DOWN,

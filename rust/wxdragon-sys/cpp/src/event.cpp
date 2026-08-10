@@ -1009,6 +1009,8 @@ get_wx_event_type_for_c_enum(WXDEventTypeCEnum c_enum_val)
         return wxEVT_MOTION;
     case WXD_EVENT_TYPE_MOUSEWHEEL:
         return wxEVT_MOUSEWHEEL;
+    case WXD_EVENT_TYPE_MAGNIFY:
+        return wxEVT_MAGNIFY;
 
     // TaskBarIcon events are handled later in this function (platform-specific support).
     case WXD_EVENT_TYPE_TASKBAR_CLICK:
@@ -1908,6 +1910,32 @@ wxd_MouseEvent_GetWheelDelta(wxd_Event_t* event)
         return 120;
 
     return mouse_event->GetWheelDelta();
+}
+
+WXD_EXPORTED int
+wxd_MouseEvent_GetWheelAxis(wxd_Event_t* event)
+{
+    if (!event)
+        return 0;
+    wxEvent* wx_event = reinterpret_cast<wxEvent*>(event);
+    wxMouseEvent* mouse_event = wxDynamicCast(wx_event, wxMouseEvent);
+    if (!mouse_event)
+        return 0;
+
+    return static_cast<int>(mouse_event->GetWheelAxis());
+}
+
+WXD_EXPORTED float
+wxd_MouseEvent_GetMagnification(wxd_Event_t* event)
+{
+    if (!event)
+        return 0.0f;
+    wxEvent* wx_event = reinterpret_cast<wxEvent*>(event);
+    wxMouseEvent* mouse_event = wxDynamicCast(wx_event, wxMouseEvent);
+    if (!mouse_event)
+        return 0.0f;
+
+    return mouse_event->GetMagnification();
 }
 
 // Modifier key functions for keyboard events
