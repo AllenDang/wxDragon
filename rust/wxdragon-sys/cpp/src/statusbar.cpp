@@ -64,6 +64,44 @@ wxd_StatusBar_PopStatusText(wxd_StatusBar_t* self, int fieldIndex)
     }
 }
 
+WXD_EXPORTED wxd_Rect
+wxd_StatusBar_GetFieldRect(wxd_StatusBar_t* self, int fieldIndex)
+{
+    wxd_Rect rect = {0, 0, 0, 0};
+    wxStatusBar* statusBar = (wxStatusBar*)self;
+    if (!statusBar) return rect;
+    wxRect r;
+    if (statusBar->GetFieldRect(fieldIndex, r)) {
+        rect.x = r.x; rect.y = r.y; rect.width = r.width; rect.height = r.height;
+    }
+    return rect;
+}
+
+WXD_EXPORTED int
+wxd_StatusBar_GetFieldsCount(wxd_StatusBar_t* self)
+{
+    wxStatusBar* statusBar = (wxStatusBar*)self;
+    return statusBar ? static_cast<int>(statusBar->GetFieldsCount()) : 0;
+}
+
+WXD_EXPORTED void
+wxd_StatusBar_SetStatusStyles(wxd_StatusBar_t* self, int count, const int* styles)
+{
+    wxStatusBar* statusBar = (wxStatusBar*)self;
+    if (statusBar && count > 0 && styles) {
+        statusBar->SetStatusStyles(count, styles);
+    }
+}
+
+WXD_EXPORTED void
+wxd_StatusBar_SetMinHeight(wxd_StatusBar_t* self, int height)
+{
+    wxStatusBar* statusBar = (wxStatusBar*)self;
+    if (statusBar) {
+        statusBar->SetMinHeight(height);
+    }
+}
+
 // No wxd_StatusBar_Destroy needed, frame manages lifetime when SetStatusBar is called.
 
 } // extern "C"

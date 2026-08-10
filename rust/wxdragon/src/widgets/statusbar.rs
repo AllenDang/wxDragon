@@ -2,7 +2,7 @@
 //! Safe wrapper for wxStatusBar.
 
 use crate::event::WxEvtHandler;
-use crate::geometry::{Point, Size};
+use crate::geometry::{Point, Rect, Size};
 use crate::id::Id;
 use crate::widgets::frame::Frame; // Parent must be a Frame
 use crate::window::{WindowHandle, WxWidget};
@@ -153,6 +153,57 @@ impl StatusBar {
         }
         unsafe { ffi::wxd_StatusBar_PopStatusText(ptr, field_index as c_int) };
     }
+
+    /// The rectangle of a field, in status-bar client coordinates — position a child control over
+    /// a field with it. Zeroed rect for an out-of-range index, or if the status bar was destroyed.
+    pub fn get_field_rect(&self, field_index: usize) -> Rect {
+        let ptr = self.statusbar_ptr();
+        if ptr.is_null() {
+            return Rect::new(0, 0, 0, 0);
+        }
+        let r = unsafe { ffi::wxd_StatusBar_GetFieldRect(ptr, field_index as c_int) };
+        Rect::new(r.x, r.y, r.width, r.height)
+    }
+
+    /// The number of fields. Returns 0 if the status bar has been destroyed.
+    pub fn get_fields_count(&self) -> usize {
+        let ptr = self.statusbar_ptr();
+        if ptr.is_null() {
+            return 0;
+        }
+        unsafe { ffi::wxd_StatusBar_GetFieldsCount(ptr) as usize }
+    }
+
+    /// Sets the per-field border style, one entry per field.
+    /// No-op if the status bar has been destroyed.
+    pub fn set_status_styles(&self, styles: &[FieldStyle]) {
+        let ptr = self.statusbar_ptr();
+        if ptr.is_null() || styles.is_empty() {
+            return;
+        }
+        let raw: Vec<c_int> = styles.iter().map(|s| *s as c_int).collect();
+        unsafe { ffi::wxd_StatusBar_SetStatusStyles(ptr, raw.len() as c_int, raw.as_ptr()) };
+    }
+
+    /// Sets the minimum height of the bar.
+    /// No-op if the status bar has been destroyed.
+    pub fn set_min_height(&self, height: i32) {
+        let ptr = self.statusbar_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_StatusBar_SetMinHeight(ptr, height as c_int) };
+    }
+}
+
+/// Per-field border style, for [`StatusBar::set_status_styles`].
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[repr(i32)]
+pub enum FieldStyle {
+    Normal = 0,
+    Flat = 1,
+    Raised = 2,
+    Sunken = 3,
 }
 
 // Manual WxWidget implementation for StatusBar (using WindowHandle)

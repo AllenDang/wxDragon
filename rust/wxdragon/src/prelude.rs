@@ -168,7 +168,7 @@ pub use crate::widgets::static_bitmap::{ScaleMode, StaticBitmap, StaticBitmapBui
 pub use crate::widgets::static_line::{StaticLine, StaticLineBuilder, StaticLineStyle};
 pub use crate::widgets::static_text::{StaticText, StaticTextBuilder, StaticTextStyle};
 pub use crate::widgets::staticbox::{StaticBox, StaticBoxBuilder, StaticBoxStyle}; // Added Style
-pub use crate::widgets::statusbar::{StatusBar, StatusBarBuilder};
+pub use crate::widgets::statusbar::{FieldStyle, StatusBar, StatusBarBuilder};
 #[cfg(feature = "stc")]
 pub use crate::widgets::styledtextctrl::{
     EolMode, FindFlags, Lexer, MarginType, MarkerSymbol, SelectionMode, StyledTextCtrl, StyledTextCtrlBuilder,
