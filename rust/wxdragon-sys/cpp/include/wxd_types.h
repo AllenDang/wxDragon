@@ -753,4 +753,108 @@ typedef bool (*wxd_Printout_OnPrintPage_Callback)(void* userData, int pageNum);
 typedef bool (*wxd_Printout_HasPage_Callback)(void* userData, int pageNum);
 typedef void (*wxd_Printout_GetPageInfo_Callback)(void* userData, int* minPage, int* maxPage, int* pageFrom, int* pageTo);
 
+// --- System Settings (wxSystemSettings) ---
+
+// Mirrors wxSystemColour. Values are wxd-internal and mapped explicitly to
+// the corresponding wxSystemColour enumerator in syssettings.cpp, so they do
+// not need to track wxWidgets' own (platform-sensitive) numbering.
+typedef enum {
+    WXD_SYS_COLOUR_SCROLLBAR = 0,
+    WXD_SYS_COLOUR_DESKTOP,
+    WXD_SYS_COLOUR_ACTIVECAPTION,
+    WXD_SYS_COLOUR_INACTIVECAPTION,
+    WXD_SYS_COLOUR_MENU,
+    WXD_SYS_COLOUR_WINDOW,
+    WXD_SYS_COLOUR_WINDOWFRAME,
+    WXD_SYS_COLOUR_MENUTEXT,
+    WXD_SYS_COLOUR_WINDOWTEXT,
+    WXD_SYS_COLOUR_CAPTIONTEXT,
+    WXD_SYS_COLOUR_ACTIVEBORDER,
+    WXD_SYS_COLOUR_INACTIVEBORDER,
+    WXD_SYS_COLOUR_APPWORKSPACE,
+    WXD_SYS_COLOUR_HIGHLIGHT,
+    WXD_SYS_COLOUR_HIGHLIGHTTEXT,
+    WXD_SYS_COLOUR_BTNFACE,
+    WXD_SYS_COLOUR_BTNSHADOW,
+    WXD_SYS_COLOUR_GRAYTEXT,
+    WXD_SYS_COLOUR_BTNTEXT,
+    WXD_SYS_COLOUR_INACTIVECAPTIONTEXT,
+    WXD_SYS_COLOUR_BTNHIGHLIGHT,
+    WXD_SYS_COLOUR_3DDKSHADOW,
+    WXD_SYS_COLOUR_3DLIGHT,
+    WXD_SYS_COLOUR_INFOTEXT,
+    WXD_SYS_COLOUR_INFOBK,
+    WXD_SYS_COLOUR_LISTBOX,
+    WXD_SYS_COLOUR_HOTLIGHT,
+    WXD_SYS_COLOUR_GRADIENTACTIVECAPTION,
+    WXD_SYS_COLOUR_GRADIENTINACTIVECAPTION,
+    WXD_SYS_COLOUR_MENUHILIGHT,
+    WXD_SYS_COLOUR_MENUBAR,
+    WXD_SYS_COLOUR_LISTBOXTEXT,
+    WXD_SYS_COLOUR_LISTBOXHIGHLIGHTTEXT,
+    WXD_SYS_COLOUR_GRIDLINES,
+    WXD_SYS_COLOUR_LISTBOXHIGHLIGHT
+} wxd_SystemColour;
+
+// Mirrors the subset of wxSystemFont that identifies an actual usable font
+// (skips wxSYS_DEFAULT_PALETTE, which isn't a font, and wxSYS_ICONTITLE_FONT,
+// which is a pure synonym of wxSYS_DEFAULT_GUI_FONT).
+typedef enum {
+    WXD_SYS_OEM_FIXED_FONT = 0,
+    WXD_SYS_ANSI_FIXED_FONT,
+    WXD_SYS_ANSI_VAR_FONT,
+    WXD_SYS_SYSTEM_FONT,
+    WXD_SYS_DEVICE_DEFAULT_FONT,
+    WXD_SYS_SYSTEM_FIXED_FONT,
+    WXD_SYS_DEFAULT_GUI_FONT
+} wxd_SystemFont;
+
+// Mirrors wxSystemMetric (wxSYS_CURSOR_X / wxSYS_CURSOR_Y are omitted in
+// favour of wxSYS_CURSOR_SIZE, which wxWidgets documents as their replacement
+// since cursors are always square).
+typedef enum {
+    WXD_SYS_MOUSE_BUTTONS = 0,
+    WXD_SYS_BORDER_X,
+    WXD_SYS_BORDER_Y,
+    WXD_SYS_CURSOR_SIZE,
+    WXD_SYS_DCLICK_X,
+    WXD_SYS_DCLICK_Y,
+    WXD_SYS_DRAG_X,
+    WXD_SYS_DRAG_Y,
+    WXD_SYS_EDGE_X,
+    WXD_SYS_EDGE_Y,
+    WXD_SYS_HSCROLL_ARROW_X,
+    WXD_SYS_HSCROLL_ARROW_Y,
+    WXD_SYS_HTHUMB_X,
+    WXD_SYS_ICON_X,
+    WXD_SYS_ICON_Y,
+    WXD_SYS_ICONSPACING_X,
+    WXD_SYS_ICONSPACING_Y,
+    WXD_SYS_WINDOWMIN_X,
+    WXD_SYS_WINDOWMIN_Y,
+    WXD_SYS_SCREEN_X,
+    WXD_SYS_SCREEN_Y,
+    WXD_SYS_FRAMESIZE_X,
+    WXD_SYS_FRAMESIZE_Y,
+    WXD_SYS_SMALLICON_X,
+    WXD_SYS_SMALLICON_Y,
+    WXD_SYS_HSCROLL_Y,
+    WXD_SYS_VSCROLL_X,
+    WXD_SYS_VSCROLL_ARROW_X,
+    WXD_SYS_VSCROLL_ARROW_Y,
+    WXD_SYS_VTHUMB_Y,
+    WXD_SYS_CAPTION_Y,
+    WXD_SYS_MENU_Y,
+    WXD_SYS_NETWORK_PRESENT,
+    WXD_SYS_PENWINDOWS_PRESENT,
+    WXD_SYS_SHOW_SOUNDS,
+    WXD_SYS_SWAP_BUTTONS,
+    WXD_SYS_DCLICK_MSEC,
+    WXD_SYS_CARET_ON_MSEC,
+    WXD_SYS_CARET_OFF_MSEC,
+    WXD_SYS_CARET_TIMEOUT_MSEC
+} wxd_SystemMetric;
+
+// --- End of System Settings ---
+
 #endif // WXD_TYPES_H

@@ -35,6 +35,7 @@ pub mod single_instance_checker;
 pub mod sizers;
 pub mod sound;
 pub mod sysopt;
+pub mod syssettings;
 pub mod timer;
 pub mod translations;
 pub mod types;
