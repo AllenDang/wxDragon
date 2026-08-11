@@ -159,6 +159,7 @@ set(WXDRAGON_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/dc.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/dialog.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/dir_dialog.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/display.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/dirpickerctrl.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/dnd.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/droptarget.cpp

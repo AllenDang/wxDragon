@@ -19,6 +19,7 @@ pub mod data_object;
 pub mod datetime;
 pub mod dc;
 pub mod dialogs;
+pub mod display;
 pub mod dnd;
 pub mod event;
 pub mod font;
