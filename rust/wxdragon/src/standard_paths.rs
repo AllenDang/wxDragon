@@ -16,7 +16,11 @@ fn call_getter(getter: GetterFn) -> String {
     }
     let mut buffer = vec![0u8; len as usize + 1];
     unsafe { getter(buffer.as_mut_ptr() as *mut std::os::raw::c_char, buffer.len()) };
-    unsafe { CStr::from_ptr(buffer.as_ptr() as *const std::os::raw::c_char).to_string_lossy().to_string() }
+    unsafe {
+        CStr::from_ptr(buffer.as_ptr() as *const std::os::raw::c_char)
+            .to_string_lossy()
+            .to_string()
+    }
 }
 
 impl StandardPaths {
