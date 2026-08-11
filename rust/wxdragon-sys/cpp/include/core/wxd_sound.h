@@ -19,6 +19,9 @@ typedef enum {
 WXD_EXPORTED wxd_Sound_t*
 wxd_Sound_Create(const char* fileName, bool isResource);
 
+WXD_EXPORTED wxd_Sound_t*
+wxd_Sound_CreateFromData(const unsigned char* data, size_t size);
+
 WXD_EXPORTED void
 wxd_Sound_Destroy(wxd_Sound_t* self);
 

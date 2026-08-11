@@ -31,6 +31,13 @@ impl Sound {
         Self { ptr }
     }
 
+    /// Creates a new sound from raw WAV data already in memory, e.g. bytes embedded in
+    /// the binary with `include_bytes!`.
+    pub fn from_data(data: &[u8]) -> Self {
+        let ptr = unsafe { ffi::wxd_Sound_CreateFromData(data.as_ptr(), data.len()) };
+        Self { ptr }
+    }
+
     /// Returns true if the sound was created successfully.
     pub fn is_ok(&self) -> bool {
         if self.ptr.is_null() {
