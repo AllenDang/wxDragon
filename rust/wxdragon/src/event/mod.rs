@@ -21,8 +21,8 @@ pub mod window_events;
 
 // Re-export window events for easier access
 pub use window_events::{
-    IdleEventData, KeyboardEvent, MouseButtonEvent, MouseEnterEvent, MouseLeaveEvent, MouseMotionEvent, WindowEvent,
-    WindowEventData, WindowEvents, WindowSizeEvent,
+    IdleEventData, KeyboardEvent, MagnifyEvent, MouseButtonEvent, MouseEnterEvent, MouseLeaveEvent, MouseMotionEvent,
+    WindowEvent, WindowEventData, WindowEvents, WindowSizeEvent,
 };
 
 // Re-export button events for easier access
@@ -121,6 +121,7 @@ pub struct EventType: ffi::WXDEventTypeCEnum { // Use the generated C enum type
     const MIDDLE_UP = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_MIDDLE_UP;
     const MOTION = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_MOTION;
     const MOUSEWHEEL = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_MOUSEWHEEL;
+    const MAGNIFY = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_MAGNIFY;
     const ENTER_WINDOW = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_ENTER_WINDOW;
     const LEAVE_WINDOW = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_LEAVE_WINDOW;
     const KEY_DOWN = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_KEY_DOWN;
@@ -547,6 +548,24 @@ impl IdleEvent {
     }
 }
 
+/// Which axis a mouse wheel event occurred on.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum MouseWheelAxis {
+    /// Regular up/down scroll wheel. The common case.
+    Vertical,
+    /// Horizontal scroll wheel, or a two-finger horizontal swipe on a trackpad.
+    Horizontal,
+}
+
+impl MouseWheelAxis {
+    fn from_raw(raw: i32) -> Self {
+        match raw {
+            1 => MouseWheelAxis::Horizontal,
+            _ => MouseWheelAxis::Vertical,
+        }
+    }
+}
+
 // --- Simple Event Struct ---
 
 /// Represents a wxWidgets event.
@@ -674,6 +693,25 @@ impl Event {
             return 120; // Default wheel delta
         }
         unsafe { ffi::wxd_MouseEvent_GetWheelDelta(self.0) }
+    }
+
+    /// Gets which axis a mouse wheel event occurred on. Vertical is the common case;
+    /// horizontal happens with dedicated horizontal scroll wheels or two-finger trackpad
+    /// panning.
+    pub fn get_wheel_axis(&self) -> MouseWheelAxis {
+        if self.0.is_null() {
+            return MouseWheelAxis::Vertical;
+        }
+        MouseWheelAxis::from_raw(unsafe { ffi::wxd_MouseEvent_GetWheelAxis(self.0) })
+    }
+
+    /// Gets the magnification factor for a pinch-to-zoom (magnify) event, e.g. from a
+    /// trackpad. Positive values mean zoom in, negative values mean zoom out.
+    pub fn get_magnification(&self) -> f32 {
+        if self.0.is_null() {
+            return 0.0;
+        }
+        unsafe { ffi::wxd_MouseEvent_GetMagnification(self.0) }
     }
 
     /// Gets the key code associated with a key event.

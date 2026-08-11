@@ -62,6 +62,19 @@ impl MouseEventData {
         self.event.get_wheel_delta()
     }
 
+    /// Gets which axis a mouse wheel event occurred on. Vertical is the common case;
+    /// horizontal happens with dedicated horizontal scroll wheels or two-finger trackpad
+    /// panning.
+    pub fn get_wheel_axis(&self) -> crate::event::MouseWheelAxis {
+        self.event.get_wheel_axis()
+    }
+
+    /// Gets the magnification factor for a pinch-to-zoom (magnify) event, e.g. from a
+    /// trackpad. Positive values mean zoom in, negative values mean zoom out.
+    pub fn get_magnification(&self) -> f32 {
+        self.event.get_magnification()
+    }
+
     pub fn skip(&self, skip: bool) {
         self.event.skip(skip);
     }
