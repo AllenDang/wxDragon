@@ -23,4 +23,31 @@ wxd_LaunchDefaultBrowser(const char* url, int flags)
     return wxLaunchDefaultBrowser(wxUrl, flags);
 }
 
+// Opens the given file/document in its default application
+WXD_EXPORTED bool
+wxd_LaunchDefaultApplication(const char* path, int flags)
+{
+    if (!path)
+        return false;
+
+    wxString wxPath = wxString::FromUTF8(path);
+    return wxLaunchDefaultApplication(wxPath, flags);
+}
+
+// Gets the current global mouse position in screen coordinates
+WXD_EXPORTED wxd_Point
+wxd_GetMousePosition(void)
+{
+    int x = 0, y = 0;
+    wxGetMousePosition(&x, &y);
+    return { x, y };
+}
+
+// Returns true if the given key is currently pressed down
+WXD_EXPORTED bool
+wxd_GetKeyState(int keycode)
+{
+    return wxGetKeyState(static_cast<wxKeyCode>(keycode));
+}
+
 } // extern "C"
