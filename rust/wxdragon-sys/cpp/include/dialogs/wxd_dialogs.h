@@ -45,6 +45,12 @@ WXD_EXPORTED wxd_MessageDialog_t*
 wxd_MessageDialog_Create(wxd_Window_t* parent, const char* message, const char* caption,
                          wxd_Style_t style);
 
+WXD_EXPORTED void
+wxd_MessageDialog_SetYesNoLabels(wxd_MessageDialog_t* self, const char* yes, const char* no);
+
+WXD_EXPORTED void
+wxd_MessageDialog_SetOKCancelLabels(wxd_MessageDialog_t* self, const char* ok, const char* cancel);
+
 // --- FileDialog ---
 
 WXD_EXPORTED wxd_FileDialog_t*
