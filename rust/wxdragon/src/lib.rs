@@ -34,6 +34,7 @@ pub mod scrollable;
 pub mod single_instance_checker;
 pub mod sizers;
 pub mod sound;
+pub mod standard_paths;
 pub mod sysopt;
 pub mod timer;
 pub mod translations;
