@@ -440,9 +440,11 @@ WxdEventHandler::DispatchEvent(wxEvent& event)
         }
     }
 
-    // If this is the destroy event, perform a final cleanup of all bound closures.
-    // This runs after all user destroy handlers have been invoked above.
-    if (eventType == wxEVT_DESTROY) {
+    // Release closures only when this handler's owning window is being destroyed.
+    // wxAUI destroys temporary floating windows while re-docking panes; their
+    // DESTROY events can reach the managed frame's handler, but must not release
+    // the frame's callbacks.
+    if (eventType == wxEVT_DESTROY && event.GetEventObject() == ownerHandler) {
         // Intentionally ignore the return value of UnbindAll() as we do not need to know
         // how many handlers were unbound; this is a final cleanup step.
         (void)this->UnbindAll();

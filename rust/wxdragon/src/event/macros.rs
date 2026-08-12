@@ -98,6 +98,50 @@ macro_rules! implement_category_event_handlers {
     }
 }
 
+/// Generates window event handlers that ignore destroy events from child windows.
+#[macro_export]
+macro_rules! implement_window_category_event_handlers {
+    ($trait_name:ident, $event_enum:ident, $event_data:ident,
+     $($variant:ident => $method_name:ident, $event_type:expr),+) => {
+        pub trait $trait_name: $crate::event::WxEvtHandler {
+            #[doc(hidden)]
+            fn bind_window_category_event<F>(&self, event_type: $crate::event::$event_enum, mut callback: F) -> $crate::event::EventToken
+            where
+                F: FnMut($crate::event::$event_data) + 'static
+            {
+                let event_type_ffi = match event_type {
+                    $($crate::event::$event_enum::$variant => $event_type,)*
+                };
+                let handler_ptr = unsafe { self.get_event_handler_ptr() } as *mut std::ffi::c_void;
+
+                let wrapper = move |event: $crate::event::Event| {
+                    if matches!(event_type, $crate::event::$event_enum::Destroy)
+                        && event
+                            .get_event_object()
+                            .is_none_or(|object| object.as_ptr().cast::<std::ffi::c_void>() != handler_ptr)
+                    {
+                        return;
+                    }
+                    callback($crate::event::$event_data::new(event));
+                };
+
+                $crate::event::WxEvtHandler::bind_internal(self, event_type_ffi, wrapper)
+            }
+
+            $(
+                paste::paste! {
+                    fn [<on_ $method_name>]<F>(&self, callback: F) -> $crate::event::EventToken
+                    where
+                        F: FnMut($crate::event::$event_data) + 'static
+                    {
+                        self.bind_window_category_event($crate::event::$event_enum::$variant, callback)
+                    }
+                }
+            )*
+        }
+    }
+}
+
 /// Generates internal binding method and public on_* methods for widget-specific events defined in the same module
 #[macro_export]
 macro_rules! implement_widget_local_event_handlers {
