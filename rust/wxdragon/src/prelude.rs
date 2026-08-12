@@ -22,10 +22,13 @@ pub use crate::id::{ID_ANY, ID_APPLY, ID_CANCEL, ID_HELP, ID_HIGHEST, ID_NO, ID_
 pub use crate::language::Language;
 pub use crate::sizers::WxSizer;
 pub use crate::sound::{Sound, SoundFlags};
+pub use crate::standard_paths::StandardPaths;
 pub use crate::sysopt::SystemOptions;
+pub use crate::syssettings::{SystemColour, SystemFont, SystemMetric, SystemSettings};
 pub use crate::types::Style;
 pub use crate::utils::{
-    ArrayString, BrowserLaunchFlags, bell, get_key_state, get_mouse_position, launch_default_application, launch_default_browser,
+    ArrayString, BrowserLaunchFlags, ColourDatabase, ColourDatabaseScheme, bell, get_key_state, get_mouse_position,
+    launch_default_application, launch_default_browser,
 };
 pub use crate::window::{BackgroundStyle, ExtraWindowStyle, Window, WindowStyle, WxWidget, WxWidgetDowncast};
 

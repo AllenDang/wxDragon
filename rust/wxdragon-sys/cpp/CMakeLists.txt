@@ -144,6 +144,7 @@ set(WXDRAGON_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/collapsiblepane.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/config.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/cursor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/colourdatabase.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/colourdialog.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/colourpickerctrl.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/combobox.cpp
@@ -210,6 +211,7 @@ set(WXDRAGON_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/static_text.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/staticbox.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/statusbar.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/syssettings.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/taskbar.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/text_entry_dialog.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/textctrl.cpp
@@ -226,6 +228,7 @@ set(WXDRAGON_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/wxd_utils.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/wxd_utils.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/wxd_sysopt.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/wxd_stdpaths.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/wxd_logging.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/wxd_variant.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/misc.cpp

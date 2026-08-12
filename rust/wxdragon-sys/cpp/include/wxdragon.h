@@ -6,6 +6,7 @@
 #include "array_string.h"  // ArrayString helper functions
 #include "core/wxd_item.h" // Added for wxd_DataViewItem_t and its functions
 #include "wxd_sysopt.h"
+#include "wxd_stdpaths.h" // wxStandardPaths bindings
 #include "wxd_logging.h" // Logging functions
 #include "wxd_variant.h" // Variant type and functions
 
@@ -158,7 +159,9 @@ extern "C" {
 #include "core/wxd_singleinstancechecker.h"
 #include "core/wxd_uiactionsimulator.h"
 #include "core/wxd_config.h"
+#include "core/wxd_colourdatabase.h"
 #include "core/wxd_misc.h"
+#include "core/wxd_syssettings.h"
 
 #ifdef __cplusplus
 } // extern "C"
