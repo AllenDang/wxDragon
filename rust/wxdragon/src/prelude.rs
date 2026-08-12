@@ -11,6 +11,7 @@ pub use crate::color::{Colour, colours};
 pub use crate::config::{Config, ConfigEntryType, ConfigPathGuard, ConfigStyle};
 pub use crate::cursor::{BitmapType, BusyCursor, Cursor, StockCursor, begin_busy_cursor, end_busy_cursor, is_busy, set_cursor};
 pub use crate::datetime::DateTime;
+pub use crate::display::Display;
 pub use crate::event::{Event, EventType, IdleEvent, IdleMode, MouseWheelAxis, WindowEventData, WxEvtHandler};
 // ADDED: Event category traits
 pub use crate::event::{AppEvents, ButtonEvents, MenuEvents, ScrollEvents, TextEvents, TreeEvents, WindowEvents};
