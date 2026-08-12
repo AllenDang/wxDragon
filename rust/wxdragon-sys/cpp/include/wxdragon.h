@@ -158,6 +158,7 @@ extern "C" {
 #include "core/wxd_singleinstancechecker.h"
 #include "core/wxd_uiactionsimulator.h"
 #include "core/wxd_config.h"
+#include "core/wxd_colourdatabase.h"
 #include "core/wxd_misc.h"
 
 #ifdef __cplusplus

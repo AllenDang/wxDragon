@@ -144,6 +144,7 @@ set(WXDRAGON_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/collapsiblepane.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/config.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/cursor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/colourdatabase.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/colourdialog.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/colourpickerctrl.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/combobox.cpp
