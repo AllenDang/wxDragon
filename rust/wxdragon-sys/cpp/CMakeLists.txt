@@ -211,6 +211,7 @@ set(WXDRAGON_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/static_text.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/staticbox.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/statusbar.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/syssettings.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/taskbar.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/text_entry_dialog.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/textctrl.cpp

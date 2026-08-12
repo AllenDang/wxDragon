@@ -160,6 +160,7 @@ extern "C" {
 #include "core/wxd_config.h"
 #include "core/wxd_colourdatabase.h"
 #include "core/wxd_misc.h"
+#include "core/wxd_syssettings.h"
 
 #ifdef __cplusplus
 } // extern "C"
