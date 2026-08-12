@@ -22,6 +22,7 @@ pub use crate::id::{ID_ANY, ID_APPLY, ID_CANCEL, ID_HELP, ID_HIGHEST, ID_NO, ID_
 pub use crate::language::Language;
 pub use crate::sizers::WxSizer;
 pub use crate::sound::{Sound, SoundFlags};
+pub use crate::standard_paths::StandardPaths;
 pub use crate::sysopt::SystemOptions;
 pub use crate::syssettings::{SystemColour, SystemFont, SystemMetric, SystemSettings};
 pub use crate::types::Style;

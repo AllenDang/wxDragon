@@ -228,6 +228,7 @@ set(WXDRAGON_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/wxd_utils.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/wxd_utils.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/wxd_sysopt.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/wxd_stdpaths.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/wxd_logging.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/wxd_variant.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/misc.cpp

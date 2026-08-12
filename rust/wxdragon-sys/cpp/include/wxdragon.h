@@ -6,6 +6,7 @@
 #include "array_string.h"  // ArrayString helper functions
 #include "core/wxd_item.h" // Added for wxd_DataViewItem_t and its functions
 #include "wxd_sysopt.h"
+#include "wxd_stdpaths.h" // wxStandardPaths bindings
 #include "wxd_logging.h" // Logging functions
 #include "wxd_variant.h" // Variant type and functions
 
