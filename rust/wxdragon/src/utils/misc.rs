@@ -3,6 +3,7 @@
 //! This module provides access to various system-level functions that don't
 //! belong to any specific widget or component.
 
+use crate::geometry::Point;
 use std::ffi::CString;
 use wxdragon_sys as ffi;
 
@@ -55,4 +56,64 @@ pub fn launch_default_browser(url: &str, flags: BrowserLaunchFlags) -> bool {
         Err(_) => return false,
     };
     unsafe { ffi::wxd_LaunchDefaultBrowser(c_url.as_ptr(), flags as i32) }
+}
+
+/// Opens the given file or document in its default application, e.g. a PDF in the
+/// system's PDF viewer or a spreadsheet in Excel.
+///
+/// Returns `true` if the application was successfully launched, `false` otherwise.
+///
+/// # Arguments
+/// * `path` - Path to the file or document to open.
+///
+/// # Example
+/// ```rust,no_run
+/// use wxdragon::utils::launch_default_application;
+///
+/// if launch_default_application("report.pdf") {
+///     println!("Default application launched successfully");
+/// }
+/// ```
+pub fn launch_default_application(path: &str) -> bool {
+    let c_path = match CString::new(path) {
+        Ok(s) => s,
+        Err(_) => return false,
+    };
+    unsafe { ffi::wxd_LaunchDefaultApplication(c_path.as_ptr(), 0) }
+}
+
+/// Returns the current global position of the mouse pointer, in screen coordinates.
+///
+/// # Example
+/// ```rust,no_run
+/// use wxdragon::utils::get_mouse_position;
+///
+/// let pos = get_mouse_position();
+/// println!("Mouse is at ({}, {})", pos.x, pos.y);
+/// ```
+pub fn get_mouse_position() -> Point {
+    unsafe { ffi::wxd_GetMousePosition() }.into()
+}
+
+/// Returns `true` if the given key is currently pressed down.
+///
+/// Unlike key events, this can be called at any time - not just from within an event
+/// handler - and can check the state of any key, not just the one that triggered the
+/// current event.
+///
+/// # Arguments
+/// * `keycode` - The key code to check, either a `WXK_*` constant or the ASCII/Unicode
+///   code point of a printable character.
+///
+/// # Example
+/// ```rust,no_run
+/// use wxdragon::utils::get_key_state;
+///
+/// // WXK_SHIFT = 306
+/// if get_key_state(306) {
+///     println!("Shift is currently held down");
+/// }
+/// ```
+pub fn get_key_state(keycode: i32) -> bool {
+    unsafe { ffi::wxd_GetKeyState(keycode) }
 }

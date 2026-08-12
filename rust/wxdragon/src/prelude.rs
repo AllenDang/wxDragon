@@ -26,7 +26,10 @@ pub use crate::standard_paths::StandardPaths;
 pub use crate::sysopt::SystemOptions;
 pub use crate::syssettings::{SystemColour, SystemFont, SystemMetric, SystemSettings};
 pub use crate::types::Style;
-pub use crate::utils::{ArrayString, BrowserLaunchFlags, ColourDatabase, ColourDatabaseScheme, bell, launch_default_browser};
+pub use crate::utils::{
+    ArrayString, BrowserLaunchFlags, ColourDatabase, ColourDatabaseScheme, bell, get_key_state, get_mouse_position,
+    launch_default_application, launch_default_browser,
+};
 pub use crate::window::{BackgroundStyle, ExtraWindowStyle, Window, WindowStyle, WxWidget, WxWidgetDowncast};
 
 // --- Sizers ---
