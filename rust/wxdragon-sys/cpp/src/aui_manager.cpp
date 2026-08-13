@@ -186,6 +186,30 @@ wxd_AuiManager_DetachPane(wxd_AuiManager_t* self, wxd_Window_t* window)
     return self->manager->DetachPane(wx_window);
 }
 
+bool
+wxd_AuiManager_SetPaneShown(wxd_AuiManager_t* self, const char* name, bool shown)
+{
+    if (!self || !self->manager || !name)
+        return false;
+
+    wxAuiPaneInfo& pane = self->manager->GetPane(wxString::FromUTF8(name));
+    if (!pane.IsOk())
+        return false;
+
+    pane.Show(shown);
+    return true;
+}
+
+bool
+wxd_AuiManager_IsPaneShown(wxd_AuiManager_t* self, const char* name)
+{
+    if (!self || !self->manager || !name)
+        return false;
+
+    wxAuiPaneInfo& pane = self->manager->GetPane(wxString::FromUTF8(name));
+    return pane.IsOk() && pane.IsShown();
+}
+
 // --- wxAuiPaneInfo implementation ---
 
 wxd_AuiPaneInfo_t*

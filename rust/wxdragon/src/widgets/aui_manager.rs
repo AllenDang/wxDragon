@@ -576,6 +576,26 @@ impl AuiManager {
         }
         unsafe { ffi::wxd_AuiManager_DetachPane(ptr, window.handle_ptr()) }
     }
+
+    /// Sets whether a named pane is visible. Call [`Self::update`] after changing it.
+    pub fn set_pane_shown(&self, name: &str, shown: bool) -> bool {
+        let ptr = self.manager_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        let name = CString::new(name).expect("pane name must not contain a null byte");
+        unsafe { ffi::wxd_AuiManager_SetPaneShown(ptr, name.as_ptr(), shown) }
+    }
+
+    /// Returns whether a named pane is currently visible.
+    pub fn is_pane_shown(&self, name: &str) -> bool {
+        let ptr = self.manager_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        let name = CString::new(name).expect("pane name must not contain a null byte");
+        unsafe { ffi::wxd_AuiManager_IsPaneShown(ptr, name.as_ptr()) }
+    }
 }
 
 // Implement WxEvtHandler for AuiManager to allow event binding

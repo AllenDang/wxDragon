@@ -51,6 +51,12 @@ wxd_AuiManager_LoadPerspective(wxd_AuiManager_t* self, const char* perspective, 
 WXD_EXPORTED bool
 wxd_AuiManager_DetachPane(wxd_AuiManager_t* self, wxd_Window_t* window);
 
+WXD_EXPORTED bool
+wxd_AuiManager_SetPaneShown(wxd_AuiManager_t* self, const char* name, bool shown);
+
+WXD_EXPORTED bool
+wxd_AuiManager_IsPaneShown(wxd_AuiManager_t* self, const char* name);
+
 // --- wxAuiPaneInfo ---
 WXD_EXPORTED wxd_AuiPaneInfo_t*
 wxd_AuiPaneInfo_Create();
