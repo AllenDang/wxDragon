@@ -332,7 +332,7 @@ impl ActivateEventData {
 }
 
 // Use the macro to implement the trait
-crate::implement_category_event_handlers!(
+crate::implement_window_category_event_handlers!(
     WindowEvents, WindowEvent, WindowEventData,
     LeftDown => mouse_left_down, EventType::LEFT_DOWN,
     LeftUp => mouse_left_up, EventType::LEFT_UP,

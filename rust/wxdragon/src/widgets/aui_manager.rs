@@ -396,9 +396,14 @@ impl<'a> AuiManagerBuilder<'a> {
 
         // Set up a destroy handler on the managed window to invalidate this manager
         let handle_copy = handle;
+        let managed_window_ptr = self.parent_ptr;
         let parent = unsafe { Window::from_ptr(self.parent_ptr) };
-        parent.bind_internal(EventType::DESTROY, move |_event| {
-            handle_copy.invalidate();
+        parent.bind_internal(EventType::DESTROY, move |event| {
+            if let Some(event_object) = event.get_event_object()
+                && event_object.as_ptr() == managed_window_ptr
+            {
+                handle_copy.invalidate();
+            }
         });
 
         mgr
