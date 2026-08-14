@@ -110,6 +110,19 @@ pub struct MediaCtrl {
 }
 
 impl MediaCtrl {
+    /// Backend name for the DirectShow backend (Windows).
+    pub const BACKEND_DIRECTSHOW: &'static str = "wxAMMediaBackend";
+    /// Backend name for the MCI backend (Windows).
+    pub const BACKEND_MCI: &'static str = "wxMCIMediaBackend";
+    /// Backend name for the QuickTime backend (macOS).
+    pub const BACKEND_QUICKTIME: &'static str = "wxQTMediaBackend";
+    /// Backend name for the GStreamer backend (Unix/Linux).
+    pub const BACKEND_GSTREAMER: &'static str = "wxGStreamerMediaBackend";
+    /// Backend name for the RealPlayer backend (Windows).
+    pub const BACKEND_REALPLAYER: &'static str = "wxRealPlayerMediaBackend";
+    /// Backend name for the Windows Media Player 10 backend (Windows).
+    pub const BACKEND_WMP10: &'static str = "wxWMP10MediaBackend";
+
     /// Creates a new `MediaCtrlBuilder` for constructing a media control.
     pub fn builder(parent: &dyn WxWidget) -> MediaCtrlBuilder<'_> {
         MediaCtrlBuilder::new(parent)
