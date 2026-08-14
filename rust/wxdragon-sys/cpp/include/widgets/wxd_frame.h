@@ -63,6 +63,12 @@ WXD_EXPORTED bool
 wxd_Frame_IsMaximized(wxd_Frame_t* frame);
 
 WXD_EXPORTED void
+wxd_Frame_ShowFullScreen(wxd_Frame_t* frame, bool show);
+
+WXD_EXPORTED bool
+wxd_Frame_IsFullScreen(wxd_Frame_t* frame);
+
+WXD_EXPORTED void
 wxd_Frame_SetIconFromBitmap(wxd_Frame_t* frame, const wxd_Bitmap_t* bitmap);
 
 WXD_EXPORTED void

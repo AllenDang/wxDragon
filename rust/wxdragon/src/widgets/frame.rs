@@ -435,6 +435,26 @@ impl Frame {
         unsafe { ffi::wxd_Frame_IsMaximized(ptr) }
     }
 
+    /// Shows or hides the frame in full screen mode.
+    /// No-op if the frame has been destroyed.
+    pub fn show_full_screen(&self, show: bool) {
+        let ptr = self.frame_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_Frame_ShowFullScreen(ptr, show) }
+    }
+
+    /// Returns true if the frame is currently in full screen mode.
+    /// Returns false if the frame has been destroyed.
+    pub fn is_full_screen(&self) -> bool {
+        let ptr = self.frame_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_Frame_IsFullScreen(ptr) }
+    }
+
     /// Sets the frame's icon from a bitmap.
     /// The bitmap will be converted to an icon internally.
     /// No-op if the frame has been destroyed.
