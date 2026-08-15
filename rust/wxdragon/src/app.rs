@@ -511,9 +511,7 @@ impl crate::event::AppEvents for App {
             let callback = Box::new(callback);
             let user_data = Box::into_raw(callback) as *mut c_void;
 
-            unsafe {
-                ffi::wxd_App_AddMacWillTerminateHandler(self.handle, Some(mac_will_terminate_trampoline::<F>), user_data)
-            };
+            unsafe { ffi::wxd_App_AddMacWillTerminateHandler(self.handle, Some(mac_will_terminate_trampoline::<F>), user_data) };
         }
         #[cfg(not(target_os = "macos"))]
         {
