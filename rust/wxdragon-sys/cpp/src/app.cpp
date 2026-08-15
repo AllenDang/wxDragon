@@ -53,6 +53,10 @@ public:
     MacReopenApp() override;
     virtual void
     MacPrintFiles(const wxArrayString& fileNames) override;
+    virtual bool
+    OSXOnShouldTerminate() override;
+    virtual void
+    OSXOnWillTerminate() override;
 
     // Store multiple callbacks for each event type
     struct MacCallbackList {
@@ -61,6 +65,8 @@ public:
         std::vector<std::pair<wxd_MacNewFileCallback, void*>> newFile;
         std::vector<std::pair<wxd_MacReopenAppCallback, void*>> reopenApp;
         std::vector<std::pair<wxd_MacPrintFilesCallback, void*>> printFiles;
+        std::vector<std::pair<wxd_MacShouldTerminateCallback, void*>> shouldTerminate;
+        std::vector<std::pair<wxd_MacWillTerminateCallback, void*>> willTerminate;
     } m_macCallbacks;
 #endif
 };
@@ -615,6 +621,39 @@ WxdApp::MacPrintFiles(const wxArrayString& fileNames)
     }
 }
 
+// OSXOnShouldTerminate override - false from any registered handler vetoes termination
+bool
+WxdApp::OSXOnShouldTerminate()
+{
+    if (m_macCallbacks.shouldTerminate.empty()) {
+        return wxApp::OSXOnShouldTerminate();
+    }
+
+    bool shouldTerminate = true;
+    for (const auto& pair : m_macCallbacks.shouldTerminate) {
+        if (pair.first && !pair.first(pair.second)) {
+            shouldTerminate = false;
+        }
+    }
+    return shouldTerminate;
+}
+
+// OSXOnWillTerminate override - calls all registered handlers
+void
+WxdApp::OSXOnWillTerminate()
+{
+    if (m_macCallbacks.willTerminate.empty()) {
+        wxApp::OSXOnWillTerminate();
+        return;
+    }
+
+    for (const auto& pair : m_macCallbacks.willTerminate) {
+        if (pair.first) {
+            pair.first(pair.second);
+        }
+    }
+}
+
 #endif // __WXOSX__
 
 // Registration functions - add handlers to the callback lists
@@ -670,6 +709,28 @@ wxd_App_AddMacPrintFilesHandler(wxd_App_t* app, wxd_MacPrintFilesCallback callba
         return;
     WxdApp* wx_app = reinterpret_cast<WxdApp*>(app);
     wx_app->m_macCallbacks.printFiles.push_back(std::make_pair(callback, userData));
+#endif
+}
+
+void
+wxd_App_AddMacShouldTerminateHandler(wxd_App_t* app, wxd_MacShouldTerminateCallback callback, void* userData)
+{
+#ifdef __WXOSX__
+    if (!app || !callback)
+        return;
+    WxdApp* wx_app = reinterpret_cast<WxdApp*>(app);
+    wx_app->m_macCallbacks.shouldTerminate.push_back(std::make_pair(callback, userData));
+#endif
+}
+
+void
+wxd_App_AddMacWillTerminateHandler(wxd_App_t* app, wxd_MacWillTerminateCallback callback, void* userData)
+{
+#ifdef __WXOSX__
+    if (!app || !callback)
+        return;
+    WxdApp* wx_app = reinterpret_cast<WxdApp*>(app);
+    wx_app->m_macCallbacks.willTerminate.push_back(std::make_pair(callback, userData));
 #endif
 }
 

@@ -482,6 +482,44 @@ impl crate::event::AppEvents for App {
             let _ = callback;
         }
     }
+
+    fn on_should_terminate<F>(&self, callback: F)
+    where
+        F: Fn() -> bool + Send + 'static,
+    {
+        #[cfg(target_os = "macos")]
+        {
+            let callback = Box::new(callback);
+            let user_data = Box::into_raw(callback) as *mut c_void;
+
+            unsafe {
+                ffi::wxd_App_AddMacShouldTerminateHandler(self.handle, Some(mac_should_terminate_trampoline::<F>), user_data)
+            };
+        }
+        #[cfg(not(target_os = "macos"))]
+        {
+            let _ = callback;
+        }
+    }
+
+    fn on_will_terminate<F>(&self, callback: F)
+    where
+        F: Fn() + Send + 'static,
+    {
+        #[cfg(target_os = "macos")]
+        {
+            let callback = Box::new(callback);
+            let user_data = Box::into_raw(callback) as *mut c_void;
+
+            unsafe {
+                ffi::wxd_App_AddMacWillTerminateHandler(self.handle, Some(mac_will_terminate_trampoline::<F>), user_data)
+            };
+        }
+        #[cfg(not(target_os = "macos"))]
+        {
+            let _ = callback;
+        }
+    }
 }
 
 // Trampoline functions for macOS
@@ -572,6 +610,32 @@ where
     }
 
     callback(file_list);
+}
+
+#[cfg(target_os = "macos")]
+unsafe extern "C" fn mac_should_terminate_trampoline<F>(user_data: *mut c_void) -> bool
+where
+    F: Fn() -> bool + Send + 'static,
+{
+    if user_data.is_null() {
+        return true;
+    }
+
+    let callback = unsafe { &*(user_data as *const F) };
+    callback()
+}
+
+#[cfg(target_os = "macos")]
+unsafe extern "C" fn mac_will_terminate_trampoline<F>(user_data: *mut c_void)
+where
+    F: Fn() + Send + 'static,
+{
+    if user_data.is_null() {
+        return;
+    }
+
+    let callback = unsafe { &*(user_data as *const F) };
+    callback();
 }
 
 /// Runs the wxWidgets application main loop, providing a safe entry point.

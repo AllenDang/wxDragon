@@ -164,4 +164,36 @@ pub trait AppEvents {
     fn on_print_files<F>(&self, callback: F)
     where
         F: Fn(Vec<String>) + Send + 'static;
+
+    /// Binds a handler that runs when the user asks to quit the application
+    /// (Cmd-Q, the dock menu's Quit item, or the OS shutting down/logging out).
+    ///
+    /// Return `false` from the closure to veto termination. If multiple handlers
+    /// are registered, termination is vetoed if any of them returns `false`.
+    ///
+    /// # Arguments
+    /// * `callback` - A closure returning `true` to allow termination, `false` to veto it
+    ///
+    /// # Platform Support
+    /// - **macOS**: Fully supported
+    /// - **Windows**: No-op
+    /// - **Linux**: No-op
+    fn on_should_terminate<F>(&self, callback: F)
+    where
+        F: Fn() -> bool + Send + 'static;
+
+    /// Binds a handler that runs once termination has been confirmed and is about
+    /// to proceed. Use this for last-chance cleanup; it cannot veto termination
+    /// (use [`AppEvents::on_should_terminate`] for that).
+    ///
+    /// # Arguments
+    /// * `callback` - A closure that takes no arguments
+    ///
+    /// # Platform Support
+    /// - **macOS**: Fully supported
+    /// - **Windows**: No-op
+    /// - **Linux**: No-op
+    fn on_will_terminate<F>(&self, callback: F)
+    where
+        F: Fn() + Send + 'static;
 }
