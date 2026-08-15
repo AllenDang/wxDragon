@@ -201,6 +201,23 @@ wxd_Frame_IsMaximized(wxd_Frame_t* frame)
 }
 
 void
+wxd_Frame_ShowFullScreen(wxd_Frame_t* frame, bool show)
+{
+    if (frame) {
+        ((wxFrame*)frame)->ShowFullScreen(show);
+    }
+}
+
+bool
+wxd_Frame_IsFullScreen(wxd_Frame_t* frame)
+{
+    if (frame) {
+        return ((wxFrame*)frame)->IsFullScreen();
+    }
+    return false;
+}
+
+void
 wxd_Frame_SetIconFromBitmap(wxd_Frame_t* frame, const wxd_Bitmap_t* bitmap)
 {
     if (!frame || !bitmap)
