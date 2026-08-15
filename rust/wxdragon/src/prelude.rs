@@ -20,6 +20,7 @@ pub use crate::event::event_data::{CommandEventData, KeyEventData, MouseEventDat
 pub use crate::event::{IdleEventData, MenuEventData};
 pub use crate::geometry::{Point, Rect, Size};
 pub use crate::id::{ID_ANY, ID_APPLY, ID_CANCEL, ID_HELP, ID_HIGHEST, ID_NO, ID_OK, ID_YES, Id};
+pub use crate::keycode::*;
 pub use crate::language::Language;
 pub use crate::sizers::WxSizer;
 pub use crate::sound::{Sound, SoundFlags};
