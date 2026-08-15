@@ -14,6 +14,14 @@ use std::os::raw::c_char;
 use std::ptr::null_mut;
 use wxdragon_sys as ffi;
 
+// bindgen never defines __WXOSX__, so this mac-only declaration (guarded by
+// #ifdef __WXOSX__ in wxd_textctrl.h) is invisible to it; declare it locally and
+// call it directly instead of routing through the generated `ffi` module.
+#[cfg(target_os = "macos")]
+unsafe extern "C" {
+    unsafe fn wxd_TextCtrl_DisableAllSmartSubstitutions(text_ctrl: *mut ffi::wxd_TextCtrl_t);
+}
+
 // --- Text Control Styles ---
 widget_style_enum!(
     name: TextCtrlStyle,
@@ -357,6 +365,21 @@ impl TextCtrl {
             return false;
         }
         unsafe { ffi::wxd_TextCtrl_IsEditable(ptr) }
+    }
+
+    /// Disables Cocoa's automatic smart quote/dash/substitution features for this
+    /// control (macOS only). Useful for fields where a user's literal input (a
+    /// straight quote, a plain hyphen) should not be silently "corrected".
+    /// No-op if the control has been destroyed, and a no-op on other platforms.
+    pub fn disable_all_smart_substitutions(&self) {
+        #[cfg(target_os = "macos")]
+        {
+            let ptr = self.textctrl_ptr();
+            if ptr.is_null() {
+                return;
+            }
+            unsafe { wxd_TextCtrl_DisableAllSmartSubstitutions(ptr) };
+        }
     }
 
     /// Gets the insertion point of the control.
