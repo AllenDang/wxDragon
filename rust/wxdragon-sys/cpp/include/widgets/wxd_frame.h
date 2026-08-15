@@ -68,6 +68,21 @@ wxd_Frame_ShowFullScreen(wxd_Frame_t* frame, bool show);
 WXD_EXPORTED bool
 wxd_Frame_IsFullScreen(wxd_Frame_t* frame);
 
+/// Enables or disables the title bar's close button/control, where the
+/// platform supports it (Windows, macOS). Returns false if not supported.
+WXD_EXPORTED bool
+wxd_Frame_EnableCloseButton(wxd_Frame_t* frame, bool enable);
+
+/// Enables or disables the title bar's maximize/zoom button/control, where
+/// the platform supports it (Windows, macOS). Returns false if not supported.
+WXD_EXPORTED bool
+wxd_Frame_EnableMaximizeButton(wxd_Frame_t* frame, bool enable);
+
+/// Enables or disables the title bar's minimize button/control, where the
+/// platform supports it (Windows, macOS). Returns false if not supported.
+WXD_EXPORTED bool
+wxd_Frame_EnableMinimizeButton(wxd_Frame_t* frame, bool enable);
+
 WXD_EXPORTED void
 wxd_Frame_SetIconFromBitmap(wxd_Frame_t* frame, const wxd_Bitmap_t* bitmap);
 

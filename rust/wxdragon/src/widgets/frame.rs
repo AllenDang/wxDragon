@@ -455,6 +455,39 @@ impl Frame {
         unsafe { ffi::wxd_Frame_IsFullScreen(ptr) }
     }
 
+    /// Enables or disables the title bar's close button/control, where the
+    /// platform supports it (Windows, macOS). Returns false if not supported,
+    /// or if the frame has been destroyed.
+    pub fn enable_close_button(&self, enable: bool) -> bool {
+        let ptr = self.frame_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_Frame_EnableCloseButton(ptr, enable) }
+    }
+
+    /// Enables or disables the title bar's maximize/zoom button/control,
+    /// where the platform supports it (Windows, macOS). Returns false if not
+    /// supported, or if the frame has been destroyed.
+    pub fn enable_maximize_button(&self, enable: bool) -> bool {
+        let ptr = self.frame_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_Frame_EnableMaximizeButton(ptr, enable) }
+    }
+
+    /// Enables or disables the title bar's minimize button/control, where
+    /// the platform supports it (Windows, macOS). Returns false if not
+    /// supported, or if the frame has been destroyed.
+    pub fn enable_minimize_button(&self, enable: bool) -> bool {
+        let ptr = self.frame_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        unsafe { ffi::wxd_Frame_EnableMinimizeButton(ptr, enable) }
+    }
+
     /// Sets the frame's icon from a bitmap.
     /// The bitmap will be converted to an icon internally.
     /// No-op if the frame has been destroyed.
