@@ -259,6 +259,13 @@ wxd_Window_SetAccessibilityValue(wxd_Window_t* window, const char* value);
 /// Equivalent to [NSRunningApplication activateWithOptions:NSApplicationActivateIgnoringOtherApps].
 WXD_EXPORTED void
 wxd_App_ActivateMac(void);
+
+/// Sets the top level window's title bar proxy icon to represent the given file
+/// path (macOS only). Lets the user Cmd-click the title to reveal the file's
+/// path in Finder, or drag the proxy icon to move/copy the file. Pass an empty
+/// string to clear it. No-op if window is not a top level window.
+WXD_EXPORTED void
+wxd_Window_SetRepresentedFilename(wxd_Window_t* window, const char* path);
 #endif
 
 // --- Popup Menu Functions ---

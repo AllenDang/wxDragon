@@ -1,6 +1,7 @@
 #import <AppKit/AppKit.h>
 #include "../include/wxdragon.h"
 #include <wx/textctrl.h>
+#include <wx/toplevel.h>
 
 void
 wxd_Window_SetAccessibilityLabel(wxd_Window_t* window, const char* label)
@@ -48,4 +49,15 @@ wxd_TextCtrl_DisableAllSmartSubstitutions(wxd_TextCtrl_t* textCtrl)
     if (!textCtrl) return;
     wxTextCtrl* wx_ctrl = reinterpret_cast<wxTextCtrl*>(textCtrl);
     wx_ctrl->OSXDisableAllSmartSubstitutions();
+}
+
+void
+wxd_Window_SetRepresentedFilename(wxd_Window_t* window, const char* path)
+{
+    if (!window || !path) return;
+    wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
+    wxTopLevelWindow* tlw = wxDynamicCast(wx_window, wxTopLevelWindow);
+    if (tlw) {
+        tlw->SetRepresentedFilename(wxString::FromUTF8(path));
+    }
 }

@@ -141,6 +141,8 @@ unsafe extern "C" {
     unsafe fn wxd_Window_SetAccessibilityValue(window: *mut ffi::wxd_Window_t, value: *const std::os::raw::c_char);
     #[cfg(target_os = "macos")]
     pub(crate) unsafe fn wxd_App_ActivateMac();
+    #[cfg(target_os = "macos")]
+    unsafe fn wxd_Window_SetRepresentedFilename(window: *mut ffi::wxd_Window_t, path: *const std::os::raw::c_char);
 }
 
 /// Marshals `s` to a C string and passes it to a `(window, *const c_char)` FFI setter.
@@ -1663,6 +1665,24 @@ pub trait WxWidget: std::any::Any {
         set_accessibility_string(handle, description, ffi::wxd_Window_SetAccessibleDescription);
         #[cfg(not(any(target_os = "macos", target_os = "windows")))]
         let _ = description;
+    }
+
+    /// Sets a top level window's title bar proxy icon to represent the given file
+    /// path (macOS only). Lets the user Cmd-click the title bar to reveal the
+    /// file's location in Finder, or drag the proxy icon to move/copy the file.
+    /// Pass an empty string to clear it.
+    ///
+    /// No-op if this window is not a top level window (a `Frame` or `Dialog`), and
+    /// a no-op on other platforms.
+    fn set_represented_filename(&self, path: &str) {
+        let handle = self.handle_ptr();
+        if handle.is_null() {
+            return;
+        }
+        #[cfg(target_os = "macos")]
+        set_accessibility_string(handle, path, wxd_Window_SetRepresentedFilename);
+        #[cfg(not(target_os = "macos"))]
+        let _ = path;
     }
 
     /// Sets the accessible value for the window.
