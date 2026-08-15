@@ -18,8 +18,12 @@ pub enum FSWatcherEvent {
 /// [`add_tree`](crate::fswatcher::FileSystemWatcher::add_tree).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[repr(transparent)]
+// The `as i32` casts below are unnecessary on MSVC (where C enums are already
+// `int`) but required on MinGW/GNU targets (where they default to `unsigned int`).
+#[allow(clippy::unnecessary_cast)]
 pub struct FSWatcherEventKind(i32);
 
+#[allow(clippy::unnecessary_cast)]
 impl FSWatcherEventKind {
     pub const CREATE: Self = Self(ffi::WXDFSWEventCEnum_WXD_FSW_EVENT_CREATE as i32);
     pub const DELETE: Self = Self(ffi::WXDFSWEventCEnum_WXD_FSW_EVENT_DELETE as i32);
