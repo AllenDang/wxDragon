@@ -14,10 +14,12 @@ pub use crate::datetime::DateTime;
 pub use crate::display::Display;
 pub use crate::event::{Event, EventType, IdleEvent, IdleMode, MouseWheelAxis, WindowEventData, WxEvtHandler};
 // ADDED: Event category traits
-pub use crate::event::{AppEvents, ButtonEvents, MenuEvents, ScrollEvents, TextEvents, TreeEvents, WindowEvents};
+pub use crate::event::{
+    AppEvents, ButtonEvents, FSWatcherEvents, MenuEvents, ScrollEvents, TextEvents, TreeEvents, WindowEvents,
+};
 // ADDED: Event Data Structs
 pub use crate::event::event_data::{CommandEventData, KeyEventData, MouseEventData};
-pub use crate::event::{IdleEventData, MenuEventData};
+pub use crate::event::{FSWatcherEventData, FSWatcherEventKind, IdleEventData, MenuEventData};
 pub use crate::geometry::{Point, Rect, Size};
 pub use crate::id::{ID_ANY, ID_APPLY, ID_CANCEL, ID_HELP, ID_HIGHEST, ID_NO, ID_OK, ID_YES, Id};
 pub use crate::language::Language;
@@ -233,6 +235,7 @@ pub use crate::printing::*;
 // --- Application & Misc ---
 // pub use crate::app::App; // Commented out as per previous error, App is in main or app module
 pub use crate::appprogress::AppProgressIndicator;
+pub use crate::fswatcher::FileSystemWatcher;
 pub use crate::ipc::{IPCClient, IPCConnection, IPCConnectionBuilder, IPCFormat, IPCServer};
 pub use crate::single_instance_checker::SingleInstanceChecker;
 pub use crate::timer::Timer;

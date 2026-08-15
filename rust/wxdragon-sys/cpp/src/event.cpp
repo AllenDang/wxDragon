@@ -32,6 +32,7 @@
 #include <wx/menu.h> // NEW: For wxMenuEvent and wxEVT_MENU_* events
 #include <wx/taskbar.h> // Needed for wxEVT_TASKBAR_* constants
 #include <wx/timectrl.h> // ADDED: For wxTimePickerCtrl and wxEVT_TIME_CHANGED
+#include <wx/fswatcher.h> // ADDED: For wxEVT_FSWATCHER
 #if wxdUSE_MEDIACTRL
 #include <wx/mediactrl.h> // ADDED: For MediaCtrl events
 #endif
@@ -1013,6 +1014,8 @@ get_wx_event_type_for_c_enum(WXDEventTypeCEnum c_enum_val)
         return wxEVT_MOUSEWHEEL;
     case WXD_EVENT_TYPE_MAGNIFY:
         return wxEVT_MAGNIFY;
+    case WXD_EVENT_TYPE_FSWATCHER:
+        return wxEVT_FSWATCHER;
 
     // TaskBarIcon events are handled later in this function (platform-specific support).
     case WXD_EVENT_TYPE_TASKBAR_CLICK:

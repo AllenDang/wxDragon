@@ -363,6 +363,7 @@ typedef enum {
     WXD_EVENT_TYPE_PG_COL_DRAGGING = 402,      // wxEVT_PG_COL_DRAGGING
     WXD_EVENT_TYPE_PG_COL_END_DRAG = 403,      // wxEVT_PG_COL_END_DRAG
     WXD_EVENT_TYPE_MAGNIFY = 404,              // wxEVT_MAGNIFY
+    WXD_EVENT_TYPE_FSWATCHER = 407,            // wxEVT_FSWATCHER
 
     WXD_EVENT_TYPE_MAX // Keep this last for count if needed, or remove if not used for iteration
 } WXDEventTypeCEnum;
@@ -696,6 +697,25 @@ typedef struct wxd_StyledTextCtrl_t wxd_StyledTextCtrl_t;
 // AppProgressIndicator type
 typedef struct wxd_AppProgressIndicator_t wxd_AppProgressIndicator_t;
 typedef struct wxd_Sound_t wxd_Sound_t;
+
+/// Opaque pointer to wxFileSystemWatcher
+typedef struct wxd_FileSystemWatcher_t wxd_FileSystemWatcher_t;
+
+/// Kinds of change a wxd_FileSystemWatcher can report, matching wxFSW_EVENT_*.
+/// Combine with bitwise OR when calling wxd_FileSystemWatcher_Add/AddTree.
+typedef enum {
+    WXD_FSW_EVENT_CREATE = 0x01,
+    WXD_FSW_EVENT_DELETE = 0x02,
+    WXD_FSW_EVENT_RENAME = 0x04,
+    WXD_FSW_EVENT_MODIFY = 0x08,
+    WXD_FSW_EVENT_ACCESS = 0x10,
+    WXD_FSW_EVENT_ATTRIB = 0x20, // GTK only
+    WXD_FSW_EVENT_WARNING = 0x40,
+    WXD_FSW_EVENT_ERROR = 0x80,
+    WXD_FSW_EVENT_ALL = WXD_FSW_EVENT_CREATE | WXD_FSW_EVENT_DELETE | WXD_FSW_EVENT_RENAME |
+                        WXD_FSW_EVENT_MODIFY | WXD_FSW_EVENT_ACCESS | WXD_FSW_EVENT_ATTRIB |
+                        WXD_FSW_EVENT_WARNING | WXD_FSW_EVENT_ERROR
+} WXDFSWEventCEnum;
 
 // --- Appearance Support (wxWidgets 3.3.0+) ---
 

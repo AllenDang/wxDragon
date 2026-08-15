@@ -24,6 +24,7 @@ pub mod dnd;
 pub mod event;
 pub mod font;
 pub mod font_data;
+pub mod fswatcher;
 pub mod geometry;
 pub mod id;
 pub mod ipc;
