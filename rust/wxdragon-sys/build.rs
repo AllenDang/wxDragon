@@ -8,6 +8,9 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
     println!("cargo::rerun-if-changed=cpp");
     println!("cargo::rerun-if-changed=src");
     println!("cargo::rerun-if-changed=build.rs");
+    println!("cargo::rerun-if-env-changed=WXWIDGETS_DIR");
+    println!("cargo::rerun-if-env-changed=WXWIDGETS_BUILD_DIR");
+    println!("cargo::rerun-if-env-changed=WXDRAGON_SYS_BUILD_DIR");
 
     let out_dir = std::path::PathBuf::from(std::env::var("OUT_DIR").unwrap());
     let target_os = std::env::var("CARGO_CFG_TARGET_OS").unwrap_or_default();
@@ -202,8 +205,14 @@ fn build_wxdragon_wrapper(
     // so different feature combinations get separate builds without conflicts.
     // Additionally append the target triple so that native vs cross builds do not
     // stomp on each other when the same profile is reused (e.g. `debug`).
-    let wxdragon_sys_build_dir = dest_bin_dir.join("wxdragon_sys_cmake_build");
-    let wxwidgets_build_dir = dest_bin_dir.join("wxwidgets_cmake_build");
+    // Both directories can be relocated through environment variables (mirroring
+    // WXWIDGETS_DIR for the source), e.g. to a location a CI cache preserves.
+    let wxdragon_sys_build_dir = std::env::var("WXDRAGON_SYS_BUILD_DIR")
+        .map(std::path::PathBuf::from)
+        .unwrap_or_else(|_| dest_bin_dir.join("wxdragon_sys_cmake_build"));
+    let wxwidgets_build_dir = std::env::var("WXWIDGETS_BUILD_DIR")
+        .map(std::path::PathBuf::from)
+        .unwrap_or_else(|_| dest_bin_dir.join("wxwidgets_cmake_build"));
 
     let mut cmake_config = cmake::Config::new(libwxdragon_cmake_source_dir);
     cmake_config.out_dir(&wxdragon_sys_build_dir);
