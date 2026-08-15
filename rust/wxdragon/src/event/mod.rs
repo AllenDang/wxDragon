@@ -136,6 +136,7 @@ pub struct EventType: ffi::WXDEventTypeCEnum { // Use the generated C enum type
     const KEY_DOWN = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_KEY_DOWN;
     const KEY_UP = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_KEY_UP;
     const CHAR = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_CHAR;
+    const CHAR_HOOK = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_CHAR_HOOK;
     const COMMAND_RADIOBUTTON_SELECTED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_COMMAND_RADIOBUTTON_SELECTED;
     const COMMAND_RADIOBOX_SELECTED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_COMMAND_RADIOBOX_SELECTED;
     const COMMAND_LISTBOX_SELECTED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_COMMAND_LISTBOX_SELECTED;
