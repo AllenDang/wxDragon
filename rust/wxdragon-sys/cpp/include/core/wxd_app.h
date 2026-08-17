@@ -96,6 +96,14 @@ WXD_EXPORTED void
 wxd_App_AddMacReopenAppHandler(wxd_App_t* app, wxd_MacReopenAppCallback callback, void* userData);
 WXD_EXPORTED void
 wxd_App_AddMacPrintFilesHandler(wxd_App_t* app, wxd_MacPrintFilesCallback callback, void* userData);
+// Handler runs on Quit (Cmd-Q, dock menu Quit, System Shut Down/Log Out). Returning
+// false from any registered handler vetoes termination.
+WXD_EXPORTED void
+wxd_App_AddMacShouldTerminateHandler(wxd_App_t* app, wxd_MacShouldTerminateCallback callback, void* userData);
+// Handler runs once termination has been confirmed and is about to proceed; use it
+// for last-chance cleanup, not to veto (that's what ShouldTerminate is for).
+WXD_EXPORTED void
+wxd_App_AddMacWillTerminateHandler(wxd_App_t* app, wxd_MacWillTerminateCallback callback, void* userData);
 
 // --- End of macOS-specific App Event Handlers ---
 

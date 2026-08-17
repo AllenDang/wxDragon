@@ -569,6 +569,9 @@ typedef void (*wxd_MacOpenURLCallback)(void* userData, const char* url);
 typedef void (*wxd_MacNewFileCallback)(void* userData);
 typedef void (*wxd_MacReopenAppCallback)(void* userData);
 typedef void (*wxd_MacPrintFilesCallback)(void* userData, const char** files, int count);
+// Return false to veto termination (e.g. Cmd-Q, dock menu Quit).
+typedef bool (*wxd_MacShouldTerminateCallback)(void* userData);
+typedef void (*wxd_MacWillTerminateCallback)(void* userData);
 
 // wxDragResult C Enum (for drag and drop operations)
 typedef enum {
