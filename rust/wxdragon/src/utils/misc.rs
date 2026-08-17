@@ -102,15 +102,15 @@ pub fn get_mouse_position() -> Point {
 /// current event.
 ///
 /// # Arguments
-/// * `keycode` - The key code to check, either a `WXK_*` constant or the ASCII/Unicode
-///   code point of a printable character.
+/// * `keycode` - The key code to check, either a [`crate::keycode`] `WXK_*` constant or
+///   the ASCII/Unicode code point of a printable character.
 ///
 /// # Example
 /// ```rust,no_run
+/// use wxdragon::keycode::WXK_SHIFT;
 /// use wxdragon::utils::get_key_state;
 ///
-/// // WXK_SHIFT = 306
-/// if get_key_state(306) {
+/// if get_key_state(WXK_SHIFT) {
 ///     println!("Shift is currently held down");
 /// }
 /// ```

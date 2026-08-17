@@ -28,6 +28,7 @@ pub mod fswatcher;
 pub mod geometry;
 pub mod id;
 pub mod ipc;
+pub mod keycode;
 pub mod language;
 pub mod menus;
 pub mod prelude;

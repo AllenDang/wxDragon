@@ -720,7 +720,8 @@ impl Event {
         unsafe { ffi::wxd_MouseEvent_GetMagnification(self.0) }
     }
 
-    /// Gets the key code associated with a key event.
+    /// Gets the key code associated with a key event. Compare against the
+    /// `WXK_*` constants in [`crate::keycode`] for non-printable keys.
     pub fn get_key_code(&self) -> Option<i32> {
         if self.0.is_null() {
             return None;
