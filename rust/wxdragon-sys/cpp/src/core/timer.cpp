@@ -6,15 +6,15 @@
 
 extern "C" {
 
-// Create a new wxTimer associated with an event handler
+// Create a new wxTimer
 WXD_EXPORTED wxd_Timer_t*
-wxd_Timer_Create(wxd_EvtHandler_t* owner)
+wxd_Timer_Create(void)
 {
-    wxEvtHandler* wx_owner = reinterpret_cast<wxEvtHandler*>(owner);
-    if (!wx_owner) {
-        return nullptr;
-    }
-    wxTimer* timer = new wxTimer(wx_owner);
+    // The default constructor makes the timer its own event handler, so events are delivered
+    // to the timer rather than to a window. Giving wxTimer an owner window instead would send
+    // every timer's events to that one handler, all carrying the same timer id, leaving
+    // callbacks meant for different timers indistinguishable.
+    wxTimer* timer = new wxTimer();
     return reinterpret_cast<wxd_Timer_t*>(timer);
 }
 
@@ -28,7 +28,18 @@ wxd_Timer_Destroy(wxd_Timer_t* self)
     if (timer->IsRunning()) {
         timer->Stop();
     }
+    // ~wxEvtHandler deletes the client object holding the bound Rust closures.
     delete timer;
+}
+
+// Get the timer as an event handler, so callbacks can be bound to the timer itself
+WXD_EXPORTED wxd_EvtHandler_t*
+wxd_Timer_GetEvtHandler(wxd_Timer_t* self)
+{
+    if (!self)
+        return nullptr;
+    wxTimer* timer = reinterpret_cast<wxTimer*>(self);
+    return reinterpret_cast<wxd_EvtHandler_t*>(static_cast<wxEvtHandler*>(timer));
 }
 
 // Start the timer

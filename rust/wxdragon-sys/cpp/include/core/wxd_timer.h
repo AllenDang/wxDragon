@@ -21,11 +21,15 @@ typedef enum {
 
 // Create a new wxTimer
 WXD_EXPORTED wxd_Timer_t*
-wxd_Timer_Create(wxd_EvtHandler_t* owner);
+wxd_Timer_Create(void);
 
 // Destroy/delete a wxTimer
 WXD_EXPORTED void
 wxd_Timer_Destroy(wxd_Timer_t* self);
+
+// Get the timer as an event handler, so callbacks can be bound to the timer itself
+WXD_EXPORTED wxd_EvtHandler_t*
+wxd_Timer_GetEvtHandler(wxd_Timer_t* self);
 
 // Start the timer
 WXD_EXPORTED bool

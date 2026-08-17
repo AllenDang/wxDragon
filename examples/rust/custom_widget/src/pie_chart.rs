@@ -63,7 +63,7 @@ custom_widget!(
         }));
 
         // Create timer for animations
-        let timer = Rc::new(Timer::new(&panel));
+        let timer = Rc::new(Timer::new());
 
         // Set up paint event
         let animation_data_paint = animation_data.clone();
