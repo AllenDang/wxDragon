@@ -1,14 +1,13 @@
 #include <wx/wxprec.h>
 #include <wx/wx.h>
-#include "../include/wxdragon.h" // Main header for wxDragon C API
-#include <wx/aui/auibar.h>       // For wxAuiToolBar
-#include <wx/window.h>           // For wxWindow
-#include <wx/control.h>          // For wxControl
-#include <wx/string.h>           // For wxString
-#include <wx/gdicmn.h>           // For wxPoint, wxSize, wxID_ANY, etc.
-#include "wxd_utils.h"           // For WXD_STR_TO_WX_STRING_UTF8_NULL_OK, etc.
-
-// --- wxAuiToolBar ---
+#include "../include/wxdragon.h"
+#if wxdUSE_AUI && wxUSE_AUI
+#include <wx/aui/auibar.h>
+#include <wx/window.h>
+#include <wx/control.h>
+#include <wx/string.h>
+#include <wx/gdicmn.h>
+#include "wxd_utils.h"
 
 extern "C" {
 
@@ -16,10 +15,6 @@ WXD_EXPORTED wxd_AuiToolBar_t*
 wxd_AuiToolBar_Create(wxd_Window_t* parent, int id, wxd_Point pos, wxd_Size size, int64_t style)
 {
     wxWindow* wx_parent = (wxWindow*)parent;
-    // wxID_ANY is -1, which is a common default for id.
-    // wxDefaultPosition is wxPoint(-1, -1)
-    // wxDefaultSize is wxSize(-1, -1)
-    // style could be wxAUI_TB_DEFAULT_STYLE
     wxAuiToolBar* toolbar = new wxAuiToolBar(wx_parent, id, wxPoint(pos.x, pos.y),
                                              wxSize(size.width, size.height), style);
     return (wxd_AuiToolBar_t*)toolbar;
@@ -238,4 +233,6 @@ wxd_AuiToolBar_DeleteTool(wxd_AuiToolBar_t* self, int tool_id)
     return toolbar->DeleteTool(tool_id);
 }
 
-} // extern "C"
+}
+
+#endif

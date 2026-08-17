@@ -34,6 +34,7 @@ pub mod gauge;
 pub mod generic_static_bitmap;
 pub mod grid;
 pub mod hyperlink_ctrl;
+pub mod info_bar;
 pub mod item_data;
 pub mod list_ctrl;
 pub mod listbox;
@@ -48,6 +49,7 @@ pub mod property_grid;
 pub mod radio_button;
 pub mod radiobox;
 pub mod rearrangelist;
+pub mod rich_tool_tip;
 #[cfg(feature = "richtext")]
 pub mod richtextctrl;
 pub mod scrollbar;
@@ -134,6 +136,7 @@ pub use grid::{
 // GenericStaticBitmap is mainly for internal use by the platform-aware XRC handler
 pub use generic_static_bitmap::{GenericStaticBitmap, GenericStaticBitmapBuilder};
 pub use hyperlink_ctrl::{HyperlinkCtrl, HyperlinkCtrlBuilder};
+pub use info_bar::*;
 pub use list_ctrl::{ListCtrl, ListCtrlBuilder};
 pub use listbox::{ListBox, ListBoxBuilder};
 pub use mdi_child_frame::{MDIChildFrame, MDIChildFrameBuilder};
@@ -149,6 +152,7 @@ pub use property_grid::{
 pub use radio_button::{RadioButton, RadioButtonBuilder, RadioButtonStyle};
 pub use radiobox::RadioBox;
 pub use rearrangelist::{RearrangeList, RearrangeListEvent, RearrangeListEventData, RearrangeListStyle};
+pub use rich_tool_tip::*;
 #[cfg(feature = "richtext")]
 pub use richtextctrl::{
     RichTextCtrl, RichTextCtrlBuilder, RichTextCtrlEvent, RichTextCtrlEventData, RichTextCtrlStyle, RichTextFileType,

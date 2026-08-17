@@ -1,6 +1,7 @@
 #include <wx/wxprec.h>
 #include <wx/wx.h>
 #include "../include/wxdragon.h"
+#if wxdUSE_AUI && wxUSE_AUI
 #include <wx/aui/framemanager.h> // For wxAuiManager
 #include <wx/aui/auibook.h>      // For wxAuiNotebook
 #include <wx/aui/aui.h>          // For wxAuiPaneInfo etc. and wxAuiMDIChildFrame
@@ -31,3 +32,4 @@ wxd_AuiMDIChildFrame_Create(wxd_AuiMDIParentFrame_t* parent, int id, const char*
 
 // Implementations for other wxAuiMDIChildFrame specific functions will go here.
 }
+#endif

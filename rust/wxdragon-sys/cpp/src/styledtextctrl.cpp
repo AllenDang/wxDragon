@@ -4,8 +4,9 @@
 #include "wx/wx.h"
 #endif
 
-#include "wx/stc/stc.h"
 #include "../include/wxdragon.h"
+#if wxUSE_STC
+#include "wx/stc/stc.h"
 #include "wxd_utils.h"
 
 extern "C" {
@@ -1211,4 +1212,6 @@ wxd_StyledTextCtrl_GetWrapMode(wxd_StyledTextCtrl_t* self)
     return 0;
 }
 
-} // extern "C"
+}
+
+#endif

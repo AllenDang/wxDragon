@@ -455,6 +455,8 @@ typedef struct wxd_FilePickerCtrl_t wxd_FilePickerCtrl_t;
 typedef struct wxd_DirPickerCtrl_t wxd_DirPickerCtrl_t;
 typedef struct wxd_FontPickerCtrl_t wxd_FontPickerCtrl_t;
 typedef struct wxd_NotificationMessage_t wxd_NotificationMessage_t;
+typedef struct wxd_InfoBar_t wxd_InfoBar_t;
+typedef struct wxd_RichToolTip_t wxd_RichToolTip_t;
 typedef struct wxd_FileCtrl_t wxd_FileCtrl_t;
 typedef struct wxd_MediaCtrl_t wxd_MediaCtrl_t;
 typedef struct wxd_RearrangeList_t wxd_RearrangeList_t;

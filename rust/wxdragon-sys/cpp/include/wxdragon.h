@@ -111,6 +111,8 @@ extern "C" {
 #include "widgets/wxd_pickers.h"
 #include "widgets/wxd_file_ctrl.h"
 #include "widgets/wxd_adv_ui.h"          // For wxNotificationMessage etc.
+#include "widgets/wxd_infobar.h"
+#include "widgets/wxd_richtooltip.h"
 #include "widgets/wxd_editablelistbox.h" // For wxEditableListBox
 #include "widgets/wxd_aui.h"
 

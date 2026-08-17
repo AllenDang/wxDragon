@@ -4,8 +4,9 @@
 #include "wx/wx.h"
 #endif
 
-#include "wx/richtext/richtextctrl.h"
 #include "wxdragon.h"
+#if wxUSE_RICHTEXT
+#include "wx/richtext/richtextctrl.h"
 #include "wxd_utils.h"
 
 extern "C" {
@@ -504,4 +505,6 @@ wxd_RichTextCtrl_SetBackgroundColorSelection(wxd_RichTextCtrl_t* self, wxd_Colou
     return ctrl->SetStyle(wxRichTextRange(from, to), attr);
 }
 
-} // extern "C"
+}
+
+#endif

@@ -132,6 +132,7 @@ pub use crate::widgets::list_ctrl::{
     // Events for ListCtrl are now in list_ctrl/event.rs, re-exported from list_ctrl/mod.rs
 }; // Added Events
 
+pub use crate::widgets::info_bar::{InfoBar, InfoBarBuilder, InfoBarStyle, ShowEffect};
 pub use crate::widgets::list_ctrl::image_list_type;
 pub use crate::widgets::listbox::{ListBox, ListBoxBuilder, ListBoxStyle};
 pub use crate::widgets::mdi_child_frame::{MDIChildFrame, MDIChildFrameBuilder};
@@ -140,13 +141,8 @@ pub use crate::widgets::mdi_parent_frame::{MDIParentFrame, MDIParentFrameBuilder
 pub use crate::widgets::media_ctrl::{MediaCtrl, MediaCtrlBuilder, MediaCtrlPlayerControls, MediaState};
 pub use crate::widgets::notebook::{Notebook, NotebookBuilder, NotebookStyle};
 pub use crate::widgets::notification_message::{
-    NotificationMessage,
-    NotificationMessageBuilder,
-    NotificationStyle,
-    // Events for NotificationMessage are now in notification_message/event.rs, re-exported from notification_message/mod.rs
-    TIMEOUT_AUTO,
-    TIMEOUT_NEVER,
-}; // Added Events
+    NotificationMessage, NotificationMessageBuilder, NotificationStyle, TIMEOUT_AUTO, TIMEOUT_NEVER,
+};
 pub use crate::widgets::panel::{Panel, PanelBuilder, PanelStyle};
 pub use crate::widgets::property_grid::{
     Property, PropertyChoice, PropertyGrid, PropertyGridBuilder, PropertyGridEvent, PropertyGridEventData, PropertyGridStyle,
@@ -154,8 +150,8 @@ pub use crate::widgets::property_grid::{
 };
 pub use crate::widgets::radio_button::{RadioButton, RadioButtonBuilder, RadioButtonStyle};
 pub use crate::widgets::radiobox::{RadioBox, RadioBoxBuilder, RadioBoxStyle};
-// Added RearrangeList
 pub use crate::widgets::rearrangelist::{RearrangeList, RearrangeListBuilder, RearrangeListStyle};
+pub use crate::widgets::rich_tool_tip::{RichToolTip, RichToolTipBuilder, TipKind};
 #[cfg(feature = "richtext")]
 pub use crate::widgets::richtextctrl::{
     RichTextCtrl, RichTextCtrlBuilder, RichTextCtrlEvent, RichTextCtrlEventData, RichTextCtrlStyle, RichTextFileType,

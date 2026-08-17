@@ -33,29 +33,29 @@
 #include <wx/taskbar.h> // Needed for wxEVT_TASKBAR_* constants
 #include <wx/timectrl.h> // ADDED: For wxTimePickerCtrl and wxEVT_TIME_CHANGED
 #include <wx/fswatcher.h> // ADDED: For wxEVT_FSWATCHER
-#if wxdUSE_MEDIACTRL
-#include <wx/mediactrl.h> // ADDED: For MediaCtrl events
+#if wxdUSE_MEDIACTRL && wxUSE_MEDIACTRL
+#include <wx/mediactrl.h>
 #endif
-#if wxdUSE_WEBVIEW
-#include <wx/webview.h> // ADDED: For WebView events
+#if wxdUSE_WEBVIEW && wxUSE_WEBVIEW
+#include <wx/webview.h>
 #endif
-#include <wx/dataview.h> // ADDED: For DataView events
+#include <wx/dataview.h>
 #include <wx/grid.h>
 #include <wx/propgrid/propgrid.h>
-#if wxdUSE_STC
-#include <wx/stc/stc.h> // ADDED: For StyledTextCtrl events
+#if wxdUSE_STC && wxUSE_STC
+#include <wx/stc/stc.h>
 #endif
-#include "../src/wxd_utils.h" // For WXD_STR_TO_WX_STRING_UTF8_NULL_OK, etc.
-#if wxdUSE_AUI
-#include <wx/aui/framemanager.h> // ADDED: For wxEVT_AUI_* constants
+#include "../src/wxd_utils.h"
+#if wxdUSE_AUI && wxUSE_AUI
+#include <wx/aui/framemanager.h>
 #endif
-#include <wx/dynarray.h> // For wxEVT_REARRANGE_LIST
+#include <wx/dynarray.h>
 #include <wx/log.h>
 #include <wx/utils.h>
-#include <wx/rearrangectrl.h> // ADDED: For wxEVT_REARRANGE_LIST
-#include <wx/collpane.h>      // ADDED: For wxEVT_COLLAPSIBLEPANE_CHANGED
-#if wxdUSE_RICHTEXT
-#include <wx/richtext/richtextctrl.h> // ADDED: For richtext events
+#include <wx/rearrangectrl.h>
+#include <wx/collpane.h>
+#if wxdUSE_RICHTEXT && wxUSE_RICHTEXT
+#include <wx/richtext/richtextctrl.h>
 #endif
 
 static inline std::string
@@ -140,7 +140,7 @@ IsVetableEventType(wxEventType eventType)
     }
 
 // AUI events
-#if wxdUSE_AUI
+#if wxdUSE_AUI && wxUSE_AUI
     if (eventType == wxEVT_AUI_PANE_CLOSE) {
         return true;
     }
@@ -1245,7 +1245,7 @@ get_wx_event_type_for_c_enum(WXDEventTypeCEnum c_enum_val)
         return wxEVT_LIST_COL_BEGIN_DRAG;
 
 // Media events
-#if wxdUSE_MEDIACTRL
+#if wxdUSE_MEDIACTRL && wxUSE_MEDIACTRL
     case WXD_EVENT_TYPE_MEDIA_LOADED:
         return wxEVT_MEDIA_LOADED;
     case WXD_EVENT_TYPE_MEDIA_STOP:
@@ -1334,7 +1334,7 @@ get_wx_event_type_for_c_enum(WXDEventTypeCEnum c_enum_val)
         return wxEVT_ANY;
 
 // AUI Manager event types
-#if wxdUSE_AUI
+#if wxdUSE_AUI && wxUSE_AUI
     case WXD_EVENT_TYPE_AUI_PANE_BUTTON:
         return wxEVT_AUI_PANE_BUTTON;
     case WXD_EVENT_TYPE_AUI_PANE_CLOSE:
@@ -1358,7 +1358,7 @@ get_wx_event_type_for_c_enum(WXDEventTypeCEnum c_enum_val)
         return wxEVT_COLLAPSIBLEPANE_CHANGED;
 
 // StyledTextCtrl events - only available when stc feature is enabled
-#if wxdUSE_STC
+#if wxdUSE_STC && wxUSE_STC
     case WXD_EVENT_TYPE_STC_CHANGE:
         return wxEVT_STC_CHANGE;
     case WXD_EVENT_TYPE_STC_STYLENEEDED:
@@ -1418,7 +1418,7 @@ get_wx_event_type_for_c_enum(WXDEventTypeCEnum c_enum_val)
 #endif
 
 // RichText events - only available when richtext feature is enabled
-#if wxdUSE_RICHTEXT
+#if wxdUSE_RICHTEXT && wxUSE_RICHTEXT
     case WXD_EVENT_TYPE_RICHTEXT_LEFT_CLICK:
         return wxEVT_RICHTEXT_LEFT_CLICK;
     case WXD_EVENT_TYPE_RICHTEXT_RIGHT_CLICK:
@@ -1477,7 +1477,7 @@ get_wx_event_type_for_c_enum(WXDEventTypeCEnum c_enum_val)
 #endif
 
 // WebView event types - only available when webview feature is enabled
-#if wxdUSE_WEBVIEW
+#if wxdUSE_WEBVIEW && wxUSE_WEBVIEW
     case WXD_EVENT_TYPE_WEBVIEW_CREATED:
         return wxEVT_WEBVIEW_CREATED;
     case WXD_EVENT_TYPE_WEBVIEW_NAVIGATING:
