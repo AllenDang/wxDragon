@@ -1,5 +1,6 @@
 #import <AppKit/AppKit.h>
 #include "../include/wxdragon.h"
+#include <wx/textctrl.h>
 
 void
 wxd_Window_SetAccessibilityLabel(wxd_Window_t* window, const char* label)
@@ -39,4 +40,12 @@ wxd_App_ActivateMac(void)
 {
     [[NSRunningApplication currentApplication]
         activateWithOptions:NSApplicationActivateIgnoringOtherApps];
+}
+
+void
+wxd_TextCtrl_DisableAllSmartSubstitutions(wxd_TextCtrl_t* textCtrl)
+{
+    if (!textCtrl) return;
+    wxTextCtrl* wx_ctrl = reinterpret_cast<wxTextCtrl*>(textCtrl);
+    wx_ctrl->OSXDisableAllSmartSubstitutions();
 }

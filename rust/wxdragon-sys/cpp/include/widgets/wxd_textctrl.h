@@ -161,4 +161,12 @@ wxd_TextCtrl_XYToPosition(wxd_TextCtrl_t* textCtrl, wxd_Long_t x, wxd_Long_t y);
 WXD_EXPORTED int
 wxd_TextCtrl_GetLineLength(wxd_TextCtrl_t* textCtrl, wxd_Long_t lineNo);
 
+#ifdef __WXOSX__
+/// Disables Cocoa's automatic smart quote/dash/substitution features for this
+/// text control (macOS only). Useful for fields where a user's literal input
+/// (a straight quote, a plain hyphen) should not be silently "corrected".
+WXD_EXPORTED void
+wxd_TextCtrl_DisableAllSmartSubstitutions(wxd_TextCtrl_t* textCtrl);
+#endif
+
 #endif // WXD_TEXTCTRL_H
