@@ -217,6 +217,33 @@ wxd_Frame_IsFullScreen(wxd_Frame_t* frame)
     return false;
 }
 
+bool
+wxd_Frame_EnableCloseButton(wxd_Frame_t* frame, bool enable)
+{
+    if (frame) {
+        return ((wxFrame*)frame)->EnableCloseButton(enable);
+    }
+    return false;
+}
+
+bool
+wxd_Frame_EnableMaximizeButton(wxd_Frame_t* frame, bool enable)
+{
+    if (frame) {
+        return ((wxFrame*)frame)->EnableMaximizeButton(enable);
+    }
+    return false;
+}
+
+bool
+wxd_Frame_EnableMinimizeButton(wxd_Frame_t* frame, bool enable)
+{
+    if (frame) {
+        return ((wxFrame*)frame)->EnableMinimizeButton(enable);
+    }
+    return false;
+}
+
 void
 wxd_Frame_SetIconFromBitmap(wxd_Frame_t* frame, const wxd_Bitmap_t* bitmap)
 {
