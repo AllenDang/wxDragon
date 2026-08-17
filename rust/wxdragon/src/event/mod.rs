@@ -9,6 +9,7 @@ use wxdragon_sys as ffi;
 pub mod app_events;
 pub mod button_events;
 pub mod event_data;
+pub mod fswatcher_events;
 pub mod macros;
 pub mod menu_events;
 pub mod scroll_events;
@@ -33,6 +34,9 @@ pub use text_events::{TextEvent, TextEventData, TextEvents};
 
 // Re-export tree events for easier access
 pub use tree_events::{TreeEvent, TreeEventData, TreeEvents};
+
+// Re-export file system watcher events for easier access
+pub use fswatcher_events::{FSWatcherEvent, FSWatcherEventData, FSWatcherEventKind, FSWatcherEvents};
 
 // Re-export scroll events for easier access
 pub use scroll_events::{ScrollEvent, ScrollEventType, ScrollEvents};
@@ -122,6 +126,8 @@ pub struct EventType: ffi::WXDEventTypeCEnum { // Use the generated C enum type
     const MOTION = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_MOTION;
     const MOUSEWHEEL = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_MOUSEWHEEL;
     const MAGNIFY = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_MAGNIFY;
+    /// Fired by a `FileSystemWatcher` for changes to a watched path.
+    const FSWATCHER = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_FSWATCHER;
     const ENTER_WINDOW = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_ENTER_WINDOW;
     const LEAVE_WINDOW = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_LEAVE_WINDOW;
     const KEY_DOWN = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_KEY_DOWN;

@@ -117,6 +117,9 @@ extern "C" {
 // Timer
 #include "core/wxd_timer.h"
 
+// File system watcher
+#include "core/wxd_fswatcher.h"
+
 // Application progress indicator
 #include "core/wxd_appprogress.h"
 
