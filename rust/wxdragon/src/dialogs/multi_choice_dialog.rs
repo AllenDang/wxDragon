@@ -106,7 +106,12 @@ impl WxWidget for MultiChoiceDialog {
 // Implement Drop
 impl Drop for MultiChoiceDialog {
     fn drop(&mut self) {
-        // The Dialog's drop will be called automatically
+        // Dialog itself has no Drop impl (this comment previously claimed
+        // otherwise), so this no-op silently leaked the underlying window.
+        // destroy_once() is idempotent across Clones of this dialog - see its
+        // doc comment for why calling wxd_Window_Destroy directly would risk
+        // a double-free.
+        self.dialog_base.destroy_once();
     }
 }
 

@@ -93,19 +93,10 @@ impl WxWidget for MessageDialog {
 
 impl Drop for MessageDialog {
     fn drop(&mut self) {
-        if !self.handle_ptr().is_null() {
-            // Ensure Rust knows this pointer is managed by Rust for this instance.
-            // If this instance is a simple wrapper not owning the underlying object,
-            // (e.g. from a GetParent call), then this Drop might be too aggressive.
-            // For dialogs created via builder, they are owned.
-            unsafe {
-                // Check if it's already being destroyed by wxWidgets or a parent
-                // For dialogs shown modally, they are often auto-destroyed or parented such that
-                // wxWidgets handles their deletion. However, explicit Destroy is safer if we created it.
-                // The current C API relies on wxd_Window_Destroy.
-                ffi::wxd_Window_Destroy(self.handle_ptr());
-            }
-        }
+        // destroy_once() is idempotent across Clones of this dialog - see its
+        // doc comment for why calling wxd_Window_Destroy directly here would
+        // risk a double-free.
+        self.dialog_base.destroy_once();
     }
 }
 
