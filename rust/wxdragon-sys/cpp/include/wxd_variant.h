@@ -11,6 +11,14 @@ typedef struct wxd_Variant_t wxd_Variant_t;
 extern "C" {
 #endif
 
+// Frees a string that was allocated on the C/C++ side (e.g. via strdup()), such as
+// the ones returned by wxd_Frame_GetTitle, wxd_FilePickerCtrl_GetPath, and the
+// FSWatcher event path/error accessors. Rust must call this instead of
+// CString::from_raw() on such strings - the latter would deallocate C-runtime-
+// allocated memory with Rust's global allocator, which is undefined behavior.
+WXD_EXPORTED void
+wxd_FreeCString(char* str);
+
 // New typed API (preferred)
 WXD_EXPORTED wxd_Variant_t*
 wxd_Variant_CreateEmpty(void);

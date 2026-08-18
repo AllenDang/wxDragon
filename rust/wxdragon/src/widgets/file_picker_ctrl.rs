@@ -124,10 +124,14 @@ impl FilePickerCtrl {
         }
         let c_str = unsafe { ffi::wxd_FilePickerCtrl_GetPath(ptr) };
         if c_str.is_null() {
-            String::new()
-        } else {
-            unsafe { CString::from_raw(c_str as *mut _).to_string_lossy().into_owned() }
+            return String::new();
         }
+        // c_str was allocated by the C++ side (strdup) - read it via a borrowing
+        // CStr and free it with wxd_FreeCString, NOT CString::from_raw, which
+        // would deallocate C-runtime memory with Rust's global allocator.
+        let path = unsafe { std::ffi::CStr::from_ptr(c_str) }.to_string_lossy().into_owned();
+        unsafe { ffi::wxd_FreeCString(c_str as *mut _) };
+        path
     }
 
     /// Sets the currently selected path.

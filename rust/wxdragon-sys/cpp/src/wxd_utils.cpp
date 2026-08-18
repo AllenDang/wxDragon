@@ -1,8 +1,15 @@
 #include <wx/wx.h>
 #include "wxd_utils.h"
+#include "../include/wxd_variant.h" // For the wxd_FreeCString declaration
 #include <cstring>   // For strncpy, strlen
 #include <algorithm> // For std::min
 #include <cstdlib>   // For strdup
+
+WXD_EXPORTED void
+wxd_FreeCString(char* str)
+{
+    free(str);
+}
 
 namespace wxd_cpp_utils {
 
