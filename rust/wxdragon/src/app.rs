@@ -285,9 +285,6 @@ fn get_app_string(
     )
 }
 
-unsafe impl Send for App {}
-unsafe impl Sync for App {}
-
 /// Sets the application's top window.
 ///
 /// This is necessary for the main event loop to run correctly.

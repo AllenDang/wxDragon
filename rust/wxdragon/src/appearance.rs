@@ -162,10 +162,6 @@ impl Drop for SystemAppearance {
     }
 }
 
-// Make SystemAppearance thread-safe for use across threads
-unsafe impl Send for SystemAppearance {}
-unsafe impl Sync for SystemAppearance {}
-
 /// Gets the current system appearance information.
 ///
 /// This function returns information about the current system appearance,

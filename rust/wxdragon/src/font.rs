@@ -68,8 +68,6 @@ pub struct Font {
     owned: bool, // Track if this instance owns the pointer
 }
 
-unsafe impl Send for Font {}
-
 impl Font {
     /// Creates a new default font.
     pub fn new() -> Self {
