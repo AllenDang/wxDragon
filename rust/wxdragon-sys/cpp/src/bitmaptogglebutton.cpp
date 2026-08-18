@@ -4,23 +4,6 @@
 #include <wx/tglbtn.h> // For wxBitmapToggleButton
 #include <wx/bitmap.h>
 
-// Helper functions for point/size conversion
-inline wxPoint
-wxd_to_wx_point(const wxd_Point& p)
-{
-    if (p.x == -1 && p.y == -1)
-        return wxDefaultPosition;
-    return wxPoint(p.x, p.y);
-}
-
-inline wxSize
-wxd_to_wx_size(const wxd_Size& s)
-{
-    if (s.width == -1 && s.height == -1)
-        return wxDefaultSize;
-    return wxSize(s.width, s.height);
-}
-
 extern "C" {
 
 WXD_EXPORTED wxd_BitmapToggleButton_t*
@@ -43,7 +26,7 @@ wxd_BitmapToggleButton_Create(wxd_Window_t* parent, wxd_Id id,
     try {
         btn = new wxBitmapToggleButton(parentWin, id,
                                        bmp_main ? *bmp_main : wxNullBitmap,
-                                       wxd_to_wx_point(pos), wxd_to_wx_size(size), style,
+                                       wxd_cpp_utils::to_wx(pos), wxd_cpp_utils::to_wx(size), style,
                                        wxDefaultValidator,
                                        WXD_STR_TO_WX_STRING_UTF8_NULL_OK(name_str));
     }

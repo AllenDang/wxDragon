@@ -37,8 +37,8 @@ wxd_HyperlinkCtrl_Create(wxd_Window_t* parent, int id, const char* label, const 
     wxWindow* p = (wxWindow*)parent;
     wxString wxLabel = wxString::FromUTF8(label);
     wxString wxUrl = wxString::FromUTF8(url);
-    wxPoint pos = (x == -1 && y == -1) ? wxDefaultPosition : wxPoint(x, y);
-    wxSize size = (w == -1 && h == -1) ? wxDefaultSize : wxSize(w, h);
+    wxPoint pos = wxd_cpp_utils::to_wx(wxd_Point{x, y});
+    wxSize size = wxd_cpp_utils::to_wx(wxd_Size{w, h});
 
     wxHyperlinkCtrl* link = new wxHyperlinkCtrl(p, id, wxLabel, wxUrl, pos, size, style);
     return (wxd_HyperlinkCtrl_t*)link;

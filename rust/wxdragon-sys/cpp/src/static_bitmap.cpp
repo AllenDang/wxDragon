@@ -6,24 +6,6 @@
 
 // Note: No top-level extern "C" here; wxdragon.h handles it.
 
-// Helper to convert wxd_Point to wxPoint
-static inline wxPoint
-wxd_to_wx_point_sb(const wxd_Point& p)
-{
-    if (p.x == -1 && p.y == -1)
-        return wxDefaultPosition;
-    return wxPoint(p.x, p.y);
-}
-
-// Helper to convert wxd_Size to wxSize
-static inline wxSize
-wxd_to_wx_size_sb(const wxd_Size& s)
-{
-    if (s.width == -1 && s.height == -1)
-        return wxDefaultSize;
-    return wxSize(s.width, s.height);
-}
-
 /**
  * @brief Creates a static bitmap control displaying a wxBitmap.
  *
@@ -52,8 +34,8 @@ wxd_StaticBitmap_CreateWithBitmap(wxd_Window_t* parent, wxd_Id id, const wxd_Bit
             "wxd_StaticBitmap_CreateWithBitmap: Bitmap is null or not OK. Creating StaticBitmap with wxNullBitmap.");
     }
 
-    wxStaticBitmap* statBmp = new wxStaticBitmap(parentWin, id, bitmap_ref, wxd_to_wx_point_sb(pos),
-                                                 wxd_to_wx_size_sb(size), style,
+    wxStaticBitmap* statBmp = new wxStaticBitmap(parentWin, id, bitmap_ref, wxd_cpp_utils::to_wx(pos),
+                                                 wxd_cpp_utils::to_wx(size), style,
                                                  WXD_STR_TO_WX_STRING_UTF8_NULL_OK(name));
 
     return reinterpret_cast<wxd_StaticBitmap_t*>(statBmp);

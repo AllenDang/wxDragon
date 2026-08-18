@@ -5,23 +5,6 @@
 #include <wx/bitmap.h>
 #include <cstdio> // For printf
 
-// Helper function (already defined elsewhere, ensure linkage or redefine locally if needed)
-// For simplicity here, assume they are accessible or redefine:
-inline wxPoint
-wxd_to_wx_point(const wxd_Point& p)
-{
-    if (p.x == -1 && p.y == -1)
-        return wxDefaultPosition;
-    return wxPoint(p.x, p.y);
-}
-inline wxSize
-wxd_to_wx_size(const wxd_Size& s)
-{
-    if (s.width == -1 && s.height == -1)
-        return wxDefaultSize;
-    return wxSize(s.width, s.height);
-}
-
 // Implementation for wxd_BitmapButton_Create
 WXD_EXPORTED wxd_BitmapButton_t*
 wxd_BitmapButton_Create(
@@ -45,7 +28,7 @@ wxd_BitmapButton_Create(
     try {
         btn = new wxBitmapButton(parentWin, id,
                                  bmp_main ? *bmp_main : wxNullBitmap, // Main bitmap
-                                 wxd_to_wx_point(pos), wxd_to_wx_size(size), style,
+                                 wxd_cpp_utils::to_wx(pos), wxd_cpp_utils::to_wx(size), style,
                                  wxDefaultValidator, WXD_STR_TO_WX_STRING_UTF8_NULL_OK(name_str));
     }
     catch (const std::exception& e) {

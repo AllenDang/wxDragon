@@ -24,12 +24,15 @@ wxd_FileDialog_Create(
                          WXD_STR_TO_WX_STRING_UTF8_NULL_OK(defaultDir),
                          WXD_STR_TO_WX_STRING_UTF8_NULL_OK(defaultFile),
                          WXD_STR_TO_WX_STRING_UTF8_NULL_OK(wildcard), style,
-                         wxPoint(x, y) // Position can be passed
+                         wxd_cpp_utils::to_wx(wxd_Point{x, y}) // Position can be passed
                          // Size is typically not passed or is wxDefaultSize for FileDialog
         );
     // If width/height are not -1 (DEFAULT_SIZE), we could call SetSize, but usually not done for file dialogs.
-    if (width != -1 && height != -1) {
-        dlg->SetSize(width, height);
+    // Use OR (not AND) so that specifying just one axis still applies - only skip
+    // when BOTH width and height are the -1 "unspecified" sentinel.
+    if (width != -1 || height != -1) {
+        wxSize size = wxd_cpp_utils::to_wx(wxd_Size{width, height});
+        dlg->SetSize(size.GetWidth(), size.GetHeight());
     }
     return (wxd_FileDialog_t*)dlg;
 }
