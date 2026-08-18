@@ -101,6 +101,30 @@ impl WindowHandle {
         self.get_ptr().is_some()
     }
 
+    /// Idempotently destroys the underlying window exactly once.
+    ///
+    /// `wxd_Window_Destroy` defers the actual C++ deletion (via
+    /// `wxPendingDelete`/`CallAfter`), processed later at idle time - the
+    /// `wxEVT_DESTROY`-driven invalidation in [`Self::new`] does NOT fire
+    /// synchronously. So if this were called twice before the event loop
+    /// reaches idle (e.g. from two `Clone`s of the same widget being dropped
+    /// back-to-back), the underlying pointer would be queued for deletion
+    /// twice - a double-free once wxWidgets processes its pending-delete list.
+    ///
+    /// This method closes that race by invalidating the registry entry
+    /// immediately, before issuing the deferred destroy, so any other handle
+    /// sharing this id sees it as already-destroyed right away rather than
+    /// waiting for the async wx event. Returns `false` (no-op) if the handle
+    /// was already invalidated by a previous call.
+    pub(crate) fn destroy(&self) -> bool {
+        let Some(ptr) = self.get_ptr() else {
+            return false;
+        };
+        Self::invalidate(self.0);
+        unsafe { ffi::wxd_Window_Destroy(ptr) };
+        true
+    }
+
     /// Internal: Remove handle from registry (called when window is destroyed)
     fn invalidate(handle_id: u64) {
         WINDOW_REGISTRY.with(|r| {

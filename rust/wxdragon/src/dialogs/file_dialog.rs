@@ -252,8 +252,12 @@ impl WxWidget for FileDialog {
 // Implement Drop
 impl Drop for FileDialog {
     fn drop(&mut self) {
-        // The composed Dialog's Drop will be called automatically,
-        // which calls wxd_Window_Destroy on the pointer.
+        // Dialog itself has no Drop impl (this comment previously claimed
+        // otherwise), so this no-op silently leaked the underlying window.
+        // destroy_once() is idempotent across Clones of this dialog - see its
+        // doc comment for why calling wxd_Window_Destroy directly would risk
+        // a double-free.
+        self.dialog_base.destroy_once();
     }
 }
 

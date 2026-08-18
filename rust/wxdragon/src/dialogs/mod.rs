@@ -93,6 +93,15 @@ impl Dialog {
         self.handle
     }
 
+    /// Idempotently destroys the underlying dialog exactly once, even if
+    /// called from multiple `Clone`s of the same dialog. See
+    /// [`WindowHandle::destroy`] for why this matters: `wxd_Window_Destroy`
+    /// defers actual deletion, so naively calling it from every clone's
+    /// `Drop` can queue a double-delete before the event loop catches up.
+    pub(crate) fn destroy_once(&self) -> bool {
+        self.handle.destroy()
+    }
+
     /// Sets the icon for the dialog.
     /// No-op if the dialog has been destroyed.
     pub fn set_icon(&self, bitmap: &Bitmap) {

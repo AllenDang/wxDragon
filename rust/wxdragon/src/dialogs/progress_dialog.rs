@@ -233,9 +233,9 @@ impl WxWidget for ProgressDialog {
 // Add a Drop implementation for ProgressDialog for proper cleanup
 impl Drop for ProgressDialog {
     fn drop(&mut self) {
-        unsafe {
-            // Use destroy from the Window trait to clean up resources
-            ffi::wxd_Window_Destroy(self.handle_ptr());
-        }
+        // destroy_once() is idempotent across Clones of this dialog and
+        // handles the null case - see its doc comment for why calling
+        // wxd_Window_Destroy directly here would risk a double-free.
+        self.dialog_base.destroy_once();
     }
 }
