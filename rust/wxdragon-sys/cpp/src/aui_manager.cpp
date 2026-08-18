@@ -1,12 +1,12 @@
 #include <wx/wxprec.h>
 #include <wx/wx.h>
 #include "../include/wxdragon.h"
+#if wxdUSE_AUI && wxUSE_AUI
 #include "wxd_utils.h"
 
 #include <wx/aui/framemanager.h>
 #include <wx/aui/auibook.h>
 
-// Direction constants for AddPane function (matching wxAUI constants)
 #define WXD_AUI_DOCK_LEFT   (0)
 #define WXD_AUI_DOCK_RIGHT  (1)
 #define WXD_AUI_DOCK_TOP    (2)
@@ -496,4 +496,6 @@ wxd_AuiPaneInfo_CaptionVisible(wxd_AuiPaneInfo_t* self, bool visible)
     return self;
 }
 
-} // extern "C"
+}
+
+#endif

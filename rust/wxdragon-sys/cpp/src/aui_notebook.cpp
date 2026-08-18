@@ -1,12 +1,9 @@
 #include <wx/wxprec.h>
 #include <wx/wx.h>
 #include "../include/wxdragon.h"
-#include <wx/aui/auibook.h> // For wxAuiNotebook
+#if wxdUSE_AUI && wxUSE_AUI
+#include <wx/aui/auibook.h>
 #include "wxd_utils.h"
-
-// Ensure this is part of wx/aui/auibook.h or wx/aui/aui.h
-// If wxAuiNotebook is in wx/aui/aui.h, this might need adjustment,
-// but typically dedicated controls are in their own headers like auibook.h
 
 extern "C" {
 
@@ -14,8 +11,6 @@ WXD_EXPORTED wxd_AuiNotebook_t*
 wxd_AuiNotebook_Create(wxd_Window_t* parent, int id, wxd_Point pos, wxd_Size size, int64_t style)
 {
     wxWindow* parentPtr = (wxWindow*)parent;
-    // Note: wxAuiNotebook parent can be null according to some docs, but safer to require for now.
-    // if (!parentPtr) return nullptr;
 
     wxPoint wxPos = wxPoint(pos.x, pos.y);
     wxSize wxSizeInstance = wxSize(size.width, size.height);
@@ -160,4 +155,6 @@ wxd_AuiNotebook_SetPageText(wxd_AuiNotebook_t* self, size_t page_idx, const char
     return notebook->SetPageText(page_idx, wxText);
 }
 
-} // extern "C"
+}
+
+#endif

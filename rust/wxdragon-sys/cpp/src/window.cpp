@@ -13,12 +13,12 @@
 #include <wx/menu.h>     // For wxCommandEvent wxEVT_MENU
 
 // Conditional includes for optional features
-#if wxdUSE_RICHTEXT
-#include <wx/richtext/richtextctrl.h> // For wxRichTextCtrl scrolling
+#if wxdUSE_RICHTEXT && wxUSE_RICHTEXT
+#include <wx/richtext/richtextctrl.h>
 #endif
 
-#if wxdUSE_STC
-#include <wx/stc/stc.h> // For wxStyledTextCtrl scrolling
+#if wxdUSE_STC && wxUSE_STC
+#include <wx/stc/stc.h>
 #endif
 
 extern "C" {
@@ -838,7 +838,7 @@ wxd_Window_ShowPosition(wxd_Window_t* window, int64_t position)
     }
 
     // Try to cast to wxRichTextCtrl if richtext feature is enabled
-#if wxdUSE_RICHTEXT
+#if wxdUSE_RICHTEXT && wxUSE_RICHTEXT
     if (wxRichTextCtrl* rich_text = wxDynamicCast(wx_window, wxRichTextCtrl)) {
         rich_text->ShowPosition(static_cast<long>(position));
         return;
@@ -846,7 +846,7 @@ wxd_Window_ShowPosition(wxd_Window_t* window, int64_t position)
 #endif
 
     // Try to cast to wxStyledTextCtrl if STC feature is enabled
-#if wxdUSE_STC
+#if wxdUSE_STC && wxUSE_STC
     if (wxStyledTextCtrl* stc = wxDynamicCast(wx_window, wxStyledTextCtrl)) {
         stc->GotoPos(static_cast<int>(position));
         stc->EnsureCaretVisible();
@@ -867,7 +867,7 @@ wxd_Window_ScrollIntoView(wxd_Window_t* window, int64_t position, int keyCode)
     }
 
     // Try to cast to wxRichTextCtrl first (has the most sophisticated scrolling)
-#if wxdUSE_RICHTEXT
+#if wxdUSE_RICHTEXT && wxUSE_RICHTEXT
     if (wxRichTextCtrl* rich_text = wxDynamicCast(wx_window, wxRichTextCtrl)) {
         rich_text->ScrollIntoView(static_cast<long>(position), keyCode);
         return;
@@ -881,7 +881,7 @@ wxd_Window_ScrollIntoView(wxd_Window_t* window, int64_t position, int keyCode)
     }
 
     // For StyledTextCtrl, use position scrolling
-#if wxdUSE_STC
+#if wxdUSE_STC && wxUSE_STC
     if (wxStyledTextCtrl* stc = wxDynamicCast(wx_window, wxStyledTextCtrl)) {
         stc->GotoPos(static_cast<int>(position));
         stc->EnsureCaretVisible();
@@ -902,7 +902,7 @@ wxd_Window_IsPositionVisible(wxd_Window_t* window, int64_t position)
     }
 
     // Try to cast to wxRichTextCtrl first (has native support for this)
-#if wxdUSE_RICHTEXT
+#if wxdUSE_RICHTEXT && wxUSE_RICHTEXT
     if (wxRichTextCtrl* rich_text = wxDynamicCast(wx_window, wxRichTextCtrl)) {
         return rich_text->IsPositionVisible(static_cast<long>(position));
     }
@@ -928,7 +928,7 @@ wxd_Window_IsPositionVisible(wxd_Window_t* window, int64_t position)
     }
 
     // For StyledTextCtrl, check if position is visible
-#if wxdUSE_STC
+#if wxdUSE_STC && wxUSE_STC
     if (wxStyledTextCtrl* stc = wxDynamicCast(wx_window, wxStyledTextCtrl)) {
         int line = stc->LineFromPosition(static_cast<int>(position));
         int first_visible_line = stc->GetFirstVisibleLine();
@@ -955,14 +955,14 @@ wxd_Window_GetLastPosition(wxd_Window_t* window)
     }
 
     // Try to cast to wxRichTextCtrl
-#if wxdUSE_RICHTEXT
+#if wxdUSE_RICHTEXT && wxUSE_RICHTEXT
     if (wxRichTextCtrl* rich_text = wxDynamicCast(wx_window, wxRichTextCtrl)) {
         return static_cast<int64_t>(rich_text->GetLastPosition());
     }
 #endif
 
     // Try to cast to wxStyledTextCtrl
-#if wxdUSE_STC
+#if wxdUSE_STC && wxUSE_STC
     if (wxStyledTextCtrl* stc = wxDynamicCast(wx_window, wxStyledTextCtrl)) {
         return static_cast<int64_t>(stc->GetLength());
     }
