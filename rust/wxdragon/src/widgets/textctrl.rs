@@ -639,14 +639,16 @@ impl TextAttr {
         unsafe { ffi::wxd_TextAttr_SetFontStyle(self.ptr, font_style as i32) };
     }
     pub fn get_font_style(&self) -> crate::font::FontStyle {
-        unsafe { std::mem::transmute(ffi::wxd_TextAttr_GetFontStyle(self.ptr)) }
+        let val = unsafe { ffi::wxd_TextAttr_GetFontStyle(self.ptr) };
+        crate::font::FontStyle::from_i32(val)
     }
 
     pub fn set_font_weight(&mut self, font_weight: crate::font::FontWeight) {
         unsafe { ffi::wxd_TextAttr_SetFontWeight(self.ptr, font_weight as i32) };
     }
     pub fn get_font_weight(&self) -> crate::font::FontWeight {
-        unsafe { std::mem::transmute(ffi::wxd_TextAttr_GetFontWeight(self.ptr)) }
+        let val = unsafe { ffi::wxd_TextAttr_GetFontWeight(self.ptr) };
+        crate::font::FontWeight::from_i32(val)
     }
 
     pub fn set_font_face_name(&mut self, face_name: &str) {

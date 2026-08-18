@@ -21,6 +21,22 @@ impl FontFamily {
     pub fn as_i32(self) -> i32 {
         self as i32
     }
+
+    /// Converts a raw wx font family value, falling back to the default
+    /// variant for any value wxWidgets didn't return one of the known
+    /// constants (rather than transmuting into an invalid discriminant).
+    pub(crate) fn from_i32(val: i32) -> Self {
+        match val {
+            v if v == ffi::WXD_FONTFAMILY_DEFAULT as i32 => Self::Default,
+            v if v == ffi::WXD_FONTFAMILY_DECORATIVE as i32 => Self::Decorative,
+            v if v == ffi::WXD_FONTFAMILY_ROMAN as i32 => Self::Roman,
+            v if v == ffi::WXD_FONTFAMILY_SCRIPT as i32 => Self::Script,
+            v if v == ffi::WXD_FONTFAMILY_SWISS as i32 => Self::Swiss,
+            v if v == ffi::WXD_FONTFAMILY_MODERN as i32 => Self::Modern,
+            v if v == ffi::WXD_FONTFAMILY_TELETYPE as i32 => Self::Teletype,
+            _ => Self::default(),
+        }
+    }
 }
 
 /// Specifies the style of the font (normal, italic, or slanted).
@@ -36,6 +52,18 @@ pub enum FontStyle {
 impl FontStyle {
     pub fn as_i32(self) -> i32 {
         self as i32
+    }
+
+    /// Converts a raw wx font style value, falling back to the default
+    /// variant for any value wxWidgets didn't return one of the known
+    /// constants (rather than transmuting into an invalid discriminant).
+    pub(crate) fn from_i32(val: i32) -> Self {
+        match val {
+            v if v == ffi::WXD_FONTSTYLE_NORMAL as i32 => Self::Normal,
+            v if v == ffi::WXD_FONTSTYLE_ITALIC as i32 => Self::Italic,
+            v if v == ffi::WXD_FONTSTYLE_SLANT as i32 => Self::Slant,
+            _ => Self::default(),
+        }
     }
 }
 
@@ -58,6 +86,27 @@ pub enum FontWeight {
 impl FontWeight {
     pub fn as_i32(self) -> i32 {
         self as i32
+    }
+
+    /// Converts a raw wx font weight value, falling back to the default
+    /// variant for any value wxWidgets didn't return one of the known
+    /// constants (rather than transmuting into an invalid discriminant).
+    /// Note: modern wxWidgets allows arbitrary numeric weights (1-1000), not
+    /// just these named constants, so unrecognized-but-valid weights collapse
+    /// to `Normal` here rather than being UB.
+    pub(crate) fn from_i32(val: i32) -> Self {
+        match val {
+            v if v == ffi::WXD_FONTWEIGHT_THIN as i32 => Self::Thin,
+            v if v == ffi::WXD_FONTWEIGHT_EXTRALIGHT as i32 => Self::ExtraLight,
+            v if v == ffi::WXD_FONTWEIGHT_LIGHT as i32 => Self::Light,
+            v if v == ffi::WXD_FONTWEIGHT_NORMAL as i32 => Self::Normal,
+            v if v == ffi::WXD_FONTWEIGHT_MEDIUM as i32 => Self::Medium,
+            v if v == ffi::WXD_FONTWEIGHT_SEMIBOLD as i32 => Self::SemiBold,
+            v if v == ffi::WXD_FONTWEIGHT_BOLD as i32 => Self::Bold,
+            v if v == ffi::WXD_FONTWEIGHT_EXTRABOLD as i32 => Self::ExtraBold,
+            v if v == ffi::WXD_FONTWEIGHT_HEAVY as i32 => Self::Heavy,
+            _ => Self::default(),
+        }
     }
 }
 
@@ -132,19 +181,19 @@ impl Font {
     /// Get the font family.
     pub fn get_family(&self) -> FontFamily {
         let val = unsafe { ffi::wxd_Font_GetFamily(self.ptr) };
-        unsafe { std::mem::transmute(val as i32) } // Ensure FFI result is i32 for transmute
+        FontFamily::from_i32(val as i32)
     }
 
     /// Get the font style.
     pub fn get_style(&self) -> FontStyle {
         let val = unsafe { ffi::wxd_Font_GetStyle(self.ptr) };
-        unsafe { std::mem::transmute(val as i32) }
+        FontStyle::from_i32(val as i32)
     }
 
     /// Get the font weight.
     pub fn get_weight(&self) -> FontWeight {
         let val = unsafe { ffi::wxd_Font_GetWeight(self.ptr) };
-        unsafe { std::mem::transmute(val as i32) }
+        FontWeight::from_i32(val as i32)
     }
 
     /// Get whether the font is underlined.
