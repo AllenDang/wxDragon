@@ -274,7 +274,11 @@ impl TreeListCtrl {
                 return String::new();
             }
         }
-        let byte_slice = unsafe { std::slice::from_raw_parts(buffer.as_ptr() as *const u8, len as usize) };
+        // Clamp to the buffer's actual size: if the retry call still reports a
+        // length >= buffer.len() (e.g. the underlying value changed between the
+        // two calls), trusting it verbatim would read past the allocation.
+        let safe_len = (len as usize).min(buffer.len());
+        let byte_slice = unsafe { std::slice::from_raw_parts(buffer.as_ptr() as *const u8, safe_len) };
         String::from_utf8_lossy(byte_slice).to_string()
     }
 
