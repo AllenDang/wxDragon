@@ -1014,6 +1014,8 @@ get_wx_event_type_for_c_enum(WXDEventTypeCEnum c_enum_val)
         return wxEVT_MOUSEWHEEL;
     case WXD_EVENT_TYPE_MAGNIFY:
         return wxEVT_MAGNIFY;
+    case WXD_EVENT_TYPE_SYS_COLOUR_CHANGED:
+        return wxEVT_SYS_COLOUR_CHANGED;
     case WXD_EVENT_TYPE_FSWATCHER:
         return wxEVT_FSWATCHER;
 

@@ -126,6 +126,9 @@ pub struct EventType: ffi::WXDEventTypeCEnum { // Use the generated C enum type
     const MOTION = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_MOTION;
     const MOUSEWHEEL = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_MOUSEWHEEL;
     const MAGNIFY = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_MAGNIFY;
+    /// Fired when the OS-level system colours/appearance change, e.g. switching
+    /// between light and dark mode.
+    const SYS_COLOUR_CHANGED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_SYS_COLOUR_CHANGED;
     /// Fired by a `FileSystemWatcher` for changes to a watched path.
     const FSWATCHER = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_FSWATCHER;
     const ENTER_WINDOW = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_ENTER_WINDOW;
