@@ -310,6 +310,7 @@ impl Accessible {
             GetLocation: Some(accessible_get_location::<T>),
             HitTest: Some(accessible_hit_test::<T>),
             Navigate: Some(accessible_navigate::<T>),
+            DestroyUserData: Some(accessible_destroy_user_data::<T>),
         };
 
         let ptr = unsafe { ffi::wxd_Accessible_Create(window.handle_ptr(), callbacks, user_data as *mut c_void) };
@@ -596,6 +597,12 @@ unsafe extern "C" fn accessible_navigate<T: AccessibleImpl>(
         unsafe { *to_object = std::ptr::null_mut() };
     }
     status.to_ffi()
+}
+
+/// Called by the C++ side exactly once, when the underlying `wxAccessible` is
+/// deleted, to reclaim the `Box<T>` leaked by `Accessible::new`.
+unsafe extern "C" fn accessible_destroy_user_data<T: AccessibleImpl>(user_data: *mut c_void) {
+    unsafe { drop(Box::from_raw(user_data as *mut T)) };
 }
 
 fn copy_string_to_c(s: String, out_buf: *mut c_char, max_len: usize) {

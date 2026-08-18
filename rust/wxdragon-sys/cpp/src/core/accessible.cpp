@@ -11,6 +11,12 @@ public:
         : wxAccessible(win), m_callbacks(callbacks), m_userData(userData)
     {}
 
+    ~WxdCustomAccessible() override {
+        if (m_callbacks.DestroyUserData) {
+            m_callbacks.DestroyUserData(m_userData);
+        }
+    }
+
     wxAccStatus GetChildCount(int* childCount) override {
         if (m_callbacks.GetChildCount) {
             return (wxAccStatus)m_callbacks.GetChildCount(m_userData, childCount);
