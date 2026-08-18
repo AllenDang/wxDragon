@@ -67,7 +67,12 @@ wxd_StaticBitmap_CreateWithBitmap(wxd_Window_t* parent, wxd_Id id, const wxd_Bit
 WXD_EXPORTED void
 wxd_StaticBitmap_SetBitmap(wxd_StaticBitmap_t* self, const wxd_Bitmap_t* bitmap)
 {
-    wxStaticBitmap* statBmp = reinterpret_cast<wxStaticBitmap*>(self);
+    // Cast to the common base, not the concrete wxStaticBitmap type: on Windows
+    // the object may actually be a wxGenericStaticBitmap (see
+    // platform_aware_staticbitmap_handler.cpp), a sibling class that does NOT
+    // derive from wxStaticBitmap. Both derive from wxStaticBitmapBase, which
+    // declares this method virtual, so dispatch through it instead.
+    wxStaticBitmapBase* statBmp = reinterpret_cast<wxStaticBitmapBase*>(self);
     const wxBitmap* bmp = reinterpret_cast<const wxBitmap*>(bitmap);
 
     if (!statBmp)
@@ -90,7 +95,9 @@ wxd_StaticBitmap_SetBitmap(wxd_StaticBitmap_t* self, const wxd_Bitmap_t* bitmap)
 WXD_EXPORTED wxd_Bitmap_t*
 wxd_StaticBitmap_GetBitmap(wxd_StaticBitmap_t* self)
 {
-    wxStaticBitmap* statBmp = reinterpret_cast<wxStaticBitmap*>(self);
+    // See comment in wxd_StaticBitmap_SetBitmap: must cast to the shared base,
+    // not the concrete wxStaticBitmap type.
+    wxStaticBitmapBase* statBmp = reinterpret_cast<wxStaticBitmapBase*>(self);
     if (!statBmp)
         return nullptr;
 
@@ -129,7 +136,9 @@ wxd_StaticBitmap_CreateWithBitmapBundle(wxd_Window_t* parent, wxd_Id id, wxd_Bit
 WXD_EXPORTED void
 wxd_StaticBitmap_SetBitmapBundle(wxd_StaticBitmap_t* self, wxd_BitmapBundle_t* bundle)
 {
-    wxStaticBitmap* statBmp = reinterpret_cast<wxStaticBitmap*>(self);
+    // See comment in wxd_StaticBitmap_SetBitmap: must cast to the shared base,
+    // not the concrete wxStaticBitmap type.
+    wxStaticBitmapBase* statBmp = reinterpret_cast<wxStaticBitmapBase*>(self);
     wxBitmapBundle* bundlePtr = reinterpret_cast<wxBitmapBundle*>(bundle);
 
     if (!statBmp)
@@ -147,11 +156,15 @@ wxd_StaticBitmap_SetBitmapBundle(wxd_StaticBitmap_t* self, wxd_BitmapBundle_t* b
 WXD_EXPORTED void
 wxd_StaticBitmap_SetScaleMode(wxd_StaticBitmap_t* self, int scaleMode)
 {
-    wxStaticBitmap* statBmp = reinterpret_cast<wxStaticBitmap*>(self);
+    // See comment in wxd_StaticBitmap_SetBitmap: must cast to the shared base,
+    // not the concrete wxStaticBitmap type. ScaleMode itself is declared on
+    // wxStaticBitmapBase, so both wxStaticBitmap and wxGenericStaticBitmap
+    // share the same enum.
+    wxStaticBitmapBase* statBmp = reinterpret_cast<wxStaticBitmapBase*>(self);
     if (!statBmp)
         return;
 
-    wxStaticBitmap::ScaleMode mode = static_cast<wxStaticBitmap::ScaleMode>(scaleMode);
+    wxStaticBitmapBase::ScaleMode mode = static_cast<wxStaticBitmapBase::ScaleMode>(scaleMode);
     statBmp->SetScaleMode(mode);
 }
 
@@ -164,7 +177,9 @@ wxd_StaticBitmap_SetScaleMode(wxd_StaticBitmap_t* self, int scaleMode)
 WXD_EXPORTED int
 wxd_StaticBitmap_GetScaleMode(wxd_StaticBitmap_t* self)
 {
-    wxStaticBitmap* statBmp = reinterpret_cast<wxStaticBitmap*>(self);
+    // See comment in wxd_StaticBitmap_SetBitmap: must cast to the shared base,
+    // not the concrete wxStaticBitmap type.
+    wxStaticBitmapBase* statBmp = reinterpret_cast<wxStaticBitmapBase*>(self);
     if (!statBmp)
         return 0; // Default to Scale_None
 
