@@ -121,7 +121,7 @@ impl From<FindFlags> for i32 {
 
 impl From<i32> for FindFlags {
     fn from(bits: i32) -> Self {
-        unsafe { std::mem::transmute(bits as i64) }
+        Self::from_bits_truncate(bits as i64)
     }
 }
 
