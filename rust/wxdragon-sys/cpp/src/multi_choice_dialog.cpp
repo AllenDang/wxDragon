@@ -15,19 +15,21 @@ wxd_MultiChoiceDialog_Create(const wxd_Window_t* parent, const char* message, co
     wxWindow* parent_wx = (wxWindow*)parent;
     const wxArrayString* wxChoices = reinterpret_cast<const wxArrayString*>(choices);
 
-    // Default position/size if not specified
-    wxPoint pos = (x == -1 && y == -1) ? wxDefaultPosition : wxPoint(x, y);
+    wxPoint pos = wxd_cpp_utils::to_wx(wxd_Point{x, y});
+    wxSize size = wxd_cpp_utils::to_wx(wxd_Size{width, height});
 
     wxMultiChoiceDialog* dialog =
         new wxMultiChoiceDialog(parent_wx, WXD_STR_TO_WX_STRING_UTF8_NULL_OK(message),
                                 WXD_STR_TO_WX_STRING_UTF8_NULL_OK(caption), *wxChoices, style);
 
-    // Set position and size if provided
-    if (x != -1 && y != -1) {
+    // Set position/size if provided. Use OR (not AND) so that specifying just
+    // one axis (e.g. x=-1, y=100) still applies - only skip when BOTH axes of
+    // a pair are the -1 "unspecified" sentinel, matching the sentinel checks above.
+    if (x != -1 || y != -1) {
         dialog->SetPosition(pos);
     }
-    if (width != -1 && height != -1) {
-        dialog->SetSize(width, height);
+    if (width != -1 || height != -1) {
+        dialog->SetSize(size.GetWidth(), size.GetHeight());
     }
 
     return reinterpret_cast<wxd_MultiChoiceDialog_t*>(dialog);

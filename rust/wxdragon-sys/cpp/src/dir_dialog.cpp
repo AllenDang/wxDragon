@@ -11,9 +11,8 @@ wxd_DirDialog_Create(wxd_Window_t* parent, const char* message, const char* defa
 {
     wxWindow* parent_wx = (wxWindow*)parent;
 
-    // Default position/size if not specified
-    wxPoint pos = (x == -1 && y == -1) ? wxDefaultPosition : wxPoint(x, y);
-    wxSize size = (width == -1 && height == -1) ? wxDefaultSize : wxSize(width, height);
+    wxPoint pos = wxd_cpp_utils::to_wx(wxd_Point{x, y});
+    wxSize size = wxd_cpp_utils::to_wx(wxd_Size{width, height});
 
     wxDirDialog* dialog = new wxDirDialog(parent_wx, WXD_STR_TO_WX_STRING_UTF8_NULL_OK(message),
                                           WXD_STR_TO_WX_STRING_UTF8_NULL_OK(defaultPath), style,

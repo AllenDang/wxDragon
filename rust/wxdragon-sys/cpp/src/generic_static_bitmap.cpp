@@ -6,24 +6,6 @@
 
 // Note: No top-level extern "C" here; wxdragon.h handles it.
 
-// Helper to convert wxd_Point to wxPoint
-static inline wxPoint
-wxd_to_wx_point_gsb(const wxd_Point& p)
-{
-    if (p.x == -1 && p.y == -1)
-        return wxDefaultPosition;
-    return wxPoint(p.x, p.y);
-}
-
-// Helper to convert wxd_Size to wxSize
-static inline wxSize
-wxd_to_wx_size_gsb(const wxd_Size& s)
-{
-    if (s.width == -1 && s.height == -1)
-        return wxDefaultSize;
-    return wxSize(s.width, s.height);
-}
-
 /**
  * @brief Creates a generic static bitmap control displaying a wxBitmap.
  *
@@ -54,8 +36,8 @@ wxd_GenericStaticBitmap_CreateWithBitmap(wxd_Window_t* parent, wxd_Id id,
     }
 
     wxGenericStaticBitmap* statBmp =
-        new wxGenericStaticBitmap(parentWin, id, bitmap_ref, wxd_to_wx_point_gsb(pos),
-                                  wxd_to_wx_size_gsb(size), style,
+        new wxGenericStaticBitmap(parentWin, id, bitmap_ref, wxd_cpp_utils::to_wx(pos),
+                                  wxd_cpp_utils::to_wx(size), style,
                                   WXD_STR_TO_WX_STRING_UTF8_NULL_OK(name));
 
     return reinterpret_cast<wxd_GenericStaticBitmap_t*>(statBmp);

@@ -12,9 +12,8 @@ wxd_Dialog_Create(wxd_Window_t* parent, const char* title, wxd_Style_t style, in
     wxWindow* wx_parent = (wxWindow*)parent;
     wxString wx_title = wxString::FromUTF8(title ? title : "");
 
-    // Use wxDefaultPosition and wxDefaultSize if coordinates are -1 (default)
-    wxPoint pos = (x == -1 && y == -1) ? wxDefaultPosition : wxPoint(x, y);
-    wxSize size = (width == -1 && height == -1) ? wxDefaultSize : wxSize(width, height);
+    wxPoint pos = wxd_cpp_utils::to_wx(wxd_Point{x, y});
+    wxSize size = wxd_cpp_utils::to_wx(wxd_Size{width, height});
 
     // Create the dialog with the provided parameters
     wxDialog* dialog = new wxDialog();

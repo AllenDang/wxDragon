@@ -12,8 +12,8 @@ wxd_SpinCtrlDouble_Create(wxd_Window_t* parent, int id, const char* value_str, i
                           double inc)
 {
     wxWindow* p = (wxWindow*)parent;
-    wxPoint pos = (x == -1 && y == -1) ? wxDefaultPosition : wxPoint(x, y);
-    wxSize size = (w == -1 && h == -1) ? wxDefaultSize : wxSize(w, h);
+    wxPoint pos = wxd_cpp_utils::to_wx(wxd_Point{x, y});
+    wxSize size = wxd_cpp_utils::to_wx(wxd_Size{w, h});
     wxString wx_value_str = wxString::FromUTF8(value_str ? value_str : "");
 
     // wxSpinCtrlDouble constructor doesn't take an initial string value if initial_val (double) is provided.

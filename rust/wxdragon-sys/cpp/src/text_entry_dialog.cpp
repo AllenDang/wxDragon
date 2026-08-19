@@ -11,19 +11,20 @@ wxd_TextEntryDialog_Create(wxd_Window_t* parent, const char* message, const char
 {
     wxWindow* parent_wx = (wxWindow*)parent;
 
-    // Default position/size if not specified
-    wxPoint pos = (x == -1 && y == -1) ? wxDefaultPosition : wxPoint(x, y);
+    wxPoint pos = wxd_cpp_utils::to_wx(wxd_Point{x, y});
     // wxTextEntryDialog doesn't take size in constructor, handled by wxWidgets
-    // We can ignore width/height here, or call SetSize after creation if needed (uncommon for this dialog)
 
     wxTextEntryDialog* dlg =
         new wxTextEntryDialog(parent_wx, WXD_STR_TO_WX_STRING_UTF8_NULL_OK(message),
                               WXD_STR_TO_WX_STRING_UTF8_NULL_OK(caption),
                               WXD_STR_TO_WX_STRING_UTF8_NULL_OK(defaultValue), style, pos);
 
-    // Optional: Set size if provided, though usually unnecessary for text entry dialogs
-    if (width != -1 && height != -1) {
-        dlg->SetSize(width, height);
+    // Optional: Set size if provided, though usually unnecessary for text entry dialogs.
+    // Use OR (not AND) so that specifying just one axis still applies - only skip
+    // when BOTH width and height are the -1 "unspecified" sentinel.
+    if (width != -1 || height != -1) {
+        wxSize size = wxd_cpp_utils::to_wx(wxd_Size{width, height});
+        dlg->SetSize(size.GetWidth(), size.GetHeight());
     }
 
     // Don't bind wxd_OnWindowDestroy here; rely on Rust Drop calling wxd_Window_Destroy
