@@ -312,10 +312,6 @@ impl Drop for Cursor {
     }
 }
 
-// Make Cursor Send and Sync for multi-threading support
-unsafe impl Send for Cursor {}
-unsafe impl Sync for Cursor {}
-
 // Global cursor functions
 
 /// Sets the global cursor for the application.

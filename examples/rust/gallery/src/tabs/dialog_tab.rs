@@ -1,10 +1,7 @@
 use wxdragon::prelude::*;
 
 use std::time::Duration;
-use std::{
-    sync::{Arc, Mutex},
-    thread,
-};
+use std::{cell::RefCell, rc::Rc, thread};
 
 #[allow(dead_code)]
 pub struct DialogTabControls {
@@ -48,7 +45,7 @@ pub struct DialogTabControls {
     // StdDialogButtonSizer
     pub show_std_btn_sizer_btn: Button,
     // Keep NotificationMessage alive while showing
-    pub notification_message: Arc<Mutex<Option<NotificationMessage>>>,
+    pub notification_message: Rc<RefCell<Option<NotificationMessage>>>,
 }
 
 pub fn create_dialog_tab(notebook: &Notebook, _frame: &Frame) -> DialogTabControls {
@@ -340,7 +337,7 @@ pub fn create_dialog_tab(notebook: &Notebook, _frame: &Frame) -> DialogTabContro
         dlg_dir_button,
         show_about_dialog_btn,
         show_std_btn_sizer_btn,
-        notification_message: Arc::new(Mutex::new(None)),
+        notification_message: Rc::new(RefCell::new(None)),
     }
 }
 
@@ -541,7 +538,7 @@ impl DialogTabControls {
                     notification.show(wxdragon::widgets::notification_message::TIMEOUT_AUTO);
                     notification_status_label.set_label("Notification shown.");
                     println!("NotificationMessage: Shown.");
-                    notif_store.lock().unwrap().replace(notification);
+                    notif_store.borrow_mut().replace(notification);
                 }
                 Err(e) => {
                     notification_status_label.set_label(&format!("Notify Err: {e:?}"));
@@ -709,7 +706,7 @@ impl DialogTabControls {
 
         let notif_store_on_destroy = self.notification_message.clone();
         frame.on_destroy(move |_| {
-            let _ = notif_store_on_destroy.lock().unwrap().take();
+            let _ = notif_store_on_destroy.borrow_mut().take();
         });
     }
 }

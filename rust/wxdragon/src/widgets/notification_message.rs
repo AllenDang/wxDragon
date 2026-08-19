@@ -63,9 +63,6 @@ pub struct NotificationMessage {
     ptr: *mut ffi::wxd_NotificationMessage_t,
 }
 
-unsafe impl Send for NotificationMessage {}
-unsafe impl Sync for NotificationMessage {}
-
 impl NotificationMessage {
     pub fn builder() -> NotificationMessageBuilder {
         NotificationMessageBuilder::new()

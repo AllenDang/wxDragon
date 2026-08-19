@@ -24,9 +24,6 @@ pub struct RichToolTip {
     ptr: *mut ffi::wxd_RichToolTip_t,
 }
 
-unsafe impl Send for RichToolTip {}
-unsafe impl Sync for RichToolTip {}
-
 impl RichToolTip {
     pub fn new(title: &str, message: &str) -> Self {
         let c_title = CString::new(title).unwrap_or_default();

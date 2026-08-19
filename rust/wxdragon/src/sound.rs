@@ -76,5 +76,3 @@ impl Drop for Sound {
         }
     }
 }
-
-unsafe impl Send for Sound {}
