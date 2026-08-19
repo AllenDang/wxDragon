@@ -1036,6 +1036,8 @@ get_wx_event_type_for_c_enum(WXDEventTypeCEnum c_enum_val)
         return wxEVT_KEY_UP;
     case WXD_EVENT_TYPE_CHAR:
         return wxEVT_CHAR;
+    case WXD_EVENT_TYPE_CHAR_HOOK:
+        return wxEVT_CHAR_HOOK;
     case WXD_EVENT_TYPE_COMMAND_RADIOBUTTON_SELECTED:
         return wxEVT_RADIOBUTTON;
     case WXD_EVENT_TYPE_COMMAND_RADIOBOX_SELECTED:
@@ -1641,7 +1643,7 @@ wxd_IsKeyboardEvent(wxd_Event_t* event)
     wxEventType type = wx_event->GetEventType();
 
     // Check if it's any of the keyboard event types
-    return (type == wxEVT_KEY_DOWN || type == wxEVT_KEY_UP || type == wxEVT_CHAR) ? 1 : 0;
+    return (type == wxEVT_KEY_DOWN || type == wxEVT_KEY_UP || type == wxEVT_CHAR || type == wxEVT_CHAR_HOOK) ? 1 : 0;
 }
 
 extern "C" int
