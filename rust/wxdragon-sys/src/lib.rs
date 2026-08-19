@@ -34,33 +34,6 @@ mod logging4c;
 
 // Need to find the actual values for these constants. // REMOVED Comment
 
-// Add necessary imports for the drop function
-use std::cell::RefCell;
-use std::os::raw::c_void;
-
-// Type placeholder for user data until a proper type is defined in the safe wrapper
-type WindowUserData = (); // Replace with actual user data type later if needed
-
-/// Function called by C++ (WxdRustClientData destructor) to drop the Rust `Box<RefCell<T>>`.
-/// # Safety
-/// The caller (C++) must ensure `user_data_ptr` is a valid pointer obtained
-/// from `Box::into_raw(Box::new(RefCell::new(data)))` and that it hasn't been
-/// dropped or invalidated since.
-#[unsafe(no_mangle)]
-#[allow(clippy::not_unsafe_ptr_arg_deref)]
-pub extern "C" fn drop_rust_refcell_box(user_data_ptr: *mut c_void) {
-    if !user_data_ptr.is_null() {
-        // Reconstitute the Box and let it drop, freeing the memory
-        // and dropping the RefCell<WindowUserData>.
-        let _boxed_refcell: Box<RefCell<WindowUserData>> =
-            unsafe { Box::from_raw(user_data_ptr as *mut RefCell<WindowUserData>) };
-        // Drop happens automatically when `_boxed_refcell` goes out of scope here.
-    } else {
-        // Optional: Log a warning or handle null pointer case if necessary
-        // eprintln!("Warning: drop_rust_refcell_box called with null pointer.");
-    }
-}
-
 /// Function to properly free a string that was allocated by Rust using CString::into_raw().
 /// This must be called instead of C's free() for strings allocated by Rust.
 /// # Safety
