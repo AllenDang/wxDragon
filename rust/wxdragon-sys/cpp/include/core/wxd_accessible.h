@@ -174,6 +174,10 @@ typedef struct {
     wxd_AccStatus (*GetLocation)(void* userData, int childId, wxd_Rect* rect);
     wxd_AccStatus (*HitTest)(void* userData, wxd_Point pt, int* childId, wxd_Accessible_t** childObject);
     wxd_AccStatus (*Navigate)(void* userData, wxd_NavDir navDir, int fromId, int* toId, wxd_Accessible_t** toObject);
+    // Called exactly once, when the underlying wxAccessible is deleted (whether via
+    // wxd_Accessible_Destroy or by wxWidgets itself, e.g. when replacing/destroying the
+    // owning window's accessible object), to free userData. May be NULL.
+    void (*DestroyUserData)(void* userData);
 } wxd_AccessibleCallbacks;
 
 // --- Accessible Functions ---
