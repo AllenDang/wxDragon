@@ -1,7 +1,6 @@
 //! Event system for `FileSystemWatcher`.
 
 use crate::event::{Event, EventType};
-use std::ffi::CString;
 use wxdragon_sys as ffi;
 
 /// Events specific to `FileSystemWatcher`.
@@ -118,8 +117,12 @@ fn string_from_owned_c_str(ptr: *mut std::os::raw::c_char) -> String {
     if ptr.is_null() {
         return String::new();
     }
-    // SAFETY: the C side hands us a strdup'd string it no longer owns.
-    unsafe { CString::from_raw(ptr) }.to_string_lossy().into_owned()
+    // The C side hands us a strdup'd string it no longer owns. Read it via a
+    // borrowing CStr and free it with wxd_FreeCString, NOT CString::from_raw,
+    // which would deallocate C-runtime memory with Rust's global allocator.
+    let s = unsafe { std::ffi::CStr::from_ptr(ptr) }.to_string_lossy().into_owned();
+    unsafe { ffi::wxd_FreeCString(ptr) };
+    s
 }
 
 // Use the macro to implement the trait

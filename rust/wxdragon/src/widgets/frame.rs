@@ -387,12 +387,14 @@ impl Frame {
         if c_title_ptr.is_null() {
             return String::new(); // Should ideally not happen if C returns empty string for null frame
         }
-        // CString::from_raw takes ownership and will free the memory.
-        unsafe {
-            CString::from_raw(c_title_ptr)
-                .into_string()
-                .unwrap_or_else(|_| String::from("Error converting title"))
-        }
+        // c_title_ptr was allocated by the C++ side (strdup) - read it via a
+        // borrowing CStr and free it with wxd_FreeCString, NOT CString::from_raw,
+        // which would deallocate C-runtime memory with Rust's global allocator.
+        let title = unsafe { std::ffi::CStr::from_ptr(c_title_ptr) }
+            .to_string_lossy()
+            .into_owned();
+        unsafe { ffi::wxd_FreeCString(c_title_ptr) };
+        title
     }
 
     /// Iconizes or restores the frame.
