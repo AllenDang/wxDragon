@@ -44,6 +44,7 @@ use std::{cell::RefCell, rc::Rc};
 use wxdragon::prelude::*;
 
 fn main() {
+    SystemOptions::set_option_by_int("msw.no-manifest-check", 1);
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("trace")).init();
     let cfg = Rc::new(RefCell::new(settings::load_settings()));
     let cfg_clone = cfg.clone();

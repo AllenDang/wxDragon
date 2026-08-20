@@ -8,6 +8,7 @@ use wxdragon::widgets::static_text::StaticText;
 use wxdragon::widgets::togglebutton::ToggleButton;
 
 fn main() {
+    SystemOptions::set_option_by_int("msw.no-manifest-check", 1);
     println!("wxdragon events test - starting...");
 
     let _ = wxdragon::main(|_| {

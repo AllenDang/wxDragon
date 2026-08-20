@@ -5,6 +5,8 @@ use wxdragon::widgets::SimpleBook;
 mod xrc_test;
 
 fn main() {
+    SystemOptions::set_option_by_int("msw.no-manifest-check", 1);
+
     // Check command line arguments to decide which test to run
     let args: Vec<String> = std::env::args().collect();
 

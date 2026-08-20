@@ -102,6 +102,7 @@ impl MainFrame {
 }
 
 fn main() {
+    SystemOptions::set_option_by_int("msw.no-manifest-check", 1);
     let _ = wxdragon::main(|_| {
         let main_frame = MainFrame::new();
         main_frame.frame.show(true);

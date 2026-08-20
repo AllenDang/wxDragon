@@ -135,6 +135,7 @@ fn test_cursor_functionality(window: &Frame) {
 }
 
 fn main() {
+    SystemOptions::set_option_by_int("msw.no-manifest-check", 1);
     println!("=== wxDragon Window Features & Comprehensive Cursor Test ===");
 
     let _ = wxdragon::main(|_| {

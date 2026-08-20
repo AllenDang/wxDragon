@@ -17,9 +17,7 @@ impl MediaPlayerFrame {
 
         let panel = Panel::builder(&frame).build();
 
-        let media_ctrl = MediaCtrl::builder(&panel)
-            .with_size(Size::new(800, 500))
-            .build();
+        let media_ctrl = MediaCtrl::builder(&panel).with_size(Size::new(800, 500)).build();
 
         let button_panel = Panel::builder(&panel).build();
 
@@ -30,9 +28,7 @@ impl MediaPlayerFrame {
 
         let stop_button = Button::builder(&button_panel).with_label("Stop").build();
 
-        let open_button = Button::builder(&button_panel)
-            .with_label("Open File")
-            .build();
+        let open_button = Button::builder(&button_panel).with_label("Open File").build();
 
         // Button sizer
         let button_sizer = BoxSizer::builder(Orientation::Horizontal).build();
@@ -63,13 +59,7 @@ impl MediaPlayerFrame {
         };
 
         // Set up event handlers
-        MediaPlayerFrame::setup_event_handlers(
-            &player_frame,
-            &play_button,
-            &pause_button,
-            &stop_button,
-            &open_button,
-        );
+        MediaPlayerFrame::setup_event_handlers(&player_frame, &play_button, &pause_button, &stop_button, &open_button);
 
         player_frame
     }
@@ -119,9 +109,7 @@ impl MediaPlayerFrame {
             let file_dialog = FileDialog::builder(&frame)
                 .with_message("Open Media File")
                 .with_style(FileDialogStyle::Open)
-                .with_wildcard(
-                    "Video files (*.mp4;*.avi;*.mkv;*.mov;*.wmv)|*.mp4;*.avi;*.mkv;*.mov;*.wmv",
-                )
+                .with_wildcard("Video files (*.mp4;*.avi;*.mkv;*.mov;*.wmv)|*.mp4;*.avi;*.mkv;*.mov;*.wmv")
                 .build();
 
             if file_dialog.show_modal() == ID_OK {
@@ -167,6 +155,7 @@ impl MediaPlayerFrame {
 }
 
 fn main() {
+    SystemOptions::set_option_by_int("msw.no-manifest-check", 1);
     let _ = wxdragon::main(|_app| {
         let player = MediaPlayerFrame::new();
         player.show();

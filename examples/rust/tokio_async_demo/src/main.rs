@@ -88,6 +88,8 @@ impl AsyncMessageHandler {
 
 #[tokio::main]
 async fn main() {
+    SystemOptions::set_option_by_int("msw.no-manifest-check", 1);
+
     // Set idle mode to only send events to windows that request them
     // This is more efficient when we have async work to do
     IdleEvent::set_mode(IdleMode::ProcessSpecified);
