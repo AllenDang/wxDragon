@@ -1,6 +1,7 @@
 use wxdragon::prelude::*;
 
 fn main() {
+    SystemOptions::set_option_by_int("msw.no-manifest-check", 1);
     let _ = wxdragon::main(|_| {
         // Create the main frame
         let frame = Frame::builder()

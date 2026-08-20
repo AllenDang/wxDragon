@@ -12,12 +12,13 @@
 use wxdragon::prelude::*;
 
 fn main() {
+    SystemOptions::set_option_by_int("msw.no-manifest-check", 1);
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
 
     let _ = wxdragon::main(|_| {
         let frame = Frame::builder()
             .with_title("UIActionSimulator Demo")
-            .with_size(Size::new(500, 400))
+            .with_size(Size::new(700, 600))
             .build();
 
         let panel = Panel::builder(&frame).build();

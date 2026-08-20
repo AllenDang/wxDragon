@@ -9,6 +9,7 @@
 use wxdragon::prelude::*;
 
 fn main() {
+    SystemOptions::set_option_by_int("msw.no-manifest-check", 1);
     let _ = wxdragon::main(|_| {
         // Create a single instance checker with a unique name for this app.
         // The name should be unique to avoid conflicts with other applications.
@@ -88,7 +89,7 @@ fn show_checker_failed_dialog() {
 fn show_main_window() {
     let frame = Frame::builder()
         .with_title("Single Instance Demo - Primary Instance")
-        .with_size(Size::new(450, 300))
+        .with_size(Size::new(500, 350))
         .build();
 
     let panel = Panel::builder(&frame).build();

@@ -1,10 +1,11 @@
 use wxdragon::prelude::*;
 
 fn main() {
+    SystemOptions::set_option_by_int("msw.no-manifest-check", 1);
     let _ = wxdragon::main(|_| {
         let frame = Frame::builder()
             .with_title("GridSizer Test")
-            .with_size(Size::new(500, 400))
+            .with_size(Size::new(500, 500))
             .build();
 
         let panel = Panel::builder(&frame).build();

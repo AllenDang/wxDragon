@@ -6,6 +6,7 @@ use wxdragon::widgets::{
 };
 
 fn main() {
+    SystemOptions::set_option_by_int("msw.no-manifest-check", 1);
     wxdragon::main(|_app| {
         let frame = Frame::builder()
             .with_title("wxWebView Full Feature Test")

@@ -54,6 +54,7 @@ fn selection_summary(grid: &Grid) -> String {
 }
 
 fn main() {
+    SystemOptions::set_option_by_int("msw.no-manifest-check", 1);
     let _ = wxdragon::main(|_| {
         let frame = Frame::builder()
             .with_title("wxGrid Full API Test")

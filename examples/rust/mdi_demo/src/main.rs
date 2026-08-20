@@ -1,6 +1,7 @@
 use wxdragon::prelude::*;
 
 fn main() {
+    SystemOptions::set_option_by_int("msw.no-manifest-check", 1);
     wxdragon::main(|_app| {
         let parent_frame = MDIParentFrame::builder().with_title("wxDragon MDI Demo").build();
 

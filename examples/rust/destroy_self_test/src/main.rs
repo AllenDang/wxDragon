@@ -7,6 +7,7 @@
 use wxdragon::prelude::*;
 
 fn main() {
+    SystemOptions::set_option_by_int("msw.no-manifest-check", 1);
     wxdragon::main(|_| {
         let frame = Frame::builder()
             .with_title("Destroy self (issue #164)")
