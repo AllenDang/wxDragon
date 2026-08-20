@@ -449,6 +449,22 @@ impl TextCtrl {
         unsafe { ffi::wxd_TextCtrl_IsSingleLine(ptr) }
     }
 
+    /// Enables or disables password masking for this text control.
+    ///
+    /// This changes the native password character without recreating the control.
+    pub fn set_password_mode(&self, enabled: bool) {
+        let ptr = self.textctrl_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_TextCtrl_SetPasswordMode(ptr, enabled) };
+    }
+
+    /// Returns true if this control currently has password masking enabled.
+    pub fn is_password_mode(&self) -> bool {
+        self.get_style_raw() & TextCtrlStyle::Password.bits() != 0
+    }
+
     // --- Selection Operations ---
 
     /// Sets the selection in the text control.

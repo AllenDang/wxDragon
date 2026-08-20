@@ -52,6 +52,48 @@ wxd_TextCtrl_DisableAllSmartSubstitutions(wxd_TextCtrl_t* textCtrl)
 }
 
 void
+wxd_TextCtrl_SetPasswordModeMac(wxd_TextCtrl_t* textCtrl, bool enabled)
+{
+    if (!textCtrl) return;
+    wxTextCtrl* wx_ctrl = reinterpret_cast<wxTextCtrl*>(textCtrl);
+    NSTextField* field = static_cast<NSTextField*>(wx_ctrl->GetHandle());
+    if (!field || wx_ctrl->IsMultiLine()) return;
+
+    NSString* value = [field stringValue];
+    long selectionFrom = 0;
+    long selectionTo = 0;
+    wx_ctrl->GetSelection(&selectionFrom, &selectionTo);
+    NSTextFieldCell* oldCell = [field cell];
+    BOOL hadFocus = (field.window.firstResponder == field);
+    BOOL editable = [field isEditable];
+    BOOL selectable = [field isSelectable];
+    [field abortEditing];
+    NSTextFieldCell* newCell = enabled
+        ? [[NSSecureTextFieldCell alloc] initTextCell:value]
+        : [[NSTextFieldCell alloc] initTextCell:value];
+
+    [newCell setAlignment:[oldCell alignment]];
+    [newCell setFont:[oldCell font]];
+    [newCell setTextColor:[oldCell textColor]];
+    [newCell setBackgroundColor:[oldCell backgroundColor]];
+    [newCell setDrawsBackground:[oldCell drawsBackground]];
+    [newCell setBezelStyle:[oldCell bezelStyle]];
+    [newCell setEditable:[oldCell isEditable]];
+    [newCell setSelectable:[oldCell isSelectable]];
+    if (enabled) {
+        [(NSSecureTextFieldCell*)newCell setEchosBullets:YES];
+    }
+    [field setCell:newCell];
+    [field setEditable:editable];
+    [field setSelectable:selectable];
+    [field setStringValue:value];
+    wx_ctrl->SetSelection(selectionFrom, selectionTo);
+    if (hadFocus) {
+        [field.window makeFirstResponder:field];
+    }
+}
+
+void
 wxd_Window_SetRepresentedFilename(wxd_Window_t* window, const char* path)
 {
     if (!window || !path) return;

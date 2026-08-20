@@ -23,8 +23,29 @@ pub fn create_book_controls_tab(notebook: &Notebook) -> BookControlsTab {
         .with_label("This is the Treebook's information page.")
         .build();
     let info_button = Button::builder(&info_page_panel).with_label("Info Button").build();
+    let password_label = StaticText::builder(&info_page_panel).with_label("Password:").build();
+    let password_input = TextCtrl::builder(&info_page_panel)
+        .with_style(TextCtrlStyle::Password)
+        .with_value("password")
+        .with_size(Size::new(180, -1))
+        .build();
+    let password_toggle_button = Button::builder(&info_page_panel).with_label("👁").build();
+
+    let password_row_sizer = BoxSizer::builder(Orientation::Horizontal).build();
+    password_row_sizer.add(&password_label, 0, SizerFlag::AlignCenterVertical | SizerFlag::Right, 5);
+    password_row_sizer.add(&password_input, 1, SizerFlag::Expand, 5);
+    password_row_sizer.add(&password_toggle_button, 0, SizerFlag::AlignCenterVertical, 0);
+
+    password_toggle_button.on_click(move |_| {
+        let password_mode = !password_input.is_password_mode();
+        password_input.set_password_mode(password_mode);
+        let label = if password_mode { "👁" } else { "🙈" };
+        password_toggle_button.set_label(label);
+    });
+
     let info_page_sizer = BoxSizer::builder(Orientation::Vertical).build();
     info_page_sizer.add(&info_label, 0, SizerFlag::All | SizerFlag::Expand, 10);
+    info_page_sizer.add_sizer(&password_row_sizer, 0, SizerFlag::All | SizerFlag::Expand, 5);
     info_page_sizer.add(&info_button, 0, SizerFlag::All | SizerFlag::AlignCenterHorizontal, 5);
     info_page_panel.set_sizer(info_page_sizer, true);
     info_page_panel.fit();

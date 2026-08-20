@@ -47,6 +47,8 @@ WXD_EXPORTED bool
 wxd_TextCtrl_IsMultiLine(wxd_TextCtrl_t* textCtrl);
 WXD_EXPORTED bool
 wxd_TextCtrl_IsSingleLine(wxd_TextCtrl_t* textCtrl);
+WXD_EXPORTED void
+wxd_TextCtrl_SetPasswordMode(wxd_TextCtrl_t* textCtrl, bool enabled);
 
 // Selection operations
 WXD_EXPORTED void

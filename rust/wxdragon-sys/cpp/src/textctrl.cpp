@@ -8,6 +8,14 @@
 #include "wxdragon.h"
 #include "wxd_utils.h"
 
+#ifdef __WXMSW__
+#include <windows.h>
+#endif
+
+#ifdef __WXOSX__
+void wxd_TextCtrl_SetPasswordModeMac(wxd_TextCtrl_t* textCtrl, bool enabled);
+#endif
+
 extern "C" {
 
 // Create a new wxTextCtrl
@@ -214,6 +222,41 @@ wxd_TextCtrl_IsSingleLine(wxd_TextCtrl_t* textCtrl)
     if (!ctrl)
         return false;
     return ctrl->IsSingleLine();
+}
+
+// Enables or disables password masking without recreating the control.
+WXD_EXPORTED void
+wxd_TextCtrl_SetPasswordMode(wxd_TextCtrl_t* textCtrl, bool enabled)
+{
+    wxTextCtrl* ctrl = (wxTextCtrl*)textCtrl;
+    if (ctrl) {
+#if defined(__WXMSW__)
+        HWND handle = static_cast<HWND>(ctrl->GetHandle());
+        if (handle) {
+            static WPARAM mask = 0;
+            if (mask == 0) {
+                mask = ::SendMessageW(handle, EM_GETPASSWORDCHAR, 0, 0);
+            }
+            // 0x25CF: Unicode black circle character in Vista and later
+            WPARAM newMask = enabled ? (mask == 0 ? 0x25CF : mask) : 0;
+            ::SendMessageW(handle, EM_SETPASSWORDCHAR, enabled ? newMask : 0, 0);
+
+            // Update the wx style flags to reflect the password mode change (even though MSW doesn't depend on it, we keep it consistent)
+            long style = ctrl->GetWindowStyleFlag();
+            ctrl->SetWindowStyleFlag(enabled ? (style | wxTE_PASSWORD) : (style & ~wxTE_PASSWORD));
+        }
+#elif defined(__WXOSX__)
+        wxd_TextCtrl_SetPasswordModeMac(textCtrl, enabled);
+        long style = ctrl->GetWindowStyleFlag();
+        ctrl->SetWindowStyleFlag(enabled ? (style | wxTE_PASSWORD) : (style & ~wxTE_PASSWORD));
+#elif defined(__WXGTK__)
+        long style = ctrl->GetWindowStyleFlag();
+        ctrl->SetWindowStyleFlag(enabled ? (style | wxTE_PASSWORD) : (style & ~wxTE_PASSWORD));
+#else
+#error "wxd_TextCtrl_SetPasswordMode is not supported on this platform"
+#endif
+        ctrl->Refresh();
+    }
 }
 
 // Selection operations
