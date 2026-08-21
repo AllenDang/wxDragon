@@ -420,7 +420,7 @@ impl CustomDataViewTreeModel {
         let boxed_data: Box<dyn Any> = Box::new(data);
 
         // Adapt typed closures into closures working with &dyn Any and *mut c_void
-        let any_get_parent: Box<dyn for<'a> Fn(&dyn Any, *mut std::ffi::c_void) -> *mut std::ffi::c_void> =
+        let any_get_parent: Box<dyn Fn(&dyn Any, *mut std::ffi::c_void) -> *mut std::ffi::c_void> =
             Box::new(move |any_data, item| {
                 let t = any_data.downcast_ref::<T>().unwrap();
                 let item_opt: Option<&N> = if item.is_null() {
@@ -435,7 +435,7 @@ impl CustomDataViewTreeModel {
                 }
             });
 
-        let any_is_container: Box<dyn for<'a> Fn(&dyn Any, *mut std::ffi::c_void) -> bool> = Box::new(move |any_data, item| {
+        let any_is_container: Box<dyn Fn(&dyn Any, *mut std::ffi::c_void) -> bool> = Box::new(move |any_data, item| {
             let t = any_data.downcast_ref::<T>().unwrap();
             let item_opt: Option<&N> = if item.is_null() {
                 None
@@ -458,7 +458,7 @@ impl CustomDataViewTreeModel {
         // The casts are performed inside `unsafe` blocks and are intentionally
         // minimal and local to this closure so the unsafety surface is easy to
         // review and reason about.
-        let any_get_children: Box<dyn for<'a> Fn(&dyn Any, *mut std::ffi::c_void) -> Vec<*mut std::ffi::c_void>> =
+        let any_get_children: Box<dyn Fn(&dyn Any, *mut std::ffi::c_void) -> Vec<*mut std::ffi::c_void>> =
             Box::new(move |any_data, item| {
                 let t = any_data.downcast_ref::<T>().unwrap();
                 let item_opt: Option<&N> = if item.is_null() {
@@ -476,16 +476,15 @@ impl CustomDataViewTreeModel {
                 let vec_typed: Vec<*mut N> = get_children(t, item_opt);
                 vec_typed.into_iter().map(|p| p as *mut std::ffi::c_void).collect()
             });
-        let any_get_value: Box<dyn for<'a> Fn(&dyn Any, *mut std::ffi::c_void, u32) -> Variant> =
-            Box::new(move |any_data, item, col| {
-                let t = any_data.downcast_ref::<T>().unwrap();
-                let item_opt: Option<&N> = if item.is_null() {
-                    None
-                } else {
-                    Some(unsafe { &*(item as *mut N) })
-                };
-                get_value(t, item_opt, col)
-            });
+        let any_get_value: Box<dyn Fn(&dyn Any, *mut std::ffi::c_void, u32) -> Variant> = Box::new(move |any_data, item, col| {
+            let t = any_data.downcast_ref::<T>().unwrap();
+            let item_opt: Option<&N> = if item.is_null() {
+                None
+            } else {
+                Some(unsafe { &*(item as *mut N) })
+            };
+            get_value(t, item_opt, col)
+        });
 
         let any_set_value = set_value.map(|f| {
             Box::new(move |any_data: &dyn Any, item: *mut std::ffi::c_void, col, var: &Variant| {
@@ -496,7 +495,7 @@ impl CustomDataViewTreeModel {
                     Some(unsafe { &*(item as *mut N) })
                 };
                 f(t, item_opt, col, var)
-            }) as Box<dyn for<'a> Fn(&dyn Any, *mut std::ffi::c_void, u32, &Variant) -> bool>
+            }) as Box<dyn Fn(&dyn Any, *mut std::ffi::c_void, u32, &Variant) -> bool>
         });
 
         let any_is_enabled = is_enabled.map(|f| {
@@ -508,7 +507,7 @@ impl CustomDataViewTreeModel {
                     Some(unsafe { &*(item as *mut N) })
                 };
                 f(t, item_opt, col)
-            }) as Box<dyn for<'a> Fn(&dyn Any, *mut std::ffi::c_void, u32) -> bool>
+            }) as Box<dyn Fn(&dyn Any, *mut std::ffi::c_void, u32) -> bool>
         });
 
         let any_compare = compare.map(|f| {
@@ -522,7 +521,7 @@ impl CustomDataViewTreeModel {
                     let b_ref: &N = unsafe { &*(b as *mut N) };
                     f(t, a_ref, b_ref, col, asc)
                 },
-            ) as Box<dyn for<'a> Fn(&dyn Any, *mut std::ffi::c_void, *mut std::ffi::c_void, u32, bool) -> i32>
+            ) as Box<dyn Fn(&dyn Any, *mut std::ffi::c_void, *mut std::ffi::c_void, u32, bool) -> i32>
         });
 
         // Build OwnedTreeCallbacks and move it to C as userdata.
