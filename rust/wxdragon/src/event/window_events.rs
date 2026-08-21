@@ -39,6 +39,8 @@ pub enum WindowEvent {
     // Misc events
     Idle,
     Close,
+    EndSession,
+    QueryEndSession,
     Destroy,
 }
 
@@ -54,6 +56,7 @@ pub enum WindowEventData {
     Size(WindowSizeEvent),
     Idle(IdleEventData),
     Activate(ActivateEventData),
+    Session(SessionEventData),
     General(Event),
 }
 
@@ -95,6 +98,8 @@ impl WindowEventData {
                 return WindowEventData::Idle(IdleEventData::new(event));
             } else if event_type == EventType::ACTIVATE {
                 return WindowEventData::Activate(ActivateEventData::new(event));
+            } else if event_type == EventType::END_SESSION || event_type == EventType::QUERY_END_SESSION {
+                return WindowEventData::Session(SessionEventData::new(event));
             }
         }
 
@@ -114,6 +119,7 @@ impl WindowEventData {
             WindowEventData::Size(event) => event.event.skip(skip),
             WindowEventData::Idle(event) => event.event.skip(skip),
             WindowEventData::Activate(event) => event.event.skip(skip),
+            WindowEventData::Session(event) => event.event.skip(skip),
             WindowEventData::General(event) => event.skip(skip),
         }
     }
@@ -317,6 +323,28 @@ pub struct ActivateEventData {
     pub event: Event,
 }
 
+/// Data for application/session termination events.
+#[derive(Debug)]
+pub struct SessionEventData {
+    pub event: Event,
+}
+
+impl SessionEventData {
+    pub fn new(event: Event) -> Self {
+        Self { event }
+    }
+
+    /// Returns whether this event can be vetoed.
+    pub fn can_veto(&self) -> bool {
+        self.event.can_veto()
+    }
+
+    /// Prevents the session termination from proceeding.
+    pub fn veto(&self) {
+        self.event.veto();
+    }
+}
+
 impl ActivateEventData {
     pub fn new(event: Event) -> Self {
         Self { event }
@@ -357,5 +385,7 @@ crate::implement_window_category_event_handlers!(
     Activate => activate, EventType::ACTIVATE,
     Idle => idle, EventType::IDLE,
     Close => close, EventType::CLOSE_WINDOW,
+    EndSession => end_session, EventType::END_SESSION,
+    QueryEndSession => query_end_session, EventType::QUERY_END_SESSION,
     Destroy => destroy, EventType::DESTROY
 );

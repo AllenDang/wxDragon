@@ -149,6 +149,12 @@ IsVetableEventType(wxEventType eventType)
     return false;
 }
 
+static bool
+IsSessionEventType(wxEventType eventType)
+{
+    return eventType == wxEVT_END_SESSION || eventType == wxEVT_QUERY_END_SESSION;
+}
+
 // General function to check if any wxWidgets event was vetoed
 static bool
 IsEventVetoed(wxEvent& event)
@@ -315,14 +321,20 @@ WxdEventHandler::UnbindClosure(size_t token)
 
         // Disconnect from wxWidgets event system
         if (IsVetableEventType(event_type)) {
-            wxEventFunction event_func;
-            if (event_type == wxEVT_CLOSE_WINDOW) {
-                event_func = wxCloseEventHandler(WxdEventHandler::DispatchCloseEvent);
+            if (IsSessionEventType(event_type)) {
+                this->ownerHandler->Unbind(event_type, &WxdEventHandler::DispatchEvent, this,
+                                           widget_id, widget_id);
             }
             else {
-                event_func = wxEventHandler(WxdEventHandler::DispatchEvent);
+                wxEventFunction event_func;
+                if (event_type == wxEVT_CLOSE_WINDOW) {
+                    event_func = wxCloseEventHandler(WxdEventHandler::DispatchCloseEvent);
+                }
+                else {
+                    event_func = wxEventHandler(WxdEventHandler::DispatchEvent);
+                }
+                this->ownerHandler->Disconnect(event_type, event_func, nullptr, this);
             }
-            this->ownerHandler->Disconnect(event_type, event_func, nullptr, this);
         }
         else {
             // For Bind-based events, provide ID range for Unbind
@@ -592,14 +604,21 @@ WxdEventHandler::BindClosure(wxEventType wx_event_type, wxd_Id actual_id, void* 
     // First binding for this event? Connect to wxWidgets
     if (!this->wx_bindings_made[map_key]) {
         if (IsVetableEventType(wx_event_type)) {
-            wxEventFunction event_func;
-            if (wx_event_type == wxEVT_CLOSE_WINDOW) {
-                event_func = wxCloseEventHandler(WxdEventHandler::DispatchCloseEvent);
+            if (IsSessionEventType(wx_event_type)) {
+                // Bind session events before wxApp's default session handler.
+                this->ownerHandler->Bind(wx_event_type, &WxdEventHandler::DispatchEvent, this,
+                                         actual_id, actual_id);
             }
             else {
-                event_func = wxEventHandler(WxdEventHandler::DispatchEvent);
+                wxEventFunction event_func;
+                if (wx_event_type == wxEVT_CLOSE_WINDOW) {
+                    event_func = wxCloseEventHandler(WxdEventHandler::DispatchCloseEvent);
+                }
+                else {
+                    event_func = wxEventHandler(WxdEventHandler::DispatchEvent);
+                }
+                this->ownerHandler->Connect(wx_event_type, event_func, nullptr, this);
             }
-            this->ownerHandler->Connect(wx_event_type, event_func, nullptr, this);
         }
         else {
             this->ownerHandler->Bind(wx_event_type, &WxdEventHandler::DispatchEvent, this,
@@ -986,6 +1005,10 @@ get_wx_event_type_for_c_enum(WXDEventTypeCEnum c_enum_val)
         return wxEVT_BUTTON;
     case WXD_EVENT_TYPE_CLOSE_WINDOW:
         return wxEVT_CLOSE_WINDOW;
+    case WXD_EVENT_TYPE_END_SESSION:
+        return wxEVT_END_SESSION;
+    case WXD_EVENT_TYPE_QUERY_END_SESSION:
+        return wxEVT_QUERY_END_SESSION;
     case WXD_EVENT_TYPE_CHECKBOX:
         return wxEVT_CHECKBOX;
     case WXD_EVENT_TYPE_TEXT:

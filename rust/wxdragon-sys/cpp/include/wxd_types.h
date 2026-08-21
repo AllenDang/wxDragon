@@ -366,6 +366,8 @@ typedef enum {
     WXD_EVENT_TYPE_CHAR_HOOK = 405,            // wxEVT_CHAR_HOOK
     WXD_EVENT_TYPE_SYS_COLOUR_CHANGED = 406,   // wxEVT_SYS_COLOUR_CHANGED
     WXD_EVENT_TYPE_FSWATCHER = 407,            // wxEVT_FSWATCHER
+    WXD_EVENT_TYPE_END_SESSION = 408,          // wxEVT_END_SESSION
+    WXD_EVENT_TYPE_QUERY_END_SESSION = 409,     // wxEVT_QUERY_END_SESSION
 
     WXD_EVENT_TYPE_MAX // Keep this last for count if needed, or remove if not used for iteration
 } WXDEventTypeCEnum;

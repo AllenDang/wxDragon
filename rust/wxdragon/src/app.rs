@@ -393,6 +393,14 @@ pub fn set_appearance(appearance: crate::appearance::Appearance) -> crate::appea
     }
 }
 
+impl crate::event::WxEvtHandler for App {
+    unsafe fn get_event_handler_ptr(&self) -> *mut ffi::wxd_EvtHandler_t {
+        self.handle.cast()
+    }
+}
+
+impl crate::event::WindowEvents for App {}
+
 // Implement AppEvents trait for App
 impl crate::event::AppEvents for App {
     fn on_open_files<F>(&self, callback: F)

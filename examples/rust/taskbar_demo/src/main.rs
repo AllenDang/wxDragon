@@ -3,7 +3,8 @@ use wxdragon::prelude::*;
 fn main() {
     SystemOptions::set_option_by_int("msw.no-manifest-check", 1);
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("trace")).init();
-    let _ = wxdragon::main(|_| {
+    let os_shutting_down = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+    let _ = wxdragon::main(move |app| {
         // Create a main frame to keep the app running
         let frame = Frame::builder()
             .with_title("TaskBar Demo - wxDragon")
@@ -122,10 +123,24 @@ fn main() {
         frame.show(true);
         frame.centre();
 
+        let os_shutting_down_1 = os_shutting_down.clone();
+        app.on_query_end_session(move |_evt| {
+            log::info!("Application on_end_session.");
+            // Here we only can set the atomic flag to indicate that the OS is shutting down.
+            // We should not attempt to close the frame here with `frame.close(true)`,
+            // as it may lead to issues during the shutdown process.
+            os_shutting_down_1.store(true, std::sync::atomic::Ordering::SeqCst);
+        });
+
+        let shutting_down_2 = os_shutting_down.clone();
         frame.on_close(move |evt| {
             if let wxdragon::WindowEventData::General(event) = &evt
                 && event.can_veto()
             {
+                if shutting_down_2.load(std::sync::atomic::Ordering::SeqCst) {
+                    log::info!("The OS is shutting down, allowing the application to close without confirmation.");
+                    return;
+                }
                 use MessageDialogStyle as MDS;
                 let res = MessageDialog::builder(&frame, "Are you sure you want to close the application?", "Confirm Close")
                     .with_style(MDS::OK | MDS::Cancel | MDS::IconInformation)

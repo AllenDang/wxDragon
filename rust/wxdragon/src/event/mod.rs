@@ -23,7 +23,7 @@ pub mod window_events;
 // Re-export window events for easier access
 pub use window_events::{
     IdleEventData, KeyboardEvent, MagnifyEvent, MouseButtonEvent, MouseEnterEvent, MouseLeaveEvent, MouseMotionEvent,
-    WindowEvent, WindowEventData, WindowEvents, WindowSizeEvent,
+    SessionEventData, WindowEvent, WindowEventData, WindowEvents, WindowSizeEvent,
 };
 
 // Re-export button events for easier access
@@ -107,6 +107,8 @@ pub struct EventType: ffi::WXDEventTypeCEnum { // Use the generated C enum type
     // Constants map directly to the stable C enum values
     const COMMAND_BUTTON_CLICKED = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_COMMAND_BUTTON_CLICKED;
     const CLOSE_WINDOW = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_CLOSE_WINDOW;
+    const END_SESSION = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_END_SESSION;
+    const QUERY_END_SESSION = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_QUERY_END_SESSION;
     const CHECKBOX = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_CHECKBOX;
     const TEXT = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TEXT;
     const TEXT_ENTER = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_TEXT_ENTER;

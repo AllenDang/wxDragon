@@ -19,7 +19,7 @@ pub use crate::event::{
 };
 // ADDED: Event Data Structs
 pub use crate::event::event_data::{CommandEventData, KeyEventData, MouseEventData};
-pub use crate::event::{FSWatcherEventData, FSWatcherEventKind, IdleEventData, MenuEventData};
+pub use crate::event::{FSWatcherEventData, FSWatcherEventKind, IdleEventData, MenuEventData, SessionEventData};
 pub use crate::geometry::{Point, Rect, Size};
 pub use crate::id::{ID_ANY, ID_APPLY, ID_CANCEL, ID_HELP, ID_HIGHEST, ID_NO, ID_OK, ID_YES, Id};
 pub use crate::keycode::*;
