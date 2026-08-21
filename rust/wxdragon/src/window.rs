@@ -2090,6 +2090,7 @@ mod tests {
         use crate::prelude::*;
         use crate::widgets::{Frame, Panel, StaticText};
 
+        let _gui_test = crate::app::GUI_TEST_LOCK.lock().unwrap();
         SystemOptions::set_option_by_int("msw.no-manifest-check", 1);
         let timer_store: std::rc::Rc<std::cell::RefCell<Option<Timer>>> = std::rc::Rc::new(std::cell::RefCell::new(None));
         let timer_store_clone = timer_store.clone();

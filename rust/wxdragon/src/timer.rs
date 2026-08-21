@@ -134,6 +134,7 @@ mod tests {
     #[cfg_attr(target_os = "macos", ignore)]
     #[test]
     fn timers_do_not_share_callbacks() {
+        let _gui_test = crate::app::GUI_TEST_LOCK.lock().unwrap();
         let ticks = Rc::new(RefCell::new(0u32));
         let idle_ticks = Rc::new(RefCell::new(0u32));
         let timers: Rc<RefCell<Vec<Timer>>> = Rc::new(RefCell::new(Vec::new()));
