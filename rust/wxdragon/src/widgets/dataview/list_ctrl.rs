@@ -188,6 +188,17 @@ impl DataViewListCtrl {
         unsafe { ffi::wxd_DataViewCtrl_UnselectAll(ptr) }
     }
 
+    /// Selects all rows in the control.
+    ///
+    /// This is only meaningful when the control uses [`DataViewStyle::Multiple`].
+    pub fn select_all(&self) {
+        let ptr = self.dvlc_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_DataViewCtrl_SelectAll(ptr) }
+    }
+
     // ==========================================================================
     // Item Count
     // ==========================================================================
@@ -463,6 +474,28 @@ impl DataViewListCtrl {
         } else {
             Some(DataViewItem::from(item_ptr as *const _))
         }
+    }
+
+    /// Sets the item that has keyboard focus.
+    ///
+    /// The item can be obtained from a row index with [`Self::row_to_item`].
+    pub fn set_current_item(&self, item: &DataViewItem) {
+        let ptr = self.dvlc_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_DataViewCtrl_SetCurrentItem(ptr, **item) }
+    }
+
+    /// Ensures that the given item is visible, scrolling the control if necessary.
+    ///
+    /// The item can be obtained from a row index with [`Self::row_to_item`].
+    pub fn ensure_visible(&self, item: &DataViewItem) {
+        let ptr = self.dvlc_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_DataViewCtrl_EnsureVisible(ptr, **item) }
     }
 
     // ==========================================================================
