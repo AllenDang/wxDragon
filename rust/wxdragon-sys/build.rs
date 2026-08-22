@@ -397,7 +397,7 @@ fn build_wxdragon_wrapper(
             )));
         }
 
-        if target == "i686-pc-windows-msvc" {
+        if target == "i686-pc-windows-msvc" || target == "i686-win7-windows-msvc" {
             let generator = detect_visual_studio_generator().unwrap_or_else(|| {
                 println!("cargo::warning=vswhere did not report an installed Visual Studio version; falling back to Visual Studio 17 2022");
                 "Visual Studio 17 2022".to_string()
@@ -414,6 +414,15 @@ fn build_wxdragon_wrapper(
             cmake_config
                 .generator(&generator)
                 .define("CMAKE_GENERATOR_PLATFORM", "ARM64")
+                .cxxflag("/EHsc");
+        } else if target == "x86_64-win7-windows-msvc" {
+            let generator = detect_visual_studio_generator().unwrap_or_else(|| {
+                println!("cargo::warning=vswhere did not report an installed Visual Studio version; falling back to Visual Studio 17 2022");
+                "Visual Studio 17 2022".to_string()
+            });
+            cmake_config
+                .generator(&generator)
+                .define("CMAKE_GENERATOR_PLATFORM", "x64")
                 .cxxflag("/EHsc");
         }
     }
@@ -435,9 +444,10 @@ fn build_wxdragon_wrapper(
     println!("info: wxWidgets build directory: {wxwidgets_build_dir:?}");
 
     // --- 4. Linker Instructions ---
-    // Recursively search for any `.a` libraries starting from both the root of
+    // Recursively search for native libraries starting from both the root of
     // the CMake destination and the build subdirectory.  This covers generators
-    // that output to `<dst>/lib` as well as `<dst>/build/lib`.
+    // that output to `<dst>/lib` as well as `<dst>/build/lib`, including MSVC
+    // `.lib` archives.
     fn collect_lib_dirs(dir: &std::path::Path, out: &mut Vec<std::path::PathBuf>) {
         if let Ok(entries) = std::fs::read_dir(dir) {
             for entry in entries.flatten() {
@@ -445,7 +455,7 @@ fn build_wxdragon_wrapper(
                 if path.is_dir() {
                     collect_lib_dirs(&path, out);
                 } else if let Some(ext) = path.extension()
-                    && ext == "a"
+                    && (ext == "a" || ext == "lib")
                     && let Some(parent) = path.parent()
                     && !out.contains(&parent.to_path_buf())
                 {
@@ -550,7 +560,7 @@ fn build_wxdragon_wrapper(
             // --- End dynamic path finding ---
         } else {
             let lib_dir = match target {
-                "i686-pc-windows-msvc" => "lib/vc_lib",
+                "i686-pc-windows-msvc" | "i686-win7-windows-msvc" => "lib/vc_lib",
                 "aarch64-pc-windows-msvc" => "lib/vc_arm64_lib",
                 _ => "lib/vc_x64_lib",
             };
@@ -561,7 +571,11 @@ fn build_wxdragon_wrapper(
             let wx_lib_widgets = wxwidgets_build_dir.join(lib_dir).display().to_string();
             println!("cargo:rustc-link-search=native={wx_lib_widgets}");
 
-            if target == "i686-pc-windows-msvc" || target == "aarch64-pc-windows-msvc" {
+            if target == "i686-pc-windows-msvc"
+                || target == "i686-win7-windows-msvc"
+                || target == "aarch64-pc-windows-msvc"
+                || target == "x86_64-win7-windows-msvc"
+            {
                 // Visual Studio generators place wrapper archives under the active CMake config.
                 let sub_dir = format!("build/lib/{cmake_profile}");
                 let wx_lib3 = wxdragon_sys_build_dir.join(sub_dir).display().to_string();
@@ -573,7 +587,7 @@ fn build_wxdragon_wrapper(
             // The libraries are typically in build/packages/Microsoft.Web.WebView2.*/build/native/
             if cfg!(feature = "webview") {
                 let webview2_arch = match target {
-                    "i686-pc-windows-msvc" => "x86",
+                    "i686-pc-windows-msvc" | "i686-win7-windows-msvc" => "x86",
                     "aarch64-pc-windows-msvc" => "arm64",
                     _ => "x64",
                 };

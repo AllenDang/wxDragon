@@ -86,12 +86,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target:
-          [
-            i686-pc-windows-msvc,
-            x86_64-pc-windows-msvc,
-            aarch64-pc-windows-msvc,
-          ]
+        include:
+          - target: i686-pc-windows-msvc
+          - target: x86_64-pc-windows-msvc
+          - target: aarch64-pc-windows-msvc
+          - target: i686-win7-windows-msvc
+            build_nightly: true
+          - target: x86_64-win7-windows-msvc
+            build_nightly: true
     runs-on: windows-latest
     steps:
       - uses: dtolnay/rust-toolchain@stable
@@ -99,13 +101,19 @@ jobs:
         with:
           submodules: recursive
       - name: Install target ${{ matrix.target }}
+        if: ${{ matrix.build_nightly != true }}
         run: rustup target add ${{ matrix.target }}
 
-      - name: Debug build for ${{ matrix.target }}
-        run: cargo build --features "aui,xrc,richtext,stc,webview" --target ${{ matrix.target }}
-
       - name: Release build for ${{ matrix.target }}
-        run: cargo build --features "aui,xrc,richtext,stc,webview" --target ${{ matrix.target }} --release
+        shell: bash
+        run: |
+          if [ "${{ matrix.build_nightly }}" == "true" ]; then
+            rustup toolchain install nightly
+            rustup component add rust-src --toolchain nightly
+            cargo +nightly build --release -Z build-std --target ${{ matrix.target }}
+          else
+            cargo build --features "aui,xrc,richtext,stc,webview" --target ${{ matrix.target }} --release
+          fi
 
   build-msys-mingw64:
     runs-on: windows-latest
