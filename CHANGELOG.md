@@ -1,6 +1,71 @@
 # Changelog
 
-## 0.9.18
+## 0.9.19
+
+### New Features
+
+- **InfoBar / RichToolTip**: Added `InfoBar` and `RichToolTip` widgets, plus reworked `NotificationMessage` backend selection (#192)
+- **FileSystemWatcher**: Wrapped `wxFileSystemWatcher` for filesystem change notifications (#191)
+- **Display**: Wrapped `wxDisplay` for multi-monitor enumeration (#177)
+- **SystemSettings**: Wrapped `wxSystemSettings` for system colours, fonts, and metrics (#175)
+- **StandardPaths**: Added `StandardPaths` for platform-appropriate filesystem locations (#174)
+- **ColourDatabase**: Added `ColourDatabase` wrapper for `wxTheColourDatabase` (#178)
+- **Key Code Constants**: Added `WXK_*` key code constants (#184)
+- **DataViewListCtrl**: Exposed selection and visibility helpers (#204)
+- **AUI**: Added AUI pane visibility APIs (#180)
+- **MediaCtrl**: Added `wxMEDIABACKEND_*` name constants (#180)
+
+### Event System
+
+- **CHAR_HOOK**: Added `CHAR_HOOK` event type for catching keyboard shortcuts regardless of focused child (#185)
+- **SYS_COLOUR_CHANGED**: Added `SYS_COLOUR_CHANGED` event for live light/dark mode change notifications (#187)
+- **Session End Events**: Added application session end event support
+- **MAGNIFY**: Exposed `wxEVT_MAGNIFY` and `wxMouseEvent::GetWheelAxis` (#172)
+
+### Frame Enhancements
+
+- **Full Screen**: Added `ShowFullScreen` and `IsFullScreen` support (#181)
+- **Title Bar Buttons**: Added `EnableCloseButton`, `EnableMaximizeButton`, and `EnableMinimizeButton` (#190)
+- **Represented Filename**: Added `SetRepresentedFilename` for native title bar proxy icons on macOS (#186)
+
+### macOS
+
+- **Quit Hooks**: Added `OSXOnShouldTerminate` and `OSXOnWillTerminate` quit hooks (#189)
+- **Smart Substitutions**: Added `DisableAllSmartSubstitutions` for `TextCtrl` on macOS (#188)
+
+### Widget Enhancements
+
+- **TextCtrl**: Added `set_password_mode` method
+- **Sound**: Added `Sound::from_data` for creating sounds from in-memory WAV bytes (#171)
+- **MessageDialog**: Added `set_yes_no_labels` and `set_ok_cancel_labels` for custom button labels (#173)
+- **StatusBar**: Added `GetFieldRect`, `SetStatusStyles`, `SetMinHeight`, `GetFieldsCount` bindings (#170)
+- **StyledTextCtrl**: Added `SetUndoCollection` binding
+- **Utilities**: Added `launch_default_application`, `get_mouse_position`, `get_key_state` (#175)
+
+### Bug Fixes
+
+- **Timer**: Fixed owner-based tick callback routing (#193)
+- **HiDPI**: Fixed position/size bugs in 14 widget and dialog constructors (#203)
+- **String Safety**: Hardened `read_string_with_retry` against untrusted retry-call length (#202)
+- **Destroy Events**: Isolated destroy events to their owning windows (#179)
+
+### Safety Fixes (UB / Memory)
+
+- Removed unjustified `unsafe impl Send/Sync` (BREAKING) (#198)
+- Fixed double-destroy race in `Clone`-able dialog wrappers (#197)
+- Fixed cross-allocator mismatch freeing `strdup`'d strings (#201)
+- Fixed memory leak: `Accessible` never freed its boxed implementation (#199)
+- Added missing null checks to `wxd_TextAttr_*` functions (#196)
+- Fixed invalid downcast in `StaticBitmap` on Windows XRC path (#195)
+- Replaced unchecked `mem::transmute` int-to-enum conversions (#194)
+- Removed dead placeholder code and stale misleading comment (#200)
+
+### Build
+
+- Allow relocating CMake build dirs via environment variables (#183)
+- Applied `msw.no-manifest-check` for every example
+- Fixed aarch64 Linux build on arm64 machines
+- Fixed CI: rustfmt + clippy fallout from removing Send/Sync (#198)
 
 ### New Features
 
