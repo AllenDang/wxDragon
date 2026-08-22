@@ -48,7 +48,7 @@ custom_widget!(
         }));
 
         // 创建定时器
-        let timer = Rc::new(Timer::new());
+        let timer = Rc::new(Timer::new(&panel));
 
         // 设置绘制事件
         let animation_data_paint = animation_data.clone();

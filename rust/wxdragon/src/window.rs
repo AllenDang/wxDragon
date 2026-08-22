@@ -2092,7 +2092,7 @@ mod tests {
 
         let _gui_test = crate::app::GUI_TEST_LOCK.lock().unwrap();
         SystemOptions::set_option_by_int("msw.no-manifest-check", 1);
-        let timer_store: std::rc::Rc<std::cell::RefCell<Option<Timer>>> = std::rc::Rc::new(std::cell::RefCell::new(None));
+        let timer_store: std::rc::Rc<std::cell::RefCell<Option<Timer<Frame>>>> = std::rc::Rc::new(std::cell::RefCell::new(None));
         let timer_store_clone = timer_store.clone();
 
         let res = crate::main(move |app| {
@@ -2110,9 +2110,11 @@ mod tests {
             assert!(panel.is_valid(), "panel was invalidated by child destruction");
 
             // schedule exit via a one-shot timer after 100ms
-            let timer = Timer::new();
+            let timer = Timer::new(&frame);
             let app_clone = app;
+            let timer_store_cleanup = timer_store_clone.clone();
             timer.on_tick(move |_evt| {
+                timer_store_cleanup.borrow_mut().take();
                 app_clone.exit_main_loop();
             });
             timer.start(100, true);

@@ -211,7 +211,7 @@ impl AdvancedTabControls {
         });
 
         // Timer for Gauge Pulse Demo (simulate pulse by cycling value)
-        let timer = Timer::new();
+        let timer = Timer::new(&self.gauge); // Use any widget as owner; here use gauge
         timer.start(200, false); // 200ms interval, repeating
         let gauge_value_for_timer = gauge_value.clone();
         timer.on_tick(move |_| {

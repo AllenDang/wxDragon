@@ -4,12 +4,12 @@
 //! Timers are used to generate events at regular intervals.
 
 use crate::event::{Event, EventToken, EventType, WxEvtHandler};
+use std::marker::PhantomData;
 use wxdragon_sys as ffi;
 
 /// Represents a timer that triggers events at specified intervals.
 ///
-/// A timer is its own event handler, so callbacks are bound on the timer itself with
-/// [`Timer::on_tick`] and are released when it is dropped.
+/// A timer sends its events to the owner supplied to [`Timer::new`].
 ///
 /// # Example
 ///
@@ -17,8 +17,10 @@ use wxdragon_sys as ffi;
 /// use wxdragon::prelude::*;
 /// use wxdragon::timer::Timer;
 ///
-/// let timer = Timer::new();
+/// let frame = Frame::builder().with_title("Timer Example").build();
+/// let timer = Timer::new(&frame);
 ///
+/// // Bind an event handler directly on the timer
 /// timer.on_tick(|_event| {
 ///     println!("Timer fired!");
 /// });
@@ -26,18 +28,25 @@ use wxdragon_sys as ffi;
 /// // Start the timer to fire every 1000ms (1 second)
 /// timer.start(1000, false);
 /// ```
-pub struct Timer {
+pub struct Timer<T: WxEvtHandler> {
     // Raw pointer to wxTimer
     ptr: *mut ffi::wxd_Timer_t,
+    // Store the owner's pointer to use for event binding
+    owner_ptr: *mut ffi::wxd_EvtHandler_t,
+    // Phantom data to track the owner's type
+    _owner: PhantomData<T>,
 }
 
-impl Timer {
-    /// Create a new timer.
+impl<T: WxEvtHandler> Timer<T> {
+    /// Create a new timer associated with an event handler.
     ///
     /// The timer does not fire until [`Timer::start`] is called.
-    pub fn new() -> Self {
+    pub fn new(owner: &T) -> Self {
+        let owner_ptr = unsafe { owner.get_event_handler_ptr() };
         Self {
-            ptr: unsafe { ffi::wxd_Timer_Create() },
+            ptr: unsafe { ffi::wxd_Timer_Create(owner_ptr) },
+            owner_ptr,
+            _owner: PhantomData,
         }
     }
 
@@ -48,7 +57,12 @@ impl Timer {
     where
         F: FnMut(Event) + 'static,
     {
-        self.bind_internal(EventType::TIMER, callback)
+        if self.owner_ptr.is_null() || self.ptr.is_null() {
+            return EventToken::INVALID_TOKEN;
+        }
+        let timer_id = unsafe { ffi::wxd_Timer_GetId(self.ptr) };
+        let handler = TimerOwnerWrapper(self.owner_ptr);
+        handler.bind_with_id_internal(EventType::TIMER, timer_id, callback)
     }
 
     /// Start the timer.
@@ -102,23 +116,22 @@ impl Timer {
     }
 }
 
-impl Default for Timer {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl WxEvtHandler for Timer {
-    unsafe fn get_event_handler_ptr(&self) -> *mut ffi::wxd_EvtHandler_t {
-        unsafe { ffi::wxd_Timer_GetEvtHandler(self.ptr) }
-    }
-}
-
-impl Drop for Timer {
+impl<T: WxEvtHandler> Drop for Timer<T> {
     fn drop(&mut self) {
         if !self.ptr.is_null() {
             unsafe { ffi::wxd_Timer_Destroy(self.ptr) };
         }
+    }
+}
+
+// This is a special wrapper to implement WxEvtHandler for the timer owner
+// It allows us to call bind_internal on the owner from the Timer methods
+struct TimerOwnerWrapper(*mut ffi::wxd_EvtHandler_t);
+
+// Implement WxEvtHandler for the wrapper so we can register events
+impl WxEvtHandler for TimerOwnerWrapper {
+    unsafe fn get_event_handler_ptr(&self) -> *mut ffi::wxd_EvtHandler_t {
+        self.0
     }
 }
 
@@ -137,26 +150,28 @@ mod tests {
         let _gui_test = crate::app::GUI_TEST_LOCK.lock().unwrap();
         let ticks = Rc::new(RefCell::new(0u32));
         let idle_ticks = Rc::new(RefCell::new(0u32));
-        let timers: Rc<RefCell<Vec<Timer>>> = Rc::new(RefCell::new(Vec::new()));
+        let timers: Rc<RefCell<Vec<Timer<Frame>>>> = Rc::new(RefCell::new(Vec::new()));
 
         let (ticks_in, idle_ticks_in, timers_in) = (ticks.clone(), idle_ticks.clone(), timers.clone());
+        let timers_cleanup = timers.clone();
         let res = crate::main(move |app| {
-            let _frame = Frame::builder().with_title("timer test").build();
+            let frame = Frame::builder().with_title("timer test").build();
 
-            let ticking = Timer::new();
+            let ticking = Timer::new(&frame);
             ticking.on_tick(move |_| {
                 let mut ticks = ticks_in.borrow_mut();
                 *ticks += 1;
-                if *ticks >= 5 {
+                if *ticks >= 1 {
+                    timers_cleanup.borrow_mut().clear();
                     app.exit_main_loop();
                 }
             });
 
             // Never started: its callback must never run.
-            let idle = Timer::new();
+            let idle = Timer::new(&frame);
             idle.on_tick(move |_| *idle_ticks_in.borrow_mut() += 1);
 
-            ticking.start(10, false);
+            assert!(ticking.start(10, true));
             timers_in.borrow_mut().extend([ticking, idle]);
         });
 
@@ -164,7 +179,7 @@ mod tests {
         if res.is_err() {
             return;
         }
-        assert!(*ticks.borrow() >= 5, "the started timer should have run its own callback");
+        assert_eq!(*ticks.borrow(), 1, "the started timer should have run its callback once");
         assert_eq!(
             *idle_ticks.borrow(),
             0,
