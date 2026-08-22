@@ -15,6 +15,11 @@ type CallbackQueue = Arc<Mutex<VecDeque<Box<dyn FnOnce() + Send + 'static>>>>;
 // Queue for storing callbacks to be executed on the main thread
 static MAIN_THREAD_QUEUE: LazyLock<CallbackQueue> = LazyLock::new(|| Arc::new(Mutex::new(VecDeque::new())));
 
+// wxWidgets keeps process-global application state, so tests must not enter
+// separate GUI event loops at the same time.
+#[cfg(test)]
+pub(crate) static GUI_TEST_LOCK: Mutex<()> = Mutex::new(());
+
 /// Schedules a callback to be executed on the main thread.
 ///
 /// This is useful when you need to update UI elements from a background thread.

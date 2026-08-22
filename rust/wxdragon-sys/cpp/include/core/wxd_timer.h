@@ -27,6 +27,10 @@ wxd_Timer_Create(wxd_EvtHandler_t* owner);
 WXD_EXPORTED void
 wxd_Timer_Destroy(wxd_Timer_t* self);
 
+// Get the timer ID used when delivering events to its owner
+WXD_EXPORTED int
+wxd_Timer_GetId(wxd_Timer_t* self);
+
 // Start the timer
 WXD_EXPORTED bool
 wxd_Timer_Start(wxd_Timer_t* self, int milliseconds, bool oneShot);

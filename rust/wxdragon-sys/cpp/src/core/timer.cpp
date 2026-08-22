@@ -28,7 +28,18 @@ wxd_Timer_Destroy(wxd_Timer_t* self)
     if (timer->IsRunning()) {
         timer->Stop();
     }
+    // ~wxEvtHandler deletes the client object holding the bound Rust closures.
     delete timer;
+}
+
+// Get the timer ID used when delivering events to its owner
+WXD_EXPORTED int
+wxd_Timer_GetId(wxd_Timer_t* self)
+{
+    if (!self)
+        return wxID_ANY;
+    wxTimer* timer = reinterpret_cast<wxTimer*>(self);
+    return timer->GetId();
 }
 
 // Start the timer

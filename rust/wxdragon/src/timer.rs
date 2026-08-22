@@ -3,15 +3,13 @@
 //! This module provides a safe wrapper around wxWidgets' wxTimer class.
 //! Timers are used to generate events at regular intervals.
 
-use crate::event::{Event, EventType, WxEvtHandler};
+use crate::event::{Event, EventToken, EventType, WxEvtHandler};
 use std::marker::PhantomData;
 use wxdragon_sys as ffi;
 
 /// Represents a timer that triggers events at specified intervals.
 ///
-/// A Timer is connected to an event handler (window, frame, etc.) and will
-/// send timer events to it. You must bind a handler for timer events
-/// directly on the timer.
+/// A timer sends its events to the owner supplied to [`Timer::new`].
 ///
 /// # Example
 ///
@@ -19,11 +17,7 @@ use wxdragon_sys as ffi;
 /// use wxdragon::prelude::*;
 /// use wxdragon::timer::Timer;
 ///
-/// let frame = Frame::builder()
-///     .with_title("Timer Example")
-///     .build();
-///
-/// // Create a timer connected to the frame
+/// let frame = Frame::builder().with_title("Timer Example").build();
 /// let timer = Timer::new(&frame);
 ///
 /// // Bind an event handler directly on the timer
@@ -43,37 +37,32 @@ pub struct Timer<T: WxEvtHandler> {
     _owner: PhantomData<T>,
 }
 
-// Timer event handler methods
 impl<T: WxEvtHandler> Timer<T> {
-    /// Create a new timer associated with the given event handler.
+    /// Create a new timer associated with an event handler.
     ///
-    /// The handler will receive timer events when the timer fires.
-    /// It must implement the WxEvtHandler trait (Windows, Frames, etc.)
+    /// The timer does not fire until [`Timer::start`] is called.
     pub fn new(owner: &T) -> Self {
         let owner_ptr = unsafe { owner.get_event_handler_ptr() };
-        let ptr = unsafe { ffi::wxd_Timer_Create(owner_ptr) };
         Self {
-            ptr,
+            ptr: unsafe { ffi::wxd_Timer_Create(owner_ptr) },
             owner_ptr,
             _owner: PhantomData,
         }
     }
 
-    /// Bind an event handler for timer events.
+    /// Bind a callback to be called when this timer fires.
     ///
-    /// This method registers the callback to be called when the timer fires.
-    pub fn on_tick<F>(&self, callback: F)
+    /// Returns a token that can be passed to [`WxEvtHandler::unbind`].
+    pub fn on_tick<F>(&self, callback: F) -> EventToken
     where
         F: FnMut(Event) + 'static,
     {
-        // We need to make sure the owner exists when using its pointer
-        if !self.owner_ptr.is_null() {
-            // Create a WxEvtHandler wrapper from the bare pointer
-            let handler = TimerOwnerWrapper(self.owner_ptr);
-
-            // Use bind_internal from the WxEvtHandler trait via the wrapper
-            handler.bind_internal(EventType::TIMER, callback);
+        if self.owner_ptr.is_null() || self.ptr.is_null() {
+            return EventToken::INVALID_TOKEN;
         }
+        let timer_id = unsafe { ffi::wxd_Timer_GetId(self.ptr) };
+        let handler = TimerOwnerWrapper(self.owner_ptr);
+        handler.bind_with_id_internal(EventType::TIMER, timer_id, callback)
     }
 
     /// Start the timer.
@@ -143,5 +132,58 @@ struct TimerOwnerWrapper(*mut ffi::wxd_EvtHandler_t);
 impl WxEvtHandler for TimerOwnerWrapper {
     unsafe fn get_event_handler_ptr(&self) -> *mut ffi::wxd_EvtHandler_t {
         self.0
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::widgets::Frame;
+    use std::cell::RefCell;
+    use std::rc::Rc;
+
+    // wxWidgets needs the OS main thread for its event loop, but on macOS the Cargo test
+    // harness runs each test on a worker thread, so `crate::main` never returns here.
+    #[cfg_attr(target_os = "macos", ignore)]
+    #[test]
+    fn timers_do_not_share_callbacks() {
+        let _gui_test = crate::app::GUI_TEST_LOCK.lock().unwrap();
+        let ticks = Rc::new(RefCell::new(0u32));
+        let idle_ticks = Rc::new(RefCell::new(0u32));
+        let timers: Rc<RefCell<Vec<Timer<Frame>>>> = Rc::new(RefCell::new(Vec::new()));
+
+        let (ticks_in, idle_ticks_in, timers_in) = (ticks.clone(), idle_ticks.clone(), timers.clone());
+        let timers_cleanup = timers.clone();
+        let res = crate::main(move |app| {
+            let frame = Frame::builder().with_title("timer test").build();
+
+            let ticking = Timer::new(&frame);
+            ticking.on_tick(move |_| {
+                let mut ticks = ticks_in.borrow_mut();
+                *ticks += 1;
+                if *ticks >= 1 {
+                    timers_cleanup.borrow_mut().clear();
+                    app.exit_main_loop();
+                }
+            });
+
+            // Never started: its callback must never run.
+            let idle = Timer::new(&frame);
+            idle.on_tick(move |_| *idle_ticks_in.borrow_mut() += 1);
+
+            assert!(ticking.start(10, true));
+            timers_in.borrow_mut().extend([ticking, idle]);
+        });
+
+        // Headless CI has no display, so the loop above never ran and there is nothing to check.
+        if res.is_err() {
+            return;
+        }
+        assert_eq!(*ticks.borrow(), 1, "the started timer should have run its callback once");
+        assert_eq!(
+            *idle_ticks.borrow(),
+            0,
+            "a timer that was never started ran another timer's callback"
+        );
     }
 }
