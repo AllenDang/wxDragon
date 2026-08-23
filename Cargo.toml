@@ -19,6 +19,7 @@ members = [
   "examples/rust/gridbagsizer_test",
   "examples/rust/gridsizer_test",
   "examples/rust/ipc_demo",
+  "examples/rust/listctrl_text_test",
   "examples/rust/menu_events_demo",
   "examples/rust/neat_demo",
   "examples/rust/printing_demo",

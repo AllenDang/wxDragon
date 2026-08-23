@@ -27,6 +27,13 @@ wxd_ListCtrl_SetItemText(wxd_ListCtrl_t* self, int64_t index, const char* text);
 WXD_EXPORTED bool
 wxd_ListCtrl_SetItem(wxd_ListCtrl_t* self, int64_t item, int col, const char* text, int image,
                      int format, int64_t state, int64_t stateMask, int64_t data, int64_t mask);
+/*
+ * Copies the item text as UTF-8 into `buffer`, which is always NUL-terminated when
+ * `buffer_len > 0`, and returns the source length EXCLUDING the NUL terminator.
+ * Callers must therefore pass `buffer_len >= returned_length + 1`, otherwise the
+ * text is silently truncated. Pass `buffer = NULL, buffer_len = 0` to query the
+ * required length first.
+ */
 WXD_EXPORTED int
 wxd_ListCtrl_GetItemText(wxd_ListCtrl_t* self, int64_t index, int col, char* buffer,
                          int buffer_len);

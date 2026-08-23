@@ -432,22 +432,29 @@ impl ListCtrl {
             return String::new();
         }
         unsafe {
+            // Probe call: returns the UTF-8 byte length *excluding* the NUL terminator.
             let needed_len = ffi::wxd_ListCtrl_GetItemText(ptr, index as c_longlong, col, std::ptr::null_mut(), 0);
             if needed_len <= 0 {
                 return String::new();
             }
-            let mut buffer: Vec<u8> = Vec::with_capacity(needed_len as usize);
+            // +1 so the C++ side has room for the NUL terminator it always writes.
+            // Passing only `needed_len` made it copy `needed_len - 1` bytes and
+            // overwrite the last character with NUL (issue #205).
+            let buffer_len = needed_len as usize + 1;
+            let mut buffer: Vec<u8> = vec![0u8; buffer_len];
             let actual_len = ffi::wxd_ListCtrl_GetItemText(
                 ptr,
                 index as c_longlong,
                 col,
                 buffer.as_mut_ptr() as *mut core::ffi::c_char,
-                needed_len as i32,
+                buffer_len as i32,
             );
             if actual_len <= 0 {
                 return String::new();
             }
-            buffer.set_len(actual_len as usize);
+            // Clamp: the item text could have changed between the two calls, and
+            // trusting a larger `actual_len` verbatim would read past the copied data.
+            buffer.truncate((actual_len as usize).min(needed_len as usize));
             String::from_utf8_lossy(&buffer).into_owned()
         }
     }

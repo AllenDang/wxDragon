@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Bug Fixes
+
+- **ListCtrl**: Fixed `get_item_text` truncating the last character and replacing it with a NUL byte; multi-byte UTF-8 text is no longer corrupted (#205)
+
 ## 0.9.19
 
 ### New Features
