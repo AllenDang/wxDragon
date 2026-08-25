@@ -1232,6 +1232,12 @@ where
                 println!("cargo:warning=Unsupported compression method {method:?} for file: {file_path:?}");
             }
         }
+        if let Some(secs) = entry_unix_time(&entry.last_modified())
+            && secs > 0
+        {
+            let modified = std::time::UNIX_EPOCH + std::time::Duration::from_secs(secs as u64);
+            outfile.set_modified(modified).ok();
+        }
     }
 
     Ok(())
@@ -1241,6 +1247,20 @@ fn dir_is_empty<P: AsRef<std::path::Path>>(dir: P) -> bool {
     std::fs::read_dir(dir)
         .map(|mut entries| entries.next().is_none())
         .unwrap_or(false)
+}
+
+/// Reads either timestamp kind as UTC.
+fn entry_unix_time(kind: &rawzip::time::ZipDateTimeKind) -> Option<i64> {
+    rawzip::time::UtcDateTime::from_components(
+        kind.year(),
+        kind.month(),
+        kind.day(),
+        kind.hour(),
+        kind.minute(),
+        kind.second(),
+        0,
+    )
+    .map(|t| t.to_unix())
 }
 
 fn chk_wx_version<P: AsRef<std::path::Path>>(wxwidgets_dir: P, expected_version: &str) -> std::io::Result<bool> {
