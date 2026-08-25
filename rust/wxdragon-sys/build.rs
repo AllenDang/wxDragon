@@ -60,7 +60,10 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
         .find(|p| p.file_name().map(|n| *n == *profile).unwrap_or(false))
         .expect("Could not find destination binary directory");
 
-    // wxWidgets source download location (shared per profile to avoid re-downloading)
+    // wxWidgets source download location (shared per profile to avoid re-downloading).
+    // A custom WXWIDGETS_DIR is used as-is when it holds a tree and receives the
+    // download when it is absent or empty; the default location is replaced whenever
+    // its version does not match.
     let wxwidgets_dir = std::env::var("WXWIDGETS_DIR")
         .map(std::path::PathBuf::from)
         .unwrap_or_else(|_| dest_bin_dir.join("wxWidgets"));
@@ -69,8 +72,18 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
 
     let is_custom_dir = std::env::var("WXWIDGETS_DIR").is_ok();
     let ver_matched = chk_wx_version(&wxwidgets_dir, WX_VERSION).unwrap_or(false);
-    if !is_custom_dir && !ver_matched {
-        std::fs::remove_dir_all(&wxwidgets_dir).ok();
+    let should_download = if is_custom_dir {
+        !wxwidgets_dir.exists() || dir_is_empty(&wxwidgets_dir)
+    } else {
+        !ver_matched
+    };
+    if is_custom_dir && !should_download && !ver_matched {
+        println!("cargo::warning=WXWIDGETS_DIR={wxwidgets_dir_str} does not contain wxWidgets {WX_VERSION}; using it as-is");
+    }
+    if should_download {
+        if !is_custom_dir {
+            std::fs::remove_dir_all(&wxwidgets_dir).ok();
+        }
 
         let archive_dest_path = std::env::temp_dir().join("wxWidgets.zip");
 
@@ -1222,6 +1235,12 @@ where
     }
 
     Ok(())
+}
+
+fn dir_is_empty<P: AsRef<std::path::Path>>(dir: P) -> bool {
+    std::fs::read_dir(dir)
+        .map(|mut entries| entries.next().is_none())
+        .unwrap_or(false)
 }
 
 fn chk_wx_version<P: AsRef<std::path::Path>>(wxwidgets_dir: P, expected_version: &str) -> std::io::Result<bool> {

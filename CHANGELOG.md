@@ -6,6 +6,10 @@
 
 - **ListCtrl**: Fixed `get_item_text` truncating the last character and replacing it with a NUL byte; multi-byte UTF-8 text is no longer corrupted (#205)
 
+### Build
+
+- Download wxWidgets into a custom `WXWIDGETS_DIR` when the directory does not exist yet or is empty (#207)
+
 ## 0.9.19
 
 ### New Features
