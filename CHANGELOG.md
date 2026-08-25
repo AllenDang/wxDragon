@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### New Features
+
+- **ComboBox**: Added the remaining `wxTextEntry` and `wxItemContainer` methods (`change_value`, `write_text`, `delete`, `find_string`, `set_items`, ...), `popup` / `dismiss`, and the `DROPDOWN` / `CLOSEUP` events (#209)
+
 ## 0.9.20
 
 ### Bug Fixes

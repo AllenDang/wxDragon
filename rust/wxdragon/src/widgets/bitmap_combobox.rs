@@ -237,7 +237,9 @@ implement_widget_local_event_handlers!(
     BitmapComboBox,
     ComboBoxEvent,
     ComboBoxEventData,
-    Selected => selection_changed, EventType::COMMAND_COMBOBOX_SELECTED
+    Selected => selection_changed, EventType::COMMAND_COMBOBOX_SELECTED,
+    DropDown => dropdown, EventType::COMMAND_COMBOBOX_DROPDOWN,
+    CloseUp => closeup, EventType::COMMAND_COMBOBOX_CLOSEUP
 );
 
 // Also implement TextEvents for text entry capabilities
