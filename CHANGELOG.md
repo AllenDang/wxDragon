@@ -14,6 +14,7 @@
 
 ### Build
 
+- Download wxWidgets into a custom `WXWIDGETS_DIR` when the directory does not exist yet or is empty (#207)
 - Preserve the file timestamps of the wxWidgets source when extracting the archive, so a re-downloaded source no longer triggers a full wxWidgets rebuild (#208)
 
 ## 0.9.19

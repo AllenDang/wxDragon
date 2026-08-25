@@ -163,6 +163,10 @@ Cross-compilation is supported, including building Windows executables from macO
 > Since wxDragon's builder downloads wxWidgets source code from GitHub using git's proxy settings,
 > applying the proxy will help avoid download issues.
 
+> The wxWidgets source and the two CMake build trees default to the profile level of the target directory.
+> `WXWIDGETS_DIR`, `WXWIDGETS_BUILD_DIR` and `WXDRAGON_SYS_BUILD_DIR` move them elsewhere, for example to a
+> directory a CI cache preserves; see the [wxdragon-sys README](rust/wxdragon-sys/README.md#build-process).
+
 **Linux Additional Requirements:**
 ```bash
 # Ubuntu/Debian
