@@ -6,6 +6,10 @@
 
 - **ListCtrl**: Fixed `get_item_text` truncating the last character and replacing it with a NUL byte; multi-byte UTF-8 text is no longer corrupted (#205)
 
+### Build
+
+- Preserve the file timestamps of the wxWidgets source when extracting the archive, so a re-downloaded source no longer triggers a full wxWidgets rebuild (#208)
+
 ## 0.9.19
 
 ### New Features
