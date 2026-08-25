@@ -4,10 +4,9 @@ use crate::event::event_data::CommandEventData;
 use crate::event::{Event, EventType, TextEvents, WxEvtHandler};
 use crate::geometry::{Point, Size};
 use crate::id::Id;
-use crate::utils::ArrayString;
+use crate::utils::{ArrayString, read_ffi_string};
 use crate::window::{WindowHandle, WxWidget};
 use std::ffi::{CStr, CString};
-use std::os::raw::c_char;
 use wxdragon_sys as ffi;
 
 // Value for GetSelection when nothing selected
@@ -262,18 +261,6 @@ impl ComboBox {
         unsafe { ffi::wxd_ComboBox_GetLastPosition(ptr) }
     }
 
-    /// Reads a string through an FFI getter that reports the needed length
-    /// when called without a buffer, then copies into a buffer of that size.
-    fn read_string(getter: impl Fn(*mut c_char, usize) -> i32) -> Option<String> {
-        let len = getter(std::ptr::null_mut(), 0);
-        if len < 0 {
-            return None;
-        }
-        let mut buf = vec![0; len as usize + 1];
-        getter(buf.as_mut_ptr(), buf.len());
-        Some(unsafe { CStr::from_ptr(buf.as_ptr()).to_string_lossy().into_owned() })
-    }
-
     // --- Text entry (wxTextEntry) ---
 
     /// Sets the text entry field value without generating a text event.
@@ -337,7 +324,7 @@ impl ComboBox {
         if ptr.is_null() {
             return String::new();
         }
-        Self::read_string(|buf, len| unsafe { ffi::wxd_ComboBox_GetRange(ptr, from, to, buf, len) }).unwrap_or_default()
+        read_ffi_string(|buf, len| unsafe { ffi::wxd_ComboBox_GetRange(ptr, from, to, buf, len) }).unwrap_or_default()
     }
 
     /// Selects all text in the text entry field.
@@ -418,7 +405,7 @@ impl ComboBox {
         if ptr.is_null() {
             return String::new();
         }
-        Self::read_string(|buf, len| unsafe { ffi::wxd_ComboBox_GetHint(ptr, buf, len) }).unwrap_or_default()
+        read_ffi_string(|buf, len| unsafe { ffi::wxd_ComboBox_GetHint(ptr, buf, len) }).unwrap_or_default()
     }
 
     /// Returns whether the text entry field is empty.

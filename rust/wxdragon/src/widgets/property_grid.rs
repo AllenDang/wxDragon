@@ -33,9 +33,10 @@
 use crate::event::{Event, EventType, WxEvtHandler};
 use crate::geometry::{Point, Size};
 use crate::id::Id;
+use crate::utils::read_ffi_string;
 use crate::widgets::dataview::Variant;
 use crate::window::{WindowHandle, WxWidget};
-use std::ffi::{CStr, CString};
+use std::ffi::CString;
 use std::fmt;
 use std::os::raw::c_char;
 use wxdragon_sys as ffi;
@@ -1068,18 +1069,6 @@ impl crate::xrc::XrcSupport for PropertyGrid {
 
 fn to_cstring(value: &str) -> Option<CString> {
     CString::new(value).ok()
-}
-
-fn read_ffi_string(reader: impl Fn(*mut c_char, usize) -> i32) -> Option<String> {
-    let needed = reader(std::ptr::null_mut(), 0);
-    if needed < 0 {
-        return None;
-    }
-    let mut buffer = vec![0; needed as usize + 1];
-    if reader(buffer.as_mut_ptr(), buffer.len()) < 0 {
-        return None;
-    }
-    Some(unsafe { CStr::from_ptr(buffer.as_ptr()) }.to_string_lossy().into_owned())
 }
 
 unsafe fn append_choices(
