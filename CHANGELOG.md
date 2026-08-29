@@ -5,6 +5,7 @@
 ### New Features
 
 - **ComboBox**: Added the remaining `wxTextEntry` and `wxItemContainer` methods (`change_value`, `write_text`, `delete`, `find_string`, `set_items`, ...), `popup` / `dismiss`, and the `DROPDOWN` / `CLOSEUP` events (#209)
+- **Window**: Added `from_dip`/`to_dip` (plus `_int` and `_point` variants) wrapping `wxWindow::FromDIP`/`ToDIP`, for converting between the device-independent pixels UI sizes are written in and the physical pixels a per-monitor DPI aware app is handed (#210)
 
 ## 0.9.20
 

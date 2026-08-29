@@ -442,6 +442,74 @@ wxd_Window_ScreenToClient(wxd_Window_t* window, wxd_Point pt)
     return { wx_result.x, wx_result.y };
 }
 
+// DPI scaling conversions. A null window leaves the value unchanged rather than falling back
+// to wx's static overloads, which resolve against the primary display: silently sizing for the
+// wrong monitor is harder to notice than a value that was left alone.
+
+WXD_EXPORTED int
+wxd_Window_FromDIPInt(wxd_Window_t* window, int value)
+{
+    wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
+    if (!wx_window) {
+        return value;
+    }
+    return wx_window->FromDIP(value);
+}
+
+WXD_EXPORTED wxd_Size
+wxd_Window_FromDIPSize(wxd_Window_t* window, wxd_Size size)
+{
+    wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
+    if (!wx_window) {
+        return size;
+    }
+    wxSize wx_result = wx_window->FromDIP(wxSize(size.width, size.height));
+    return { wx_result.GetWidth(), wx_result.GetHeight() };
+}
+
+WXD_EXPORTED wxd_Point
+wxd_Window_FromDIPPoint(wxd_Window_t* window, wxd_Point pt)
+{
+    wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
+    if (!wx_window) {
+        return pt;
+    }
+    wxPoint wx_result = wx_window->FromDIP(wxPoint(pt.x, pt.y));
+    return { wx_result.x, wx_result.y };
+}
+
+WXD_EXPORTED int
+wxd_Window_ToDIPInt(wxd_Window_t* window, int value)
+{
+    wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
+    if (!wx_window) {
+        return value;
+    }
+    return wx_window->ToDIP(value);
+}
+
+WXD_EXPORTED wxd_Size
+wxd_Window_ToDIPSize(wxd_Window_t* window, wxd_Size size)
+{
+    wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
+    if (!wx_window) {
+        return size;
+    }
+    wxSize wx_result = wx_window->ToDIP(wxSize(size.width, size.height));
+    return { wx_result.GetWidth(), wx_result.GetHeight() };
+}
+
+WXD_EXPORTED wxd_Point
+wxd_Window_ToDIPPoint(wxd_Window_t* window, wxd_Point pt)
+{
+    wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
+    if (!wx_window) {
+        return pt;
+    }
+    wxPoint wx_result = wx_window->ToDIP(wxPoint(pt.x, pt.y));
+    return { wx_result.x, wx_result.y };
+}
+
 // Extra window style functions
 WXD_EXPORTED void
 wxd_Window_SetExtraStyle(wxd_Window_t* window, int64_t exStyle)

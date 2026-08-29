@@ -688,6 +688,104 @@ pub trait WxWidget: std::any::Any {
         }
     }
 
+    /// Converts a size from device-independent pixels to physical pixels, for the display this
+    /// window is on.
+    ///
+    /// Sizes hardcoded in UI code are written for a display at 100% scaling. On a per-monitor
+    /// DPI aware application nothing scales them automatically, so a dialog asked for 800x600
+    /// is 800x600 physical pixels: two thirds of its intended size on a 150% display. Passing
+    /// every such size through here is what keeps a layout the size it was designed to be, on
+    /// whichever monitor the window happens to be on.
+    ///
+    /// This is `wxWindow::FromDIP`. On platforms that hand wx logical coordinates already
+    /// (GTK, macOS) it returns its input unchanged, so it is safe to apply unconditionally.
+    ///
+    /// ```no_run
+    /// # use wxdragon::prelude::*;
+    /// # fn example(parent: &Frame) {
+    /// let size = parent.from_dip(Size::new(400, 300));
+    /// let list = ListCtrl::builder(parent).with_size(size).build();
+    /// # }
+    /// ```
+    // Named for `wxWindow::FromDIP`, which every other method here mirrors too; clippy reads
+    // the `from_` prefix as a constructor.
+    #[allow(clippy::wrong_self_convention)]
+    fn from_dip(&self, size: Size) -> Size {
+        let handle = self.handle_ptr();
+        if handle.is_null() {
+            return size;
+        }
+        let converted = unsafe { ffi::wxd_Window_FromDIPSize(handle, size.into()) };
+        Size {
+            width: converted.width,
+            height: converted.height,
+        }
+    }
+
+    /// [`from_dip`](WxWidget::from_dip) for a single value, e.g. a sizer's border width.
+    #[allow(clippy::wrong_self_convention)]
+    fn from_dip_int(&self, value: i32) -> i32 {
+        let handle = self.handle_ptr();
+        if handle.is_null() {
+            return value;
+        }
+        unsafe { ffi::wxd_Window_FromDIPInt(handle, value) }
+    }
+
+    /// [`from_dip`](WxWidget::from_dip) for a point.
+    #[allow(clippy::wrong_self_convention)]
+    fn from_dip_point(&self, point: Point) -> Point {
+        let handle = self.handle_ptr();
+        if handle.is_null() {
+            return point;
+        }
+        let converted = unsafe { ffi::wxd_Window_FromDIPPoint(handle, point.into()) };
+        Point {
+            x: converted.x,
+            y: converted.y,
+        }
+    }
+
+    /// Converts a size from physical pixels back to device-independent pixels, the inverse of
+    /// [`from_dip`](WxWidget::from_dip).
+    ///
+    /// This is `wxWindow::ToDIP`. Useful for storing a user-resized window's geometry in a
+    /// config file, so it restores to the same apparent size on a display with different
+    /// scaling.
+    fn to_dip(&self, size: Size) -> Size {
+        let handle = self.handle_ptr();
+        if handle.is_null() {
+            return size;
+        }
+        let converted = unsafe { ffi::wxd_Window_ToDIPSize(handle, size.into()) };
+        Size {
+            width: converted.width,
+            height: converted.height,
+        }
+    }
+
+    /// [`to_dip`](WxWidget::to_dip) for a single value.
+    fn to_dip_int(&self, value: i32) -> i32 {
+        let handle = self.handle_ptr();
+        if handle.is_null() {
+            return value;
+        }
+        unsafe { ffi::wxd_Window_ToDIPInt(handle, value) }
+    }
+
+    /// [`to_dip`](WxWidget::to_dip) for a point.
+    fn to_dip_point(&self, point: Point) -> Point {
+        let handle = self.handle_ptr();
+        if handle.is_null() {
+            return point;
+        }
+        let converted = unsafe { ffi::wxd_Window_ToDIPPoint(handle, point.into()) };
+        Point {
+            x: converted.x,
+            y: converted.y,
+        }
+    }
+
     /// Sets the window's size.
     fn set_size(&self, size: Size) {
         let handle = self.handle_ptr();
