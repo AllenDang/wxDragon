@@ -286,6 +286,11 @@ fn build_wxdragon_wrapper(
         .define("wxdUSE_MEDIACTRL", if cfg!(feature = "media-ctrl") { "1" } else { "0" })
         .define("wxdUSE_WEBVIEW", if cfg!(feature = "webview") { "1" } else { "0" });
     cmake_config.define("wxUSE_WEBVIEW", if cfg!(feature = "webview") { "ON" } else { "OFF" });
+    // wxdUSE_MEDIACTRL above only controls wxdragon's own C++ wrapper (cpp/src/media_ctrl.cpp);
+    // it never turned on wxUSE_MEDIACTRL for the wxWidgets build being configured here, so
+    // wxWidgets was built without wxMediaCtrl at all and the wrapper failed to compile against
+    // its headers. Mirror the wxUSE_WEBVIEW handling above.
+    cmake_config.define("wxUSE_MEDIACTRL", if cfg!(feature = "media-ctrl") { "ON" } else { "OFF" });
     if cfg!(feature = "webview") {
         if target_os == "macos" {
             cmake_config.define("wxUSE_WEBVIEW_WEBKIT", "ON");
@@ -1010,6 +1015,22 @@ fn build_wxdragon_wrapper(
         }
         if cfg!(feature = "media-ctrl") {
             println!("cargo:rustc-link-lib=static=wx_gtk3u_media-3.3");
+            // wxWidgets' GTK media backend calls into GStreamer directly
+            // (gst_element_factory_make etc.), but it was never linked here, leaving that
+            // symbol undefined at link time. Probe the same way the webview branch above
+            // probes WebKitGTK.
+            if let Ok(gst) = pkg_config::Config::new().probe("gstreamer-video-1.0") {
+                for lib in gst.libs {
+                    println!("cargo:rustc-link-lib={lib}");
+                }
+                println!("info: Using gstreamer-video-1.0 for MediaCtrl support");
+            } else {
+                println!("cargo:warning=GStreamer not found. MediaCtrl feature may not work on Linux.");
+                println!("cargo:warning=Install GStreamer development packages:");
+                println!(
+                    "cargo:warning=  Ubuntu/Debian: sudo apt install libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev"
+                );
+            }
         }
         if cfg!(feature = "stc") {
             println!("cargo:rustc-link-lib=static=wx_gtk3u_stc-3.3");
