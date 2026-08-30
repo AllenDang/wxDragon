@@ -1027,9 +1027,7 @@ fn build_wxdragon_wrapper(
             } else {
                 println!("cargo:warning=GStreamer not found. MediaCtrl feature may not work on Linux.");
                 println!("cargo:warning=Install GStreamer development packages:");
-                println!(
-                    "cargo:warning=  Ubuntu/Debian: sudo apt install libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev"
-                );
+                println!("cargo:warning=  Ubuntu/Debian: sudo apt install libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev");
             }
         }
         if cfg!(feature = "stc") {
