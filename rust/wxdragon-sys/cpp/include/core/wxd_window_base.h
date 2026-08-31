@@ -53,6 +53,22 @@ wxd_Window_ClientToScreen(wxd_Window_t* window, wxd_Point pt);
 WXD_EXPORTED wxd_Point
 wxd_Window_ScreenToClient(wxd_Window_t* window, wxd_Point pt);
 
+// DPI scaling: convert between device-independent pixels (what a size is written as at
+// 100% scaling) and the physical pixels wx works in, using the DPI of the display the
+// window is actually on. A null window leaves the value unchanged.
+WXD_EXPORTED int
+wxd_Window_FromDIPInt(wxd_Window_t* window, int value);
+WXD_EXPORTED wxd_Size
+wxd_Window_FromDIPSize(wxd_Window_t* window, wxd_Size size);
+WXD_EXPORTED wxd_Point
+wxd_Window_FromDIPPoint(wxd_Window_t* window, wxd_Point pt);
+WXD_EXPORTED int
+wxd_Window_ToDIPInt(wxd_Window_t* window, int value);
+WXD_EXPORTED wxd_Size
+wxd_Window_ToDIPSize(wxd_Window_t* window, wxd_Size size);
+WXD_EXPORTED wxd_Point
+wxd_Window_ToDIPPoint(wxd_Window_t* window, wxd_Point pt);
+
 // Declarations for functions that were previously in wxdragon.h directly
 WXD_EXPORTED void
 wxd_Window_Show(wxd_Window_t* self, bool show);
