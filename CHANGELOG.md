@@ -1,22 +1,23 @@
 # Changelog
 
-## Unreleased
+## 0.9.21
 
 ### New Features
 
 - **ComboBox**: Added the remaining `wxTextEntry` and `wxItemContainer` methods (`change_value`, `write_text`, `delete`, `find_string`, `set_items`, ...), `popup` / `dismiss`, and the `DROPDOWN` / `CLOSEUP` events (#209)
 - **Window**: Added `from_dip`/`to_dip` (plus `_int` and `_point` variants) wrapping `wxWindow::FromDIP`/`ToDIP`, for converting between the device-independent pixels UI sizes are written in and the physical pixels a per-monitor DPI aware app is handed (#210)
 
+### Build
+
+- Download wxWidgets into a custom `WXWIDGETS_DIR` when the directory does not exist yet or is empty (#207)
+- Preserve the file timestamps of the wxWidgets source when extracting the archive, so a re-downloaded source no longer triggers a full wxWidgets rebuild (#208)
+- Fixed the Linux `media-ctrl` feature by enabling wxMediaCtrl in the wxWidgets build and linking its GStreamer dependencies (#212)
+
 ## 0.9.20
 
 ### Bug Fixes
 
 - **ListCtrl**: Fixed `get_item_text` truncating the last character and replacing it with a NUL byte; multi-byte UTF-8 text is no longer corrupted (#205)
-
-### Build
-
-- Download wxWidgets into a custom `WXWIDGETS_DIR` when the directory does not exist yet or is empty (#207)
-- Preserve the file timestamps of the wxWidgets source when extracting the archive, so a re-downloaded source no longer triggers a full wxWidgets rebuild (#208)
 
 ## 0.9.19
 
