@@ -1,7 +1,7 @@
 use proc_macro::TokenStream;
 use quote::quote;
 use std::collections::HashMap;
-use syn::{Error, Ident, LitStr, Token, parse_macro_input};
+use syn::{parse_macro_input, Error, Ident, LitStr, Token};
 
 /// A procedural macro that generates a Rust struct for XRC-defined UI with all named widgets.
 ///
@@ -466,8 +466,8 @@ fn read_xrc_file(path: &str) -> syn::Result<String> {
 
 /// Parse XRC XML content to extract object hierarchy
 fn parse_xrc_content(content: &str) -> syn::Result<Vec<XrcObject>> {
-    use quick_xml::Reader;
     use quick_xml::events::Event;
+    use quick_xml::Reader;
 
     let mut reader = Reader::from_str(content);
     reader.config_mut().trim_text(true);
@@ -477,7 +477,7 @@ fn parse_xrc_content(content: &str) -> syn::Result<Vec<XrcObject>> {
 
     loop {
         match reader.read_event() {
-            Ok(Event::Start(ref e)) if e.name().as_ref() == b"object" => {
+            Ok(Event::Start(ref e)) if e.name().as_ref() == "object" => {
                 let mut obj = XrcObject {
                     name: String::new(),
                     class: String::new(),
@@ -489,15 +489,15 @@ fn parse_xrc_content(content: &str) -> syn::Result<Vec<XrcObject>> {
                     let attr = attr.map_err(|e| Error::new(proc_macro2::Span::call_site(), format!("XML parsing error: {e}")))?;
 
                     match attr.key.as_ref() {
-                        b"name" => obj.name = String::from_utf8_lossy(&attr.value).into_owned(),
-                        b"class" => obj.class = String::from_utf8_lossy(&attr.value).into_owned(),
+                        "name" => obj.name = attr.value.into_owned(),
+                        "class" => obj.class = attr.value.into_owned(),
                         _ => {}
                     }
                 }
 
                 stack.push(obj);
             }
-            Ok(Event::End(ref e)) if e.name().as_ref() == b"object" => {
+            Ok(Event::End(ref e)) if e.name().as_ref() == "object" => {
                 if let Some(obj) = stack.pop() {
                     if let Some(parent) = stack.last_mut() {
                         // Always add to parent, even if object doesn't have a name
