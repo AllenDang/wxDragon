@@ -764,6 +764,13 @@ fn build_wxdragon_wrapper(
         println!("cargo:rustc-link-lib=framework=Foundation");
         println!("cargo:rustc-link-lib=framework=SystemConfiguration");
 
+        // wx_osx_cocoau_gl's NSOpenGL calls live in the OpenGL framework, and nothing was linking
+        // it — the same omission as libGL on GTK. It went unnoticed because a program that never
+        // mentions wxGLCanvas leaves those objects unpulled from the static archive.
+        if cmake_cache.contains("wxUSE_OPENGL:BOOL=ON") {
+            println!("cargo:rustc-link-lib=framework=OpenGL");
+        }
+
         // Conditional frameworks for macOS
         if cfg!(feature = "media-ctrl") {
             println!("cargo:rustc-link-lib=framework=AVFoundation");
@@ -780,6 +787,13 @@ fn build_wxdragon_wrapper(
         // Detect cross-compilation from macOS to Windows
         let host_os = std::env::consts::OS;
         let is_macos_to_windows_gnu = host_os == "macos" && target_os == "windows" && target_env == "gnu";
+
+        // wxWidgets asks MSVC for opengl32 itself, with `#pragma comment(lib, "opengl32")` in
+        // src/msw/glcanvas.cpp — which is why the MSVC targets link without this and the MinGW ones
+        // do not: GCC ignores that pragma. Emitted for both, since a duplicate is harmless.
+        if cmake_cache.contains("wxUSE_OPENGL:BOOL=ON") {
+            println!("cargo:rustc-link-lib=opengl32");
+        }
 
         if is_macos_to_windows_gnu || is_cross_linux_to_windows {
             // Cross-compilation from macOS or Linux: libraries have -Windows suffix
