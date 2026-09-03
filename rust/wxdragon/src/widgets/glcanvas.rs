@@ -712,8 +712,9 @@ impl GLContext {
 
     /// The address of a GL entry point, or null when unavailable.
     ///
-    /// Pass this to a GL loader. It resolves through wxWidgets, so it behaves the same on every
-    /// platform and needs no `wglGetProcAddress`/`glXGetProcAddress`/`dlsym` of its own.
+    /// Pass this to a GL loader; a context must be current first. It resolves through wxWidgets,
+    /// except on macOS, where `wxGLContextBase::GetProcAddress` is a stub returning nullptr for
+    /// every name and the OpenGL framework is dlsym'd instead.
     ///
     /// # Panics
     /// If `name` contains a NUL byte.

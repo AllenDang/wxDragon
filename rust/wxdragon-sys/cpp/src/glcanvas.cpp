@@ -6,6 +6,10 @@
 
 #include <wx/glcanvas.h>
 
+#ifdef __WXOSX__
+#include <dlfcn.h>
+#endif
+
 // The header's WXD_GL_* values are what a caller builds an attribute list from, and wxWidgets
 // rejects a list holding anything it does not recognise. Checked here so a value that moves
 // upstream is a build failure rather than a run-time assert inside ParseAttribList.
@@ -484,7 +488,21 @@ WXD_EXPORTED void* wxd_GLContext_GetProcAddress(const char* name)
     if (!name) {
         return nullptr;
     }
+#ifdef __WXOSX__
+    // wxGLContextBase::GetProcAddress returns nullptr for every name on macOS -- a stub whose own
+    // comment says the shared library to load from is not clear (src/osx/cocoa/glcanvas.mm). It is
+    // the framework, which is already in the process because wxUSE_GLCANVAS links it, so resolve
+    // there. Without this a loader gets a null for every entry point and the first GL call fails.
+    static void* const gl = dlopen(
+        "/System/Library/Frameworks/OpenGL.framework/Versions/Current/OpenGL",
+        RTLD_LAZY | RTLD_LOCAL);
+    if (gl) {
+        return dlsym(gl, name);
+    }
+    return dlsym(RTLD_DEFAULT, name);
+#else
     return (void*)wxGLContext::GetProcAddress(wxString::FromUTF8(name));
+#endif
 }
 
 #else // !wxUSE_GLCANVAS
