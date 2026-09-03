@@ -965,6 +965,23 @@ fn build_wxdragon_wrapper(
         if cmake_cache.contains("wxUSE_LIBSDL:BOOL=ON") {
             println!("cargo:rustc-link-lib=SDL2");
         }
+        // src/gtk/textctrl.cpp's proof-check support compiles against gspell whenever cmake finds
+        // it, and the `-l` was not propagated — the same shape as the two above.
+        if cmake_cache.contains("wxUSE_SPELLCHECK:BOOL=ON") {
+            match pkg_config::Config::new().probe("gspell-1") {
+                Ok(found) => {
+                    for lib in found.libs {
+                        println!("cargo:rustc-link-lib={lib}");
+                    }
+                }
+                Err(_) => {
+                    println!(
+                        "cargo::warning=wxUSE_SPELLCHECK is on but pkg-config found no \
+                         'gspell-1'; linking wxTextCtrl may fail on its symbols."
+                    );
+                }
+            }
+        }
 
         if lib_dirs.iter().any(|dir| dir.join("libwx_gtk3u_propgrid-3.3.a").exists()) {
             println!("cargo:rustc-link-lib=static=wx_gtk3u_propgrid-3.3");
@@ -979,6 +996,31 @@ fn build_wxdragon_wrapper(
         println!("cargo:rustc-link-lib=static=wx_baseu-3.3");
         println!("cargo:rustc-link-lib=static=wx_baseu_net-3.3");
         println!("cargo:rustc-link-lib=stdc++");
+        // wx_gtk3u_gl's GLX and EGL backends call into the system GL libraries, and nothing here
+        // propagated the `-l` for them — the same shape as libnotify and SDL2 above. It went
+        // unnoticed because a program that never mentions wxGLCanvas leaves both backends' objects
+        // unpulled from the static archive; the symbols only go undefined once something uses one.
+        //
+        // Probed rather than emitted unconditionally, so a host without the development libraries
+        // still builds: pkg-config is the same signal wxWidgets configures against, which keeps the
+        // flags in step with whether the symbols exist.
+        if cmake_cache.contains("wxUSE_OPENGL:BOOL=ON") {
+            for pkg in ["gl", "egl", "wayland-egl"] {
+                match pkg_config::Config::new().probe(pkg) {
+                    Ok(found) => {
+                        for lib in found.libs {
+                            println!("cargo:rustc-link-lib={lib}");
+                        }
+                    }
+                    Err(_) => {
+                        println!(
+                            "cargo::warning=wxUSE_OPENGL is on but pkg-config found no '{pkg}'; \
+                             linking wxGLCanvas may fail on its symbols."
+                        );
+                    }
+                }
+            }
+        }
 
         if cfg!(feature = "aui") {
             println!("cargo:rustc-link-lib=static=wx_gtk3u_aui-3.3");
