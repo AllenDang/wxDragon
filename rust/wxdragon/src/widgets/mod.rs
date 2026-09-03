@@ -32,6 +32,7 @@ pub mod font_picker_ctrl;
 pub mod frame;
 pub mod gauge;
 pub mod generic_static_bitmap;
+pub mod glcanvas;
 pub mod grid;
 pub mod hyperlink_ctrl;
 pub mod info_bar;
@@ -129,6 +130,7 @@ pub use dataview::{
 pub use font_picker_ctrl::{FontPickerCtrl, FontPickerCtrlBuilder, FontPickerCtrlStyle};
 pub use frame::{Frame, FrameBuilder};
 pub use gauge::{Gauge, GaugeBuilder};
+pub use glcanvas::{GLCanvas, GLCanvasBuilder, GLContext};
 pub use grid::{
     CellSpan, Grid, GridBlockCoords, GridBuilder, GridCellCoords, GridEvent, GridEventData, GridSelectionMode, GridStyle,
     TabBehaviour,
