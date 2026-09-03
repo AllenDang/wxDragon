@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### New Features
+
+- **GLCanvas**: Wrapped `wxGLCanvas`, `wxGLContext`, `wxGLAttributes` and `wxGLContextAttrs` for OpenGL drawing — the pixel-format and context-attribute builders, both canvas constructors, `IsDisplaySupported`, swap interval, extension queries and `ParseAttribList`. `GLContext::proc_address` resolves GL entry points through wxWidgets, so a GL loader needs no per-platform symbol lookup, and `GLCanvas::pixel_size` gives the physical-pixel size a viewport wants on a scaled display. The wxWidgets build already enabled `wxUSE_OPENGL` and linked `wx::gl`; only the binding was missing
+
 ## 0.9.21
 
 ### New Features

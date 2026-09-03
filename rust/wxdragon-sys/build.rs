@@ -764,6 +764,13 @@ fn build_wxdragon_wrapper(
         println!("cargo:rustc-link-lib=framework=Foundation");
         println!("cargo:rustc-link-lib=framework=SystemConfiguration");
 
+        // wx_osx_cocoau_gl's NSOpenGL calls live in the OpenGL framework, and nothing was linking
+        // it — the same omission as libGL on GTK. It went unnoticed because a program that never
+        // mentions wxGLCanvas leaves those objects unpulled from the static archive.
+        if cmake_cache.contains("wxUSE_OPENGL:BOOL=ON") {
+            println!("cargo:rustc-link-lib=framework=OpenGL");
+        }
+
         // Conditional frameworks for macOS
         if cfg!(feature = "media-ctrl") {
             println!("cargo:rustc-link-lib=framework=AVFoundation");
@@ -780,6 +787,13 @@ fn build_wxdragon_wrapper(
         // Detect cross-compilation from macOS to Windows
         let host_os = std::env::consts::OS;
         let is_macos_to_windows_gnu = host_os == "macos" && target_os == "windows" && target_env == "gnu";
+
+        // wxWidgets asks MSVC for opengl32 itself, with `#pragma comment(lib, "opengl32")` in
+        // src/msw/glcanvas.cpp — which is why the MSVC targets link without this and the MinGW ones
+        // do not: GCC ignores that pragma. Emitted for both, since a duplicate is harmless.
+        if cmake_cache.contains("wxUSE_OPENGL:BOOL=ON") {
+            println!("cargo:rustc-link-lib=opengl32");
+        }
 
         if is_macos_to_windows_gnu || is_cross_linux_to_windows {
             // Cross-compilation from macOS or Linux: libraries have -Windows suffix
@@ -965,6 +979,23 @@ fn build_wxdragon_wrapper(
         if cmake_cache.contains("wxUSE_LIBSDL:BOOL=ON") {
             println!("cargo:rustc-link-lib=SDL2");
         }
+        // src/gtk/textctrl.cpp's proof-check support compiles against gspell whenever cmake finds
+        // it, and the `-l` was not propagated — the same shape as the two above.
+        if cmake_cache.contains("wxUSE_SPELLCHECK:BOOL=ON") {
+            match pkg_config::Config::new().probe("gspell-1") {
+                Ok(found) => {
+                    for lib in found.libs {
+                        println!("cargo:rustc-link-lib={lib}");
+                    }
+                }
+                Err(_) => {
+                    println!(
+                        "cargo::warning=wxUSE_SPELLCHECK is on but pkg-config found no \
+                         'gspell-1'; linking wxTextCtrl may fail on its symbols."
+                    );
+                }
+            }
+        }
 
         if lib_dirs.iter().any(|dir| dir.join("libwx_gtk3u_propgrid-3.3.a").exists()) {
             println!("cargo:rustc-link-lib=static=wx_gtk3u_propgrid-3.3");
@@ -979,6 +1010,31 @@ fn build_wxdragon_wrapper(
         println!("cargo:rustc-link-lib=static=wx_baseu-3.3");
         println!("cargo:rustc-link-lib=static=wx_baseu_net-3.3");
         println!("cargo:rustc-link-lib=stdc++");
+        // wx_gtk3u_gl's GLX and EGL backends call into the system GL libraries, and nothing here
+        // propagated the `-l` for them — the same shape as libnotify and SDL2 above. It went
+        // unnoticed because a program that never mentions wxGLCanvas leaves both backends' objects
+        // unpulled from the static archive; the symbols only go undefined once something uses one.
+        //
+        // Probed rather than emitted unconditionally, so a host without the development libraries
+        // still builds: pkg-config is the same signal wxWidgets configures against, which keeps the
+        // flags in step with whether the symbols exist.
+        if cmake_cache.contains("wxUSE_OPENGL:BOOL=ON") {
+            for pkg in ["gl", "egl", "wayland-egl"] {
+                match pkg_config::Config::new().probe(pkg) {
+                    Ok(found) => {
+                        for lib in found.libs {
+                            println!("cargo:rustc-link-lib={lib}");
+                        }
+                    }
+                    Err(_) => {
+                        println!(
+                            "cargo::warning=wxUSE_OPENGL is on but pkg-config found no '{pkg}'; \
+                             linking wxGLCanvas may fail on its symbols."
+                        );
+                    }
+                }
+            }
+        }
 
         if cfg!(feature = "aui") {
             println!("cargo:rustc-link-lib=static=wx_gtk3u_aui-3.3");

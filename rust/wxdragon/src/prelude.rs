@@ -113,6 +113,7 @@ pub use crate::widgets::file_picker_ctrl::{FilePickerCtrl, FilePickerCtrlBuilder
 pub use crate::widgets::font_picker_ctrl::{FontPickerCtrl, FontPickerCtrlBuilder, FontPickerCtrlStyle};
 pub use crate::widgets::frame::{Frame, FrameBuilder, FrameStyle, UserAttentionFlag};
 pub use crate::widgets::gauge::{Gauge, GaugeBuilder, GaugeStyle};
+pub use crate::widgets::glcanvas::{GLCanvas, GLCanvasBuilder, GLCanvasStyle, GLContext};
 pub use crate::widgets::grid::{
     CellSpan, Grid, GridBlockCoords, GridBuilder, GridCellCoords, GridEvent, GridEventData, GridSelectionMode, GridStyle,
     TabBehaviour,
