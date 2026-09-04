@@ -420,8 +420,11 @@ impl TreeCtrl {
         if ptr.is_null() {
             return;
         }
-        // Clean up any attached data before deleting the item
-        let _ = self.clear_custom_data(item);
+        // Clean up attached data before deleting, for the item and for every
+        // child going with it. This used to clear only the item named, while
+        // the doc comment above says the children go too, so each of those
+        // leaked its registry entry.
+        self.clean_item_and_children(item);
 
         unsafe { ffi::wxd_TreeCtrl_Delete(ptr, item.as_ptr()) };
     }
@@ -972,6 +975,9 @@ impl TreeCtrl {
         if ptr.is_null() {
             return;
         }
+        // Before the items go, because each one's registry id is stored on the
+        // item itself and cannot be read once wxWidgets has deleted it.
+        self.cleanup_all_custom_data();
         unsafe { ffi::wxd_TreeCtrl_DeleteAllItems(ptr) }
     }
 
@@ -980,6 +986,15 @@ impl TreeCtrl {
         let ptr = self.treectrl_ptr();
         if ptr.is_null() {
             return;
+        }
+        // The children go, so their registry entries have to go first, for the
+        // same reason as `delete_all_items`. The item itself stays and keeps
+        // whatever data it holds.
+        if let Some((first_child, mut cookie)) = self.get_first_child(item) {
+            self.clean_item_and_children(&first_child);
+            while let Some(next_child) = self.get_next_child(item, &mut cookie) {
+                self.clean_item_and_children(&next_child);
+            }
         }
         unsafe { ffi::wxd_TreeCtrl_DeleteChildren(ptr, item.as_ptr()) }
     }
@@ -1234,22 +1249,46 @@ impl TreeCtrl {
 
     /// Recursively clean up the item and all its children
     fn clean_item_and_children(&self, item: &TreeItemId) {
-        // Check if this item has any children
-        if self.get_children_count(item, false) == 0 {
-            // No children, we're done with this branch
-            return;
-        }
+        // Clear this item before descending. Two things used to stop anything
+        // being freed here: the walk returned early for an item with no
+        // children, which is where custom data usually lives, and even for a
+        // branch it only recursed without ever clearing.
+        self.clear_custom_data_direct(item);
 
-        // Get the first child
         if let Some((first_child, mut cookie)) = self.get_first_child(item) {
-            // Clean up the first child and its descendants
             self.clean_item_and_children(&first_child);
 
-            // Process all remaining children
             while let Some(next_child) = self.get_next_child(item, &mut cookie) {
                 self.clean_item_and_children(&next_child);
             }
         }
+    }
+
+    /// Direct method to clear custom data on a TreeItemId without going through
+    /// u64 conversion.
+    ///
+    /// The same reason `set_custom_data_direct` exists: `From<&TreeItemId> for
+    /// u64` passes the address of the reference and `get_concrete_tree_item_id`
+    /// reads it back, which is a round trip worth skipping when the caller
+    /// already holds the item.
+    ///
+    /// Returns whether there was anything to remove.
+    pub fn clear_custom_data_direct(&self, item_id: &TreeItemId) -> bool {
+        let ptr = self.treectrl_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+
+        let data_id = unsafe { ffi::wxd_TreeCtrl_GetItemData(ptr, item_id.as_ptr()) as u64 };
+        if data_id == 0 {
+            return false;
+        }
+
+        let _ = remove_item_data(data_id);
+        unsafe {
+            ffi::wxd_TreeCtrl_SetItemData(ptr, item_id.as_ptr(), 0);
+        }
+        true
     }
 
     /// Direct method to set custom data on a TreeItemId without going through u64 conversion.
