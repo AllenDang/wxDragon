@@ -1267,10 +1267,18 @@ impl TreeCtrl {
     /// Direct method to clear custom data on a TreeItemId without going through
     /// u64 conversion.
     ///
-    /// The same reason `set_custom_data_direct` exists: `From<&TreeItemId> for
-    /// u64` passes the address of the reference and `get_concrete_tree_item_id`
-    /// reads it back, which is a round trip worth skipping when the caller
-    /// already holds the item.
+    /// The same reason `set_custom_data_direct` exists, and one more that is
+    /// worth stating because it is not a matter of taste. `From<&TreeItemId>
+    /// for u64` passes the address of the reference, and
+    /// `get_concrete_tree_item_id` reads it back only when the value is greater
+    /// than `u32::MAX`. On a 32-bit target an address never is, so the pointer
+    /// branch is unreachable there and the value falls through to a match that
+    /// answers only 1 and 2, for the root item and the selection. Any real
+    /// address is neither, so the trait path returns `None` and the call does
+    /// nothing at all rather than reporting that it could not.
+    ///
+    /// So the direct methods are not merely a saved round trip. On 32-bit they
+    /// are the only ones that work.
     ///
     /// Returns whether there was anything to remove.
     pub fn clear_custom_data_direct(&self, item_id: &TreeItemId) -> bool {
