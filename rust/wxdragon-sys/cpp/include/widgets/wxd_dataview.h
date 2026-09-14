@@ -467,8 +467,12 @@ wxd_DataViewListCtrl_GetValue(wxd_Window_t* self, uint32_t row, uint32_t col);
 // Text convenience methods
 WXD_EXPORTED void
 wxd_DataViewListCtrl_SetTextValue(wxd_Window_t* self, uint32_t row, uint32_t col, const char* value);
-WXD_EXPORTED const char*
-wxd_DataViewListCtrl_GetTextValue(wxd_Window_t* self, uint32_t row, uint32_t col);
+/// Copies the cell's text into `buffer` (UTF-8, always NUL-terminated when
+/// `buffer_len > 0`) and returns its full length in bytes, or -1 on failure.
+/// Call with a null buffer to size the allocation first.
+WXD_EXPORTED int
+wxd_DataViewListCtrl_GetTextValue(wxd_Window_t* self, uint32_t row, uint32_t col, char* buffer,
+                                  size_t buffer_len);
 
 // Toggle convenience methods
 WXD_EXPORTED void

@@ -1444,9 +1444,6 @@ wxd_DataViewListCtrl_GetValue(wxd_Window_t* self, uint32_t row, uint32_t col)
     return reinterpret_cast<wxd_Variant_t*>(result);
 }
 
-// Thread-local storage for GetTextValue return string
-static thread_local wxString g_text_value_buffer;
-
 WXD_EXPORTED void
 wxd_DataViewListCtrl_SetTextValue(wxd_Window_t* self, uint32_t row, uint32_t col, const char* value)
 {
@@ -1457,14 +1454,15 @@ wxd_DataViewListCtrl_SetTextValue(wxd_Window_t* self, uint32_t row, uint32_t col
     ctrl->SetTextValue(wxValue, row, col);
 }
 
-WXD_EXPORTED const char*
-wxd_DataViewListCtrl_GetTextValue(wxd_Window_t* self, uint32_t row, uint32_t col)
+WXD_EXPORTED int
+wxd_DataViewListCtrl_GetTextValue(wxd_Window_t* self, uint32_t row, uint32_t col, char* buffer,
+                                  size_t buffer_len)
 {
     if (!self)
-        return "";
+        return -1;
     wxDataViewListCtrl* ctrl = reinterpret_cast<wxDataViewListCtrl*>(self);
-    g_text_value_buffer = ctrl->GetTextValue(row, col);
-    return g_text_value_buffer.utf8_str().data();
+    return (int)wxd_cpp_utils::copy_wxstring_to_buffer(ctrl->GetTextValue(row, col), buffer,
+                                                       buffer_len);
 }
 
 WXD_EXPORTED void
