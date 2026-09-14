@@ -263,7 +263,7 @@ impl Button {
         if bmp_ptr.is_null() {
             None
         } else {
-            Some(Bitmap::from(bmp_ptr))
+            Some(unsafe { Bitmap::from_raw(bmp_ptr) })
         }
     }
 
@@ -276,7 +276,7 @@ impl Button {
         if bmp_ptr.is_null() {
             None
         } else {
-            Some(Bitmap::from(bmp_ptr))
+            Some(unsafe { Bitmap::from_raw(bmp_ptr) })
         }
     }
 
@@ -289,7 +289,7 @@ impl Button {
         if bmp_ptr.is_null() {
             None
         } else {
-            Some(Bitmap::from(bmp_ptr))
+            Some(unsafe { Bitmap::from_raw(bmp_ptr) })
         }
     }
 
@@ -302,7 +302,7 @@ impl Button {
         if bmp_ptr.is_null() {
             None
         } else {
-            Some(Bitmap::from(bmp_ptr))
+            Some(unsafe { Bitmap::from_raw(bmp_ptr) })
         }
     }
 
@@ -315,7 +315,7 @@ impl Button {
         if bmp_ptr.is_null() {
             None
         } else {
-            Some(Bitmap::from(bmp_ptr))
+            Some(unsafe { Bitmap::from_raw(bmp_ptr) })
         }
     }
 

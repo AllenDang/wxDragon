@@ -163,7 +163,7 @@ impl DataViewEvent {
             return None;
         }
         // Wrap the returned pointer in a Variant; Rust takes ownership
-        Some(super::Variant::from(p))
+        Some(unsafe { super::Variant::from_raw(p) })
     }
 
     /// Set the value for editing events

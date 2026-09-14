@@ -341,7 +341,11 @@ impl DataViewListCtrl {
             return None;
         }
         let v_ptr = unsafe { ffi::wxd_DataViewListCtrl_GetValue(ptr, row as u32, col as u32) };
-        if v_ptr.is_null() { None } else { Some(Variant::from(v_ptr)) }
+        if v_ptr.is_null() {
+            None
+        } else {
+            Some(unsafe { Variant::from_raw(v_ptr) })
+        }
     }
 
     // ==========================================================================

@@ -456,7 +456,11 @@ impl PropertyGridEventData {
             return None;
         }
         let ptr = unsafe { ffi::wxd_PropertyGridEvent_GetValue(self.event.0) };
-        if ptr.is_null() { None } else { Some(Variant::from(ptr)) }
+        if ptr.is_null() {
+            None
+        } else {
+            Some(unsafe { Variant::from_raw(ptr) })
+        }
     }
 
     /// Returns the associated column index for column-related events.
@@ -673,7 +677,7 @@ impl PropertyGrid {
             return None;
         }
         let value = unsafe { ffi::wxd_PropertyGrid_GetValue(ptr, name.as_ptr()) };
-        (!value.is_null()).then(|| Variant::from(value))
+        (!value.is_null()).then(|| unsafe { Variant::from_raw(value) })
     }
 
     /// Sets a value without validation or property change events.

@@ -242,11 +242,20 @@ impl From<*const ffi::wxd_Bitmap_t> for Bitmap {
     }
 }
 
-impl From<*mut ffi::wxd_Bitmap_t> for Bitmap {
-    /// Creates an owning Bitmap wrapper from a raw pointer.
-    /// The pointer must be valid and Rust will take ownership of it.
-    fn from(ptr: *mut ffi::wxd_Bitmap_t) -> Self {
-        assert!(!ptr.is_null(), "invalid null pointer passed to Bitmap::from");
+impl Bitmap {
+    /// Creates an owning `Bitmap` from a raw pointer, taking responsibility for
+    /// destroying it.
+    ///
+    /// # Safety
+    ///
+    /// `ptr` must be non-null, point to a live `wxBitmap`, and be one that
+    /// nothing else will destroy. In particular it must not come from
+    /// [`Bitmap::as_mut_ptr`] or [`Bitmap::as_const_ptr`] on a `Bitmap` that is
+    /// still alive: both wrappers would then destroy the same object. Use
+    /// [`Bitmap::into_raw_mut`] when you mean to hand ownership out, or
+    /// `Bitmap::from(ptr as *const _)` for a non-owning wrapper.
+    pub unsafe fn from_raw(ptr: *mut ffi::wxd_Bitmap_t) -> Self {
+        assert!(!ptr.is_null(), "invalid null pointer passed to Bitmap::from_raw");
         Bitmap {
             ptr,
             owned: true,
@@ -320,5 +329,36 @@ mod tests {
 
         // When this test ends, `bmp` will be dropped and should destroy its own handle.
         // If ownership transfer or Drop were incorrect, this test would double-free or leak.
+    }
+
+    #[test]
+    fn as_const_ptr_yields_a_non_owning_wrapper() {
+        let rgba = vec![255u8; 2 * 2 * 4];
+        let owner = Bitmap::from_rgba(&rgba, 2, 2).expect("failed to create bitmap from rgba");
+        assert!(owner.is_owned());
+
+        // The safe route from an existing bitmap to a second wrapper must never
+        // claim ownership; adopting here would destroy `owner`'s bitmap twice.
+        let borrowed = Bitmap::from(owner.as_const_ptr());
+        assert!(!borrowed.is_owned(), "From<*const> must not take ownership");
+        assert!(borrowed.is_ok());
+        drop(borrowed);
+
+        // Still usable: the borrowed wrapper's Drop left it alone.
+        assert!(owner.is_ok());
+        assert_eq!(owner.get_width(), 2);
+    }
+
+    #[test]
+    fn from_raw_adopts_a_pointer_released_by_into_raw_mut() {
+        let rgba = vec![255u8; 2 * 2 * 4];
+        let bmp = Bitmap::from_rgba(&rgba, 2, 2).expect("failed to create bitmap from rgba");
+        let raw = bmp.into_raw_mut();
+        assert!(!raw.is_null());
+
+        // Ownership was handed out and is now handed back; exactly one destroy.
+        let adopted = unsafe { Bitmap::from_raw(raw) };
+        assert!(adopted.is_owned());
+        assert_eq!(adopted.get_width(), 2);
     }
 }

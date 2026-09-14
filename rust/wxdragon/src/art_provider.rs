@@ -182,7 +182,7 @@ impl ArtProvider {
             None
         } else {
             // The bitmap is created by wxWidgets and ownership is transferred to Rust
-            Some(Bitmap::from(bitmap_ptr))
+            Some(unsafe { Bitmap::from_raw(bitmap_ptr) })
         }
     }
 
