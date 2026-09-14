@@ -106,17 +106,17 @@ impl DataViewTreeCtrl {
 
     // --- Column Management (inherited from DataViewCtrl conceptually) ---
     /// Appends a pre-created column to the control.
-    pub fn append_column(&self, column: &DataViewColumn) -> bool {
+    pub fn append_column(&self, column: DataViewColumn) -> bool {
         unsafe { ffi::wxd_DataViewCtrl_AppendColumn(self.dvtc_ptr(), column.as_raw()) }
     }
 
     /// Prepends a column to the control.
-    pub fn prepend_column(&self, column: &DataViewColumn) -> bool {
+    pub fn prepend_column(&self, column: DataViewColumn) -> bool {
         unsafe { ffi::wxd_DataViewCtrl_PrependColumn(self.dvtc_ptr(), column.as_raw()) }
     }
 
     /// Inserts a column at the specified position.
-    pub fn insert_column(&self, pos: usize, column: &DataViewColumn) -> bool {
+    pub fn insert_column(&self, pos: usize, column: DataViewColumn) -> bool {
         unsafe { ffi::wxd_DataViewCtrl_InsertColumn(self.dvtc_ptr(), pos as i64, column.as_raw()) }
     }
 
@@ -171,8 +171,8 @@ impl DataViewTreeCtrl {
         flags: DataViewColumnFlags,
     ) -> bool {
         let renderer = DataViewTextRenderer::new(VariantType::String, DataViewCellMode::Inert, align);
-        let column = DataViewColumn::new(label, &renderer, model_column as usize, width, align, flags);
-        self.append_column(&column)
+        let column = DataViewColumn::new(label, renderer, model_column as usize, width, align, flags);
+        self.append_column(column)
     }
 
     /// Creates and appends an icon+text column to this control.
@@ -185,8 +185,8 @@ impl DataViewTreeCtrl {
         flags: DataViewColumnFlags,
     ) -> bool {
         let renderer = DataViewIconTextRenderer::new(VariantType::IconText, DataViewCellMode::Inert, align);
-        let column = DataViewColumn::new(label, &renderer, model_column as usize, width, align, flags);
-        self.append_column(&column)
+        let column = DataViewColumn::new(label, renderer, model_column as usize, width, align, flags);
+        self.append_column(column)
     }
 
     /// Associates a data model with this DataViewTreeCtrl.

@@ -19,20 +19,23 @@ impl DataViewColumn {
     /// # Parameters
     ///
     /// * `title` - The header text for this column
-    /// * `renderer` - The renderer that will be used to display data in this column
+    /// * `renderer` - The renderer that will be used to display data in this
+    ///   column. The column takes ownership of it, which is why this is taken
+    ///   by value: `wxDataViewColumn` deletes its renderer, so one renderer
+    ///   cannot be shared between two columns.
     /// * `model_column` - The column index in the data model
     /// * `width` - The column width (in pixels)
     /// * `align` - The alignment of the column content
     /// * `flags` - Column flags specifying behavior (e.g., resizable, sortable)
     pub fn new(
         title: &str,
-        renderer: &dyn DataViewRenderer,
+        renderer: impl DataViewRenderer,
         model_column: usize,
         width: i32,
         align: DataViewAlign,
         flags: DataViewColumnFlags,
     ) -> Self {
-        let title_cstr = CString::new(title).unwrap();
+        let title_cstr = CString::new(title).unwrap_or_default();
         let handle = unsafe {
             // FFI function now takes 6 arguments, including flags as int.
             ffi::wxd_DataViewColumn_Create(

@@ -256,7 +256,7 @@ impl MenuEventsApp {
         // Create columns
         let name_col = DataViewColumn::new(
             "Name",
-            &DataViewTextRenderer::new(VariantType::String, DataViewCellMode::Inert, DataViewAlign::Left),
+            DataViewTextRenderer::new(VariantType::String, DataViewCellMode::Inert, DataViewAlign::Left),
             0,
             100,
             DataViewAlign::Left,
@@ -264,7 +264,7 @@ impl MenuEventsApp {
         );
         let age_col = DataViewColumn::new(
             "Age",
-            &DataViewTextRenderer::new(VariantType::Int32, DataViewCellMode::Inert, DataViewAlign::Center),
+            DataViewTextRenderer::new(VariantType::Int32, DataViewCellMode::Inert, DataViewAlign::Center),
             1,
             60,
             DataViewAlign::Center,
@@ -272,7 +272,7 @@ impl MenuEventsApp {
         );
         let city_col = DataViewColumn::new(
             "City",
-            &DataViewTextRenderer::new(VariantType::String, DataViewCellMode::Inert, DataViewAlign::Left),
+            DataViewTextRenderer::new(VariantType::String, DataViewCellMode::Inert, DataViewAlign::Left),
             2,
             100,
             DataViewAlign::Left,
@@ -280,17 +280,17 @@ impl MenuEventsApp {
         );
         let status_col = DataViewColumn::new(
             "Status",
-            &DataViewTextRenderer::new(VariantType::String, DataViewCellMode::Inert, DataViewAlign::Center),
+            DataViewTextRenderer::new(VariantType::String, DataViewCellMode::Inert, DataViewAlign::Center),
             3,
             80,
             DataViewAlign::Center,
             DataViewColumnFlags::Resizable,
         );
 
-        dataview.append_column(&name_col);
-        dataview.append_column(&age_col);
-        dataview.append_column(&city_col);
-        dataview.append_column(&status_col);
+        dataview.append_column(name_col);
+        dataview.append_column(age_col);
+        dataview.append_column(city_col);
+        dataview.append_column(status_col);
         dataview.associate_model(&model);
 
         let sizer = BoxSizer::builder(Orientation::Vertical).build();
