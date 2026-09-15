@@ -383,12 +383,13 @@ impl DataViewListCtrl {
         if ptr.is_null() {
             return String::new();
         }
-        let c_str = unsafe { ffi::wxd_DataViewListCtrl_GetTextValue(ptr, row as u32, col as u32) };
-        if c_str.is_null() {
-            String::new()
-        } else {
-            unsafe { CStr::from_ptr(c_str).to_string_lossy().into_owned() }
+        let len = unsafe { ffi::wxd_DataViewListCtrl_GetTextValue(ptr, row as u32, col as u32, std::ptr::null_mut(), 0) };
+        if len < 0 {
+            return String::new();
         }
+        let mut buf = vec![0; len as usize + 1];
+        unsafe { ffi::wxd_DataViewListCtrl_GetTextValue(ptr, row as u32, col as u32, buf.as_mut_ptr(), buf.len()) };
+        unsafe { CStr::from_ptr(buf.as_ptr()).to_string_lossy().into_owned() }
     }
 
     // ==========================================================================
@@ -607,3 +608,93 @@ widget_builder!(
 
 // Implement DataViewEventHandler for DataViewListCtrl
 impl crate::widgets::dataview::DataViewEventHandler for DataViewListCtrl {}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::prelude::*;
+    use crate::widgets::Frame;
+    use std::cell::{Cell, RefCell};
+    use std::rc::Rc;
+
+    const NOT_RUN: u8 = 0;
+    const STARTED: u8 = 1;
+    const FINISHED: u8 = 2;
+
+    /// Runs `body` against a one-column list control inside a wx main loop that
+    /// a one-shot timer exits again (see the `window.rs` and `combobox.rs`
+    /// tests). Panics in the init callback are swallowed by `crate::main`, so
+    /// the body's progress is tracked: started-but-unfinished fails the test,
+    /// never-started (wx could not initialise) only logs. Skipped on macOS,
+    /// where the test thread is not the OS main thread.
+    fn with_list_ctrl(body: impl FnOnce(&DataViewListCtrl) + 'static) {
+        let _gui_test = crate::app::GUI_TEST_LOCK.lock().unwrap();
+        SystemOptions::set_option_by_int("msw.no-manifest-check", 1);
+        let progress = Rc::new(Cell::new(NOT_RUN));
+        let progress_in_loop = progress.clone();
+        let timer_store: Rc<RefCell<Option<Timer<Frame>>>> = Rc::new(RefCell::new(None));
+        let timer_store_clone = timer_store.clone();
+
+        let res = crate::main(move |app| {
+            let frame = Frame::builder().with_title("dataview list test").build();
+            let list = DataViewListCtrl::builder(&frame).build();
+            list.append_text_column("text", 0, DataViewAlign::Left, 200, DataViewColumnFlags::Resizable);
+            list.append_item(&[Variant::from_string("")]);
+
+            progress_in_loop.set(STARTED);
+            body(&list);
+            progress_in_loop.set(FINISHED);
+
+            let timer = Timer::new(&frame);
+            let app_clone = app;
+            let timer_store_cleanup = timer_store_clone.clone();
+            timer.on_tick(move |_evt| {
+                timer_store_cleanup.borrow_mut().take();
+                app_clone.exit_main_loop();
+            });
+            timer.start(100, true);
+            timer_store_clone.borrow_mut().replace(timer);
+        });
+        if let Err(e) = res {
+            log::warn!("Test failed with error: {e:?}");
+        }
+        assert_ne!(progress.get(), STARTED, "test body panicked inside the wx main loop");
+    }
+
+    #[cfg_attr(target_os = "macos", ignore)]
+    #[test]
+    fn text_values_round_trip() {
+        with_list_ctrl(|list| {
+            list.set_text_value(0, 0, "hello");
+            assert_eq!(list.get_text_value(0, 0), "hello");
+
+            // Multi-byte, so a byte length and a char count disagree.
+            list.set_text_value(0, 0, "héllo wörld — ünïcøde");
+            assert_eq!(list.get_text_value(0, 0), "héllo wörld — ünïcøde");
+
+            list.set_text_value(0, 0, "");
+            assert_eq!(list.get_text_value(0, 0), "");
+        });
+    }
+
+    #[cfg_attr(target_os = "macos", ignore)]
+    #[test]
+    fn a_long_text_value_is_not_truncated() {
+        with_list_ctrl(|list| {
+            // Longer than any fixed stack buffer a getter might be tempted to
+            // use, and long enough that the UTF-8 conversion allocates.
+            let long = "wxDragon ".repeat(500);
+            list.set_text_value(0, 0, &long);
+            assert_eq!(list.get_text_value(0, 0), long);
+        });
+    }
+
+    #[cfg_attr(target_os = "macos", ignore)]
+    #[test]
+    fn get_text_value_on_a_destroyed_control_is_empty() {
+        with_list_ctrl(|list| {
+            list.destroy();
+            assert_eq!(list.get_text_value(0, 0), "");
+        });
+    }
+}
