@@ -580,7 +580,7 @@ impl DataViewCtrl {
 
         for raw_ptr in items_raw {
             if !raw_ptr.is_null() {
-                items.push(DataViewItem::from(raw_ptr));
+                items.push(unsafe { DataViewItem::from_raw(raw_ptr) });
             }
         }
 
@@ -607,14 +607,14 @@ impl DataViewCtrl {
         if item_ptr.is_null() {
             None
         } else {
-            Some(DataViewItem::from(item_ptr))
+            Some(unsafe { DataViewItem::from_raw(item_ptr) })
         }
     }
 
     /// Gets the nth child of a parent item (works for tree models attached to a DataViewCtrl)
     pub fn get_nth_child(&self, parent: &DataViewItem, pos: u32) -> DataViewItem {
         let item = unsafe { ffi::wxd_DataViewCtrl_GetNthChild(self.dvc_ptr(), **parent, pos) };
-        DataViewItem::from(item)
+        unsafe { DataViewItem::from_raw(item) }
     }
 
     /// Expand the given item (works for tree models attached to a DataViewCtrl)
@@ -637,7 +637,7 @@ impl DataViewCtrl {
         if item_ptr.is_null() {
             None
         } else {
-            Some(DataViewItem::from(item_ptr))
+            Some(unsafe { DataViewItem::from_raw(item_ptr) })
         }
     }
 

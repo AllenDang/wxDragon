@@ -122,7 +122,7 @@ impl DataViewEvent {
                 None
             } else {
                 // The C++ function returns a newly-allocated wrapper pointer that Rust takes ownership of
-                Some(DataViewItem::from(item_ptr))
+                Some(DataViewItem::from_raw(item_ptr))
             }
         }
     }

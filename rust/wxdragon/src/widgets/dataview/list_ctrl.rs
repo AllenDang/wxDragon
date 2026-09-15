@@ -477,7 +477,7 @@ impl DataViewListCtrl {
         if item_ptr.is_null() {
             None
         } else {
-            Some(DataViewItem::from(item_ptr as *const _))
+            Some(unsafe { DataViewItem::from_raw(item_ptr as *const _) })
         }
     }
 
