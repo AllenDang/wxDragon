@@ -29,9 +29,22 @@ impl Drop for Menu {
     }
 }
 
-impl From<*mut ffi::wxd_Menu_t> for Menu {
-    fn from(ptr: *mut ffi::wxd_Menu_t) -> Self {
-        assert!(!ptr.is_null(), "invalid null pointer passed to Menu::from");
+impl Menu {
+    /// Creates an owning `Menu` from a raw pointer, taking responsibility for
+    /// destroying it.
+    ///
+    /// # Safety
+    ///
+    /// `ptr` must be non-null, point to a live `wxMenu`, and be one that nothing
+    /// else will destroy — which rules out a menu already given to a `MenuBar`,
+    /// a parent menu, or a `TaskBarIcon`, since each of those takes ownership.
+    /// It must also not come from [`Menu::as_mut_ptr`] or
+    /// [`Menu::as_const_ptr`] on a `Menu` that is still alive: both wrappers
+    /// would then destroy the same object. Use [`Menu::into_raw_mut`] when you
+    /// mean to hand ownership out, or `Menu::from(ptr as *const _)` for a
+    /// non-owning wrapper.
+    pub unsafe fn from_raw(ptr: *mut ffi::wxd_Menu_t) -> Self {
+        assert!(!ptr.is_null(), "invalid null pointer passed to Menu::from_raw");
         Menu {
             ptr,
             owned: true,

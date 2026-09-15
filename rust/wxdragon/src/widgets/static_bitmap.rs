@@ -187,7 +187,7 @@ impl StaticBitmap {
             None
         } else {
             // We get ownership of the bitmap from C++
-            Some(Bitmap::from(ptr))
+            Some(unsafe { Bitmap::from_raw(ptr) })
         }
     }
 

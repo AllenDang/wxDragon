@@ -158,7 +158,7 @@ impl GenericStaticBitmap {
             if bmp_ptr.is_null() {
                 None
             } else {
-                Some(Bitmap::from(bmp_ptr))
+                Some(Bitmap::from_raw(bmp_ptr))
             }
         }
     }
