@@ -6,6 +6,10 @@
 
 - **DataViewColumn / DataViewCtrl / DataViewTreeCtrl**: `DataViewColumn::new` now takes its renderer by value, and `append_column` / `prepend_column` / `insert_column` now take the column by value. `wxDataViewColumn` deletes its renderer and `wxDataViewCtrl` deletes its columns, but both were taken by reference, so the same C++ object could be handed to two owners and deleted twice at teardown — `dvc.append_column(&col); dvc2.append_column(&col);`, or one renderer shared by two columns. Move semantics now prevent it. The `DataViewCustomRenderer` docs previously demonstrated sharing one renderer across two columns; they are corrected. Migration: drop the `&` at both call sites, and where code kept using a column after adding it, fetch it back with `DataViewCtrl::get_column(pos)`
 
+### Bug Fixes
+
+- **Events**: Fixed heap corruption when an event handler binds or unbinds handlers on the widget that is dispatching it. `DispatchEvent` iterated the closure list by reference while calling into Rust, so an `unbind` erased from the vector under the loop and a `bind` could reallocate it; `unbind` also handed the closure box back to Rust while that closure was still running. Dispatch now works from a copy of the list, skips handlers removed part-way through, and defers closure drops until the outermost dispatch has unwound. A handler that unbinds itself (the "run once" pattern) previously crashed
+
 ### New Features
 
 - **GLCanvas**: Wrapped `wxGLCanvas`, `wxGLContext`, `wxGLAttributes` and `wxGLContextAttrs` for OpenGL drawing — the pixel-format and context-attribute builders, both canvas constructors, `IsDisplaySupported`, swap interval, extension queries and `ParseAttribList`. `GLContext::proc_address` resolves GL entry points through wxWidgets, so a GL loader needs no per-platform symbol lookup, and `GLCanvas::pixel_size` gives the physical-pixel size a viewport wants on a scaled display. The wxWidgets build already enabled `wxUSE_OPENGL` and linked `wx::gl`; only the binding was missing

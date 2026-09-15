@@ -1016,3 +1016,171 @@ pub unsafe extern "C" fn drop_rust_event_closure_box(ptr: *mut c_void) {
         let _ = unsafe { Box::from_raw(ptr as *mut Box<dyn FnMut(Event) + 'static>) };
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::prelude::*;
+    use crate::widgets::{Frame, Panel};
+    use std::cell::{Cell, RefCell};
+    use std::rc::Rc;
+
+    const NOT_RUN: u8 = 0;
+    const STARTED: u8 = 1;
+    const FINISHED: u8 = 2;
+
+    /// Command id the dispatch tests bind and fire. Arbitrary, just not a stock wx id.
+    const CMD_ID: i32 = 4321;
+
+    /// Runs `body` against a fresh panel inside a wx main loop that a one-shot
+    /// timer exits again (see the `window.rs` and `combobox.rs` tests). Panics
+    /// in the init callback are swallowed by `crate::main`, so the body's
+    /// progress is tracked: started-but-unfinished fails the test, never-started
+    /// (wx could not initialise) only logs. Skipped on macOS, where the test
+    /// thread is not the OS main thread.
+    ///
+    /// The body gets the panel rather than the frame on purpose: the loop's exit
+    /// timer binds on the frame, and one of these tests calls `unbind_all`.
+    fn with_panel(body: impl FnOnce(&Panel) + 'static) {
+        let _gui_test = crate::app::GUI_TEST_LOCK.lock().unwrap();
+        SystemOptions::set_option_by_int("msw.no-manifest-check", 1);
+        let progress = Rc::new(Cell::new(NOT_RUN));
+        let progress_in_loop = progress.clone();
+        let timer_store: Rc<RefCell<Option<Timer<Frame>>>> = Rc::new(RefCell::new(None));
+        let timer_store_clone = timer_store.clone();
+
+        let res = crate::main(move |app| {
+            let frame = Frame::builder().with_title("event dispatch test").build();
+            let panel = Panel::builder(&frame).build();
+
+            progress_in_loop.set(STARTED);
+            body(&panel);
+            progress_in_loop.set(FINISHED);
+
+            let timer = Timer::new(&frame);
+            let app_clone = app;
+            let timer_store_cleanup = timer_store_clone.clone();
+            timer.on_tick(move |_evt| {
+                timer_store_cleanup.borrow_mut().take();
+                app_clone.exit_main_loop();
+            });
+            timer.start(100, true);
+            timer_store_clone.borrow_mut().replace(timer);
+        });
+        if let Err(e) = res {
+            log::warn!("Test failed with error: {e:?}");
+        }
+        assert_ne!(progress.get(), STARTED, "test body panicked inside the wx main loop");
+    }
+
+    /// Binds a `CMD_ID` handler that records `tag` and then runs `extra`, which
+    /// is where each test does its mid-dispatch bind or unbind.
+    fn bind_recorder(
+        panel: &Panel,
+        log: &Rc<RefCell<Vec<&'static str>>>,
+        tag: &'static str,
+        mut extra: impl FnMut() + 'static,
+    ) -> EventToken {
+        let log = log.clone();
+        panel.bind_with_id_internal(EventType::MENU, CMD_ID, move |_| {
+            log.borrow_mut().push(tag);
+            extra();
+        })
+    }
+
+    #[cfg_attr(target_os = "macos", ignore)]
+    #[test]
+    fn a_handler_can_unbind_itself_during_dispatch() {
+        with_panel(|panel| {
+            let log = Rc::new(RefCell::new(Vec::new()));
+            let own_token = Rc::new(Cell::new(EventToken::INVALID_TOKEN));
+
+            let panel_copy = *panel;
+            let token_for_closure = own_token.clone();
+            let token = bind_recorder(panel, &log, "a", move || {
+                panel_copy.unbind(token_for_closure.get());
+            });
+            own_token.set(token);
+            bind_recorder(panel, &log, "b", || {});
+            bind_recorder(panel, &log, "c", || {});
+
+            panel.process_menu_command(CMD_ID);
+            assert_eq!(*log.borrow(), ["a", "b", "c"], "the remaining handlers should still run");
+
+            log.borrow_mut().clear();
+            panel.process_menu_command(CMD_ID);
+            assert_eq!(*log.borrow(), ["b", "c"], "the self-unbound handler should be gone");
+        });
+    }
+
+    #[cfg_attr(target_os = "macos", ignore)]
+    #[test]
+    fn unbinding_a_later_handler_during_dispatch_skips_it() {
+        with_panel(|panel| {
+            let log = Rc::new(RefCell::new(Vec::new()));
+            let b_token = Rc::new(Cell::new(EventToken::INVALID_TOKEN));
+
+            let panel_copy = *panel;
+            let token_for_closure = b_token.clone();
+            bind_recorder(panel, &log, "a", move || {
+                panel_copy.unbind(token_for_closure.get());
+            });
+            b_token.set(bind_recorder(panel, &log, "b", || {}));
+            bind_recorder(panel, &log, "c", || {});
+
+            panel.process_menu_command(CMD_ID);
+            assert_eq!(*log.borrow(), ["a", "c"], "a handler unbound mid-dispatch must not run");
+        });
+    }
+
+    #[cfg_attr(target_os = "macos", ignore)]
+    #[test]
+    fn binding_during_dispatch_waits_for_the_next_event() {
+        with_panel(|panel| {
+            let log = Rc::new(RefCell::new(Vec::new()));
+
+            let panel_copy = *panel;
+            let log_for_new = log.clone();
+            let already_bound = Cell::new(false);
+            bind_recorder(panel, &log, "a", move || {
+                if already_bound.replace(true) {
+                    return;
+                }
+                let log_inner = log_for_new.clone();
+                panel_copy.bind_with_id_internal(EventType::MENU, CMD_ID, move |_| {
+                    log_inner.borrow_mut().push("d");
+                });
+            });
+            bind_recorder(panel, &log, "b", || {});
+
+            panel.process_menu_command(CMD_ID);
+            assert_eq!(*log.borrow(), ["a", "b"], "a handler bound mid-dispatch should not run yet");
+
+            log.borrow_mut().clear();
+            panel.process_menu_command(CMD_ID);
+            assert_eq!(*log.borrow(), ["a", "b", "d"]);
+        });
+    }
+
+    #[cfg_attr(target_os = "macos", ignore)]
+    #[test]
+    fn unbind_all_from_inside_a_handler_stops_the_dispatch() {
+        with_panel(|panel| {
+            let log = Rc::new(RefCell::new(Vec::new()));
+
+            let panel_copy = *panel;
+            bind_recorder(panel, &log, "a", move || {
+                panel_copy.unbind_all();
+            });
+            bind_recorder(panel, &log, "b", || {});
+            bind_recorder(panel, &log, "c", || {});
+
+            panel.process_menu_command(CMD_ID);
+            assert_eq!(*log.borrow(), ["a"], "handlers removed by unbind_all must not run");
+
+            log.borrow_mut().clear();
+            panel.process_menu_command(CMD_ID);
+            assert!(log.borrow().is_empty(), "nothing should remain bound");
+        });
+    }
+}
