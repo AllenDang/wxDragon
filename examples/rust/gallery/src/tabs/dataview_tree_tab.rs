@@ -38,7 +38,7 @@ pub fn create_dataview_tree_tab(parent: &impl WxWidget) -> DataViewTreeTabContro
     let expander_renderer = DataViewIconTextRenderer::new(VariantType::IconText, DataViewCellMode::Inert, DataViewAlign::Left);
     let expander_col = DataViewColumn::new(
         "Hierarchy",                    // Header text for the tree column
-        &expander_renderer,             // Renderer
+        expander_renderer,              // Renderer
         0,                              // Model column 0 (for the main item text/icon)
         200,                            // Initial width
         DataViewAlign::Left,            // Alignment
@@ -48,7 +48,7 @@ pub fn create_dataview_tree_tab(parent: &impl WxWidget) -> DataViewTreeTabContro
     let aux_renderer = DataViewIconTextRenderer::new(VariantType::IconText, DataViewCellMode::Inert, DataViewAlign::Left);
     let aux_col = DataViewColumn::new(
         "Auxiliary Info (IconText)",    // Initial title, will be overridden
-        &aux_renderer,                  // renderer
+        aux_renderer,                   // renderer
         1,                              // model_column
         150,                            // width
         DataViewAlign::Left,            // align
@@ -56,11 +56,15 @@ pub fn create_dataview_tree_tab(parent: &impl WxWidget) -> DataViewTreeTabContro
     );
 
     // Add columns in order
-    dvc_tree.prepend_column(&expander_col);
-    dvc_tree.append_column(&aux_col);
+    dvc_tree.prepend_column(expander_col);
+    dvc_tree.append_column(aux_col);
 
-    // Set expander column *after* all columns are added
-    dvc_tree.set_expander_column(&expander_col);
+    // Set expander column *after* all columns are added. The control owns the
+    // columns now, so ask it for the one we want instead of reusing the wrapper
+    // we handed over.
+    if let Some(expander_col) = dvc_tree.get_column(0) {
+        dvc_tree.set_expander_column(&expander_col);
+    }
 
     // Explicitly set properties on the second column (index 1) due to wxWidgets quirk
     if let Some(col_to_fix) = dvc_tree.get_column(1) {

@@ -51,7 +51,7 @@ fn main() {
         fn create_column(title: &str, model_col: usize, width: i32) -> DataViewColumn {
             DataViewColumn::new(
                 title,
-                &DataViewTextRenderer::new(VariantType::String, DataViewCellMode::Inert, DataViewAlign::Left),
+                DataViewTextRenderer::new(VariantType::String, DataViewCellMode::Inert, DataViewAlign::Left),
                 model_col,
                 width,
                 DataViewAlign::Left,
@@ -65,10 +65,10 @@ fn main() {
         let year_col = create_column("Year", 2, 100);
         let judg_col = create_column("Judgement", 3, 120);
 
-        dataview.append_column(&title_col);
-        dataview.append_column(&artist_col);
-        dataview.append_column(&year_col);
-        dataview.append_column(&judg_col);
+        dataview.append_column(title_col);
+        dataview.append_column(artist_col);
+        dataview.append_column(year_col);
+        dataview.append_column(judg_col);
 
         // Associate the model with the control
         dataview.associate_model(&model);

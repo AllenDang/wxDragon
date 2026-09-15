@@ -92,7 +92,7 @@ impl DataViewListCtrl {
             return false;
         }
         let renderer = DataViewTextRenderer::new(VariantType::String, DataViewCellMode::Inert, align);
-        let column = DataViewColumn::new(label, &renderer, model_column, width, align, flags);
+        let column = DataViewColumn::new(label, renderer, model_column, width, align, flags);
         unsafe { ffi::wxd_DataViewCtrl_AppendColumn(ptr, column.as_raw()) }
     }
 
@@ -122,7 +122,7 @@ impl DataViewListCtrl {
             return false;
         }
         let renderer = DataViewToggleRenderer::new(VariantType::Bool, DataViewCellMode::Activatable, align);
-        let column = DataViewColumn::new(label, &renderer, model_column, width, align, flags);
+        let column = DataViewColumn::new(label, renderer, model_column, width, align, flags);
         unsafe { ffi::wxd_DataViewCtrl_AppendColumn(ptr, column.as_raw()) }
     }
 
@@ -144,7 +144,7 @@ impl DataViewListCtrl {
             return false;
         }
         let renderer = DataViewProgressRenderer::new(VariantType::Int32, DataViewCellMode::Inert);
-        let column = DataViewColumn::new(label, &renderer, model_column, width, DataViewAlign::Center, flags);
+        let column = DataViewColumn::new(label, renderer, model_column, width, DataViewAlign::Center, flags);
         unsafe { ffi::wxd_DataViewCtrl_AppendColumn(ptr, column.as_raw()) }
     }
 
