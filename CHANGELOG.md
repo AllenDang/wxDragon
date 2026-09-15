@@ -9,6 +9,7 @@
 ### Bug Fixes
 
 - **DataViewListCtrl**: Fixed `get_text_value` reading freed memory. The shim returned `wxString::utf8_str().data()`, and on a wide-character wxString build (Windows, macOS) `utf8_str()` hands back a `wxScopedCharBuffer` that owns the converted bytes and frees them when the temporary dies at the end of that return statement. The thread-local `wxString` kept the wide string alive but not the UTF-8 conversion. `wxd_DataViewListCtrl_GetTextValue` now takes a `(buffer, buffer_len)` pair and returns the length, the same convention as every other string getter in the shim
+- **Events**: Fixed heap corruption when an event handler binds or unbinds handlers on the widget that is dispatching it. `DispatchEvent` iterated the closure list by reference while calling into Rust, so an `unbind` erased from the vector under the loop and a `bind` could reallocate it; `unbind` also handed the closure box back to Rust while that closure was still running. Dispatch now works from a copy of the list, skips handlers removed part-way through, and defers closure drops until the outermost dispatch has unwound. A handler that unbinds itself (the "run once" pattern) previously crashed
 
 ### New Features
 
