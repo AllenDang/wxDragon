@@ -114,6 +114,7 @@ main(int argc, char** argv)
     constants_to_extract.push_back({ "wxID_HELP", wxID_HELP });
     constants_to_extract.push_back({ "wxID_MORE", wxID_MORE });
     constants_to_extract.push_back({ "wxID_SETUP", wxID_SETUP });
+    constants_to_extract.push_back({ "wxID_CONTEXT_HELP", wxID_CONTEXT_HELP });
     constants_to_extract.push_back({ "wxID_PRINT", wxID_PRINT });
     constants_to_extract.push_back({ "wxID_PREVIEW", wxID_PREVIEW });
     constants_to_extract.push_back({ "wxID_OPEN", wxID_OPEN });

@@ -29,6 +29,7 @@ pub const WXD_ID_STOP: i64 = 5124;
 pub const WXD_ID_HELP: i64 = 5009;
 pub const WXD_ID_MORE: i64 = 5109;
 pub const WXD_ID_SETUP: i64 = 5110;
+pub const WXD_ID_CONTEXT_HELP: i64 = 5112;
 pub const WXD_ID_PRINT: i64 = 5010;
 pub const WXD_ID_PREVIEW: i64 = 5013;
 pub const WXD_ID_OPEN: i64 = 5000;

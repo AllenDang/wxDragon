@@ -32,3 +32,6 @@ pub const ID_NO: Id = ffi::WXD_ID_NO as Id; // Typically wxID_NO
 // Other standard IDs
 pub const ID_APPLY: Id = ffi::WXD_ID_APPLY as Id;
 pub const ID_HELP: Id = ffi::WXD_ID_HELP as Id;
+pub const ID_SAVE: Id = ffi::WXD_ID_SAVE as Id;
+pub const ID_CLOSE: Id = ffi::WXD_ID_CLOSE as Id;
+pub const ID_CONTEXT_HELP: Id = ffi::WXD_ID_CONTEXT_HELP as Id;
