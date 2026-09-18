@@ -26,6 +26,10 @@ pub enum WindowEvent {
     KeyDown,
     KeyUp,
     Char,
+    /// Fires on the window with focus and every ancestor before `KeyDown`
+    /// reaches the focused control, so a frame can act on a key its
+    /// children would otherwise consume. Skip the event to let it carry on.
+    CharHook,
 
     // Window events
     Size,
@@ -376,6 +380,7 @@ crate::implement_window_category_event_handlers!(
     KeyDown => key_down, EventType::KEY_DOWN,
     KeyUp => key_up, EventType::KEY_UP,
     Char => char, EventType::CHAR,
+    CharHook => char_hook, EventType::CHAR_HOOK,
     Size => size, EventType::SIZE,
     Move => move_event, EventType::MOVE,
     Paint => paint, EventType::PAINT,

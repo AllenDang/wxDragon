@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### New Features
+
+- **Window**: Added `on_char_hook`, binding `wxEVT_CHAR_HOOK`. The hook runs on the focused window and every ancestor before the key reaches the control, which is the only way to act on combinations a control consumes itself: a multiline `TextCtrl` swallows Ctrl+Enter, and a `ListBox` answers Alt+Enter with a system beep, so neither ever reaches a `key_down` handler. Skip the event to let it carry on to the control. The C++ side already mapped `WXD_EVENT_TYPE_CHAR_HOOK` and `wxd_IsKeyboardEvent` already accepted it; only the Rust binding was missing. See `examples/rust/char_hook_demo`
+
 ## 0.9.22
 
 ### Breaking Changes

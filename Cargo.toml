@@ -1,5 +1,6 @@
 [workspace]
 members = [
+  "examples/rust/char_hook_demo",
   "examples/rust/clipboard_test",
   "examples/rust/combobox_modifier_test",
   "examples/rust/config_demo",
