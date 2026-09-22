@@ -14,6 +14,12 @@ categories = ["gui", "api-bindings"] # Already good
 features = ["aui", "stc", "xrc", "richtext"]
 
 [features]
+# See wxdragon-sys for what these do; they are enabled by default.
+default = ["wx-printing", "wx-tiff", "wx-jpeg", "wx-asserts"]
+wx-printing = ["wxdragon-sys/wx-printing"]
+wx-tiff = ["wxdragon-sys/wx-tiff"]
+wx-jpeg = ["wxdragon-sys/wx-jpeg"]
+wx-asserts = ["wxdragon-sys/wx-asserts"]
 # default = ["aui", "stc", "xrc", "richtext"]
 aui = ["wxdragon-sys/aui"]
 media-ctrl = ["wxdragon-sys/media-ctrl"]
