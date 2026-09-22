@@ -14,7 +14,8 @@ crate::widget_style_enum!(
         Cancel: ffi::WXD_CANCEL, "Style flag for Cancel button.",
         Centre: ffi::WXD_CENTRE, "Style flag to center the dialog.",
         Password: ffi::WXD_TE_PASSWORD, "Style flag for password text entry.",
-        ProcessEnter: ffi::WXD_TE_PROCESS_ENTER, "Style flag to process Enter key in the text control."
+        ProcessEnter: ffi::WXD_TE_PROCESS_ENTER, "Style flag to process Enter key in the text control.",
+        MultiLine: ffi::WXD_TE_MULTILINE, "Style flag for a multi-line text entry."
     },
     default_variant: Default
 );
