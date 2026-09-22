@@ -1,6 +1,7 @@
 #include <wx/wxprec.h>
 #include <wx/wx.h>
 #include "../include/wxdragon.h"
+#include "../include/events/wxd_event_type_registry.h"
 // #include "../include/events/wxd_event_api.h" // No longer needed, wxd_Event_t defined in wxd_types.h (via wxdragon.h)
 #include <unordered_map>
 #include <vector>     // For std::vector used in closureMap
@@ -1644,44 +1645,6 @@ get_wx_event_type_for_c_enum(WXDEventTypeCEnum c_enum_val)
     case WXD_EVENT_TYPE_CONTEXT_MENU:
         return wxEVT_CONTEXT_MENU;
 
-    // Grid event types
-    case WXD_EVENT_TYPE_GRID_CELL_LEFT_CLICK:
-        return wxEVT_GRID_CELL_LEFT_CLICK;
-    case WXD_EVENT_TYPE_GRID_CELL_RIGHT_CLICK:
-        return wxEVT_GRID_CELL_RIGHT_CLICK;
-    case WXD_EVENT_TYPE_GRID_CELL_LEFT_DCLICK:
-        return wxEVT_GRID_CELL_LEFT_DCLICK;
-    case WXD_EVENT_TYPE_GRID_CELL_RIGHT_DCLICK:
-        return wxEVT_GRID_CELL_RIGHT_DCLICK;
-    case WXD_EVENT_TYPE_GRID_LABEL_LEFT_CLICK:
-        return wxEVT_GRID_LABEL_LEFT_CLICK;
-    case WXD_EVENT_TYPE_GRID_LABEL_RIGHT_CLICK:
-        return wxEVT_GRID_LABEL_RIGHT_CLICK;
-    case WXD_EVENT_TYPE_GRID_LABEL_LEFT_DCLICK:
-        return wxEVT_GRID_LABEL_LEFT_DCLICK;
-    case WXD_EVENT_TYPE_GRID_LABEL_RIGHT_DCLICK:
-        return wxEVT_GRID_LABEL_RIGHT_DCLICK;
-    case WXD_EVENT_TYPE_GRID_CELL_CHANGED:
-        return wxEVT_GRID_CELL_CHANGED;
-    case WXD_EVENT_TYPE_GRID_SELECT_CELL:
-        return wxEVT_GRID_SELECT_CELL;
-    case WXD_EVENT_TYPE_GRID_EDITOR_SHOWN:
-        return wxEVT_GRID_EDITOR_SHOWN;
-    case WXD_EVENT_TYPE_GRID_EDITOR_HIDDEN:
-        return wxEVT_GRID_EDITOR_HIDDEN;
-    case WXD_EVENT_TYPE_GRID_EDITOR_CREATED:
-        return wxEVT_GRID_EDITOR_CREATED;
-    case WXD_EVENT_TYPE_GRID_CELL_BEGIN_DRAG:
-        return wxEVT_GRID_CELL_BEGIN_DRAG;
-    case WXD_EVENT_TYPE_GRID_ROW_SIZE:
-        return wxEVT_GRID_ROW_SIZE;
-    case WXD_EVENT_TYPE_GRID_COL_SIZE:
-        return wxEVT_GRID_COL_SIZE;
-    case WXD_EVENT_TYPE_GRID_RANGE_SELECTED:
-        return wxEVT_GRID_RANGE_SELECTED;
-    case WXD_EVENT_TYPE_GRID_TABBING:
-        return wxEVT_GRID_TABBING;
-
     // PropertyGrid event types
     case WXD_EVENT_TYPE_PG_SELECTED:
         return wxEVT_PG_SELECTED;
@@ -1713,7 +1676,9 @@ get_wx_event_type_for_c_enum(WXDEventTypeCEnum c_enum_val)
         return wxEVT_PG_COL_END_DRAG;
 
     default:
-        return wxEVT_NULL;
+        // Widget-specific event types are registered by the files
+        // implementing the widgets themselves, see the registry header.
+        return wxd_LookupRegisteredEventType(c_enum_val);
     }
 }
 

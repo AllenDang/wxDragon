@@ -3,6 +3,61 @@
 #include <wx/grid.h>
 #include "../include/wxdragon.h"
 #include "../src/wxd_utils.h"
+#include "../include/events/wxd_event_type_registry.h"
+
+namespace
+{
+
+// Map the grid event types here and not in event.cpp to avoid pulling in
+// wxGrid when linking statically with an application not using it.
+wxEventType
+GridEventTypeMapper(WXDEventTypeCEnum c_enum_val)
+{
+    switch (c_enum_val) {
+    case WXD_EVENT_TYPE_GRID_CELL_LEFT_CLICK:
+        return wxEVT_GRID_CELL_LEFT_CLICK;
+    case WXD_EVENT_TYPE_GRID_CELL_RIGHT_CLICK:
+        return wxEVT_GRID_CELL_RIGHT_CLICK;
+    case WXD_EVENT_TYPE_GRID_CELL_LEFT_DCLICK:
+        return wxEVT_GRID_CELL_LEFT_DCLICK;
+    case WXD_EVENT_TYPE_GRID_CELL_RIGHT_DCLICK:
+        return wxEVT_GRID_CELL_RIGHT_DCLICK;
+    case WXD_EVENT_TYPE_GRID_LABEL_LEFT_CLICK:
+        return wxEVT_GRID_LABEL_LEFT_CLICK;
+    case WXD_EVENT_TYPE_GRID_LABEL_RIGHT_CLICK:
+        return wxEVT_GRID_LABEL_RIGHT_CLICK;
+    case WXD_EVENT_TYPE_GRID_LABEL_LEFT_DCLICK:
+        return wxEVT_GRID_LABEL_LEFT_DCLICK;
+    case WXD_EVENT_TYPE_GRID_LABEL_RIGHT_DCLICK:
+        return wxEVT_GRID_LABEL_RIGHT_DCLICK;
+    case WXD_EVENT_TYPE_GRID_CELL_CHANGED:
+        return wxEVT_GRID_CELL_CHANGED;
+    case WXD_EVENT_TYPE_GRID_SELECT_CELL:
+        return wxEVT_GRID_SELECT_CELL;
+    case WXD_EVENT_TYPE_GRID_EDITOR_SHOWN:
+        return wxEVT_GRID_EDITOR_SHOWN;
+    case WXD_EVENT_TYPE_GRID_EDITOR_HIDDEN:
+        return wxEVT_GRID_EDITOR_HIDDEN;
+    case WXD_EVENT_TYPE_GRID_EDITOR_CREATED:
+        return wxEVT_GRID_EDITOR_CREATED;
+    case WXD_EVENT_TYPE_GRID_CELL_BEGIN_DRAG:
+        return wxEVT_GRID_CELL_BEGIN_DRAG;
+    case WXD_EVENT_TYPE_GRID_ROW_SIZE:
+        return wxEVT_GRID_ROW_SIZE;
+    case WXD_EVENT_TYPE_GRID_COL_SIZE:
+        return wxEVT_GRID_COL_SIZE;
+    case WXD_EVENT_TYPE_GRID_RANGE_SELECTED:
+        return wxEVT_GRID_RANGE_SELECTED;
+    case WXD_EVENT_TYPE_GRID_TABBING:
+        return wxEVT_GRID_TABBING;
+    default:
+        return wxEVT_NULL;
+    }
+}
+
+const WxdEventTypeMapperRegistrar gs_gridEventTypes(GridEventTypeMapper);
+
+} // anonymous namespace
 
 extern "C" {
 
