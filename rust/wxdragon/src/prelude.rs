@@ -228,6 +228,7 @@ pub use crate::dc::{
     AutoBufferedPaintDC, BackgroundMode, BrushStyle, ClientDC, DeviceContext, GenericDC, MemoryDC, PaintDC, PenStyle, ScreenDC,
     WindowDC,
 };
+#[cfg(feature = "wx-printing")]
 pub use crate::printing::*;
 
 // --- Application & Misc ---

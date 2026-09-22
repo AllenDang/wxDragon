@@ -1,5 +1,10 @@
 #include <wx/wxprec.h>
 #include <wx/wx.h>
+
+// The whole file is only useful when wxWidgets is built with printing
+// support, which can be turned off to make the binaries smaller.
+#if wxUSE_PRINTING_ARCHITECTURE
+
 #include <wx/print.h>
 #include <wx/printdlg.h>
 #include "../include/wxdragon.h"
@@ -249,3 +254,5 @@ extern "C" int wxd_PageSetupDialog_ShowModal(wxd_PageSetupDialog_t* self) {
 extern "C" wxd_PageSetupDialogData_t* wxd_PageSetupDialog_GetPageSetupDialogData(wxd_PageSetupDialog_t* self) {
     return reinterpret_cast<wxd_PageSetupDialogData_t*>(&reinterpret_cast<wxPageSetupDialog*>(self)->GetPageSetupDialogData());
 }
+
+#endif // wxUSE_PRINTING_ARCHITECTURE
