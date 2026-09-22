@@ -266,6 +266,17 @@ fn build_wxdragon_wrapper(
     if !cfg!(feature = "wx-jpeg") {
         cmake_config.define("wxUSE_LIBJPEG", "OFF");
     }
+    if !cfg!(feature = "wx-tango-icons") {
+        cmake_config.define("wxUSE_ARTPROVIDER_TANGO", "OFF");
+    }
+    if !cfg!(feature = "wx-extra-image-formats") {
+        for option in ["wxUSE_GIF", "wxUSE_PCX", "wxUSE_TGA", "wxUSE_IFF", "wxUSE_PNM", "wxUSE_XPM"] {
+            cmake_config.define(option, "OFF");
+        }
+    }
+    if !cfg!(feature = "wx-regex") {
+        cmake_config.define("wxUSE_REGEX", "OFF");
+    }
     if !cfg!(feature = "wx-asserts") {
         // wxBUILD_DEBUG_LEVEL only applies to the wxWidgets sources, so define
         // wxDEBUG_LEVEL for our own C++ code too, otherwise it still refers to
@@ -750,7 +761,9 @@ fn build_wxdragon_wrapper(
         if cfg!(feature = "wx-tiff") {
             println!("cargo:rustc-link-lib=static={}", resolve_wx_lib("wxtiff-3.3"));
         }
-        println!("cargo:rustc-link-lib=static={}", resolve_wx_lib("wxregexu-3.3"));
+        if cfg!(feature = "wx-regex") {
+            println!("cargo:rustc-link-lib=static={}", resolve_wx_lib("wxregexu-3.3"));
+        }
         println!("cargo:rustc-link-lib=expat");
         println!("cargo:rustc-link-lib=z");
         // If cmake found iconv in a non-standard location (e.g. MacPorts /opt/local,
@@ -864,7 +877,9 @@ fn build_wxdragon_wrapper(
             if cfg!(feature = "wx-jpeg") {
                 println!("cargo:rustc-link-lib=static=wxjpeg-3.3");
             }
-            println!("cargo:rustc-link-lib=static=wxregexu-3.3");
+            if cfg!(feature = "wx-regex") {
+                println!("cargo:rustc-link-lib=static=wxregexu-3.3");
+            }
             println!("cargo:rustc-link-lib=static=wxzlib-3.3");
             println!("cargo:rustc-link-lib=static=wxexpat-3.3");
 
@@ -957,7 +972,9 @@ fn build_wxdragon_wrapper(
                 println!("cargo:rustc-link-lib=static=wxjpeg{debug_suffix}");
             }
             println!("cargo:rustc-link-lib=static=wxpng{debug_suffix}");
-            println!("cargo:rustc-link-lib=static=wxregexu{debug_suffix}");
+            if cfg!(feature = "wx-regex") {
+                println!("cargo:rustc-link-lib=static=wxregexu{debug_suffix}");
+            }
             println!("cargo:rustc-link-lib=static=wxzlib{debug_suffix}");
             println!("cargo:rustc-link-lib=static=wxexpat{debug_suffix}");
 
