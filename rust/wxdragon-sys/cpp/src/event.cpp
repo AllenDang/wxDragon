@@ -1,6 +1,7 @@
 #include <wx/wxprec.h>
 #include <wx/wx.h>
 #include "../include/wxdragon.h"
+#include "../include/events/wxd_event_type_registry.h"
 // #include "../include/events/wxd_event_api.h" // No longer needed, wxd_Event_t defined in wxd_types.h (via wxdragon.h)
 #include <unordered_map>
 #include <vector>     // For std::vector used in closureMap
@@ -1188,18 +1189,6 @@ get_wx_event_type_for_c_enum(WXDEventTypeCEnum c_enum_val)
         return wxEVT_TREE_ITEM_ACTIVATED;
 
     // TreeListCtrl events
-    case WXD_EVENT_TYPE_TREELIST_SELECTION_CHANGED:
-        return wxEVT_TREELIST_SELECTION_CHANGED;
-    case WXD_EVENT_TYPE_TREELIST_ITEM_CHECKED:
-        return wxEVT_TREELIST_ITEM_CHECKED;
-    case WXD_EVENT_TYPE_TREELIST_ITEM_ACTIVATED:
-        return wxEVT_TREELIST_ITEM_ACTIVATED;
-    case WXD_EVENT_TYPE_TREELIST_COLUMN_SORTED:
-        return wxEVT_TREELIST_COLUMN_SORTED;
-    case WXD_EVENT_TYPE_TREELIST_ITEM_EXPANDING:
-        return wxEVT_TREELIST_ITEM_EXPANDING;
-    case WXD_EVENT_TYPE_TREELIST_ITEM_EXPANDED:
-        return wxEVT_TREELIST_ITEM_EXPANDED;
 
     // Slider and spin control events
     case WXD_EVENT_TYPE_SLIDER:
@@ -1389,32 +1378,6 @@ get_wx_event_type_for_c_enum(WXDEventTypeCEnum c_enum_val)
 #endif
 
     // DataView events
-    case WXD_EVENT_TYPE_DATAVIEW_SELECTION_CHANGED:
-        return wxEVT_DATAVIEW_SELECTION_CHANGED;
-    case WXD_EVENT_TYPE_DATAVIEW_ITEM_ACTIVATED:
-        return wxEVT_DATAVIEW_ITEM_ACTIVATED;
-    case WXD_EVENT_TYPE_DATAVIEW_ITEM_EDITING_STARTED:
-        return wxEVT_DATAVIEW_ITEM_EDITING_STARTED;
-    case WXD_EVENT_TYPE_DATAVIEW_ITEM_EDITING_DONE:
-        return wxEVT_DATAVIEW_ITEM_EDITING_DONE;
-    case WXD_EVENT_TYPE_DATAVIEW_ITEM_COLLAPSING:
-        return wxEVT_DATAVIEW_ITEM_COLLAPSING;
-    case WXD_EVENT_TYPE_DATAVIEW_ITEM_COLLAPSED:
-        return wxEVT_DATAVIEW_ITEM_COLLAPSED;
-    case WXD_EVENT_TYPE_DATAVIEW_ITEM_EXPANDING:
-        return wxEVT_DATAVIEW_ITEM_EXPANDING;
-    case WXD_EVENT_TYPE_DATAVIEW_ITEM_EXPANDED:
-        return wxEVT_DATAVIEW_ITEM_EXPANDED;
-    case WXD_EVENT_TYPE_DATAVIEW_COLUMN_HEADER_CLICK:
-        return wxEVT_DATAVIEW_COLUMN_HEADER_CLICK;
-    case WXD_EVENT_TYPE_DATAVIEW_COLUMN_HEADER_RIGHT_CLICK:
-        return wxEVT_DATAVIEW_COLUMN_HEADER_RIGHT_CLICK;
-    case WXD_EVENT_TYPE_DATAVIEW_COLUMN_SORTED:
-        return wxEVT_DATAVIEW_COLUMN_SORTED;
-    case WXD_EVENT_TYPE_DATAVIEW_COLUMN_REORDERED:
-        return wxEVT_DATAVIEW_COLUMN_REORDERED;
-    case WXD_EVENT_TYPE_DATAVIEW_ITEM_CONTEXT_MENU:
-        return wxEVT_DATAVIEW_ITEM_CONTEXT_MENU;
 
     // Additional TreeCtrl events
     case WXD_EVENT_TYPE_TREE_SEL_CHANGING:
@@ -1582,26 +1545,8 @@ get_wx_event_type_for_c_enum(WXDEventTypeCEnum c_enum_val)
 // TaskBarIcon events - platform-specific support
 #if wxUSE_TASKBARICON
     // Basic mouse events supported by the current wxWidgets backend.
-    case WXD_EVENT_TYPE_TASKBAR_LEFT_DOWN:
-        return wxEVT_TASKBAR_LEFT_DOWN;
-    case WXD_EVENT_TYPE_TASKBAR_LEFT_DCLICK:
-        return wxEVT_TASKBAR_LEFT_DCLICK;
 
     // Windows-only events - check each constant individually
-    case WXD_EVENT_TYPE_TASKBAR_MOVE:
-        return wxEVT_TASKBAR_MOVE;
-    case WXD_EVENT_TYPE_TASKBAR_LEFT_UP:
-        return wxEVT_TASKBAR_LEFT_UP;
-    case WXD_EVENT_TYPE_TASKBAR_RIGHT_DOWN:
-        return wxEVT_TASKBAR_RIGHT_DOWN;
-    case WXD_EVENT_TYPE_TASKBAR_RIGHT_UP:
-        return wxEVT_TASKBAR_RIGHT_UP;
-    case WXD_EVENT_TYPE_TASKBAR_RIGHT_DCLICK:
-        return wxEVT_TASKBAR_RIGHT_DCLICK;
-    case WXD_EVENT_TYPE_TASKBAR_BALLOON_TIMEOUT:
-        return wxEVT_TASKBAR_BALLOON_TIMEOUT;
-    case WXD_EVENT_TYPE_TASKBAR_BALLOON_CLICK:
-        return wxEVT_TASKBAR_BALLOON_CLICK;
 #endif
 
 // WebView event types - only available when webview feature is enabled
@@ -1644,76 +1589,11 @@ get_wx_event_type_for_c_enum(WXDEventTypeCEnum c_enum_val)
     case WXD_EVENT_TYPE_CONTEXT_MENU:
         return wxEVT_CONTEXT_MENU;
 
-    // Grid event types
-    case WXD_EVENT_TYPE_GRID_CELL_LEFT_CLICK:
-        return wxEVT_GRID_CELL_LEFT_CLICK;
-    case WXD_EVENT_TYPE_GRID_CELL_RIGHT_CLICK:
-        return wxEVT_GRID_CELL_RIGHT_CLICK;
-    case WXD_EVENT_TYPE_GRID_CELL_LEFT_DCLICK:
-        return wxEVT_GRID_CELL_LEFT_DCLICK;
-    case WXD_EVENT_TYPE_GRID_CELL_RIGHT_DCLICK:
-        return wxEVT_GRID_CELL_RIGHT_DCLICK;
-    case WXD_EVENT_TYPE_GRID_LABEL_LEFT_CLICK:
-        return wxEVT_GRID_LABEL_LEFT_CLICK;
-    case WXD_EVENT_TYPE_GRID_LABEL_RIGHT_CLICK:
-        return wxEVT_GRID_LABEL_RIGHT_CLICK;
-    case WXD_EVENT_TYPE_GRID_LABEL_LEFT_DCLICK:
-        return wxEVT_GRID_LABEL_LEFT_DCLICK;
-    case WXD_EVENT_TYPE_GRID_LABEL_RIGHT_DCLICK:
-        return wxEVT_GRID_LABEL_RIGHT_DCLICK;
-    case WXD_EVENT_TYPE_GRID_CELL_CHANGED:
-        return wxEVT_GRID_CELL_CHANGED;
-    case WXD_EVENT_TYPE_GRID_SELECT_CELL:
-        return wxEVT_GRID_SELECT_CELL;
-    case WXD_EVENT_TYPE_GRID_EDITOR_SHOWN:
-        return wxEVT_GRID_EDITOR_SHOWN;
-    case WXD_EVENT_TYPE_GRID_EDITOR_HIDDEN:
-        return wxEVT_GRID_EDITOR_HIDDEN;
-    case WXD_EVENT_TYPE_GRID_EDITOR_CREATED:
-        return wxEVT_GRID_EDITOR_CREATED;
-    case WXD_EVENT_TYPE_GRID_CELL_BEGIN_DRAG:
-        return wxEVT_GRID_CELL_BEGIN_DRAG;
-    case WXD_EVENT_TYPE_GRID_ROW_SIZE:
-        return wxEVT_GRID_ROW_SIZE;
-    case WXD_EVENT_TYPE_GRID_COL_SIZE:
-        return wxEVT_GRID_COL_SIZE;
-    case WXD_EVENT_TYPE_GRID_RANGE_SELECTED:
-        return wxEVT_GRID_RANGE_SELECTED;
-    case WXD_EVENT_TYPE_GRID_TABBING:
-        return wxEVT_GRID_TABBING;
-
-    // PropertyGrid event types
-    case WXD_EVENT_TYPE_PG_SELECTED:
-        return wxEVT_PG_SELECTED;
-    case WXD_EVENT_TYPE_PG_CHANGING:
-        return wxEVT_PG_CHANGING;
-    case WXD_EVENT_TYPE_PG_CHANGED:
-        return wxEVT_PG_CHANGED;
-    case WXD_EVENT_TYPE_PG_HIGHLIGHTED:
-        return wxEVT_PG_HIGHLIGHTED;
-    case WXD_EVENT_TYPE_PG_RIGHT_CLICK:
-        return wxEVT_PG_RIGHT_CLICK;
-    case WXD_EVENT_TYPE_PG_PAGE_CHANGED:
-        return wxEVT_PG_PAGE_CHANGED;
-    case WXD_EVENT_TYPE_PG_ITEM_COLLAPSED:
-        return wxEVT_PG_ITEM_COLLAPSED;
-    case WXD_EVENT_TYPE_PG_ITEM_EXPANDED:
-        return wxEVT_PG_ITEM_EXPANDED;
-    case WXD_EVENT_TYPE_PG_DOUBLE_CLICK:
-        return wxEVT_PG_DOUBLE_CLICK;
-    case WXD_EVENT_TYPE_PG_LABEL_EDIT_BEGIN:
-        return wxEVT_PG_LABEL_EDIT_BEGIN;
-    case WXD_EVENT_TYPE_PG_LABEL_EDIT_ENDING:
-        return wxEVT_PG_LABEL_EDIT_ENDING;
-    case WXD_EVENT_TYPE_PG_COL_BEGIN_DRAG:
-        return wxEVT_PG_COL_BEGIN_DRAG;
-    case WXD_EVENT_TYPE_PG_COL_DRAGGING:
-        return wxEVT_PG_COL_DRAGGING;
-    case WXD_EVENT_TYPE_PG_COL_END_DRAG:
-        return wxEVT_PG_COL_END_DRAG;
 
     default:
-        return wxEVT_NULL;
+        // Widget-specific event types are registered by the files
+        // implementing the widgets themselves, see the registry header.
+        return wxd_LookupRegisteredEventType(c_enum_val);
     }
 }
 

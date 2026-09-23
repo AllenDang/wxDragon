@@ -9,6 +9,53 @@
 #include <wx/datetime.h> // For wxDateTime
 #include <wx/variant.h>
 #include <cstring>
+#include "../include/events/wxd_event_type_registry.h"
+
+namespace
+{
+
+// Map the DataView event types here and not in event.cpp to avoid
+// pulling in wxDataViewCtrl when linking statically with an application not
+// using it.
+wxEventType
+DataViewEventTypeMapper(WXDEventTypeCEnum c_enum_val)
+{
+    switch (c_enum_val) {
+    case WXD_EVENT_TYPE_DATAVIEW_SELECTION_CHANGED:
+        return wxEVT_DATAVIEW_SELECTION_CHANGED;
+    case WXD_EVENT_TYPE_DATAVIEW_ITEM_ACTIVATED:
+        return wxEVT_DATAVIEW_ITEM_ACTIVATED;
+    case WXD_EVENT_TYPE_DATAVIEW_ITEM_EDITING_STARTED:
+        return wxEVT_DATAVIEW_ITEM_EDITING_STARTED;
+    case WXD_EVENT_TYPE_DATAVIEW_ITEM_EDITING_DONE:
+        return wxEVT_DATAVIEW_ITEM_EDITING_DONE;
+    case WXD_EVENT_TYPE_DATAVIEW_ITEM_COLLAPSING:
+        return wxEVT_DATAVIEW_ITEM_COLLAPSING;
+    case WXD_EVENT_TYPE_DATAVIEW_ITEM_COLLAPSED:
+        return wxEVT_DATAVIEW_ITEM_COLLAPSED;
+    case WXD_EVENT_TYPE_DATAVIEW_ITEM_EXPANDING:
+        return wxEVT_DATAVIEW_ITEM_EXPANDING;
+    case WXD_EVENT_TYPE_DATAVIEW_ITEM_EXPANDED:
+        return wxEVT_DATAVIEW_ITEM_EXPANDED;
+    case WXD_EVENT_TYPE_DATAVIEW_COLUMN_HEADER_CLICK:
+        return wxEVT_DATAVIEW_COLUMN_HEADER_CLICK;
+    case WXD_EVENT_TYPE_DATAVIEW_COLUMN_HEADER_RIGHT_CLICK:
+        return wxEVT_DATAVIEW_COLUMN_HEADER_RIGHT_CLICK;
+    case WXD_EVENT_TYPE_DATAVIEW_COLUMN_SORTED:
+        return wxEVT_DATAVIEW_COLUMN_SORTED;
+    case WXD_EVENT_TYPE_DATAVIEW_COLUMN_REORDERED:
+        return wxEVT_DATAVIEW_COLUMN_REORDERED;
+    case WXD_EVENT_TYPE_DATAVIEW_ITEM_CONTEXT_MENU:
+        return wxEVT_DATAVIEW_ITEM_CONTEXT_MENU;
+    default:
+        return wxEVT_NULL;
+    }
+}
+
+const WxdEventTypeMapperRegistrar gs_dataviewEventTypes(DataViewEventTypeMapper);
+
+} // anonymous namespace
+
 
 // Forward declarations, this function is implemented in rust side.
 extern "C" void
