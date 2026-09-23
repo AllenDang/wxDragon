@@ -14,6 +14,8 @@
 
 #ifdef __WXOSX__
 #include "wx/osx/private.h"
+#endif
+
 #include "../include/events/wxd_event_type_registry.h"
 
 namespace
@@ -52,8 +54,6 @@ TaskBarEventTypeMapper(WXDEventTypeCEnum c_enum_val)
 const WxdEventTypeMapperRegistrar gs_taskbarEventTypes(TaskBarEventTypeMapper);
 
 } // anonymous namespace
-
-#endif
 
 // Custom TaskBarIcon class that exposes events properly and supports auto popup menus
 class wxdTaskBarIcon : public wxTaskBarIcon {
