@@ -255,6 +255,38 @@ fn build_wxdragon_wrapper(
     // Disable WebP support since we'll use the image crate for image decoding
     cmake_config.define("wxUSE_LIBWEBP", "OFF");
 
+    // Optional wxWidgets features, see the Cargo features of this crate.
+    if !cfg!(feature = "wx-printing") {
+        cmake_config.define("wxUSE_PRINTING_ARCHITECTURE", "OFF");
+        cmake_config.define("wxUSE_POSTSCRIPT", "OFF");
+    }
+    if !cfg!(feature = "wx-tiff") {
+        cmake_config.define("wxUSE_LIBTIFF", "OFF");
+    }
+    if !cfg!(feature = "wx-jpeg") {
+        cmake_config.define("wxUSE_LIBJPEG", "OFF");
+    }
+    if !cfg!(feature = "wx-tango-icons") {
+        cmake_config.define("wxUSE_ARTPROVIDER_TANGO", "OFF");
+    }
+    if !cfg!(feature = "wx-extra-image-formats") {
+        for option in ["wxUSE_GIF", "wxUSE_PCX", "wxUSE_TGA", "wxUSE_IFF", "wxUSE_PNM", "wxUSE_XPM"] {
+            cmake_config.define(option, "OFF");
+        }
+    }
+    if !cfg!(feature = "wx-regex") {
+        cmake_config.define("wxUSE_REGEX", "OFF");
+    }
+    if !cfg!(feature = "wx-asserts") {
+        // wxBUILD_DEBUG_LEVEL only applies to the wxWidgets sources, so define
+        // wxDEBUG_LEVEL for our own C++ code too, otherwise it still refers to
+        // the assert functions which are not in the library any more, see
+        // https://github.com/wxWidgets/wxWidgets/issues/27066
+        cmake_config.define("wxBUILD_DEBUG_LEVEL", "0");
+        cmake_config.cxxflag("-DwxDEBUG_LEVEL=0");
+        cmake_config.cflag("-DwxDEBUG_LEVEL=0");
+    }
+
     // macOS cross-architecture support: when building on Apple Silicon for an
     // x86_64-apple-darwin target (or vice versa), CMake must be instructed to
     // use the correct architecture.  Otherwise it will default to the host
@@ -722,10 +754,16 @@ fn build_wxdragon_wrapper(
             println!("cargo:rustc-link-lib=static={}", resolve_wx_lib("wx_osx_cocoau_richtext-3.3"));
         }
 
-        println!("cargo:rustc-link-lib=static={}", resolve_wx_lib("wxjpeg-3.3"));
+        if cfg!(feature = "wx-jpeg") {
+            println!("cargo:rustc-link-lib=static={}", resolve_wx_lib("wxjpeg-3.3"));
+        }
         println!("cargo:rustc-link-lib=static={}", resolve_wx_lib("wxpng-3.3"));
-        println!("cargo:rustc-link-lib=static={}", resolve_wx_lib("wxtiff-3.3"));
-        println!("cargo:rustc-link-lib=static={}", resolve_wx_lib("wxregexu-3.3"));
+        if cfg!(feature = "wx-tiff") {
+            println!("cargo:rustc-link-lib=static={}", resolve_wx_lib("wxtiff-3.3"));
+        }
+        if cfg!(feature = "wx-regex") {
+            println!("cargo:rustc-link-lib=static={}", resolve_wx_lib("wxregexu-3.3"));
+        }
         println!("cargo:rustc-link-lib=expat");
         println!("cargo:rustc-link-lib=z");
         // If cmake found iconv in a non-standard location (e.g. MacPorts /opt/local,
@@ -833,9 +871,15 @@ fn build_wxdragon_wrapper(
             }
 
             println!("cargo:rustc-link-lib=static=wxpng-3.3");
-            println!("cargo:rustc-link-lib=static=wxtiff-3.3");
-            println!("cargo:rustc-link-lib=static=wxjpeg-3.3");
-            println!("cargo:rustc-link-lib=static=wxregexu-3.3");
+            if cfg!(feature = "wx-tiff") {
+                println!("cargo:rustc-link-lib=static=wxtiff-3.3");
+            }
+            if cfg!(feature = "wx-jpeg") {
+                println!("cargo:rustc-link-lib=static=wxjpeg-3.3");
+            }
+            if cfg!(feature = "wx-regex") {
+                println!("cargo:rustc-link-lib=static=wxregexu-3.3");
+            }
             println!("cargo:rustc-link-lib=static=wxzlib-3.3");
             println!("cargo:rustc-link-lib=static=wxexpat-3.3");
 
@@ -921,10 +965,16 @@ fn build_wxdragon_wrapper(
 
             println!("cargo:rustc-link-lib=static=wxbase33u{debug_suffix}");
             println!("cargo:rustc-link-lib=static=wxbase33u{debug_suffix}_net");
-            println!("cargo:rustc-link-lib=static=wxtiff{debug_suffix}");
-            println!("cargo:rustc-link-lib=static=wxjpeg{debug_suffix}");
+            if cfg!(feature = "wx-tiff") {
+                println!("cargo:rustc-link-lib=static=wxtiff{debug_suffix}");
+            }
+            if cfg!(feature = "wx-jpeg") {
+                println!("cargo:rustc-link-lib=static=wxjpeg{debug_suffix}");
+            }
             println!("cargo:rustc-link-lib=static=wxpng{debug_suffix}");
-            println!("cargo:rustc-link-lib=static=wxregexu{debug_suffix}");
+            if cfg!(feature = "wx-regex") {
+                println!("cargo:rustc-link-lib=static=wxregexu{debug_suffix}");
+            }
             println!("cargo:rustc-link-lib=static=wxzlib{debug_suffix}");
             println!("cargo:rustc-link-lib=static=wxexpat{debug_suffix}");
 

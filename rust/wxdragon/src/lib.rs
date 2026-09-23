@@ -32,6 +32,7 @@ pub mod keycode;
 pub mod language;
 pub mod menus;
 pub mod prelude;
+#[cfg(feature = "wx-printing")]
 pub mod printing;
 pub mod scrollable;
 pub mod single_instance_checker;
