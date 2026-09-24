@@ -5,6 +5,7 @@ use crate::event::event_data::CommandEventData;
 use crate::event::{Event, EventType, WxEvtHandler};
 use crate::geometry::{Point, Size};
 use crate::id::Id;
+use crate::utils::ArrayString;
 use crate::window::{WindowHandle, WxWidget};
 use std::ffi::{CStr, CString};
 use wxdragon_sys as ffi;
@@ -81,6 +82,43 @@ impl ListBox {
         unsafe {
             ffi::wxd_ListBox_Insert(ptr, c_item.as_ptr(), pos as u32);
         }
+    }
+
+    /// Appends several items to the listbox in one call.
+    ///
+    /// Much faster than calling [`append`](Self::append) in a loop for many
+    /// items: wxWidgets reserves room for all of them up front (on MSW,
+    /// `LB_INITSTORAGE`) and updates its own bookkeeping once, not per item.
+    /// No-op if the listbox has been destroyed.
+    pub fn append_items(&self, items: &[&str]) {
+        let ptr = self.listbox_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        let array = ArrayString::from(items);
+        unsafe { ffi::wxd_ListBox_AppendItems(ptr, array.as_const_ptr()) };
+    }
+
+    /// Inserts several items before the given position in one call.
+    /// No-op if the position is out of bounds or the listbox has been destroyed.
+    pub fn insert_items(&self, items: &[&str], pos: u32) {
+        let ptr = self.listbox_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        let array = ArrayString::from(items);
+        unsafe { ffi::wxd_ListBox_InsertItems(ptr, array.as_const_ptr(), pos) };
+    }
+
+    /// Replaces all items in the listbox in one call.
+    /// No-op if the listbox has been destroyed.
+    pub fn set_items(&self, items: &[&str]) {
+        let ptr = self.listbox_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        let array = ArrayString::from(items);
+        unsafe { ffi::wxd_ListBox_SetItems(ptr, array.as_const_ptr()) };
     }
 
     /// Clears all items from the listbox.
@@ -292,8 +330,9 @@ widget_builder!(
         let list_box = unsafe { ListBox::from_ptr(ctrl_ptr) };
 
         // Append initial choices if any
-        for choice_str in &slf.choices {
-            list_box.append(choice_str);
+        if !slf.choices.is_empty() {
+            let choices: Vec<&str> = slf.choices.iter().map(String::as_str).collect();
+            list_box.append_items(&choices);
         }
 
         list_box
@@ -389,5 +428,87 @@ impl crate::window::FromWindowWithClassName for ListBox {
         ListBox {
             handle: WindowHandle::new(ptr),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::prelude::*;
+    use std::cell::{Cell, RefCell};
+    use std::rc::Rc;
+
+    const NOT_RUN: u8 = 0;
+    const STARTED: u8 = 1;
+    const FINISHED: u8 = 2;
+
+    /// Runs `body` against a fresh list box inside a wx main loop that a
+    /// one-shot timer exits again (see the `combobox.rs` tests). Skipped on
+    /// macOS, where the test thread is not the OS main thread.
+    fn with_listbox(body: impl FnOnce(&ListBox) + 'static) {
+        let _gui_test = crate::app::GUI_TEST_LOCK.lock().unwrap();
+        SystemOptions::set_option_by_int("msw.no-manifest-check", 1);
+        let progress = Rc::new(Cell::new(NOT_RUN));
+        let progress_in_loop = progress.clone();
+        let timer_store: Rc<RefCell<Option<Timer<Frame>>>> = Rc::new(RefCell::new(None));
+        let timer_store_clone = timer_store.clone();
+
+        let res = crate::main(move |app| {
+            let frame = Frame::builder().with_title("listbox test").build();
+            let panel = Panel::builder(&frame).build();
+            let list = ListBox::builder(&panel).build();
+
+            progress_in_loop.set(STARTED);
+            body(&list);
+            progress_in_loop.set(FINISHED);
+
+            let timer = Timer::new(&frame);
+            let app_clone = app;
+            let timer_store_cleanup = timer_store_clone.clone();
+            timer.on_tick(move |_evt| {
+                timer_store_cleanup.borrow_mut().take();
+                app_clone.exit_main_loop();
+            });
+            timer.start(100, true);
+            timer_store_clone.borrow_mut().replace(timer);
+        });
+        if let Err(e) = res {
+            log::warn!("Test failed with error: {:?}", e);
+        }
+        assert_ne!(progress.get(), STARTED, "test body panicked inside the wx main loop");
+    }
+
+    fn strings(list: &ListBox) -> Vec<String> {
+        (0..list.get_count()).filter_map(|i| list.get_string(i)).collect()
+    }
+
+    #[cfg_attr(target_os = "macos", ignore)]
+    #[test]
+    fn set_items_replaces_the_list() {
+        with_listbox(|list| {
+            list.append("old");
+            list.set_items(&["a", "b"]);
+            assert_eq!(strings(list), vec!["a", "b"]);
+        });
+    }
+
+    #[cfg_attr(target_os = "macos", ignore)]
+    #[test]
+    fn append_items_and_insert_items_extend_the_list() {
+        with_listbox(|list| {
+            list.append_items(&["a", "b"]);
+            list.insert_items(&["x", "y"], 1);
+            assert_eq!(strings(list), vec!["a", "x", "y", "b"]);
+        });
+    }
+
+    #[cfg_attr(target_os = "macos", ignore)]
+    #[test]
+    fn insert_items_past_the_end_is_ignored() {
+        with_listbox(|list| {
+            list.append_items(&["a"]);
+            list.insert_items(&["x"], 5);
+            assert_eq!(strings(list), vec!["a"]);
+        });
     }
 }

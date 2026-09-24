@@ -12,6 +12,12 @@ wxd_ListBox_Append(wxd_ListBox_t* self, const char* item);
 WXD_EXPORTED void
 wxd_ListBox_Insert(wxd_ListBox_t* self, const char* item, unsigned int pos);
 WXD_EXPORTED void
+wxd_ListBox_AppendItems(wxd_ListBox_t* self, const wxd_ArrayString_t* items);
+WXD_EXPORTED void
+wxd_ListBox_InsertItems(wxd_ListBox_t* self, const wxd_ArrayString_t* items, unsigned int pos);
+WXD_EXPORTED void
+wxd_ListBox_SetItems(wxd_ListBox_t* self, const wxd_ArrayString_t* items);
+WXD_EXPORTED void
 wxd_ListBox_Clear(wxd_ListBox_t* listbox);
 WXD_EXPORTED int
 wxd_ListBox_GetSelection(wxd_ListBox_t* listbox);
