@@ -7,6 +7,10 @@
 - **Window**: Added `on_char_hook`, binding `wxEVT_CHAR_HOOK`. The hook runs on the focused window and every ancestor before the key reaches the control, which is the only way to act on combinations a control consumes itself: a multiline `TextCtrl` swallows Ctrl+Enter, and a `ListBox` answers Alt+Enter with a system beep, so neither ever reaches a `key_down` handler. Skip the event to let it carry on to the control. The C++ side already mapped `WXD_EVENT_TYPE_CHAR_HOOK` and `wxd_IsKeyboardEvent` already accepted it; only the Rust binding was missing. See `examples/rust/char_hook_demo`
 - **Dialogs**: Added five style flags whose constants wxDragon already extracted on every platform but no style enum exposed, so the only way to use them was `from_bits_retain` with the raw value. `DialogStyle::NoParent` (`wxDIALOG_NO_PARENT`) makes a dialog a top-level window of its own, so one opened from a global hotkey while another application is in front comes forward instead of opening behind it. `MessageDialogStyle::NoDefault` and `CancelDefault` (`wxNO_DEFAULT`, `wxCANCEL_DEFAULT`) make the safe answer the default button, which matters for a question like "Do you want to exit?" where a stray Return should not be the answer that closes the app. `MessageDialogStyle::StayOnTop` (`wxSTAY_ON_TOP`) and `TextEntryDialogStyle::MultiLine` (`wxTE_MULTILINE`) complete what `wxMessageDialog` and `wxTextEntryDialog` document
 
+### Bug Fixes
+
+- **TaskBarIcon**: Fixed tray icon events never firing on Windows and Linux. When the taskbar event types moved from `event.cpp` into `taskbar.cpp`, the mapper and its registrar landed inside the existing `#ifdef __WXOSX__` block that only guarded `wx/osx/private.h`, so they were compiled on macOS alone. Everywhere else `on_left_up`, `on_left_down`, `on_left_double_click` and the other taskbar handlers bound to `wxEVT_NULL` and silently never ran. The guard now covers just the macOS header again
+
 ## 0.9.22
 
 ### Breaking Changes
