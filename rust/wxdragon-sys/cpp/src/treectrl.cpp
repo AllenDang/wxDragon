@@ -393,7 +393,7 @@ wxd_TreeCtrl_SetImageList(wxd_TreeCtrl_t* self, wxd_ImageList_t* imageList)
     wxTreeCtrl* treeCtrl = reinterpret_cast<wxTreeCtrl*>(self);
     wxImageList* wx_imageList = reinterpret_cast<wxImageList*>(imageList);
     if (treeCtrl) {
-        treeCtrl->SetImageList(wx_imageList); // wxTreeCtrl takes ownership of the image list
+        treeCtrl->AssignImageList(wx_imageList); // wxTreeCtrl takes ownership of the image list
     }
 }
 
