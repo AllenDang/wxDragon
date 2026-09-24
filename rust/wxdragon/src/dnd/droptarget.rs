@@ -510,13 +510,15 @@ extern "C" fn file_on_drop_files_trampoline(
     filenames.reserve(count as usize);
 
     for i in 0..count {
-        let mut buffer = vec![0; 2048]; // Buffer for path
-        let len = unsafe { ffi::wxd_ArrayString_GetString(filenames_ptr, i, buffer.as_mut_ptr(), buffer.len()) };
-
-        if len > 0 {
-            let s = unsafe { CStr::from_ptr(buffer.as_ptr()).to_string_lossy().to_string() };
-            filenames.push(s);
+        let len = unsafe { ffi::wxd_ArrayString_GetString(filenames_ptr, i, std::ptr::null_mut(), 0) };
+        if len <= 0 {
+            continue;
         }
+
+        let mut buffer = vec![0; len as usize + 1];
+        unsafe { ffi::wxd_ArrayString_GetString(filenames_ptr, i, buffer.as_mut_ptr(), buffer.len()) };
+        let s = unsafe { CStr::from_ptr(buffer.as_ptr()).to_string_lossy().to_string() };
+        filenames.push(s);
     }
 
     let callbacks = unsafe { &mut *(data_ptr as *mut FileDropTargetCallbacks) };

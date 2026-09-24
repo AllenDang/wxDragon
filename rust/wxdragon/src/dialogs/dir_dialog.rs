@@ -55,11 +55,13 @@ impl DirDialog {
 
     /// Gets the message shown to the user.
     pub fn get_message(&self) -> Option<String> {
-        let mut buffer = vec![0; 1024];
-        let len = unsafe { ffi::wxd_DirDialog_GetMessage(self.ptr, buffer.as_mut_ptr(), buffer.len()) };
+        let len = unsafe { ffi::wxd_DirDialog_GetMessage(self.ptr, std::ptr::null_mut(), 0) };
         if len < 0 {
             return None;
         }
+
+        let mut buffer = vec![0; len as usize + 1];
+        unsafe { ffi::wxd_DirDialog_GetMessage(self.ptr, buffer.as_mut_ptr(), buffer.len()) };
         Some(unsafe { CStr::from_ptr(buffer.as_ptr()).to_string_lossy().to_string() })
     }
 
