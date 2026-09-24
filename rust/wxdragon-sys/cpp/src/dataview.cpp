@@ -408,6 +408,9 @@ public:
     {
         // Destructor implementation without debug logs
         WXD_LOG_TRACEF("WxdDataViewCustomRenderer destroyed with pointer %p", this);
+        if (m_user_data) {
+            drop_rust_custom_renderer_callbacks(m_user_data);
+        }
     }
 
     // Size calculation for custom rendering
