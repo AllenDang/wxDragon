@@ -51,7 +51,7 @@ impl TreeCtrlTabControls {
         self.tree_ctrl.on_selection_changed(move |event_data| {
             if let Some(item_id) = event_data.get_item() {
                 // Get data from the selected item
-                if let Some(item_data) = tree_ctrl.get_custom_data(&item_id) {
+                if let Some(item_data) = tree_ctrl.get_custom_data_direct(&item_id) {
                     // Try to downcast to PersonData first
                     if let Some(person) = item_data.downcast_ref::<PersonData>() {
                         info_text.set_label(&person.to_display_string());
@@ -80,7 +80,7 @@ impl TreeCtrlTabControls {
         // Bind item activation (double-click) event
         self.tree_ctrl.on_item_activated(move |event_data| {
             if let Some(item_id) = event_data.get_item() {
-                if tree_ctrl.has_custom_data(&item_id) {
+                if tree_ctrl.get_custom_data_direct(&item_id).is_some() {
                     info_text.set_label("Double-clicked on item with custom data");
                 } else {
                     info_text.set_label("Double-clicked on item with no data");
