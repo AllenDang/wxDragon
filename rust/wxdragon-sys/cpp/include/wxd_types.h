@@ -631,6 +631,9 @@ typedef struct wxd_Icon_t wxd_Icon_t; // Assuming this pattern from Bitmap_t
 // --- Cursor type ---
 typedef struct wxd_Cursor_t wxd_Cursor_t;
 
+// --- Validator type ---
+typedef struct wxd_TextValidator_t wxd_TextValidator_t;
+
 // --- Cursor Stock Types ---
 typedef enum {
     WXD_CURSOR_NONE = 0,

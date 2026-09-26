@@ -36,6 +36,7 @@ pub use crate::utils::{
     ArrayString, BrowserLaunchFlags, ColourDatabase, ColourDatabaseScheme, bell, get_key_state, get_mouse_position,
     launch_default_application, launch_default_browser,
 };
+pub use crate::validators::{TextValidator, TextValidatorStyle};
 pub use crate::window::{BackgroundStyle, ExtraWindowStyle, Window, WindowStyle, WxWidget, WxWidgetDowncast};
 
 // --- Sizers ---

@@ -46,6 +46,7 @@ pub mod translations;
 pub mod types;
 pub mod uiactionsimulator;
 pub mod utils;
+pub mod validators;
 pub mod widgets;
 pub mod window;
 #[cfg(feature = "xrc")]

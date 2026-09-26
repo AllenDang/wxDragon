@@ -27,6 +27,7 @@ extern "C" {
 #include "core/wxd_window_base.h"
 #include "core/wxd_accessible.h"
 #include "core/wxd_cursor.h"
+#include "core/wxd_validator.h"
 #if wxdUSE_XRC
 #include "core/wxd_xrc.h"
 #endif

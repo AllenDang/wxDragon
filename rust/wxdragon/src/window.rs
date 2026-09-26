@@ -1330,6 +1330,28 @@ pub trait WxWidget: std::any::Any {
         }
     }
 
+    // --- Validators ---
+
+    /// Associates a validator restricting what can be typed into this window.
+    fn set_text_validator(&self, validator: &crate::validators::TextValidator) {
+        let handle = self.handle_ptr();
+        if !handle.is_null() {
+            unsafe {
+                ffi::wxd_Window_SetTextValidator(handle, validator.as_ptr());
+            }
+        }
+    }
+
+    /// Validates the contents of this window and of all its children.
+    fn validate(&self) -> bool {
+        let handle = self.handle_ptr();
+        if handle.is_null() {
+            return false;
+        }
+
+        unsafe { ffi::wxd_Window_Validate(handle) }
+    }
+
     // --- Cursor Management ---
 
     /// Sets the cursor for this window.
