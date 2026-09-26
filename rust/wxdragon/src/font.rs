@@ -206,13 +206,14 @@ impl Font {
 
     /// Get the font face name.
     pub fn get_face_name(&self) -> String {
-        let mut buffer = vec![0; 256];
-        let len = unsafe { ffi::wxd_Font_GetFaceName(self.ptr, buffer.as_mut_ptr(), buffer.len()) };
-        if len > 0 {
-            unsafe { CStr::from_ptr(buffer.as_ptr()).to_string_lossy().to_string() }
-        } else {
-            String::new()
+        let len = unsafe { ffi::wxd_Font_GetFaceName(self.ptr, std::ptr::null_mut(), 0) };
+        if len <= 0 {
+            return String::new();
         }
+
+        let mut buffer = vec![0; len as usize + 1];
+        unsafe { ffi::wxd_Font_GetFaceName(self.ptr, buffer.as_mut_ptr(), buffer.len()) };
+        unsafe { CStr::from_ptr(buffer.as_ptr()).to_string_lossy().to_string() }
     }
 
     /// Check if the font is valid.

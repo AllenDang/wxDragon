@@ -184,14 +184,14 @@ impl FileDataObject {
     /// Gets a file path from the data object at the specified index.
     pub fn get_file(&self, index: usize) -> String {
         let obj = self.data_object.as_ptr() as *mut ffi::wxd_FileDataObject_t;
-        let mut buffer = vec![0; 1024]; // Initial buffer size
-        let len = unsafe { ffi::wxd_FileDataObject_GetFile(obj, index as i32, buffer.as_mut_ptr(), buffer.len()) };
-
-        if len > 0 {
-            unsafe { CStr::from_ptr(buffer.as_ptr()).to_string_lossy().to_string() }
-        } else {
-            String::new()
+        let len = unsafe { ffi::wxd_FileDataObject_GetFile(obj, index as i32, std::ptr::null_mut(), 0) };
+        if len <= 0 {
+            return String::new();
         }
+
+        let mut buffer = vec![0; len as usize + 1];
+        unsafe { ffi::wxd_FileDataObject_GetFile(obj, index as i32, buffer.as_mut_ptr(), buffer.len()) };
+        unsafe { CStr::from_ptr(buffer.as_ptr()).to_string_lossy().to_string() }
     }
 
     /// Gets all files from the data object.
