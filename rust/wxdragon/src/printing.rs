@@ -61,42 +61,56 @@ impl<T: Printout> PrintoutProxy<T> {
     }
 
     unsafe extern "C" fn on_prepare_printing_cb(user_data: *mut c_void) {
-        let proxy = unsafe { &mut *(user_data as *mut Self) };
-        let dc = proxy.get_dc();
-        proxy.inner.on_prepare_printing(&dc);
+        crate::utils::guard_ffi_callback("on_prepare_printing_cb", (), || {
+            let proxy = unsafe { &mut *(user_data as *mut Self) };
+            let dc = proxy.get_dc();
+            proxy.inner.on_prepare_printing(&dc);
+        })
     }
 
     unsafe extern "C" fn on_begin_printing_cb(user_data: *mut c_void) {
-        let proxy = unsafe { &mut *(user_data as *mut Self) };
-        let dc = proxy.get_dc();
-        proxy.inner.on_begin_printing(&dc);
+        crate::utils::guard_ffi_callback("on_begin_printing_cb", (), || {
+            let proxy = unsafe { &mut *(user_data as *mut Self) };
+            let dc = proxy.get_dc();
+            proxy.inner.on_begin_printing(&dc);
+        })
     }
 
     unsafe extern "C" fn on_end_printing_cb(user_data: *mut c_void) {
-        let proxy = unsafe { &mut *(user_data as *mut Self) };
-        proxy.inner.on_end_printing();
+        crate::utils::guard_ffi_callback("on_end_printing_cb", (), || {
+            let proxy = unsafe { &mut *(user_data as *mut Self) };
+            proxy.inner.on_end_printing();
+        })
     }
 
     unsafe extern "C" fn on_begin_document_cb(user_data: *mut c_void, start_page: i32, end_page: i32) {
-        let proxy = unsafe { &mut *(user_data as *mut Self) };
-        let dc = proxy.get_dc();
-        proxy.inner.on_begin_document(&dc, start_page, end_page);
+        crate::utils::guard_ffi_callback("on_begin_document_cb", (), || {
+            let proxy = unsafe { &mut *(user_data as *mut Self) };
+            let dc = proxy.get_dc();
+            proxy.inner.on_begin_document(&dc, start_page, end_page);
+        })
     }
 
     unsafe extern "C" fn on_end_document_cb(user_data: *mut c_void) {
-        let proxy = unsafe { &mut *(user_data as *mut Self) };
-        proxy.inner.on_end_document();
+        crate::utils::guard_ffi_callback("on_end_document_cb", (), || {
+            let proxy = unsafe { &mut *(user_data as *mut Self) };
+            proxy.inner.on_end_document();
+        })
     }
 
     unsafe extern "C" fn on_print_page_cb(user_data: *mut c_void, page_num: i32) -> bool {
-        let proxy = unsafe { &mut *(user_data as *mut Self) };
-        let dc = proxy.get_dc();
-        proxy.inner.on_print_page(&dc, page_num)
+        crate::utils::guard_ffi_callback("on_print_page_cb", false, || {
+            let proxy = unsafe { &mut *(user_data as *mut Self) };
+            let dc = proxy.get_dc();
+            proxy.inner.on_print_page(&dc, page_num)
+        })
     }
 
     unsafe extern "C" fn has_page_cb(user_data: *mut c_void, page_num: i32) -> bool {
-        let proxy = unsafe { &mut *(user_data as *mut Self) };
-        proxy.inner.has_page(page_num)
+        crate::utils::guard_ffi_callback("has_page_cb", false, || {
+            let proxy = unsafe { &mut *(user_data as *mut Self) };
+            proxy.inner.has_page(page_num)
+        })
     }
 
     unsafe extern "C" fn get_page_info_cb(
@@ -106,22 +120,24 @@ impl<T: Printout> PrintoutProxy<T> {
         page_from: *mut i32,
         page_to: *mut i32,
     ) {
-        let proxy = unsafe { &mut *(user_data as *mut Self) };
-        let (min, max, from, to) = proxy.inner.get_page_info();
-        unsafe {
-            if !min_page.is_null() {
-                *min_page = min;
+        crate::utils::guard_ffi_callback("get_page_info_cb", (), || {
+            let proxy = unsafe { &mut *(user_data as *mut Self) };
+            let (min, max, from, to) = proxy.inner.get_page_info();
+            unsafe {
+                if !min_page.is_null() {
+                    *min_page = min;
+                }
+                if !max_page.is_null() {
+                    *max_page = max;
+                }
+                if !page_from.is_null() {
+                    *page_from = from;
+                }
+                if !page_to.is_null() {
+                    *page_to = to;
+                }
             }
-            if !max_page.is_null() {
-                *max_page = max;
-            }
-            if !page_from.is_null() {
-                *page_from = from;
-            }
-            if !page_to.is_null() {
-                *page_to = to;
-            }
-        }
+        })
     }
 }
 

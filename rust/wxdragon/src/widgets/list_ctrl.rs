@@ -1080,19 +1080,23 @@ unsafe extern "C" fn listctrl_virtual_text_callback(userdata: *mut c_void, item:
 }
 
 unsafe extern "C" fn listctrl_free_virtual_text(text: *mut c_char) {
-    if !text.is_null() {
-        unsafe {
-            let _ = CString::from_raw(text);
+    crate::utils::guard_ffi_callback("listctrl_free_virtual_text", (), || {
+        if !text.is_null() {
+            unsafe {
+                let _ = CString::from_raw(text);
+            }
         }
-    }
+    })
 }
 
 unsafe extern "C" fn listctrl_drop_virtual_text_callback(userdata: *mut c_void) {
-    if !userdata.is_null() {
-        unsafe {
-            let _ = Box::from_raw(userdata as *mut ListCtrlVirtualTextCallback);
+    crate::utils::guard_ffi_callback("listctrl_drop_virtual_text_callback", (), || {
+        if !userdata.is_null() {
+            unsafe {
+                let _ = Box::from_raw(userdata as *mut ListCtrlVirtualTextCallback);
+            }
         }
-    }
+    })
 }
 
 fn string_to_c_ptr(text: String) -> *mut c_char {

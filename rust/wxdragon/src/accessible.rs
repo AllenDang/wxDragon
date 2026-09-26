@@ -354,10 +354,16 @@ unsafe extern "C" fn accessible_get_child_count<T: AccessibleImpl>(
     user_data: *mut c_void,
     count: *mut c_int,
 ) -> ffi::wxd_AccStatus {
-    let impl_ptr = user_data as *const T;
-    let (status, c) = unsafe { (*impl_ptr).get_child_count() };
-    unsafe { *count = c };
-    status.to_ffi()
+    crate::utils::guard_ffi_callback(
+        "accessible_get_child_count",
+        ffi::wxd_AccStatus_WXD_ACC_NOT_IMPLEMENTED,
+        || {
+            let impl_ptr = user_data as *const T;
+            let (status, c) = unsafe { (*impl_ptr).get_child_count() };
+            unsafe { *count = c };
+            status.to_ffi()
+        },
+    )
 }
 
 unsafe extern "C" fn accessible_get_child<T: AccessibleImpl>(
@@ -365,30 +371,34 @@ unsafe extern "C" fn accessible_get_child<T: AccessibleImpl>(
     child_id: c_int,
     child: *mut *mut ffi::wxd_Accessible_t,
 ) -> ffi::wxd_AccStatus {
-    let impl_ptr = user_data as *const T;
-    let (status, acc) = unsafe { (*impl_ptr).get_child(child_id) };
-    if let Some(a) = acc {
-        unsafe { *child = a.as_ptr() };
-        std::mem::forget(a); // C++ will manage the pointer
-    } else {
-        unsafe { *child = std::ptr::null_mut() };
-    }
-    status.to_ffi()
+    crate::utils::guard_ffi_callback("accessible_get_child", ffi::wxd_AccStatus_WXD_ACC_NOT_IMPLEMENTED, || {
+        let impl_ptr = user_data as *const T;
+        let (status, acc) = unsafe { (*impl_ptr).get_child(child_id) };
+        if let Some(a) = acc {
+            unsafe { *child = a.as_ptr() };
+            std::mem::forget(a); // C++ will manage the pointer
+        } else {
+            unsafe { *child = std::ptr::null_mut() };
+        }
+        status.to_ffi()
+    })
 }
 
 unsafe extern "C" fn accessible_get_parent<T: AccessibleImpl>(
     user_data: *mut c_void,
     parent: *mut *mut ffi::wxd_Accessible_t,
 ) -> ffi::wxd_AccStatus {
-    let impl_ptr = user_data as *const T;
-    let (status, acc) = unsafe { (*impl_ptr).get_parent() };
-    if let Some(a) = acc {
-        unsafe { *parent = a.as_ptr() };
-        std::mem::forget(a);
-    } else {
-        unsafe { *parent = std::ptr::null_mut() };
-    }
-    status.to_ffi()
+    crate::utils::guard_ffi_callback("accessible_get_parent", ffi::wxd_AccStatus_WXD_ACC_NOT_IMPLEMENTED, || {
+        let impl_ptr = user_data as *const T;
+        let (status, acc) = unsafe { (*impl_ptr).get_parent() };
+        if let Some(a) = acc {
+            unsafe { *parent = a.as_ptr() };
+            std::mem::forget(a);
+        } else {
+            unsafe { *parent = std::ptr::null_mut() };
+        }
+        status.to_ffi()
+    })
 }
 
 unsafe extern "C" fn accessible_get_role<T: AccessibleImpl>(
@@ -396,10 +406,12 @@ unsafe extern "C" fn accessible_get_role<T: AccessibleImpl>(
     child_id: c_int,
     role: *mut ffi::wxd_AccRole,
 ) -> ffi::wxd_AccStatus {
-    let impl_ptr = user_data as *const T;
-    let (status, r) = unsafe { (*impl_ptr).get_role(child_id) };
-    unsafe { *role = r.to_ffi() };
-    status.to_ffi()
+    crate::utils::guard_ffi_callback("accessible_get_role", ffi::wxd_AccStatus_WXD_ACC_NOT_IMPLEMENTED, || {
+        let impl_ptr = user_data as *const T;
+        let (status, r) = unsafe { (*impl_ptr).get_role(child_id) };
+        unsafe { *role = r.to_ffi() };
+        status.to_ffi()
+    })
 }
 
 unsafe extern "C" fn accessible_get_state<T: AccessibleImpl>(
@@ -407,10 +419,12 @@ unsafe extern "C" fn accessible_get_state<T: AccessibleImpl>(
     child_id: c_int,
     state: *mut c_long,
 ) -> ffi::wxd_AccStatus {
-    let impl_ptr = user_data as *const T;
-    let (status, s) = unsafe { (*impl_ptr).get_state(child_id) };
-    unsafe { *state = s.bits() as c_long };
-    status.to_ffi()
+    crate::utils::guard_ffi_callback("accessible_get_state", ffi::wxd_AccStatus_WXD_ACC_NOT_IMPLEMENTED, || {
+        let impl_ptr = user_data as *const T;
+        let (status, s) = unsafe { (*impl_ptr).get_state(child_id) };
+        unsafe { *state = s.bits() as c_long };
+        status.to_ffi()
+    })
 }
 
 unsafe extern "C" fn accessible_get_name<T: AccessibleImpl>(
@@ -419,12 +433,14 @@ unsafe extern "C" fn accessible_get_name<T: AccessibleImpl>(
     out_name: *mut c_char,
     max_len: usize,
 ) -> ffi::wxd_AccStatus {
-    let impl_ptr = user_data as *const T;
-    let (status, name) = unsafe { (*impl_ptr).get_name(child_id) };
-    if let Some(n) = name {
-        copy_string_to_c(n, out_name, max_len);
-    }
-    status.to_ffi()
+    crate::utils::guard_ffi_callback("accessible_get_name", ffi::wxd_AccStatus_WXD_ACC_NOT_IMPLEMENTED, || {
+        let impl_ptr = user_data as *const T;
+        let (status, name) = unsafe { (*impl_ptr).get_name(child_id) };
+        if let Some(n) = name {
+            copy_string_to_c(n, out_name, max_len);
+        }
+        status.to_ffi()
+    })
 }
 
 unsafe extern "C" fn accessible_get_description<T: AccessibleImpl>(
@@ -433,12 +449,18 @@ unsafe extern "C" fn accessible_get_description<T: AccessibleImpl>(
     out_description: *mut c_char,
     max_len: usize,
 ) -> ffi::wxd_AccStatus {
-    let impl_ptr = user_data as *const T;
-    let (status, desc) = unsafe { (*impl_ptr).get_description(child_id) };
-    if let Some(d) = desc {
-        copy_string_to_c(d, out_description, max_len);
-    }
-    status.to_ffi()
+    crate::utils::guard_ffi_callback(
+        "accessible_get_description",
+        ffi::wxd_AccStatus_WXD_ACC_NOT_IMPLEMENTED,
+        || {
+            let impl_ptr = user_data as *const T;
+            let (status, desc) = unsafe { (*impl_ptr).get_description(child_id) };
+            if let Some(d) = desc {
+                copy_string_to_c(d, out_description, max_len);
+            }
+            status.to_ffi()
+        },
+    )
 }
 
 unsafe extern "C" fn accessible_get_help_text<T: AccessibleImpl>(
@@ -447,12 +469,14 @@ unsafe extern "C" fn accessible_get_help_text<T: AccessibleImpl>(
     out_help_text: *mut c_char,
     max_len: usize,
 ) -> ffi::wxd_AccStatus {
-    let impl_ptr = user_data as *const T;
-    let (status, text) = unsafe { (*impl_ptr).get_help_text(child_id) };
-    if let Some(t) = text {
-        copy_string_to_c(t, out_help_text, max_len);
-    }
-    status.to_ffi()
+    crate::utils::guard_ffi_callback("accessible_get_help_text", ffi::wxd_AccStatus_WXD_ACC_NOT_IMPLEMENTED, || {
+        let impl_ptr = user_data as *const T;
+        let (status, text) = unsafe { (*impl_ptr).get_help_text(child_id) };
+        if let Some(t) = text {
+            copy_string_to_c(t, out_help_text, max_len);
+        }
+        status.to_ffi()
+    })
 }
 
 unsafe extern "C" fn accessible_get_keyboard_shortcut<T: AccessibleImpl>(
@@ -461,12 +485,18 @@ unsafe extern "C" fn accessible_get_keyboard_shortcut<T: AccessibleImpl>(
     out_shortcut: *mut c_char,
     max_len: usize,
 ) -> ffi::wxd_AccStatus {
-    let impl_ptr = user_data as *const T;
-    let (status, shortcut) = unsafe { (*impl_ptr).get_keyboard_shortcut(child_id) };
-    if let Some(s) = shortcut {
-        copy_string_to_c(s, out_shortcut, max_len);
-    }
-    status.to_ffi()
+    crate::utils::guard_ffi_callback(
+        "accessible_get_keyboard_shortcut",
+        ffi::wxd_AccStatus_WXD_ACC_NOT_IMPLEMENTED,
+        || {
+            let impl_ptr = user_data as *const T;
+            let (status, shortcut) = unsafe { (*impl_ptr).get_keyboard_shortcut(child_id) };
+            if let Some(s) = shortcut {
+                copy_string_to_c(s, out_shortcut, max_len);
+            }
+            status.to_ffi()
+        },
+    )
 }
 
 unsafe extern "C" fn accessible_get_default_action<T: AccessibleImpl>(
@@ -475,12 +505,18 @@ unsafe extern "C" fn accessible_get_default_action<T: AccessibleImpl>(
     out_action: *mut c_char,
     max_len: usize,
 ) -> ffi::wxd_AccStatus {
-    let impl_ptr = user_data as *const T;
-    let (status, action) = unsafe { (*impl_ptr).get_default_action(child_id) };
-    if let Some(a) = action {
-        copy_string_to_c(a, out_action, max_len);
-    }
-    status.to_ffi()
+    crate::utils::guard_ffi_callback(
+        "accessible_get_default_action",
+        ffi::wxd_AccStatus_WXD_ACC_NOT_IMPLEMENTED,
+        || {
+            let impl_ptr = user_data as *const T;
+            let (status, action) = unsafe { (*impl_ptr).get_default_action(child_id) };
+            if let Some(a) = action {
+                copy_string_to_c(a, out_action, max_len);
+            }
+            status.to_ffi()
+        },
+    )
 }
 
 unsafe extern "C" fn accessible_get_value<T: AccessibleImpl>(
@@ -489,12 +525,14 @@ unsafe extern "C" fn accessible_get_value<T: AccessibleImpl>(
     out_value: *mut c_char,
     max_len: usize,
 ) -> ffi::wxd_AccStatus {
-    let impl_ptr = user_data as *const T;
-    let (status, value) = unsafe { (*impl_ptr).get_value(child_id) };
-    if let Some(v) = value {
-        copy_string_to_c(v, out_value, max_len);
-    }
-    status.to_ffi()
+    crate::utils::guard_ffi_callback("accessible_get_value", ffi::wxd_AccStatus_WXD_ACC_NOT_IMPLEMENTED, || {
+        let impl_ptr = user_data as *const T;
+        let (status, value) = unsafe { (*impl_ptr).get_value(child_id) };
+        if let Some(v) = value {
+            copy_string_to_c(v, out_value, max_len);
+        }
+        status.to_ffi()
+    })
 }
 
 unsafe extern "C" fn accessible_select<T: AccessibleImpl>(
@@ -502,21 +540,29 @@ unsafe extern "C" fn accessible_select<T: AccessibleImpl>(
     child_id: c_int,
     select_flags: c_int,
 ) -> ffi::wxd_AccStatus {
-    let impl_ptr = user_data as *const T;
-    let flags = AccSelectFlags::from_bits_retain(select_flags);
-    unsafe { (*impl_ptr).select(child_id, flags) }.to_ffi()
+    crate::utils::guard_ffi_callback("accessible_select", ffi::wxd_AccStatus_WXD_ACC_NOT_IMPLEMENTED, || {
+        let impl_ptr = user_data as *const T;
+        let flags = AccSelectFlags::from_bits_retain(select_flags);
+        unsafe { (*impl_ptr).select(child_id, flags) }.to_ffi()
+    })
 }
 
 unsafe extern "C" fn accessible_get_selections<T: AccessibleImpl>(
     user_data: *mut c_void,
     selections: *mut ffi::wxd_Variant_t,
 ) -> ffi::wxd_AccStatus {
-    let impl_ptr = user_data as *const T;
-    let (status, sel) = unsafe { (*impl_ptr).get_selections() };
-    if status == AccStatus::Ok && !selections.is_null() {
-        unsafe { ffi::wxd_Variant_Assign(selections, sel.as_const_ptr()) };
-    }
-    status.to_ffi()
+    crate::utils::guard_ffi_callback(
+        "accessible_get_selections",
+        ffi::wxd_AccStatus_WXD_ACC_NOT_IMPLEMENTED,
+        || {
+            let impl_ptr = user_data as *const T;
+            let (status, sel) = unsafe { (*impl_ptr).get_selections() };
+            if status == AccStatus::Ok && !selections.is_null() {
+                unsafe { ffi::wxd_Variant_Assign(selections, sel.as_const_ptr()) };
+            }
+            status.to_ffi()
+        },
+    )
 }
 
 unsafe extern "C" fn accessible_get_focus<T: AccessibleImpl>(
@@ -524,24 +570,32 @@ unsafe extern "C" fn accessible_get_focus<T: AccessibleImpl>(
     child_id: *mut c_int,
     child: *mut *mut ffi::wxd_Accessible_t,
 ) -> ffi::wxd_AccStatus {
-    let impl_ptr = user_data as *const T;
-    let (status, id, acc) = unsafe { (*impl_ptr).get_focus() };
-    unsafe { *child_id = id };
-    if let Some(a) = acc {
-        unsafe { *child = a.as_ptr() };
-        std::mem::forget(a);
-    } else {
-        unsafe { *child = std::ptr::null_mut() };
-    }
-    status.to_ffi()
+    crate::utils::guard_ffi_callback("accessible_get_focus", ffi::wxd_AccStatus_WXD_ACC_NOT_IMPLEMENTED, || {
+        let impl_ptr = user_data as *const T;
+        let (status, id, acc) = unsafe { (*impl_ptr).get_focus() };
+        unsafe { *child_id = id };
+        if let Some(a) = acc {
+            unsafe { *child = a.as_ptr() };
+            std::mem::forget(a);
+        } else {
+            unsafe { *child = std::ptr::null_mut() };
+        }
+        status.to_ffi()
+    })
 }
 
 unsafe extern "C" fn accessible_do_default_action<T: AccessibleImpl>(
     user_data: *mut c_void,
     child_id: c_int,
 ) -> ffi::wxd_AccStatus {
-    let impl_ptr = user_data as *const T;
-    unsafe { (*impl_ptr).do_default_action(child_id) }.to_ffi()
+    crate::utils::guard_ffi_callback(
+        "accessible_do_default_action",
+        ffi::wxd_AccStatus_WXD_ACC_NOT_IMPLEMENTED,
+        || {
+            let impl_ptr = user_data as *const T;
+            unsafe { (*impl_ptr).do_default_action(child_id) }.to_ffi()
+        },
+    )
 }
 
 unsafe extern "C" fn accessible_get_location<T: AccessibleImpl>(
@@ -549,10 +603,12 @@ unsafe extern "C" fn accessible_get_location<T: AccessibleImpl>(
     child_id: c_int,
     rect: *mut ffi::wxd_Rect,
 ) -> ffi::wxd_AccStatus {
-    let impl_ptr = user_data as *const T;
-    let (status, r) = unsafe { (*impl_ptr).get_location(child_id) };
-    unsafe { *rect = r.into() };
-    status.to_ffi()
+    crate::utils::guard_ffi_callback("accessible_get_location", ffi::wxd_AccStatus_WXD_ACC_NOT_IMPLEMENTED, || {
+        let impl_ptr = user_data as *const T;
+        let (status, r) = unsafe { (*impl_ptr).get_location(child_id) };
+        unsafe { *rect = r.into() };
+        status.to_ffi()
+    })
 }
 
 unsafe extern "C" fn accessible_hit_test<T: AccessibleImpl>(
@@ -561,16 +617,18 @@ unsafe extern "C" fn accessible_hit_test<T: AccessibleImpl>(
     child_id: *mut c_int,
     child_object: *mut *mut ffi::wxd_Accessible_t,
 ) -> ffi::wxd_AccStatus {
-    let impl_ptr = user_data as *const T;
-    let (status, id, acc) = unsafe { (*impl_ptr).hit_test(crate::geometry::Point { x: pt.x, y: pt.y }) };
-    unsafe { *child_id = id };
-    if let Some(a) = acc {
-        unsafe { *child_object = a.as_ptr() };
-        std::mem::forget(a);
-    } else {
-        unsafe { *child_object = std::ptr::null_mut() };
-    }
-    status.to_ffi()
+    crate::utils::guard_ffi_callback("accessible_hit_test", ffi::wxd_AccStatus_WXD_ACC_NOT_IMPLEMENTED, || {
+        let impl_ptr = user_data as *const T;
+        let (status, id, acc) = unsafe { (*impl_ptr).hit_test(crate::geometry::Point { x: pt.x, y: pt.y }) };
+        unsafe { *child_id = id };
+        if let Some(a) = acc {
+            unsafe { *child_object = a.as_ptr() };
+            std::mem::forget(a);
+        } else {
+            unsafe { *child_object = std::ptr::null_mut() };
+        }
+        status.to_ffi()
+    })
 }
 
 unsafe extern "C" fn accessible_navigate<T: AccessibleImpl>(
@@ -580,29 +638,33 @@ unsafe extern "C" fn accessible_navigate<T: AccessibleImpl>(
     to_id: *mut c_int,
     to_object: *mut *mut ffi::wxd_Accessible_t,
 ) -> ffi::wxd_AccStatus {
-    let impl_ptr = user_data as *const T;
-    let Some(dir) = NavDir::from_ffi(nav_dir) else {
-        unsafe {
-            *to_id = 0;
-            *to_object = std::ptr::null_mut();
+    crate::utils::guard_ffi_callback("accessible_navigate", ffi::wxd_AccStatus_WXD_ACC_NOT_IMPLEMENTED, || {
+        let impl_ptr = user_data as *const T;
+        let Some(dir) = NavDir::from_ffi(nav_dir) else {
+            unsafe {
+                *to_id = 0;
+                *to_object = std::ptr::null_mut();
+            }
+            return AccStatus::InvalidArg.to_ffi();
+        };
+        let (status, id, acc) = unsafe { (*impl_ptr).navigate(dir, from_id) };
+        unsafe { *to_id = id };
+        if let Some(a) = acc {
+            unsafe { *to_object = a.as_ptr() };
+            std::mem::forget(a);
+        } else {
+            unsafe { *to_object = std::ptr::null_mut() };
         }
-        return AccStatus::InvalidArg.to_ffi();
-    };
-    let (status, id, acc) = unsafe { (*impl_ptr).navigate(dir, from_id) };
-    unsafe { *to_id = id };
-    if let Some(a) = acc {
-        unsafe { *to_object = a.as_ptr() };
-        std::mem::forget(a);
-    } else {
-        unsafe { *to_object = std::ptr::null_mut() };
-    }
-    status.to_ffi()
+        status.to_ffi()
+    })
 }
 
 /// Called by the C++ side exactly once, when the underlying `wxAccessible` is
 /// deleted, to reclaim the `Box<T>` leaked by `Accessible::new`.
 unsafe extern "C" fn accessible_destroy_user_data<T: AccessibleImpl>(user_data: *mut c_void) {
-    unsafe { drop(Box::from_raw(user_data as *mut T)) };
+    crate::utils::guard_ffi_callback("accessible_destroy_user_data", (), || {
+        unsafe { drop(Box::from_raw(user_data as *mut T)) };
+    })
 }
 
 fn copy_string_to_c(s: String, out_buf: *mut c_char, max_len: usize) {
