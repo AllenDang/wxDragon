@@ -54,7 +54,7 @@ public:
 
     wxAccStatus GetName(int childId, wxString* name) override {
         if (m_callbacks.GetName) {
-            char buf[1024];
+            char buf[1024] = {};
             wxd_AccStatus status = m_callbacks.GetName(m_userData, childId, buf, sizeof(buf));
             if (status == WXD_ACC_OK) {
                 *name = wxString::FromUTF8(buf);
@@ -66,7 +66,7 @@ public:
 
     wxAccStatus GetDescription(int childId, wxString* description) override {
         if (m_callbacks.GetDescription) {
-            char buf[1024];
+            char buf[1024] = {};
             wxd_AccStatus status = m_callbacks.GetDescription(m_userData, childId, buf, sizeof(buf));
             if (status == WXD_ACC_OK) {
                 *description = wxString::FromUTF8(buf);
@@ -78,7 +78,7 @@ public:
 
     wxAccStatus GetHelpText(int childId, wxString* helpText) override {
         if (m_callbacks.GetHelpText) {
-            char buf[1024];
+            char buf[1024] = {};
             wxd_AccStatus status = m_callbacks.GetHelpText(m_userData, childId, buf, sizeof(buf));
             if (status == WXD_ACC_OK) {
                 *helpText = wxString::FromUTF8(buf);
@@ -90,7 +90,7 @@ public:
 
     wxAccStatus GetKeyboardShortcut(int childId, wxString* shortcut) override {
         if (m_callbacks.GetKeyboardShortcut) {
-            char buf[1024];
+            char buf[1024] = {};
             wxd_AccStatus status = m_callbacks.GetKeyboardShortcut(m_userData, childId, buf, sizeof(buf));
             if (status == WXD_ACC_OK) {
                 *shortcut = wxString::FromUTF8(buf);
@@ -102,7 +102,7 @@ public:
 
     wxAccStatus GetDefaultAction(int childId, wxString* actionName) override {
         if (m_callbacks.GetDefaultAction) {
-            char buf[1024];
+            char buf[1024] = {};
             wxd_AccStatus status = m_callbacks.GetDefaultAction(m_userData, childId, buf, sizeof(buf));
             if (status == WXD_ACC_OK) {
                 *actionName = wxString::FromUTF8(buf);
@@ -114,7 +114,7 @@ public:
 
     wxAccStatus GetValue(int childId, wxString* value) override {
         if (m_callbacks.GetValue) {
-            char buf[1024];
+            char buf[1024] = {};
             wxd_AccStatus status = m_callbacks.GetValue(m_userData, childId, buf, sizeof(buf));
             if (status == WXD_ACC_OK) {
                 *value = wxString::FromUTF8(buf);
