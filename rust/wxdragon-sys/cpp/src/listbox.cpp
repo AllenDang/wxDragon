@@ -41,6 +41,36 @@ wxd_ListBox_Insert(wxd_ListBox_t* listbox, const char* item, unsigned int pos)
 }
 
 WXD_EXPORTED void
+wxd_ListBox_AppendItems(wxd_ListBox_t* listbox, const wxd_ArrayString_t* items)
+{
+    wxListBox* lb = (wxListBox*)listbox;
+    const wxArrayString* arr = reinterpret_cast<const wxArrayString*>(items);
+    if (lb && arr) {
+        lb->Append(*arr);
+    }
+}
+
+WXD_EXPORTED void
+wxd_ListBox_InsertItems(wxd_ListBox_t* listbox, const wxd_ArrayString_t* items, unsigned int pos)
+{
+    wxListBox* lb = (wxListBox*)listbox;
+    const wxArrayString* arr = reinterpret_cast<const wxArrayString*>(items);
+    if (lb && arr && pos <= lb->GetCount()) {
+        lb->Insert(*arr, pos);
+    }
+}
+
+WXD_EXPORTED void
+wxd_ListBox_SetItems(wxd_ListBox_t* listbox, const wxd_ArrayString_t* items)
+{
+    wxListBox* lb = (wxListBox*)listbox;
+    const wxArrayString* arr = reinterpret_cast<const wxArrayString*>(items);
+    if (lb && arr) {
+        lb->Set(*arr);
+    }
+}
+
+WXD_EXPORTED void
 wxd_ListBox_Clear(wxd_ListBox_t* listbox)
 {
     wxListBox* lb = (wxListBox*)listbox;

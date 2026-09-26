@@ -28,7 +28,8 @@ widget_style_enum!(
         CloseBox: ffi::WXD_CLOSE_BOX, "Show a close box on the dialog.",
         MaximizeBox: ffi::WXD_MAXIMIZE_BOX, "Show a maximize box on the dialog.",
         MinimizeBox: ffi::WXD_MINIMIZE_BOX, "Show a minimize box on the dialog.",
-        StayOnTop: ffi::WXD_STAY_ON_TOP, "Keep the dialog on top of other windows."
+        StayOnTop: ffi::WXD_STAY_ON_TOP, "Keep the dialog on top of other windows.",
+        NoParent: ffi::WXD_DIALOG_NO_PARENT, "Create the dialog without a parent rather than the application's top-level window, so it is a top-level window of its own."
     },
     default_variant: DefaultDialogStyle
 );

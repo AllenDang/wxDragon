@@ -378,9 +378,9 @@ impl DataViewRenderer for DataViewCheckIconTextRenderer {
 ///     })
 ///     .build();
 ///
-/// // Use in multiple columns
-/// let col1 = DataViewColumn::new("Name", &text_renderer, 0, 120, DataViewAlign::Left, DataViewColumnFlags::Resizable);
-/// let col2 = DataViewColumn::new("Description", &text_renderer, 1, 200, DataViewAlign::Left, DataViewColumnFlags::Resizable);
+/// // A column takes ownership of its renderer and deletes it, so build one
+/// // renderer per column rather than sharing a single renderer between them.
+/// let col1 = DataViewColumn::new("Name", text_renderer, 0, 120, DataViewAlign::Left, DataViewColumnFlags::Resizable);
 /// ```
 ///
 /// # Examples
@@ -402,9 +402,9 @@ impl DataViewRenderer for DataViewCheckIconTextRenderer {
 ///     })
 ///     .build();
 ///
-/// // Use in multiple columns
-/// let col1 = DataViewColumn::new("Progress 1", &progress_renderer, 1, 120, DataViewAlign::Left, DataViewColumnFlags::Resizable);
-/// let col2 = DataViewColumn::new("Progress 2", &progress_renderer, 3, 120, DataViewAlign::Left, DataViewColumnFlags::Resizable);
+/// // The column takes ownership of the renderer. For a second progress column,
+/// // build a second renderer: one wxDataViewRenderer belongs to one column.
+/// let col1 = DataViewColumn::new("Progress 1", progress_renderer, 1, 120, DataViewAlign::Left, DataViewColumnFlags::Resizable);
 /// ```
 pub struct DataViewCustomRenderer {
     raw: *mut ffi::wxd_DataViewRenderer_t,

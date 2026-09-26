@@ -118,7 +118,7 @@ fn main() {
         // Create columns with different renderers
         let name_column = DataViewColumn::new(
             "Name",
-            &DataViewTextRenderer::new(VariantType::String, DataViewCellMode::Inert, DataViewAlign::Left),
+            DataViewTextRenderer::new(VariantType::String, DataViewCellMode::Inert, DataViewAlign::Left),
             0,
             100,
             DataViewAlign::Left,
@@ -127,7 +127,7 @@ fn main() {
 
         let progress_column = DataViewColumn::new(
             "Progress",
-            &progress_renderer,
+            progress_renderer,
             1,
             120,
             DataViewAlign::Center,
@@ -136,7 +136,7 @@ fn main() {
 
         let status_column = DataViewColumn::new(
             "Status",
-            &status_renderer,
+            status_renderer,
             2,
             120,
             DataViewAlign::Center,
@@ -144,9 +144,9 @@ fn main() {
         );
 
         // Add columns to the control
-        dataview.append_column(&name_column);
-        dataview.append_column(&progress_column);
-        dataview.append_column(&status_column);
+        dataview.append_column(name_column);
+        dataview.append_column(progress_column);
+        dataview.append_column(status_column);
 
         // Associate the model with the control
         dataview.associate_model(&model);

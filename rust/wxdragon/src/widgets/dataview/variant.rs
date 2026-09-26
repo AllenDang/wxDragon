@@ -47,7 +47,7 @@ impl VariantType {
 pub struct Variant {
     ptr: *mut ffi::wxd_Variant_t,
     /// Indicates whether this Rust wrapper owns the underlying wxVariant and is responsible for destroying it.
-    /// Ownership is determined by how the pointer was obtained (e.g., from `From<*mut>` vs `From<*const>`), not by the pointer's type.
+    /// Ownership is determined by how the pointer was obtained (`from_raw` adopts, `From<*const>` borrows), not by the pointer's type.
     owned: bool,
     // Prevent Send/Sync: wxWidgets objects are not thread-safe and must stay on UI thread.
     _nosend_nosync: PhantomData<Rc<()>>,
@@ -254,7 +254,11 @@ impl Variant {
 
     pub fn get_bitmap(&self) -> Option<Bitmap> {
         let ptr = unsafe { ffi::wxd_Variant_GetBitmapClone(self.as_const_ptr()) };
-        if ptr.is_null() { None } else { Some(Bitmap::from(ptr)) }
+        if ptr.is_null() {
+            None
+        } else {
+            Some(unsafe { Bitmap::from_raw(ptr) })
+        }
     }
 
     /// If this variant stores a wxArrayString, return it as an ArrayString.
@@ -268,7 +272,7 @@ impl Clone for Variant {
     fn clone(&self) -> Self {
         let cloned = unsafe { ffi::wxd_Variant_Clone(self.as_const_ptr()) };
         assert!(!cloned.is_null(), "Failed to clone wxVariant");
-        Self::from(cloned)
+        unsafe { Self::from_raw(cloned) }
     }
 }
 
@@ -304,10 +308,20 @@ impl From<*const ffi::wxd_Variant_t> for Variant {
     }
 }
 
-impl From<*mut ffi::wxd_Variant_t> for Variant {
-    /// Takes ownership of the raw pointer.
-    fn from(ptr: *mut ffi::wxd_Variant_t) -> Self {
-        assert!(!ptr.is_null(), "invalid null pointer passed to Variant::from");
+impl Variant {
+    /// Creates an owning `Variant` from a raw pointer, taking responsibility for
+    /// destroying it.
+    ///
+    /// # Safety
+    ///
+    /// `ptr` must be non-null, point to a live `wxVariant`, and be one that
+    /// nothing else will destroy. In particular it must not come from
+    /// [`Variant::as_mut_ptr`] or [`Variant::as_const_ptr`] on a `Variant` that
+    /// is still alive: both wrappers would then destroy the same object. Use
+    /// [`Variant::into_raw_mut`] when you mean to hand ownership out, or
+    /// `Variant::from(ptr as *const _)` for a non-owning wrapper.
+    pub unsafe fn from_raw(ptr: *mut ffi::wxd_Variant_t) -> Self {
+        assert!(!ptr.is_null(), "invalid null pointer passed to Variant::from_raw");
         Variant {
             ptr,
             owned: true,
@@ -557,5 +571,31 @@ mod tests {
         // TryFrom
         let got2: ArrayString = v.clone().try_into().expect("convert to ArrayString");
         assert_eq!(src, got2.get_strings());
+    }
+
+    #[test]
+    fn as_const_ptr_yields_a_non_owning_wrapper() {
+        let owner = Variant::from_string("hello");
+        assert!(owner.is_owned());
+
+        // The safe route from an existing variant to a second wrapper must never
+        // claim ownership; adopting here would destroy `owner`'s variant twice.
+        let borrowed = Variant::from(owner.as_const_ptr());
+        assert!(!borrowed.is_owned(), "From<*const> must not take ownership");
+        drop(borrowed);
+
+        // Still usable: the borrowed wrapper's Drop left it alone.
+        assert_eq!(owner.get_string().as_deref(), Some("hello"));
+    }
+
+    #[test]
+    fn from_raw_adopts_a_pointer_released_by_into_raw_mut() {
+        let raw = Variant::from_i64(7).into_raw_mut();
+        assert!(!raw.is_null());
+
+        // Ownership was handed out and is now handed back; exactly one destroy.
+        let adopted = unsafe { Variant::from_raw(raw) };
+        assert!(adopted.is_owned());
+        assert_eq!(adopted.get_i64(), Some(7));
     }
 }

@@ -106,17 +106,17 @@ impl DataViewTreeCtrl {
 
     // --- Column Management (inherited from DataViewCtrl conceptually) ---
     /// Appends a pre-created column to the control.
-    pub fn append_column(&self, column: &DataViewColumn) -> bool {
+    pub fn append_column(&self, column: DataViewColumn) -> bool {
         unsafe { ffi::wxd_DataViewCtrl_AppendColumn(self.dvtc_ptr(), column.as_raw()) }
     }
 
     /// Prepends a column to the control.
-    pub fn prepend_column(&self, column: &DataViewColumn) -> bool {
+    pub fn prepend_column(&self, column: DataViewColumn) -> bool {
         unsafe { ffi::wxd_DataViewCtrl_PrependColumn(self.dvtc_ptr(), column.as_raw()) }
     }
 
     /// Inserts a column at the specified position.
-    pub fn insert_column(&self, pos: usize, column: &DataViewColumn) -> bool {
+    pub fn insert_column(&self, pos: usize, column: DataViewColumn) -> bool {
         unsafe { ffi::wxd_DataViewCtrl_InsertColumn(self.dvtc_ptr(), pos as i64, column.as_raw()) }
     }
 
@@ -171,8 +171,8 @@ impl DataViewTreeCtrl {
         flags: DataViewColumnFlags,
     ) -> bool {
         let renderer = DataViewTextRenderer::new(VariantType::String, DataViewCellMode::Inert, align);
-        let column = DataViewColumn::new(label, &renderer, model_column as usize, width, align, flags);
-        self.append_column(&column)
+        let column = DataViewColumn::new(label, renderer, model_column as usize, width, align, flags);
+        self.append_column(column)
     }
 
     /// Creates and appends an icon+text column to this control.
@@ -185,8 +185,8 @@ impl DataViewTreeCtrl {
         flags: DataViewColumnFlags,
     ) -> bool {
         let renderer = DataViewIconTextRenderer::new(VariantType::IconText, DataViewCellMode::Inert, align);
-        let column = DataViewColumn::new(label, &renderer, model_column as usize, width, align, flags);
-        self.append_column(&column)
+        let column = DataViewColumn::new(label, renderer, model_column as usize, width, align, flags);
+        self.append_column(column)
     }
 
     /// Associates a data model with this DataViewTreeCtrl.
@@ -202,7 +202,7 @@ impl DataViewTreeCtrl {
         let text_c_str = CString::new(text).unwrap_or_default();
         unsafe {
             let raw_item = ffi::wxd_DataViewTreeCtrl_AppendItem(self.dvtc_ptr(), **parent, text_c_str.as_ptr(), icon);
-            DataViewItem::from(raw_item)
+            DataViewItem::from_raw(raw_item)
         }
     }
 
@@ -211,7 +211,7 @@ impl DataViewTreeCtrl {
         unsafe {
             let raw_item =
                 ffi::wxd_DataViewTreeCtrl_AppendContainer(self.dvtc_ptr(), **parent, text_c_str.as_ptr(), icon, expanded_icon);
-            DataViewItem::from(raw_item)
+            DataViewItem::from_raw(raw_item)
         }
     }
 
@@ -219,7 +219,7 @@ impl DataViewTreeCtrl {
         let text_c_str = CString::new(text).unwrap_or_default();
         unsafe {
             let raw_item = ffi::wxd_DataViewTreeCtrl_PrependItem(self.dvtc_ptr(), **parent, text_c_str.as_ptr(), icon);
-            DataViewItem::from(raw_item)
+            DataViewItem::from_raw(raw_item)
         }
     }
 
@@ -228,7 +228,7 @@ impl DataViewTreeCtrl {
         unsafe {
             let raw_item =
                 ffi::wxd_DataViewTreeCtrl_PrependContainer(self.dvtc_ptr(), **parent, text_c_str.as_ptr(), icon, expanded_icon);
-            DataViewItem::from(raw_item)
+            DataViewItem::from_raw(raw_item)
         }
     }
 
@@ -236,7 +236,7 @@ impl DataViewTreeCtrl {
         let text_c_str = CString::new(text).unwrap_or_default();
         unsafe {
             let raw_item = ffi::wxd_DataViewTreeCtrl_InsertItem(self.dvtc_ptr(), **parent, **previous, text_c_str.as_ptr(), icon);
-            DataViewItem::from(raw_item)
+            DataViewItem::from_raw(raw_item)
         }
     }
 
@@ -258,7 +258,7 @@ impl DataViewTreeCtrl {
                 icon,
                 expanded_icon,
             );
-            DataViewItem::from(raw_item)
+            DataViewItem::from_raw(raw_item)
         }
     }
 
@@ -315,7 +315,7 @@ impl DataViewTreeCtrl {
     pub fn get_item_parent(&self, item: &DataViewItem) -> DataViewItem {
         unsafe {
             let raw_item = ffi::wxd_DataViewTreeCtrl_GetItemParent(self.dvtc_ptr(), **item);
-            DataViewItem::from(raw_item)
+            DataViewItem::from_raw(raw_item)
         }
     }
 
@@ -326,7 +326,7 @@ impl DataViewTreeCtrl {
     pub fn get_nth_child(&self, parent: &DataViewItem, pos: u32) -> DataViewItem {
         unsafe {
             let raw_item = ffi::wxd_DataViewTreeCtrl_GetNthChild(self.dvtc_ptr(), **parent, pos);
-            DataViewItem::from(raw_item)
+            DataViewItem::from_raw(raw_item)
         }
     }
 
@@ -403,7 +403,7 @@ impl DataViewTreeCtrl {
 
         for raw_ptr in items_raw {
             if !raw_ptr.is_null() {
-                items.push(DataViewItem::from(raw_ptr));
+                items.push(unsafe { DataViewItem::from_raw(raw_ptr) });
             }
         }
 

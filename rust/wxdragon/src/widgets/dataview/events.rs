@@ -122,7 +122,7 @@ impl DataViewEvent {
                 None
             } else {
                 // The C++ function returns a newly-allocated wrapper pointer that Rust takes ownership of
-                Some(DataViewItem::from(item_ptr))
+                Some(DataViewItem::from_raw(item_ptr))
             }
         }
     }
@@ -163,7 +163,7 @@ impl DataViewEvent {
             return None;
         }
         // Wrap the returned pointer in a Variant; Rust takes ownership
-        Some(super::Variant::from(p))
+        Some(unsafe { super::Variant::from_raw(p) })
     }
 
     /// Set the value for editing events

@@ -4,7 +4,36 @@
 
 ### New Features
 
-- **GLCanvas**: Wrapped `wxGLCanvas`, `wxGLContext`, `wxGLAttributes` and `wxGLContextAttrs` for OpenGL drawing — the pixel-format and context-attribute builders, both canvas constructors, `IsDisplaySupported`, swap interval, extension queries and `ParseAttribList`. `GLContext::proc_address` resolves GL entry points through wxWidgets, so a GL loader needs no per-platform symbol lookup, and `GLCanvas::pixel_size` gives the physical-pixel size a viewport wants on a scaled display. The wxWidgets build already enabled `wxUSE_OPENGL` and linked `wx::gl`; only the binding was missing
+- **Window**: Added `on_char_hook`, binding `wxEVT_CHAR_HOOK`. The hook runs on the focused window and every ancestor before the key reaches the control, which is the only way to act on combinations a control consumes itself: a multiline `TextCtrl` swallows Ctrl+Enter, and a `ListBox` answers Alt+Enter with a system beep, so neither ever reaches a `key_down` handler. Skip the event to let it carry on to the control. The C++ side already mapped `WXD_EVENT_TYPE_CHAR_HOOK` and `wxd_IsKeyboardEvent` already accepted it; only the Rust binding was missing. See `examples/rust/char_hook_demo`
+- **ListBox**: Added `append_items`, `insert_items` and `set_items`, wrapping the `wxItemContainer` overloads that take a `wxArrayString`, the same trio `ComboBox` got in 0.9.21. Filling a list one `append` at a time costs a Rust-to-C++ call, a string conversion and wxWidgets' own per-change bookkeeping for every row, and on MSW the native list box grows its storage a little at a time; the array overloads reserve room for every row up front (`LB_INITSTORAGE`) and update once. Loading 26,934 rows into a `ListBox` went from about 2.3 s to 1.3 s on Windows. The builder's `with_choices` now goes through `append_items` too
+- **Dialogs**: Added five style flags whose constants wxDragon already extracted on every platform but no style enum exposed, so the only way to use them was `from_bits_retain` with the raw value. `DialogStyle::NoParent` (`wxDIALOG_NO_PARENT`) makes a dialog a top-level window of its own, so one opened from a global hotkey while another application is in front comes forward instead of opening behind it. `MessageDialogStyle::NoDefault` and `CancelDefault` (`wxNO_DEFAULT`, `wxCANCEL_DEFAULT`) make the safe answer the default button, which matters for a question like "Do you want to exit?" where a stray Return should not be the answer that closes the app. `MessageDialogStyle::StayOnTop` (`wxSTAY_ON_TOP`) and `TextEntryDialogStyle::MultiLine` (`wxTE_MULTILINE`) complete what `wxMessageDialog` and `wxTextEntryDialog` document
+
+### Bug Fixes
+
+- **TaskBarIcon**: Fixed tray icon events never firing on Windows and Linux. When the taskbar event types moved from `event.cpp` into `taskbar.cpp`, the mapper and its registrar landed inside the existing `#ifdef __WXOSX__` block that only guarded `wx/osx/private.h`, so they were compiled on macOS alone. Everywhere else `on_left_up`, `on_left_down`, `on_left_double_click` and the other taskbar handlers bound to `wxEVT_NULL` and silently never ran. The guard now covers just the macOS header again
+
+## 0.9.22
+
+### Breaking Changes
+
+- **DataViewColumn / DataViewCtrl / DataViewTreeCtrl**: `DataViewColumn::new` now takes its renderer by value, and `append_column` / `prepend_column` / `insert_column` now take the column by value. `wxDataViewColumn` deletes its renderer and `wxDataViewCtrl` deletes its columns, but both were taken by reference, so the same C++ object could be handed to two owners and deleted twice at teardown — `dvc.append_column(&col); dvc2.append_column(&col);`, or one renderer shared by two columns. Move semantics now prevent it. The `DataViewCustomRenderer` docs previously demonstrated sharing one renderer across two columns; they are corrected. Migration: drop the `&` at both call sites, and where code kept using a column after adding it, fetch it back with `DataViewCtrl::get_column(pos)`
+- **Bitmap / Variant / Menu**: Replaced `impl From<*mut wxd_*_t>` with `pub unsafe fn from_raw`. The `From` impl was safe but claimed ownership, so pairing it with the (also safe) `as_mut_ptr` produced a double free with no `unsafe` anywhere: `Bitmap::from(bmp.as_mut_ptr())` gave a second owner of a live bitmap and both destroyed it. Adopting a raw pointer is now `unsafe`, as it is for `Box::from_raw`. Migration: `T::from(ptr)` on a `*mut` becomes `unsafe { T::from_raw(ptr) }`; the non-owning `T::from(ptr as *const _)` is unchanged and stays safe
+- **DataViewItem**: Replaced `impl From<*const wxd_DataViewItem_t>` with `pub unsafe fn from_raw`. The `From` impl was safe but adopted the pointer, and `DataViewItem` also derefs to that raw pointer, so `DataViewItem::from(*item)` produced a second owner and both released the same item. Migration: `DataViewItem::from(ptr)` becomes `unsafe { DataViewItem::from_raw(ptr) }`; `from_id_ptr`, which allocates a fresh item for a model node, is unchanged and stays safe
+
+### Bug Fixes
+
+- **DataViewListCtrl**: Fixed `get_text_value` reading freed memory. The shim returned `wxString::utf8_str().data()`, and on a wide-character wxString build (Windows, macOS) `utf8_str()` hands back a `wxScopedCharBuffer` that owns the converted bytes and frees them when the temporary dies at the end of that return statement. The thread-local `wxString` kept the wide string alive but not the UTF-8 conversion. `wxd_DataViewListCtrl_GetTextValue` now takes a `(buffer, buffer_len)` pair and returns the length, the same convention as every other string getter in the shim
+- **Events**: Fixed heap corruption when an event handler binds or unbinds handlers on the widget that is dispatching it. `DispatchEvent` iterated the closure list by reference while calling into Rust, so an `unbind` erased from the vector under the loop and a `bind` could reallocate it; `unbind` also handed the closure box back to Rust while that closure was still running. Dispatch now works from a copy of the list, skips handlers removed part-way through, and defers closure drops until the outermost dispatch has unwound. A handler that unbinds itself (the "run once" pattern) previously crashed
+- **TreeCtrl**: Fixed custom item data leaking when items were removed. Cleanup now releases data attached to leaf items and descendants before `delete`, `delete_children`, or `delete_all_items` invalidates their IDs; the new `clear_custom_data_direct` helper also avoids the broken reference-to-`u64` conversion path on 32-bit targets (#214)
+
+### New Features
+
+- **Standard IDs**: Added `ID_SAVE`, `ID_CLOSE`, and `ID_CONTEXT_HELP` and exported them through the prelude (#216)
+- **GLCanvas**: Wrapped `wxGLCanvas`, `wxGLContext`, `wxGLAttributes` and `wxGLContextAttrs` for OpenGL drawing — the pixel-format and context-attribute builders, both canvas constructors, `IsDisplaySupported`, swap interval, extension queries and `ParseAttribList`. `GLContext::proc_address` resolves GL entry points through wxWidgets, so a GL loader needs no per-platform symbol lookup, and `GLCanvas::pixel_size` gives the physical-pixel size a viewport wants on a scaled display
+
+### Build
+
+- **wxWidgets dependencies**: Propagated the system OpenGL, EGL, Wayland EGL, gspell, macOS OpenGL framework, and Windows `opengl32` libraries used by the bundled static wxWidgets build, fixing link failures when the corresponding backends are enabled
 
 ## 0.9.21
 

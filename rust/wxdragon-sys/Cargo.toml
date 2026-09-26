@@ -14,7 +14,28 @@ build = "build.rs"
 links = "wxdragon" # Crucial: Signals to Cargo this crate builds/links libwxdragon
 
 [features]
-default = []
+# The "wx-" features are enabled by default and can be turned off to make
+# statically linked binaries smaller when the application does not need them.
+default = [
+    "wx-printing",
+    "wx-tiff",
+    "wx-jpeg",
+    "wx-asserts",
+    "wx-tango-icons",
+    "wx-extra-image-formats",
+    "wx-regex",
+]
+wx-printing = []
+# The Tango icons built into wxArtProvider, not needed by the applications
+# providing their own icons.
+wx-tango-icons = []
+# The GIF, PCX, TGA, IFF, PNM and XPM image handlers.
+wx-extra-image-formats = []
+# wxRegEx and the PCRE2 library it uses.
+wx-regex = []
+wx-tiff = []
+wx-jpeg = []
+wx-asserts = []
 aui = []
 media-ctrl = []
 webview = []

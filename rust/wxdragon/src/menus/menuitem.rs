@@ -246,7 +246,7 @@ impl MenuItem {
             None
         } else {
             // The C++ side returns a heap-allocated copy.
-            Some(Bitmap::from(ptr))
+            Some(unsafe { Bitmap::from_raw(ptr) })
         }
     }
 

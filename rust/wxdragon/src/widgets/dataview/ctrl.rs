@@ -188,7 +188,7 @@ impl DataViewCtrl {
     /// # Returns
     ///
     /// `true` if the column was successfully appended, `false` otherwise.
-    pub fn append_column(&self, column: &DataViewColumn) -> bool {
+    pub fn append_column(&self, column: DataViewColumn) -> bool {
         unsafe { ffi::wxd_DataViewCtrl_AppendColumn(self.dvc_ptr(), column.as_raw()) }
     }
 
@@ -197,7 +197,7 @@ impl DataViewCtrl {
     /// # Returns
     ///
     /// `true` if the column was successfully prepended, `false` otherwise.
-    pub fn prepend_column(&self, column: &DataViewColumn) -> bool {
+    pub fn prepend_column(&self, column: DataViewColumn) -> bool {
         unsafe { ffi::wxd_DataViewCtrl_PrependColumn(self.dvc_ptr(), column.as_raw()) }
     }
 
@@ -206,7 +206,7 @@ impl DataViewCtrl {
     /// # Returns
     ///
     /// `true` if the column was successfully inserted, `false` otherwise.
-    pub fn insert_column(&self, pos: usize, column: &DataViewColumn) -> bool {
+    pub fn insert_column(&self, pos: usize, column: DataViewColumn) -> bool {
         unsafe { ffi::wxd_DataViewCtrl_InsertColumn(self.dvc_ptr(), pos as i64, column.as_raw()) }
     }
 
@@ -258,8 +258,8 @@ impl DataViewCtrl {
         flags: DataViewColumnFlags,
     ) -> bool {
         let renderer = DataViewTextRenderer::new(VariantType::String, DataViewCellMode::Inert, align);
-        let column = DataViewColumn::new(label, &renderer, model_column, width, align, flags);
-        self.append_column(&column)
+        let column = DataViewColumn::new(label, renderer, model_column, width, align, flags);
+        self.append_column(column)
     }
 
     /// Creates and appends a toggle (checkbox) column to this control.
@@ -286,8 +286,8 @@ impl DataViewCtrl {
         flags: DataViewColumnFlags,
     ) -> bool {
         let renderer = DataViewToggleRenderer::new(VariantType::Bool, DataViewCellMode::Activatable, align);
-        let column = DataViewColumn::new(label, &renderer, model_column, width, align, flags);
-        self.append_column(&column)
+        let column = DataViewColumn::new(label, renderer, model_column, width, align, flags);
+        self.append_column(column)
     }
 
     /// Creates and appends a progress bar column to this control.
@@ -306,8 +306,8 @@ impl DataViewCtrl {
     /// `true` if the column was successfully appended, `false` otherwise.
     pub fn append_progress_column(&self, label: &str, model_column: usize, width: i32, flags: DataViewColumnFlags) -> bool {
         let renderer = DataViewProgressRenderer::new(VariantType::Int32, DataViewCellMode::Inert);
-        let column = DataViewColumn::new(label, &renderer, model_column, width, DataViewAlign::Center, flags);
-        self.append_column(&column)
+        let column = DataViewColumn::new(label, renderer, model_column, width, DataViewAlign::Center, flags);
+        self.append_column(column)
     }
 
     /// Creates and appends a bitmap column to this control.
@@ -334,8 +334,8 @@ impl DataViewCtrl {
         flags: DataViewColumnFlags,
     ) -> bool {
         let renderer = DataViewBitmapRenderer::new(DataViewCellMode::Inert, align);
-        let column = DataViewColumn::new(label, &renderer, model_column, width, align, flags);
-        self.append_column(&column)
+        let column = DataViewColumn::new(label, renderer, model_column, width, align, flags);
+        self.append_column(column)
     }
 
     /// Creates and appends a date column to this control.
@@ -362,8 +362,8 @@ impl DataViewCtrl {
         flags: DataViewColumnFlags,
     ) -> bool {
         let renderer = DataViewDateRenderer::new(VariantType::DateTime, DataViewCellMode::Activatable, align);
-        let column = DataViewColumn::new(label, &renderer, model_column, width, align, flags);
-        self.append_column(&column)
+        let column = DataViewColumn::new(label, renderer, model_column, width, align, flags);
+        self.append_column(column)
     }
 
     /// Creates and appends a choice column to this control.
@@ -392,8 +392,8 @@ impl DataViewCtrl {
         flags: DataViewColumnFlags,
     ) -> bool {
         let renderer = DataViewChoiceRenderer::new(VariantType::String, choices, DataViewCellMode::Editable, align);
-        let column = DataViewColumn::new(label, &renderer, model_column, width, align, flags);
-        self.append_column(&column)
+        let column = DataViewColumn::new(label, renderer, model_column, width, align, flags);
+        self.append_column(column)
     }
 
     /// Creates and appends a spin column to this control.
@@ -417,13 +417,13 @@ impl DataViewCtrl {
         );
         let column = DataViewColumn::new(
             &config.label,
-            &renderer,
+            renderer,
             config.model_column,
             config.width,
             config.align,
             config.flags,
         );
-        self.append_column(&column)
+        self.append_column(column)
     }
 
     /// Creates and appends an icon and text column to this control.
@@ -449,8 +449,8 @@ impl DataViewCtrl {
         flags: DataViewColumnFlags,
     ) -> bool {
         let renderer = DataViewIconTextRenderer::new(VariantType::String, DataViewCellMode::Inert, align);
-        let column = DataViewColumn::new(label, &renderer, model_column, width, align, flags);
-        self.append_column(&column)
+        let column = DataViewColumn::new(label, renderer, model_column, width, align, flags);
+        self.append_column(column)
     }
 
     /// Gets the number of columns in the control.
@@ -580,7 +580,7 @@ impl DataViewCtrl {
 
         for raw_ptr in items_raw {
             if !raw_ptr.is_null() {
-                items.push(DataViewItem::from(raw_ptr));
+                items.push(unsafe { DataViewItem::from_raw(raw_ptr) });
             }
         }
 
@@ -607,14 +607,14 @@ impl DataViewCtrl {
         if item_ptr.is_null() {
             None
         } else {
-            Some(DataViewItem::from(item_ptr))
+            Some(unsafe { DataViewItem::from_raw(item_ptr) })
         }
     }
 
     /// Gets the nth child of a parent item (works for tree models attached to a DataViewCtrl)
     pub fn get_nth_child(&self, parent: &DataViewItem, pos: u32) -> DataViewItem {
         let item = unsafe { ffi::wxd_DataViewCtrl_GetNthChild(self.dvc_ptr(), **parent, pos) };
-        DataViewItem::from(item)
+        unsafe { DataViewItem::from_raw(item) }
     }
 
     /// Expand the given item (works for tree models attached to a DataViewCtrl)
@@ -637,7 +637,7 @@ impl DataViewCtrl {
         if item_ptr.is_null() {
             None
         } else {
-            Some(DataViewItem::from(item_ptr))
+            Some(unsafe { DataViewItem::from_raw(item_ptr) })
         }
     }
 
@@ -814,3 +814,102 @@ impl crate::widgets::dataview::DataViewEventHandler for DataViewCtrl {}
 
 // Implement DataViewTreeEventHandler for DataViewCtrl since it supports tree functionality
 impl crate::widgets::dataview::DataViewTreeEventHandler for DataViewCtrl {}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::prelude::*;
+    use crate::widgets::Frame;
+    use std::cell::{Cell, RefCell};
+    use std::rc::Rc;
+
+    const NOT_RUN: u8 = 0;
+    const STARTED: u8 = 1;
+    const FINISHED: u8 = 2;
+
+    /// Runs `body` against a fresh DataViewCtrl inside a wx main loop that a
+    /// one-shot timer exits again (see the `window.rs` and `combobox.rs`
+    /// tests). Panics in the init callback are swallowed by `crate::main`, so
+    /// the body's progress is tracked: started-but-unfinished fails the test,
+    /// never-started (wx could not initialise) only logs. Skipped on macOS,
+    /// where the test thread is not the OS main thread.
+    fn with_dvc(body: impl FnOnce(&DataViewCtrl) + 'static) {
+        let _gui_test = crate::app::GUI_TEST_LOCK.lock().unwrap();
+        SystemOptions::set_option_by_int("msw.no-manifest-check", 1);
+        let progress = Rc::new(Cell::new(NOT_RUN));
+        let progress_in_loop = progress.clone();
+        let timer_store: Rc<RefCell<Option<Timer<Frame>>>> = Rc::new(RefCell::new(None));
+        let timer_store_clone = timer_store.clone();
+
+        let res = crate::main(move |app| {
+            let frame = Frame::builder().with_title("dataview column test").build();
+            let dvc = DataViewCtrl::builder(&frame).build();
+
+            progress_in_loop.set(STARTED);
+            body(&dvc);
+            progress_in_loop.set(FINISHED);
+
+            let timer = Timer::new(&frame);
+            let app_clone = app;
+            let timer_store_cleanup = timer_store_clone.clone();
+            timer.on_tick(move |_evt| {
+                timer_store_cleanup.borrow_mut().take();
+                app_clone.exit_main_loop();
+            });
+            timer.start(100, true);
+            timer_store_clone.borrow_mut().replace(timer);
+        });
+        if let Err(e) = res {
+            log::warn!("Test failed with error: {e:?}");
+        }
+        assert_ne!(progress.get(), STARTED, "test body panicked inside the wx main loop");
+    }
+
+    fn text_renderer() -> DataViewTextRenderer {
+        DataViewTextRenderer::new(VariantType::String, DataViewCellMode::Inert, DataViewAlign::Left)
+    }
+
+    fn column(title: &str, model_column: usize) -> DataViewColumn {
+        DataViewColumn::new(
+            title,
+            text_renderer(),
+            model_column,
+            100,
+            DataViewAlign::Left,
+            DataViewColumnFlags::Resizable,
+        )
+    }
+
+    #[cfg_attr(target_os = "macos", ignore)]
+    #[test]
+    fn appending_a_column_hands_it_to_the_control() {
+        with_dvc(|dvc| {
+            assert_eq!(dvc.get_column_count(), 0);
+
+            // Each column owns its own renderer, and the control owns each
+            // column once it is added. Both are moves, so neither object can be
+            // handed to a second owner.
+            assert!(dvc.append_column(column("first", 0)));
+            assert!(dvc.append_column(column("second", 1)));
+            assert!(dvc.prepend_column(column("zeroth", 2)));
+            assert_eq!(dvc.get_column_count(), 3);
+        });
+    }
+
+    #[cfg_attr(target_os = "macos", ignore)]
+    #[test]
+    fn get_column_is_the_way_back_to_an_added_column() {
+        with_dvc(|dvc| {
+            assert!(dvc.append_column(column("only", 0)));
+
+            // The migration path for code that used to keep its own wrapper
+            // around after adding it: ask the control instead.
+            let added = dvc.get_column(0).expect("column 0 should exist");
+            added.set_title("renamed");
+            added.set_resizeable(false);
+            assert!(!added.is_resizeable());
+
+            assert!(dvc.get_column(1).is_none(), "out-of-range column must be None");
+        });
+    }
+}

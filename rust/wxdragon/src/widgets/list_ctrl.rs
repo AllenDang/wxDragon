@@ -866,7 +866,7 @@ impl ListCtrl {
             return;
         }
         unsafe {
-            ffi::wxd_ListCtrl_SetImageList(
+            ffi::wxd_ListCtrl_AssignImageList(
                 ptr,
                 image_list.as_ptr(), // Pass the raw pointer
                 list_type,

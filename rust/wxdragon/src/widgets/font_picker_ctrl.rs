@@ -123,12 +123,7 @@ impl FontPickerCtrl {
         if ptr.is_null() {
             return;
         }
-        // Create a new font to ensure proper ownership
-        let font_copy = font.to_owned();
-        // The C++ code makes a copy of the font, so we can just pass the pointer
-        unsafe { ffi::wxd_FontPickerCtrl_SetSelectedFont(ptr, font_copy.as_ptr()) };
-        // Intentionally leak the font as the C++ side now owns it
-        std::mem::forget(font_copy);
+        unsafe { ffi::wxd_FontPickerCtrl_SetSelectedFont(ptr, font.as_ptr()) };
     }
 
     /// Creates a FontPickerCtrl from a raw pointer.

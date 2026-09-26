@@ -16,6 +16,45 @@
 #include "wx/osx/private.h"
 #endif
 
+#include "../include/events/wxd_event_type_registry.h"
+
+namespace
+{
+
+// Map the TaskBar event types here and not in event.cpp to avoid
+// pulling in wxTaskBarIcon when linking statically with an application not
+// using it.
+wxEventType
+TaskBarEventTypeMapper(WXDEventTypeCEnum c_enum_val)
+{
+    switch (c_enum_val) {
+    case WXD_EVENT_TYPE_TASKBAR_LEFT_DOWN:
+        return wxEVT_TASKBAR_LEFT_DOWN;
+    case WXD_EVENT_TYPE_TASKBAR_LEFT_DCLICK:
+        return wxEVT_TASKBAR_LEFT_DCLICK;
+    case WXD_EVENT_TYPE_TASKBAR_MOVE:
+        return wxEVT_TASKBAR_MOVE;
+    case WXD_EVENT_TYPE_TASKBAR_LEFT_UP:
+        return wxEVT_TASKBAR_LEFT_UP;
+    case WXD_EVENT_TYPE_TASKBAR_RIGHT_DOWN:
+        return wxEVT_TASKBAR_RIGHT_DOWN;
+    case WXD_EVENT_TYPE_TASKBAR_RIGHT_UP:
+        return wxEVT_TASKBAR_RIGHT_UP;
+    case WXD_EVENT_TYPE_TASKBAR_RIGHT_DCLICK:
+        return wxEVT_TASKBAR_RIGHT_DCLICK;
+    case WXD_EVENT_TYPE_TASKBAR_BALLOON_TIMEOUT:
+        return wxEVT_TASKBAR_BALLOON_TIMEOUT;
+    case WXD_EVENT_TYPE_TASKBAR_BALLOON_CLICK:
+        return wxEVT_TASKBAR_BALLOON_CLICK;
+    default:
+        return wxEVT_NULL;
+    }
+}
+
+const WxdEventTypeMapperRegistrar gs_taskbarEventTypes(TaskBarEventTypeMapper);
+
+} // anonymous namespace
+
 // Custom TaskBarIcon class that exposes events properly and supports auto popup menus
 class wxdTaskBarIcon : public wxTaskBarIcon {
 public:

@@ -7,6 +7,39 @@
 #include "wx/treelist.h"
 #include "../include/wxdragon.h"
 #include "wxd_utils.h"
+#include "../include/events/wxd_event_type_registry.h"
+
+namespace
+{
+
+// Map the TreeList event types here and not in event.cpp to avoid
+// pulling in wxTreeListCtrl when linking statically with an application not
+// using it.
+wxEventType
+TreeListEventTypeMapper(WXDEventTypeCEnum c_enum_val)
+{
+    switch (c_enum_val) {
+    case WXD_EVENT_TYPE_TREELIST_SELECTION_CHANGED:
+        return wxEVT_TREELIST_SELECTION_CHANGED;
+    case WXD_EVENT_TYPE_TREELIST_ITEM_CHECKED:
+        return wxEVT_TREELIST_ITEM_CHECKED;
+    case WXD_EVENT_TYPE_TREELIST_ITEM_ACTIVATED:
+        return wxEVT_TREELIST_ITEM_ACTIVATED;
+    case WXD_EVENT_TYPE_TREELIST_COLUMN_SORTED:
+        return wxEVT_TREELIST_COLUMN_SORTED;
+    case WXD_EVENT_TYPE_TREELIST_ITEM_EXPANDING:
+        return wxEVT_TREELIST_ITEM_EXPANDING;
+    case WXD_EVENT_TYPE_TREELIST_ITEM_EXPANDED:
+        return wxEVT_TREELIST_ITEM_EXPANDED;
+    default:
+        return wxEVT_NULL;
+    }
+}
+
+const WxdEventTypeMapperRegistrar gs_treelistEventTypes(TreeListEventTypeMapper);
+
+} // anonymous namespace
+
 
 extern "C" {
 

@@ -9,6 +9,55 @@
 #include <new>
 
 #include "../include/wxdragon.h"
+#include "../include/events/wxd_event_type_registry.h"
+
+namespace
+{
+
+// Map the PropertyGrid event types here and not in event.cpp to avoid
+// pulling in wxPropertyGrid when linking statically with an application not
+// using it.
+wxEventType
+PropertyGridEventTypeMapper(WXDEventTypeCEnum c_enum_val)
+{
+    switch (c_enum_val) {
+    case WXD_EVENT_TYPE_PG_SELECTED:
+        return wxEVT_PG_SELECTED;
+    case WXD_EVENT_TYPE_PG_CHANGING:
+        return wxEVT_PG_CHANGING;
+    case WXD_EVENT_TYPE_PG_CHANGED:
+        return wxEVT_PG_CHANGED;
+    case WXD_EVENT_TYPE_PG_HIGHLIGHTED:
+        return wxEVT_PG_HIGHLIGHTED;
+    case WXD_EVENT_TYPE_PG_RIGHT_CLICK:
+        return wxEVT_PG_RIGHT_CLICK;
+    case WXD_EVENT_TYPE_PG_PAGE_CHANGED:
+        return wxEVT_PG_PAGE_CHANGED;
+    case WXD_EVENT_TYPE_PG_ITEM_COLLAPSED:
+        return wxEVT_PG_ITEM_COLLAPSED;
+    case WXD_EVENT_TYPE_PG_ITEM_EXPANDED:
+        return wxEVT_PG_ITEM_EXPANDED;
+    case WXD_EVENT_TYPE_PG_DOUBLE_CLICK:
+        return wxEVT_PG_DOUBLE_CLICK;
+    case WXD_EVENT_TYPE_PG_LABEL_EDIT_BEGIN:
+        return wxEVT_PG_LABEL_EDIT_BEGIN;
+    case WXD_EVENT_TYPE_PG_LABEL_EDIT_ENDING:
+        return wxEVT_PG_LABEL_EDIT_ENDING;
+    case WXD_EVENT_TYPE_PG_COL_BEGIN_DRAG:
+        return wxEVT_PG_COL_BEGIN_DRAG;
+    case WXD_EVENT_TYPE_PG_COL_DRAGGING:
+        return wxEVT_PG_COL_DRAGGING;
+    case WXD_EVENT_TYPE_PG_COL_END_DRAG:
+        return wxEVT_PG_COL_END_DRAG;
+    default:
+        return wxEVT_NULL;
+    }
+}
+
+const WxdEventTypeMapperRegistrar gs_propertygridEventTypes(PropertyGridEventTypeMapper);
+
+} // anonymous namespace
+
 
 namespace {
 wxPropertyGrid*

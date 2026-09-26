@@ -22,7 +22,10 @@ widget_style_enum!(
         IconQuestion: ffi::WXD_ICON_QUESTION, "Show a question mark icon.",
         IconInformation: ffi::WXD_ICON_INFORMATION, "Show an information symbol.",
         IconAuthNeeded: ffi::WXD_ICON_AUTH_NEEDED, "Show an authentication needed symbol.",
-        Centre: ffi::WXD_CENTRE, "Center the dialog on its parent."
+        Centre: ffi::WXD_CENTRE, "Center the dialog on its parent.",
+        NoDefault: ffi::WXD_NO_DEFAULT, "Make 'No' the default button instead of 'Yes'. Only valid with YesNo.",
+        CancelDefault: ffi::WXD_CANCEL_DEFAULT, "Make 'Cancel' the default button. Only valid with Cancel.",
+        StayOnTop: ffi::WXD_STAY_ON_TOP, "Keep the message box on top of all other windows, not only its parent (MSW and GTK)."
     },
     default_variant: OK
 );

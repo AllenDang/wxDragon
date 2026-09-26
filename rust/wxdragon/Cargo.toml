@@ -14,6 +14,23 @@ categories = ["gui", "api-bindings"] # Already good
 features = ["aui", "stc", "xrc", "richtext"]
 
 [features]
+# See wxdragon-sys for what these do; they are enabled by default.
+default = [
+    "wx-printing",
+    "wx-tiff",
+    "wx-jpeg",
+    "wx-asserts",
+    "wx-tango-icons",
+    "wx-extra-image-formats",
+    "wx-regex",
+]
+wx-printing = ["wxdragon-sys/wx-printing"]
+wx-tango-icons = ["wxdragon-sys/wx-tango-icons"]
+wx-extra-image-formats = ["wxdragon-sys/wx-extra-image-formats"]
+wx-regex = ["wxdragon-sys/wx-regex"]
+wx-tiff = ["wxdragon-sys/wx-tiff"]
+wx-jpeg = ["wxdragon-sys/wx-jpeg"]
+wx-asserts = ["wxdragon-sys/wx-asserts"]
 # default = ["aui", "stc", "xrc", "richtext"]
 aui = ["wxdragon-sys/aui"]
 media-ctrl = ["wxdragon-sys/media-ctrl"]
@@ -27,4 +44,4 @@ bitflags = "2.13.0"
 log = "0.4.28"
 paste = "1.0.15"
 wxdragon-macros = { path = "../../rust/wxdragon-macros" }
-wxdragon-sys = { path = "../../rust/wxdragon-sys" } 
+wxdragon-sys = { path = "../../rust/wxdragon-sys", default-features = false } 

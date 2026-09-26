@@ -175,7 +175,7 @@ impl BitmapBundle {
             None
         } else {
             // The C++ side returns a new bitmap that we own
-            Some(Bitmap::from(bitmap_ptr))
+            Some(unsafe { Bitmap::from_raw(bitmap_ptr) })
         }
     }
 
@@ -197,7 +197,7 @@ impl BitmapBundle {
             None
         } else {
             // The C++ side returns a new bitmap that we own
-            Some(Bitmap::from(bitmap_ptr))
+            Some(unsafe { Bitmap::from_raw(bitmap_ptr) })
         }
     }
 

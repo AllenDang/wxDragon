@@ -1,6 +1,7 @@
 #include <wx/wxprec.h>
 #include <wx/wx.h>
 #include "../include/wxdragon.h"
+#include "../include/events/wxd_event_type_registry.h"
 // #include "../include/events/wxd_event_api.h" // No longer needed, wxd_Event_t defined in wxd_types.h (via wxdragon.h)
 #include <unordered_map>
 #include <vector>     // For std::vector used in closureMap
@@ -208,6 +209,13 @@ public:
     std::unordered_map<std::pair<wxEventType, wxd_Id>, bool, PairHash> wx_bindings_made;
     wxEvtHandler* ownerHandler = nullptr; // Store the actual wxEvtHandler*
 
+    // Number of DispatchEvent calls currently on the stack for this handler.
+    // A Rust closure is free to Bind or Unbind on the very handler that is
+    // dispatching it, so drops are queued while this is non-zero (see
+    // DropClosure) and released once the outermost dispatch unwinds.
+    size_t dispatchDepth = 0;
+    std::vector<void*> pendingDrops;
+
     WxdEventHandler(wxEvtHandler* owner) : ownerHandler(owner)
     {
         WXD_LOG_TRACEF("WxdEventHandler 0x%" PRIxPTR " created for wxEvtHandler 0x%p cls=%s",
@@ -225,6 +233,12 @@ public:
     size_t
     UnbindAll();
 
+    // Hands a closure box back to Rust, or queues it if a dispatch is in flight.
+    void
+    DropClosure(void* closure_ptr);
+    void
+    FlushPendingDrops();
+
     // The new dispatch method that handles multiple closures per event
     void
     DispatchEvent(wxEvent& event);
@@ -232,6 +246,39 @@ public:
     // Special dispatch method for close events with correct signature
     void
     DispatchCloseEvent(wxCloseEvent& event);
+
+private:
+    // Runs one pre-copied list of closures. Returns true if any of them consumed
+    // the event. Skips entries that an earlier closure in the same dispatch
+    // unbound.
+    bool
+    RunClosures(const std::vector<RustClosureInfo>& snapshot, wxEvent& event,
+                bool keep_dispatching_after_consume);
+};
+
+// RAII guard that keeps closure-box drops deferred for the duration of a
+// dispatch, so a handler that unbinds itself does not free the closure that is
+// still running.
+class WxdDispatchGuard {
+public:
+    explicit WxdDispatchGuard(WxdEventHandler* handler) : m_handler(handler)
+    {
+        ++m_handler->dispatchDepth;
+    }
+
+    ~WxdDispatchGuard()
+    {
+        if (--m_handler->dispatchDepth == 0) {
+            m_handler->FlushPendingDrops();
+        }
+    }
+
+    WxdDispatchGuard(const WxdDispatchGuard&) = delete;
+    WxdDispatchGuard&
+    operator=(const WxdDispatchGuard&) = delete;
+
+private:
+    WxdEventHandler* m_handler;
 };
 
 // Define WxdHandlerClientData destructor (no change needed here, it still just deletes the handler)
@@ -255,6 +302,8 @@ WxdEventHandler::~WxdEventHandler()
 {
     WXD_LOG_TRACEF("WxdEventHandler 0x%" PRIxPTR " destroying. cls=%s", (uintptr_t)this,
                    wx_cls(ownerHandler).c_str());
+    // Anything unbound during a dispatch that never reached a flush.
+    this->FlushPendingDrops();
     for (auto const& [key, closure_vector] : closureMap) {
         for (auto const& info : closure_vector) {
             if (info.closure_ptr) {
@@ -266,6 +315,35 @@ WxdEventHandler::~WxdEventHandler()
     // Clear the maps (optional, as the handler is being destroyed)
     closureMap.clear();
     wx_bindings_made.clear();
+}
+
+void
+WxdEventHandler::DropClosure(void* closure_ptr)
+{
+    if (!closure_ptr) {
+        return;
+    }
+    if (this->dispatchDepth > 0) {
+        // The box may be the closure we are running right now, or one a later
+        // iteration of the dispatch loop still has a pointer to.
+        this->pendingDrops.push_back(closure_ptr);
+        return;
+    }
+    drop_rust_event_closure_box(closure_ptr);
+}
+
+void
+WxdEventHandler::FlushPendingDrops()
+{
+    // Swap the queue out first: a Rust Drop impl may unbind further handlers,
+    // and those land in a fresh queue rather than reallocating under us.
+    std::vector<void*> batch;
+    batch.swap(this->pendingDrops);
+    for (void* closure_ptr : batch) {
+        if (closure_ptr) {
+            drop_rust_event_closure_box(closure_ptr);
+        }
+    }
 }
 
 bool
@@ -296,10 +374,8 @@ WxdEventHandler::UnbindClosure(size_t token)
     bool found = false;
     for (auto vec_it = closure_vec.begin(); vec_it != closure_vec.end(); ++vec_it) {
         if (vec_it->token == token) {
-            // Found it! Drop the Rust closure
-            if (vec_it->closure_ptr) {
-                drop_rust_event_closure_box(vec_it->closure_ptr);
-            }
+            // Found it! Hand the Rust closure back (deferred if we are dispatching)
+            this->DropClosure(vec_it->closure_ptr);
 
             // Remove from vector
             closure_vec.erase(vec_it);
@@ -364,6 +440,44 @@ WxdEventHandler::UnbindAll()
     return removed;
 }
 
+bool
+WxdEventHandler::RunClosures(const std::vector<RustClosureInfo>& snapshot, wxEvent& event,
+                             bool keep_dispatching_after_consume)
+{
+    bool event_consumed = false;
+
+    for (auto const& info : snapshot) {
+        if (!info.closure_ptr || !info.rust_trampoline) {
+            continue;
+        }
+
+        // An earlier closure in this same dispatch may have unbound this one.
+        // A handler that is no longer bound must not run, and its box is
+        // already queued to drop. Checking closure_ptr as well as the token
+        // keeps this correct even if a token were ever reused.
+        auto token_it = this->tokenMap.find(info.token);
+        if (token_it == this->tokenMap.end() || std::get<2>(token_it->second) != info.closure_ptr) {
+            continue;
+        }
+
+        // Reset skip to true before each handler call
+        event.Skip(true);
+
+        // Call the Rust trampoline function
+        info.rust_trampoline(info.closure_ptr, reinterpret_cast<wxd_Event_t*>(&event));
+
+        // Check if this handler consumed the event
+        if (!event.GetSkipped()) {
+            event_consumed = true;
+            if (!keep_dispatching_after_consume) {
+                break; // Stop processing further handlers
+            }
+        }
+    }
+
+    return event_consumed;
+}
+
 // New DispatchEvent method that handles multiple closures per event
 void
 WxdEventHandler::DispatchEvent(wxEvent& event)
@@ -382,52 +496,36 @@ WxdEventHandler::DispatchEvent(wxEvent& event)
     std::pair<wxEventType, wxd_Id> key_any_id = { eventType, wxID_ANY };
     const bool specific_key_is_any = key_specific_id == key_any_id;
 
-    bool event_consumed = false;
+    // Copy the closure lists before calling into Rust. A closure may Bind or
+    // Unbind on this same handler, and either one invalidates iterators into
+    // the vectors held by closureMap - Unbind erases an element (and can erase
+    // the whole vector when it empties), Bind push_backs and can reallocate.
+    std::vector<RustClosureInfo> specific_closures;
+    std::vector<RustClosureInfo> any_closures;
 
-    // Process Specific ID Handlers first
     auto it_specific = closureMap.find(key_specific_id);
     if (it_specific != closureMap.end()) {
-        for (auto const& info : it_specific->second) {
-            if (info.closure_ptr && info.rust_trampoline) {
-                // Reset skip to true before each handler call
-                event.Skip(true);
-
-                // Call the Rust trampoline function
-                info.rust_trampoline(info.closure_ptr, reinterpret_cast<wxd_Event_t*>(&event));
-
-                // Check if this handler consumed the event
-                if (!event.GetSkipped()) {
-                    event_consumed = true;
-                    if (!keep_dispatching_after_consume) {
-                        break; // Stop processing further handlers
-                    }
-                }
-            }
+        specific_closures = it_specific->second;
+    }
+    if (!specific_key_is_any) {
+        auto it_any = closureMap.find(key_any_id);
+        if (it_any != closureMap.end()) {
+            any_closures = it_any->second;
         }
     }
 
+    // Keep closure-box drops queued until this dispatch (and any nested one)
+    // has unwound, so a self-unbinding handler is not freed mid-call. The
+    // guard outlives the DESTROY cleanup at the bottom of this function.
+    WxdDispatchGuard dispatch_guard(this);
+
+    // Process Specific ID Handlers first
+    bool event_consumed =
+        this->RunClosures(specific_closures, event, keep_dispatching_after_consume);
+
     // Process wxID_ANY handlers only when they are distinct from the specific-ID lookup.
     if (!event_consumed && !specific_key_is_any) {
-        auto it_any = closureMap.find(key_any_id);
-        if (it_any != closureMap.end()) {
-            for (auto const& info : it_any->second) {
-                if (info.closure_ptr && info.rust_trampoline) {
-                    // Reset skip to true before each handler call
-                    event.Skip(true);
-
-                    // Call the Rust trampoline function
-                    info.rust_trampoline(info.closure_ptr, reinterpret_cast<wxd_Event_t*>(&event));
-
-                    // Check if this handler consumed the event
-                    if (!event.GetSkipped()) {
-                        event_consumed = true;
-                        if (!keep_dispatching_after_consume) {
-                            break; // Stop processing further handlers
-                        }
-                    }
-                }
-            }
-        }
+        event_consumed = this->RunClosures(any_closures, event, keep_dispatching_after_consume);
     }
 
     // Set final event state
@@ -1091,18 +1189,6 @@ get_wx_event_type_for_c_enum(WXDEventTypeCEnum c_enum_val)
         return wxEVT_TREE_ITEM_ACTIVATED;
 
     // TreeListCtrl events
-    case WXD_EVENT_TYPE_TREELIST_SELECTION_CHANGED:
-        return wxEVT_TREELIST_SELECTION_CHANGED;
-    case WXD_EVENT_TYPE_TREELIST_ITEM_CHECKED:
-        return wxEVT_TREELIST_ITEM_CHECKED;
-    case WXD_EVENT_TYPE_TREELIST_ITEM_ACTIVATED:
-        return wxEVT_TREELIST_ITEM_ACTIVATED;
-    case WXD_EVENT_TYPE_TREELIST_COLUMN_SORTED:
-        return wxEVT_TREELIST_COLUMN_SORTED;
-    case WXD_EVENT_TYPE_TREELIST_ITEM_EXPANDING:
-        return wxEVT_TREELIST_ITEM_EXPANDING;
-    case WXD_EVENT_TYPE_TREELIST_ITEM_EXPANDED:
-        return wxEVT_TREELIST_ITEM_EXPANDED;
 
     // Slider and spin control events
     case WXD_EVENT_TYPE_SLIDER:
@@ -1292,32 +1378,6 @@ get_wx_event_type_for_c_enum(WXDEventTypeCEnum c_enum_val)
 #endif
 
     // DataView events
-    case WXD_EVENT_TYPE_DATAVIEW_SELECTION_CHANGED:
-        return wxEVT_DATAVIEW_SELECTION_CHANGED;
-    case WXD_EVENT_TYPE_DATAVIEW_ITEM_ACTIVATED:
-        return wxEVT_DATAVIEW_ITEM_ACTIVATED;
-    case WXD_EVENT_TYPE_DATAVIEW_ITEM_EDITING_STARTED:
-        return wxEVT_DATAVIEW_ITEM_EDITING_STARTED;
-    case WXD_EVENT_TYPE_DATAVIEW_ITEM_EDITING_DONE:
-        return wxEVT_DATAVIEW_ITEM_EDITING_DONE;
-    case WXD_EVENT_TYPE_DATAVIEW_ITEM_COLLAPSING:
-        return wxEVT_DATAVIEW_ITEM_COLLAPSING;
-    case WXD_EVENT_TYPE_DATAVIEW_ITEM_COLLAPSED:
-        return wxEVT_DATAVIEW_ITEM_COLLAPSED;
-    case WXD_EVENT_TYPE_DATAVIEW_ITEM_EXPANDING:
-        return wxEVT_DATAVIEW_ITEM_EXPANDING;
-    case WXD_EVENT_TYPE_DATAVIEW_ITEM_EXPANDED:
-        return wxEVT_DATAVIEW_ITEM_EXPANDED;
-    case WXD_EVENT_TYPE_DATAVIEW_COLUMN_HEADER_CLICK:
-        return wxEVT_DATAVIEW_COLUMN_HEADER_CLICK;
-    case WXD_EVENT_TYPE_DATAVIEW_COLUMN_HEADER_RIGHT_CLICK:
-        return wxEVT_DATAVIEW_COLUMN_HEADER_RIGHT_CLICK;
-    case WXD_EVENT_TYPE_DATAVIEW_COLUMN_SORTED:
-        return wxEVT_DATAVIEW_COLUMN_SORTED;
-    case WXD_EVENT_TYPE_DATAVIEW_COLUMN_REORDERED:
-        return wxEVT_DATAVIEW_COLUMN_REORDERED;
-    case WXD_EVENT_TYPE_DATAVIEW_ITEM_CONTEXT_MENU:
-        return wxEVT_DATAVIEW_ITEM_CONTEXT_MENU;
 
     // Additional TreeCtrl events
     case WXD_EVENT_TYPE_TREE_SEL_CHANGING:
@@ -1485,26 +1545,8 @@ get_wx_event_type_for_c_enum(WXDEventTypeCEnum c_enum_val)
 // TaskBarIcon events - platform-specific support
 #if wxUSE_TASKBARICON
     // Basic mouse events supported by the current wxWidgets backend.
-    case WXD_EVENT_TYPE_TASKBAR_LEFT_DOWN:
-        return wxEVT_TASKBAR_LEFT_DOWN;
-    case WXD_EVENT_TYPE_TASKBAR_LEFT_DCLICK:
-        return wxEVT_TASKBAR_LEFT_DCLICK;
 
     // Windows-only events - check each constant individually
-    case WXD_EVENT_TYPE_TASKBAR_MOVE:
-        return wxEVT_TASKBAR_MOVE;
-    case WXD_EVENT_TYPE_TASKBAR_LEFT_UP:
-        return wxEVT_TASKBAR_LEFT_UP;
-    case WXD_EVENT_TYPE_TASKBAR_RIGHT_DOWN:
-        return wxEVT_TASKBAR_RIGHT_DOWN;
-    case WXD_EVENT_TYPE_TASKBAR_RIGHT_UP:
-        return wxEVT_TASKBAR_RIGHT_UP;
-    case WXD_EVENT_TYPE_TASKBAR_RIGHT_DCLICK:
-        return wxEVT_TASKBAR_RIGHT_DCLICK;
-    case WXD_EVENT_TYPE_TASKBAR_BALLOON_TIMEOUT:
-        return wxEVT_TASKBAR_BALLOON_TIMEOUT;
-    case WXD_EVENT_TYPE_TASKBAR_BALLOON_CLICK:
-        return wxEVT_TASKBAR_BALLOON_CLICK;
 #endif
 
 // WebView event types - only available when webview feature is enabled
@@ -1547,76 +1589,11 @@ get_wx_event_type_for_c_enum(WXDEventTypeCEnum c_enum_val)
     case WXD_EVENT_TYPE_CONTEXT_MENU:
         return wxEVT_CONTEXT_MENU;
 
-    // Grid event types
-    case WXD_EVENT_TYPE_GRID_CELL_LEFT_CLICK:
-        return wxEVT_GRID_CELL_LEFT_CLICK;
-    case WXD_EVENT_TYPE_GRID_CELL_RIGHT_CLICK:
-        return wxEVT_GRID_CELL_RIGHT_CLICK;
-    case WXD_EVENT_TYPE_GRID_CELL_LEFT_DCLICK:
-        return wxEVT_GRID_CELL_LEFT_DCLICK;
-    case WXD_EVENT_TYPE_GRID_CELL_RIGHT_DCLICK:
-        return wxEVT_GRID_CELL_RIGHT_DCLICK;
-    case WXD_EVENT_TYPE_GRID_LABEL_LEFT_CLICK:
-        return wxEVT_GRID_LABEL_LEFT_CLICK;
-    case WXD_EVENT_TYPE_GRID_LABEL_RIGHT_CLICK:
-        return wxEVT_GRID_LABEL_RIGHT_CLICK;
-    case WXD_EVENT_TYPE_GRID_LABEL_LEFT_DCLICK:
-        return wxEVT_GRID_LABEL_LEFT_DCLICK;
-    case WXD_EVENT_TYPE_GRID_LABEL_RIGHT_DCLICK:
-        return wxEVT_GRID_LABEL_RIGHT_DCLICK;
-    case WXD_EVENT_TYPE_GRID_CELL_CHANGED:
-        return wxEVT_GRID_CELL_CHANGED;
-    case WXD_EVENT_TYPE_GRID_SELECT_CELL:
-        return wxEVT_GRID_SELECT_CELL;
-    case WXD_EVENT_TYPE_GRID_EDITOR_SHOWN:
-        return wxEVT_GRID_EDITOR_SHOWN;
-    case WXD_EVENT_TYPE_GRID_EDITOR_HIDDEN:
-        return wxEVT_GRID_EDITOR_HIDDEN;
-    case WXD_EVENT_TYPE_GRID_EDITOR_CREATED:
-        return wxEVT_GRID_EDITOR_CREATED;
-    case WXD_EVENT_TYPE_GRID_CELL_BEGIN_DRAG:
-        return wxEVT_GRID_CELL_BEGIN_DRAG;
-    case WXD_EVENT_TYPE_GRID_ROW_SIZE:
-        return wxEVT_GRID_ROW_SIZE;
-    case WXD_EVENT_TYPE_GRID_COL_SIZE:
-        return wxEVT_GRID_COL_SIZE;
-    case WXD_EVENT_TYPE_GRID_RANGE_SELECTED:
-        return wxEVT_GRID_RANGE_SELECTED;
-    case WXD_EVENT_TYPE_GRID_TABBING:
-        return wxEVT_GRID_TABBING;
-
-    // PropertyGrid event types
-    case WXD_EVENT_TYPE_PG_SELECTED:
-        return wxEVT_PG_SELECTED;
-    case WXD_EVENT_TYPE_PG_CHANGING:
-        return wxEVT_PG_CHANGING;
-    case WXD_EVENT_TYPE_PG_CHANGED:
-        return wxEVT_PG_CHANGED;
-    case WXD_EVENT_TYPE_PG_HIGHLIGHTED:
-        return wxEVT_PG_HIGHLIGHTED;
-    case WXD_EVENT_TYPE_PG_RIGHT_CLICK:
-        return wxEVT_PG_RIGHT_CLICK;
-    case WXD_EVENT_TYPE_PG_PAGE_CHANGED:
-        return wxEVT_PG_PAGE_CHANGED;
-    case WXD_EVENT_TYPE_PG_ITEM_COLLAPSED:
-        return wxEVT_PG_ITEM_COLLAPSED;
-    case WXD_EVENT_TYPE_PG_ITEM_EXPANDED:
-        return wxEVT_PG_ITEM_EXPANDED;
-    case WXD_EVENT_TYPE_PG_DOUBLE_CLICK:
-        return wxEVT_PG_DOUBLE_CLICK;
-    case WXD_EVENT_TYPE_PG_LABEL_EDIT_BEGIN:
-        return wxEVT_PG_LABEL_EDIT_BEGIN;
-    case WXD_EVENT_TYPE_PG_LABEL_EDIT_ENDING:
-        return wxEVT_PG_LABEL_EDIT_ENDING;
-    case WXD_EVENT_TYPE_PG_COL_BEGIN_DRAG:
-        return wxEVT_PG_COL_BEGIN_DRAG;
-    case WXD_EVENT_TYPE_PG_COL_DRAGGING:
-        return wxEVT_PG_COL_DRAGGING;
-    case WXD_EVENT_TYPE_PG_COL_END_DRAG:
-        return wxEVT_PG_COL_END_DRAG;
 
     default:
-        return wxEVT_NULL;
+        // Widget-specific event types are registered by the files
+        // implementing the widgets themselves, see the registry header.
+        return wxd_LookupRegisteredEventType(c_enum_val);
     }
 }
 

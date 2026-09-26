@@ -552,13 +552,9 @@ pub trait WxWidget: std::any::Any {
     }
 
     fn set_font(&self, font: &Font) {
-        // Create a new Font object owned by the widget to avoid ownership issues
-        let font_copy = font.to_owned();
         unsafe {
-            ffi::wxd_Window_SetFont(self.handle_ptr(), font_copy.as_ptr());
+            ffi::wxd_Window_SetFont(self.handle_ptr(), font.as_ptr());
         }
-        // Intentionally leak the font as the C++ side now owns it
-        std::mem::forget(font_copy);
     }
 
     /// Gets the font currently used for this widget.

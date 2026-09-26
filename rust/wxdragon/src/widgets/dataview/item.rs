@@ -28,8 +28,21 @@ impl Default for DataViewItem {
     }
 }
 
-impl From<*const ffi::wxd_DataViewItem_t> for DataViewItem {
-    fn from(raw: *const ffi::wxd_DataViewItem_t) -> Self {
+impl DataViewItem {
+    /// Creates an owning `DataViewItem` from a raw pointer, taking
+    /// responsibility for releasing it.
+    ///
+    /// # Safety
+    ///
+    /// `raw` must point to a `wxd_DataViewItem_t` that nothing else will
+    /// release, since [`DataViewItem`]'s `Drop` calls
+    /// `wxd_DataViewItem_Release` on it. In particular it must not be a pointer
+    /// borrowed from a live `DataViewItem` (via its [`Deref`](std::ops::Deref)
+    /// or [`AsRef`]) — both wrappers would then release the same item.
+    ///
+    /// To build an item from a model node identity instead, use
+    /// [`DataViewItem::from_id_ptr`], which allocates a fresh item.
+    pub unsafe fn from_raw(raw: *const ffi::wxd_DataViewItem_t) -> Self {
         Self { inner: raw }
     }
 }
@@ -42,6 +55,12 @@ impl AsRef<*const ffi::wxd_DataViewItem_t> for DataViewItem {
 
 impl std::ops::Deref for DataViewItem {
     type Target = *const ffi::wxd_DataViewItem_t;
+
+    /// Borrows the raw pointer so it can be handed to an FFI call.
+    ///
+    /// This does not transfer ownership: the pointer stays valid only while
+    /// this `DataViewItem` is alive, and feeding it back to
+    /// [`DataViewItem::from_raw`] would release the same item twice.
     fn deref(&self) -> &Self::Target {
         &self.inner
     }
@@ -64,8 +83,10 @@ impl DataViewItem {
 
     /// Create a DataViewItem from an arbitrary ID pointer.
     ///
-    /// This is the preferred generic constructor to avoid trait overlap issues
-    /// with `From<*const T>` while keeping a dedicated `From<*const wxd_DataViewItem_t>`.
+    /// This allocates a fresh `wxDataViewItem` naming `raw` as the model node,
+    /// so the returned item owns its own allocation and can safely coexist with
+    /// other items naming the same node. Custom models use this to hand their
+    /// node identities to the control.
     pub fn from_id_ptr<T>(raw: *const T) -> Self {
         let inner = unsafe { ffi::wxd_DataViewItem_CreateFromID(raw as *const std::ffi::c_void) };
         Self { inner }
@@ -85,3 +106,35 @@ impl Drop for DataViewItem {
 // a C++ FFI function to duplicate the wxDataViewItem if that's meaningful, or by using Rc/Arc if shared ownership
 // within Rust is desired, though that doesn't map directly to the C++ object lifecycle here).
 // For now, treating it as a unique owner is safest.
+
+#[cfg(test)]
+mod tests {
+    use super::DataViewItem;
+
+    #[test]
+    fn from_id_ptr_allocates_a_distinct_item_per_call() {
+        // Two items naming the same model node are independent allocations, so
+        // each one's Drop releases only its own. This is the safe way to build
+        // a second handle to a node; adopting a borrowed pointer is not.
+        let node = 0x1234_usize;
+        let a = DataViewItem::from_id_ptr(node as *const usize);
+        let b = DataViewItem::from_id_ptr(node as *const usize);
+
+        assert!(a.is_ok());
+        assert!(b.is_ok());
+        assert_eq!(a.get_id::<usize>(), b.get_id::<usize>(), "both should name the same node");
+        assert!(!std::ptr::eq(*a, *b), "but must be separate wxDataViewItem allocations");
+
+        drop(b);
+        // Releasing one must leave the other intact.
+        assert!(a.is_ok());
+        assert_eq!(a.get_id::<usize>(), Some(node as *const usize));
+    }
+
+    #[test]
+    fn a_default_item_is_not_ok_and_drops_cleanly() {
+        let empty = DataViewItem::default();
+        assert!(!empty.is_ok());
+        assert_eq!(empty.get_id::<u8>(), None);
+    }
+}

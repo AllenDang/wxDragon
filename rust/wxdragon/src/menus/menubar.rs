@@ -172,8 +172,8 @@ impl MenuBar {
             None
         } else {
             // The old menu is detached, so we own it now.
-            // Menu::from(*mut) sets owned=true.
-            Some(Menu::from(ptr))
+            // from_raw adopts it, so this wrapper destroys it.
+            Some(unsafe { Menu::from_raw(ptr) })
         }
     }
 }

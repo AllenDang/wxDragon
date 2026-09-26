@@ -168,6 +168,7 @@ set(WXDRAGON_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/editablelistbox.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/event.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/validator.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/event_type_registry.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/file_ctrl.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/file_dialog.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/filepickerctrl.cpp
