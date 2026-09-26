@@ -110,7 +110,7 @@ wxd_Notebook_SetImageList(wxd_Notebook_t* self, wxd_ImageList_t* imageList)
     wxNotebook* notebook = reinterpret_cast<wxNotebook*>(self);
     wxImageList* wx_imageList = reinterpret_cast<wxImageList*>(imageList);
     if (notebook) {
-        notebook->SetImageList(wx_imageList); // wxNotebook takes ownership
+        notebook->AssignImageList(wx_imageList); // wxNotebook takes ownership
     }
 }
 

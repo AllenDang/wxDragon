@@ -345,7 +345,7 @@ wxd_DataViewTreeCtrl_SetImageList(wxd_Window_t* self, wxd_ImageList_t* image_lis
     if (!ctrl)
         return;
     wxImageList* img_list = reinterpret_cast<wxImageList*>(image_list_ptr);
-    ctrl->SetImageList(img_list);
+    ctrl->AssignImageList(img_list);
 }
 
 WXD_EXPORTED wxd_ImageList_t*
