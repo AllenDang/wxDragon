@@ -1126,55 +1126,61 @@ extern "C" fn handler_callback_trampoline(
     out_len: *mut usize,
     out_mime: *mut *mut c_char,
 ) -> bool {
-    if userdata.is_null() || uri.is_null() {
-        return false;
-    }
-    let closure = unsafe { &*(userdata as *const HandlerClosure) };
-    let uri_str = unsafe { std::ffi::CStr::from_ptr(uri) }.to_string_lossy();
-
-    match closure(&uri_str) {
-        Some(response) => {
-            // Leak the bytes and MIME string to C++; freed via the free_data trampoline.
-            let mut data = response.data.into_boxed_slice();
-            let len = data.len();
-            let data_ptr = data.as_mut_ptr();
-            std::mem::forget(data);
-
-            let mime_ptr = match response.mime_type {
-                Some(m) => CString::new(m).map(|c| c.into_raw()).unwrap_or(std::ptr::null_mut()),
-                None => std::ptr::null_mut(),
-            };
-
-            unsafe {
-                *out_data = data_ptr;
-                *out_len = len;
-                *out_mime = mime_ptr;
-            }
-            true
+    crate::utils::guard_ffi_callback("handler_callback_trampoline", false, || {
+        if userdata.is_null() || uri.is_null() {
+            return false;
         }
-        None => false,
-    }
+        let closure = unsafe { &*(userdata as *const HandlerClosure) };
+        let uri_str = unsafe { std::ffi::CStr::from_ptr(uri) }.to_string_lossy();
+
+        match closure(&uri_str) {
+            Some(response) => {
+                // Leak the bytes and MIME string to C++; freed via the free_data trampoline.
+                let mut data = response.data.into_boxed_slice();
+                let len = data.len();
+                let data_ptr = data.as_mut_ptr();
+                std::mem::forget(data);
+
+                let mime_ptr = match response.mime_type {
+                    Some(m) => CString::new(m).map(|c| c.into_raw()).unwrap_or(std::ptr::null_mut()),
+                    None => std::ptr::null_mut(),
+                };
+
+                unsafe {
+                    *out_data = data_ptr;
+                    *out_len = len;
+                    *out_mime = mime_ptr;
+                }
+                true
+            }
+            None => false,
+        }
+    })
 }
 
 extern "C" fn handler_free_data_trampoline(data: *mut u8, len: usize, mime: *mut c_char) {
-    if !data.is_null() {
-        unsafe {
-            drop(Box::from_raw(std::ptr::slice_from_raw_parts_mut(data, len)));
+    crate::utils::guard_ffi_callback("handler_free_data_trampoline", (), || {
+        if !data.is_null() {
+            unsafe {
+                drop(Box::from_raw(std::ptr::slice_from_raw_parts_mut(data, len)));
+            }
         }
-    }
-    if !mime.is_null() {
-        unsafe {
-            drop(CString::from_raw(mime));
+        if !mime.is_null() {
+            unsafe {
+                drop(CString::from_raw(mime));
+            }
         }
-    }
+    })
 }
 
 extern "C" fn handler_drop_userdata_trampoline(userdata: *mut std::os::raw::c_void) {
-    if !userdata.is_null() {
-        unsafe {
-            drop(Box::from_raw(userdata as *mut HandlerClosure));
+    crate::utils::guard_ffi_callback("handler_drop_userdata_trampoline", (), || {
+        if !userdata.is_null() {
+            unsafe {
+                drop(Box::from_raw(userdata as *mut HandlerClosure));
+            }
         }
-    }
+    })
 }
 
 // Implement WebViewEvents trait for WebView

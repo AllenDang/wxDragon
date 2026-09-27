@@ -320,17 +320,19 @@ extern "C" fn text_on_enter_trampoline(
     def_result: ffi::wxd_DragResult,
     data_ptr: *mut c_void,
 ) -> ffi::wxd_DragResult {
-    if data_ptr.is_null() {
-        return def_result;
-    }
+    crate::utils::guard_ffi_callback("text_on_enter_trampoline", ffi::wxd_DragResult_WXD_DRAG_NONE, || {
+        if data_ptr.is_null() {
+            return def_result;
+        }
 
-    let callbacks = unsafe { &mut *(data_ptr as *mut TextDropTargetCallbacks) };
+        let callbacks = unsafe { &mut *(data_ptr as *mut TextDropTargetCallbacks) };
 
-    if let Some(ref mut callback) = callbacks.on_enter {
-        callback(x, y, DragResult::from(def_result)).into()
-    } else {
-        def_result
-    }
+        if let Some(ref mut callback) = callbacks.on_enter {
+            callback(x, y, DragResult::from(def_result)).into()
+        } else {
+            def_result
+        }
+    })
 }
 
 extern "C" fn text_on_drag_over_trampoline(
@@ -339,43 +341,49 @@ extern "C" fn text_on_drag_over_trampoline(
     def_result: ffi::wxd_DragResult,
     data_ptr: *mut c_void,
 ) -> ffi::wxd_DragResult {
-    if data_ptr.is_null() {
-        return def_result;
-    }
+    crate::utils::guard_ffi_callback("text_on_drag_over_trampoline", ffi::wxd_DragResult_WXD_DRAG_NONE, || {
+        if data_ptr.is_null() {
+            return def_result;
+        }
 
-    let callbacks = unsafe { &mut *(data_ptr as *mut TextDropTargetCallbacks) };
+        let callbacks = unsafe { &mut *(data_ptr as *mut TextDropTargetCallbacks) };
 
-    if let Some(ref mut callback) = callbacks.on_drag_over {
-        callback(x, y, DragResult::from(def_result)).into()
-    } else {
-        def_result
-    }
+        if let Some(ref mut callback) = callbacks.on_drag_over {
+            callback(x, y, DragResult::from(def_result)).into()
+        } else {
+            def_result
+        }
+    })
 }
 
 extern "C" fn text_on_leave_trampoline(data_ptr: *mut c_void) {
-    if data_ptr.is_null() {
-        return;
-    }
+    crate::utils::guard_ffi_callback("text_on_leave_trampoline", (), || {
+        if data_ptr.is_null() {
+            return;
+        }
 
-    let callbacks = unsafe { &mut *(data_ptr as *mut TextDropTargetCallbacks) };
+        let callbacks = unsafe { &mut *(data_ptr as *mut TextDropTargetCallbacks) };
 
-    if let Some(ref mut callback) = callbacks.on_leave {
-        callback();
-    }
+        if let Some(ref mut callback) = callbacks.on_leave {
+            callback();
+        }
+    })
 }
 
 extern "C" fn text_on_drop_trampoline(x: i32, y: i32, data_ptr: *mut c_void) -> bool {
-    if data_ptr.is_null() {
-        return false;
-    }
+    crate::utils::guard_ffi_callback("text_on_drop_trampoline", false, || {
+        if data_ptr.is_null() {
+            return false;
+        }
 
-    let callbacks = unsafe { &mut *(data_ptr as *mut TextDropTargetCallbacks) };
+        let callbacks = unsafe { &mut *(data_ptr as *mut TextDropTargetCallbacks) };
 
-    if let Some(ref mut callback) = callbacks.on_drop {
-        callback(x, y)
-    } else {
-        true // Default to accepting the drop
-    }
+        if let Some(ref mut callback) = callbacks.on_drop {
+            callback(x, y)
+        } else {
+            true // Default to accepting the drop
+        }
+    })
 }
 
 extern "C" fn text_on_data_trampoline(
@@ -384,28 +392,32 @@ extern "C" fn text_on_data_trampoline(
     def_result: ffi::wxd_DragResult,
     data_ptr: *mut c_void,
 ) -> ffi::wxd_DragResult {
-    if data_ptr.is_null() {
-        return def_result;
-    }
+    crate::utils::guard_ffi_callback("text_on_data_trampoline", ffi::wxd_DragResult_WXD_DRAG_NONE, || {
+        if data_ptr.is_null() {
+            return def_result;
+        }
 
-    let callbacks = unsafe { &mut *(data_ptr as *mut TextDropTargetCallbacks) };
+        let callbacks = unsafe { &mut *(data_ptr as *mut TextDropTargetCallbacks) };
 
-    if let Some(ref mut callback) = callbacks.on_data {
-        callback(x, y, DragResult::from(def_result)).into()
-    } else {
-        def_result
-    }
+        if let Some(ref mut callback) = callbacks.on_data {
+            callback(x, y, DragResult::from(def_result)).into()
+        } else {
+            def_result
+        }
+    })
 }
 
 extern "C" fn text_on_drop_text_trampoline(text: *const c_char, x: i32, y: i32, data_ptr: *mut c_void) -> bool {
-    if text.is_null() || data_ptr.is_null() {
-        return false;
-    }
+    crate::utils::guard_ffi_callback("text_on_drop_text_trampoline", false, || {
+        if text.is_null() || data_ptr.is_null() {
+            return false;
+        }
 
-    let text_str = unsafe { CStr::from_ptr(text).to_string_lossy().into_owned() };
-    let callbacks = unsafe { &mut *(data_ptr as *mut TextDropTargetCallbacks) };
+        let text_str = unsafe { CStr::from_ptr(text).to_string_lossy().into_owned() };
+        let callbacks = unsafe { &mut *(data_ptr as *mut TextDropTargetCallbacks) };
 
-    (callbacks.on_drop_text)(&text_str, x, y)
+        (callbacks.on_drop_text)(&text_str, x, y)
+    })
 }
 
 // --- Callback trampolines for FileDropTarget ---
@@ -416,17 +428,19 @@ extern "C" fn file_on_enter_trampoline(
     def_result: ffi::wxd_DragResult,
     data_ptr: *mut c_void,
 ) -> ffi::wxd_DragResult {
-    if data_ptr.is_null() {
-        return def_result;
-    }
+    crate::utils::guard_ffi_callback("file_on_enter_trampoline", ffi::wxd_DragResult_WXD_DRAG_NONE, || {
+        if data_ptr.is_null() {
+            return def_result;
+        }
 
-    let callbacks = unsafe { &mut *(data_ptr as *mut FileDropTargetCallbacks) };
+        let callbacks = unsafe { &mut *(data_ptr as *mut FileDropTargetCallbacks) };
 
-    if let Some(ref mut callback) = callbacks.on_enter {
-        callback(x, y, DragResult::from(def_result)).into()
-    } else {
-        def_result
-    }
+        if let Some(ref mut callback) = callbacks.on_enter {
+            callback(x, y, DragResult::from(def_result)).into()
+        } else {
+            def_result
+        }
+    })
 }
 
 extern "C" fn file_on_drag_over_trampoline(
@@ -435,43 +449,49 @@ extern "C" fn file_on_drag_over_trampoline(
     def_result: ffi::wxd_DragResult,
     data_ptr: *mut c_void,
 ) -> ffi::wxd_DragResult {
-    if data_ptr.is_null() {
-        return def_result;
-    }
+    crate::utils::guard_ffi_callback("file_on_drag_over_trampoline", ffi::wxd_DragResult_WXD_DRAG_NONE, || {
+        if data_ptr.is_null() {
+            return def_result;
+        }
 
-    let callbacks = unsafe { &mut *(data_ptr as *mut FileDropTargetCallbacks) };
+        let callbacks = unsafe { &mut *(data_ptr as *mut FileDropTargetCallbacks) };
 
-    if let Some(ref mut callback) = callbacks.on_drag_over {
-        callback(x, y, DragResult::from(def_result)).into()
-    } else {
-        def_result
-    }
+        if let Some(ref mut callback) = callbacks.on_drag_over {
+            callback(x, y, DragResult::from(def_result)).into()
+        } else {
+            def_result
+        }
+    })
 }
 
 extern "C" fn file_on_leave_trampoline(data_ptr: *mut c_void) {
-    if data_ptr.is_null() {
-        return;
-    }
+    crate::utils::guard_ffi_callback("file_on_leave_trampoline", (), || {
+        if data_ptr.is_null() {
+            return;
+        }
 
-    let callbacks = unsafe { &mut *(data_ptr as *mut FileDropTargetCallbacks) };
+        let callbacks = unsafe { &mut *(data_ptr as *mut FileDropTargetCallbacks) };
 
-    if let Some(ref mut callback) = callbacks.on_leave {
-        callback();
-    }
+        if let Some(ref mut callback) = callbacks.on_leave {
+            callback();
+        }
+    })
 }
 
 extern "C" fn file_on_drop_trampoline(x: i32, y: i32, data_ptr: *mut c_void) -> bool {
-    if data_ptr.is_null() {
-        return false;
-    }
+    crate::utils::guard_ffi_callback("file_on_drop_trampoline", false, || {
+        if data_ptr.is_null() {
+            return false;
+        }
 
-    let callbacks = unsafe { &mut *(data_ptr as *mut FileDropTargetCallbacks) };
+        let callbacks = unsafe { &mut *(data_ptr as *mut FileDropTargetCallbacks) };
 
-    if let Some(ref mut callback) = callbacks.on_drop {
-        callback(x, y)
-    } else {
-        true // Default to accepting the drop
-    }
+        if let Some(ref mut callback) = callbacks.on_drop {
+            callback(x, y)
+        } else {
+            true // Default to accepting the drop
+        }
+    })
 }
 
 extern "C" fn file_on_data_trampoline(
@@ -480,17 +500,19 @@ extern "C" fn file_on_data_trampoline(
     def_result: ffi::wxd_DragResult,
     data_ptr: *mut c_void,
 ) -> ffi::wxd_DragResult {
-    if data_ptr.is_null() {
-        return def_result;
-    }
+    crate::utils::guard_ffi_callback("file_on_data_trampoline", ffi::wxd_DragResult_WXD_DRAG_NONE, || {
+        if data_ptr.is_null() {
+            return def_result;
+        }
 
-    let callbacks = unsafe { &mut *(data_ptr as *mut FileDropTargetCallbacks) };
+        let callbacks = unsafe { &mut *(data_ptr as *mut FileDropTargetCallbacks) };
 
-    if let Some(ref mut callback) = callbacks.on_data {
-        callback(x, y, DragResult::from(def_result)).into()
-    } else {
-        def_result
-    }
+        if let Some(ref mut callback) = callbacks.on_data {
+            callback(x, y, DragResult::from(def_result)).into()
+        } else {
+            def_result
+        }
+    })
 }
 
 extern "C" fn file_on_drop_files_trampoline(
@@ -499,45 +521,51 @@ extern "C" fn file_on_drop_files_trampoline(
     y: i32,
     data_ptr: *mut c_void,
 ) -> bool {
-    if filenames_ptr.is_null() || data_ptr.is_null() {
-        return false;
-    }
-
-    // Extract filenames from wxArrayString
-    let mut filenames = Vec::<String>::new();
-
-    let count = unsafe { ffi::wxd_ArrayString_GetCount(filenames_ptr) };
-    filenames.reserve(count as usize);
-
-    for i in 0..count {
-        let len = unsafe { ffi::wxd_ArrayString_GetString(filenames_ptr, i, std::ptr::null_mut(), 0) };
-        if len <= 0 {
-            continue;
+    crate::utils::guard_ffi_callback("file_on_drop_files_trampoline", false, || {
+        if filenames_ptr.is_null() || data_ptr.is_null() {
+            return false;
         }
 
-        let mut buffer = vec![0; len as usize + 1];
-        unsafe { ffi::wxd_ArrayString_GetString(filenames_ptr, i, buffer.as_mut_ptr(), buffer.len()) };
-        let s = unsafe { CStr::from_ptr(buffer.as_ptr()).to_string_lossy().to_string() };
-        filenames.push(s);
-    }
+        // Extract filenames from wxArrayString
+        let mut filenames = Vec::<String>::new();
 
-    let callbacks = unsafe { &mut *(data_ptr as *mut FileDropTargetCallbacks) };
+        let count = unsafe { ffi::wxd_ArrayString_GetCount(filenames_ptr) };
+        filenames.reserve(count as usize);
 
-    (callbacks.on_drop_files)(filenames, x, y)
+        for i in 0..count {
+            let len = unsafe { ffi::wxd_ArrayString_GetString(filenames_ptr, i, std::ptr::null_mut(), 0) };
+            if len <= 0 {
+                continue;
+            }
+
+            let mut buffer = vec![0; len as usize + 1];
+            unsafe { ffi::wxd_ArrayString_GetString(filenames_ptr, i, buffer.as_mut_ptr(), buffer.len()) };
+            let s = unsafe { CStr::from_ptr(buffer.as_ptr()).to_string_lossy().to_string() };
+            filenames.push(s);
+        }
+
+        let callbacks = unsafe { &mut *(data_ptr as *mut FileDropTargetCallbacks) };
+
+        (callbacks.on_drop_files)(filenames, x, y)
+    })
 }
 
 // --- Rust-side cleanup functions for boxed user data ---
 
 extern "C" fn free_text_drop_target_userdata(ptr: *mut c_void) {
-    if ptr.is_null() {
-        return;
-    }
-    let _ = unsafe { Box::from_raw(ptr as *mut TextDropTargetCallbacks) };
+    crate::utils::guard_ffi_callback("free_text_drop_target_userdata", (), || {
+        if ptr.is_null() {
+            return;
+        }
+        let _ = unsafe { Box::from_raw(ptr as *mut TextDropTargetCallbacks) };
+    })
 }
 
 extern "C" fn free_file_drop_target_userdata(ptr: *mut c_void) {
-    if ptr.is_null() {
-        return;
-    }
-    let _ = unsafe { Box::from_raw(ptr as *mut FileDropTargetCallbacks) };
+    crate::utils::guard_ffi_callback("free_file_drop_target_userdata", (), || {
+        if ptr.is_null() {
+            return;
+        }
+        let _ = unsafe { Box::from_raw(ptr as *mut FileDropTargetCallbacks) };
+    })
 }

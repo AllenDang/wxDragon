@@ -1010,11 +1010,13 @@ pub unsafe extern "C" fn rust_event_handler_trampoline(user_data: *mut c_void, e
 /// - This function must only be called once per pointer
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn drop_rust_event_closure_box(ptr: *mut c_void) {
-    if !ptr.is_null() {
-        // Drop the Box<dyn FnMut(Event)>
-        log::trace!("Dropping Rust event closure box at ptr: {ptr:?}");
-        let _ = unsafe { Box::from_raw(ptr as *mut Box<dyn FnMut(Event) + 'static>) };
-    }
+    crate::utils::guard_ffi_callback("drop_rust_event_closure_box", (), || {
+        if !ptr.is_null() {
+            // Drop the Box<dyn FnMut(Event)>
+            log::trace!("Dropping Rust event closure box at ptr: {ptr:?}");
+            let _ = unsafe { Box::from_raw(ptr as *mut Box<dyn FnMut(Event) + 'static>) };
+        }
+    })
 }
 
 #[cfg(test)]

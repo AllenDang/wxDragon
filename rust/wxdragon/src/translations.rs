@@ -455,44 +455,50 @@ unsafe extern "C" fn loader_load_catalog(
     sink: *mut c_void,
     emit: Option<unsafe extern "C" fn(*mut c_void, *const u8, usize)>,
 ) -> bool {
-    if user_data.is_null() || domain.is_null() || lang.is_null() {
-        return false;
-    }
-    let Some(emit) = emit else { return false };
-    unsafe {
-        let loader = &**(user_data as *mut Box<dyn TranslationsLoader>);
-        let domain = CStr::from_ptr(domain).to_string_lossy();
-        let lang = CStr::from_ptr(lang).to_string_lossy();
-        match loader.load_catalog(&domain, &lang) {
-            Some(bytes) => {
-                // `bytes` alive across the call; C++ consumes them inside `emit`
-                // (see the wxd_TranslationsCatalogSink contract).
-                emit(sink, bytes.as_ptr(), bytes.len());
-                true
-            }
-            None => false,
+    crate::utils::guard_ffi_callback("loader_load_catalog", false, || {
+        if user_data.is_null() || domain.is_null() || lang.is_null() {
+            return false;
         }
-    }
+        let Some(emit) = emit else { return false };
+        unsafe {
+            let loader = &**(user_data as *mut Box<dyn TranslationsLoader>);
+            let domain = CStr::from_ptr(domain).to_string_lossy();
+            let lang = CStr::from_ptr(lang).to_string_lossy();
+            match loader.load_catalog(&domain, &lang) {
+                Some(bytes) => {
+                    // `bytes` alive across the call; C++ consumes them inside `emit`
+                    // (see the wxd_TranslationsCatalogSink contract).
+                    emit(sink, bytes.as_ptr(), bytes.len());
+                    true
+                }
+                None => false,
+            }
+        }
+    })
 }
 
 unsafe extern "C" fn loader_available(user_data: *mut c_void, domain: *const c_char, out: *mut ffi::wxd_ArrayString_t) {
-    if user_data.is_null() || domain.is_null() || out.is_null() {
-        return;
-    }
-    unsafe {
-        let loader = &**(user_data as *mut Box<dyn TranslationsLoader>);
-        let domain = CStr::from_ptr(domain).to_string_lossy();
-        // Borrow (non-owning) the C++-owned array and reuse the shared wrapper's
-        // CString + Add loop instead of hand-rolling it.
-        ArrayString::from(out as *const ffi::wxd_ArrayString_t).add_many(&loader.available_translations(&domain));
-    }
+    crate::utils::guard_ffi_callback("loader_available", (), || {
+        if user_data.is_null() || domain.is_null() || out.is_null() {
+            return;
+        }
+        unsafe {
+            let loader = &**(user_data as *mut Box<dyn TranslationsLoader>);
+            let domain = CStr::from_ptr(domain).to_string_lossy();
+            // Borrow (non-owning) the C++-owned array and reuse the shared wrapper's
+            // CString + Add loop instead of hand-rolling it.
+            ArrayString::from(out as *const ffi::wxd_ArrayString_t).add_many(&loader.available_translations(&domain));
+        }
+    })
 }
 
 unsafe extern "C" fn loader_destroy(user_data: *mut c_void) {
-    if user_data.is_null() {
-        return;
-    }
-    drop(unsafe { Box::from_raw(user_data as *mut Box<dyn TranslationsLoader>) });
+    crate::utils::guard_ffi_callback("loader_destroy", (), || {
+        if user_data.is_null() {
+            return;
+        }
+        drop(unsafe { Box::from_raw(user_data as *mut Box<dyn TranslationsLoader>) });
+    })
 }
 
 static LOADER_VTABLE: ffi::wxd_RustTranslationsLoader_vtable = ffi::wxd_RustTranslationsLoader_vtable {

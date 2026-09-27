@@ -691,27 +691,33 @@ impl CustomDataViewTreeModel {
 
 // Extern "C" trampolines and helpers used by the FFI callbacks
 extern "C" fn trampoline_free_children(items: *mut *mut std::ffi::c_void, count: i32) {
-    unsafe { tree_helpers::free_children_array(items, count) };
+    crate::utils::guard_ffi_callback("trampoline_free_children", (), || {
+        unsafe { tree_helpers::free_children_array(items, count) };
+    })
 }
 
 extern "C" fn trampoline_get_parent(userdata: *mut std::ffi::c_void, item: *mut std::ffi::c_void) -> *mut std::ffi::c_void {
-    if userdata.is_null() {
-        return std::ptr::null_mut();
-    }
-    let cb = unsafe { &*(userdata as *mut OwnedTreeCallbacks) };
-    let u = cb.userdata.borrow();
-    let any_ref: &dyn Any = &**u;
-    (cb.get_parent)(any_ref, item)
+    crate::utils::guard_ffi_callback("trampoline_get_parent", std::ptr::null_mut(), || {
+        if userdata.is_null() {
+            return std::ptr::null_mut();
+        }
+        let cb = unsafe { &*(userdata as *mut OwnedTreeCallbacks) };
+        let u = cb.userdata.borrow();
+        let any_ref: &dyn Any = &**u;
+        (cb.get_parent)(any_ref, item)
+    })
 }
 
 extern "C" fn trampoline_is_container(userdata: *mut std::ffi::c_void, item: *mut std::ffi::c_void) -> bool {
-    if userdata.is_null() {
-        return false;
-    }
-    let cb = unsafe { &*(userdata as *mut OwnedTreeCallbacks) };
-    let u = cb.userdata.borrow();
-    let any_ref: &dyn Any = &**u;
-    (cb.is_container)(any_ref, item)
+    crate::utils::guard_ffi_callback("trampoline_is_container", false, || {
+        if userdata.is_null() {
+            return false;
+        }
+        let cb = unsafe { &*(userdata as *mut OwnedTreeCallbacks) };
+        let u = cb.userdata.borrow();
+        let any_ref: &dyn Any = &**u;
+        (cb.is_container)(any_ref, item)
+    })
 }
 
 extern "C" fn trampoline_get_children(
@@ -720,24 +726,26 @@ extern "C" fn trampoline_get_children(
     out_items: *mut *mut *mut std::ffi::c_void,
     out_count: *mut i32,
 ) {
-    if userdata.is_null() {
-        unsafe { *out_items = std::ptr::null_mut() };
-        unsafe { *out_count = 0 };
-        return;
-    }
-    let cb = unsafe { &*(userdata as *mut OwnedTreeCallbacks) };
-    let u = cb.userdata.borrow();
-    let any_ref: &dyn Any = &**u;
-    let vec = (cb.get_children)(any_ref, item);
-    let (ptr, cnt) = tree_helpers::leak_children_vec(vec);
-    // SAFETY: `ptr` is a pointer to a heap-allocated array of `*mut c_void`
-    // produced by `leak_children_vec`. The FFI contract expects a
-    // `*mut *mut c_void` output parameter; assign `ptr` directly. We keep the
-    // cast explicit to highlight that `ptr` is owned by Rust until the C++
-    // side calls the corresponding free function which will call
-    // `trampoline_free_children` to reclaim it.
-    unsafe { *out_items = ptr };
-    unsafe { *out_count = cnt };
+    crate::utils::guard_ffi_callback("trampoline_get_children", (), || {
+        if userdata.is_null() {
+            unsafe { *out_items = std::ptr::null_mut() };
+            unsafe { *out_count = 0 };
+            return;
+        }
+        let cb = unsafe { &*(userdata as *mut OwnedTreeCallbacks) };
+        let u = cb.userdata.borrow();
+        let any_ref: &dyn Any = &**u;
+        let vec = (cb.get_children)(any_ref, item);
+        let (ptr, cnt) = tree_helpers::leak_children_vec(vec);
+        // SAFETY: `ptr` is a pointer to a heap-allocated array of `*mut c_void`
+        // produced by `leak_children_vec`. The FFI contract expects a
+        // `*mut *mut c_void` output parameter; assign `ptr` directly. We keep the
+        // cast explicit to highlight that `ptr` is owned by Rust until the C++
+        // side calls the corresponding free function which will call
+        // `trampoline_free_children` to reclaim it.
+        unsafe { *out_items = ptr };
+        unsafe { *out_count = cnt };
+    })
 }
 
 extern "C" fn trampoline_get_value(
@@ -745,18 +753,20 @@ extern "C" fn trampoline_get_value(
     item: *mut std::ffi::c_void,
     col: u32,
 ) -> *mut ffi::wxd_Variant_t {
-    if userdata.is_null() {
-        return std::ptr::null_mut();
-    }
-    let cb = unsafe { &*(userdata as *mut OwnedTreeCallbacks) };
-    let u = cb.userdata.borrow();
-    let any_ref: &dyn Any = &**u;
-    let val = (cb.get_value)(any_ref, item, col);
-    // Transfer ownership to C++ side, which will destroy it when done.
-    match val.try_into() {
-        Ok(raw_ptr) => raw_ptr,
-        Err(_) => std::ptr::null_mut(),
-    }
+    crate::utils::guard_ffi_callback("trampoline_get_value", std::ptr::null_mut(), || {
+        if userdata.is_null() {
+            return std::ptr::null_mut();
+        }
+        let cb = unsafe { &*(userdata as *mut OwnedTreeCallbacks) };
+        let u = cb.userdata.borrow();
+        let any_ref: &dyn Any = &**u;
+        let val = (cb.get_value)(any_ref, item, col);
+        // Transfer ownership to C++ side, which will destroy it when done.
+        match val.try_into() {
+            Ok(raw_ptr) => raw_ptr,
+            Err(_) => std::ptr::null_mut(),
+        }
+    })
 }
 
 extern "C" fn trampoline_set_value(
@@ -765,32 +775,36 @@ extern "C" fn trampoline_set_value(
     col: u32,
     variant: *const ffi::wxd_Variant_t,
 ) -> bool {
-    if userdata.is_null() || variant.is_null() {
-        return false;
-    }
-    let cb = unsafe { &*(userdata as *mut OwnedTreeCallbacks) };
-    if let Some(f) = &cb.set_value {
-        let v = Variant::from(variant); // Here we just wrap the raw pointer, no ownership transfer
-        let u = cb.userdata.borrow();
-        let any_ref: &dyn Any = &**u;
-        f(any_ref, item, col, &v)
-    } else {
-        false
-    }
+    crate::utils::guard_ffi_callback("trampoline_set_value", false, || {
+        if userdata.is_null() || variant.is_null() {
+            return false;
+        }
+        let cb = unsafe { &*(userdata as *mut OwnedTreeCallbacks) };
+        if let Some(f) = &cb.set_value {
+            let v = Variant::from(variant); // Here we just wrap the raw pointer, no ownership transfer
+            let u = cb.userdata.borrow();
+            let any_ref: &dyn Any = &**u;
+            f(any_ref, item, col, &v)
+        } else {
+            false
+        }
+    })
 }
 
 extern "C" fn trampoline_is_enabled(userdata: *mut std::ffi::c_void, item: *mut std::ffi::c_void, col: u32) -> bool {
-    if userdata.is_null() {
-        return true;
-    }
-    let cb = unsafe { &*(userdata as *mut OwnedTreeCallbacks) };
-    if let Some(f) = &cb.is_enabled {
-        let u = cb.userdata.borrow();
-        let any_ref: &dyn Any = &**u;
-        f(any_ref, item, col)
-    } else {
-        true
-    }
+    crate::utils::guard_ffi_callback("trampoline_is_enabled", false, || {
+        if userdata.is_null() {
+            return true;
+        }
+        let cb = unsafe { &*(userdata as *mut OwnedTreeCallbacks) };
+        if let Some(f) = &cb.is_enabled {
+            let u = cb.userdata.borrow();
+            let any_ref: &dyn Any = &**u;
+            f(any_ref, item, col)
+        } else {
+            true
+        }
+    })
 }
 
 extern "C" fn trampoline_compare(
@@ -800,26 +814,30 @@ extern "C" fn trampoline_compare(
     col: u32,
     asc: bool,
 ) -> i32 {
-    if userdata.is_null() {
-        return 0;
-    }
-    let cb = unsafe { &*(userdata as *mut OwnedTreeCallbacks) };
-    if let Some(f) = &cb.compare {
-        let u = cb.userdata.borrow();
-        let any_ref: &dyn Any = &**u;
-        f(any_ref, a, b, col, asc)
-    } else {
-        0
-    }
+    crate::utils::guard_ffi_callback("trampoline_compare", 0, || {
+        if userdata.is_null() {
+            return 0;
+        }
+        let cb = unsafe { &*(userdata as *mut OwnedTreeCallbacks) };
+        if let Some(f) = &cb.compare {
+            let u = cb.userdata.borrow();
+            let any_ref: &dyn Any = &**u;
+            f(any_ref, a, b, col, asc)
+        } else {
+            0
+        }
+    })
 }
 
 extern "C" fn free_owned_tree_callbacks(ptr: *mut std::ffi::c_void) {
-    if ptr.is_null() {
-        return;
-    }
+    crate::utils::guard_ffi_callback("free_owned_tree_callbacks", (), || {
+        if ptr.is_null() {
+            return;
+        }
 
-    // Recreate the Box<OwnedTreeCallbacks> and drop it to run destructors
-    let _ = unsafe { Box::from_raw(ptr as *mut OwnedTreeCallbacks) };
+        // Recreate the Box<OwnedTreeCallbacks> and drop it to run destructors
+        let _ = unsafe { Box::from_raw(ptr as *mut OwnedTreeCallbacks) };
+    })
 }
 
 impl DataViewModel for CustomDataViewTreeModel {
@@ -831,15 +849,17 @@ impl DataViewModel for CustomDataViewTreeModel {
 #[unsafe(no_mangle)]
 #[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub extern "C" fn wxd_Drop_Rust_DataViewTreeModelCallbacks(cb_ptr: *mut ffi::wxd_DataViewTreeModel_Callbacks) {
-    if cb_ptr.is_null() {
-        return;
-    }
+    crate::utils::guard_ffi_callback("wxd_Drop_Rust_DataViewTreeModelCallbacks", (), || {
+        if cb_ptr.is_null() {
+            return;
+        }
 
-    let cb_box = unsafe { Box::from_raw(cb_ptr) };
-    if let Some(free_fn) = cb_box.userdata_free {
-        unsafe { free_fn(cb_box.userdata) };
-    }
-    drop(cb_box);
+        let cb_box = unsafe { Box::from_raw(cb_ptr) };
+        if let Some(free_fn) = cb_box.userdata_free {
+            unsafe { free_fn(cb_box.userdata) };
+        }
+        drop(cb_box);
+    })
 }
 
 /// A customizable virtual list model that uses callbacks to provide data.
@@ -1025,19 +1045,21 @@ impl_refcounted_object!(
 
 // Create C++ callbacks
 unsafe extern "C" fn get_value_callback(userdata: *mut ::std::os::raw::c_void, row: u64, col: u64) -> *mut ffi::wxd_Variant_t {
-    if userdata.is_null() {
-        // Return an owned empty string variant to satisfy the API, C++ will destroy it.
-        let v = Variant::from_string("");
-        return v.try_into().unwrap();
-    }
+    crate::utils::guard_ffi_callback("get_value_callback", std::ptr::null_mut(), || {
+        if userdata.is_null() {
+            // Return an owned empty string variant to satisfy the API, C++ will destroy it.
+            let v = Variant::from_string("");
+            return v.try_into().unwrap();
+        }
 
-    let callbacks = unsafe { &*(userdata as *const CustomModelCallbacks) };
-    let value = (callbacks.get_value)(&*callbacks.userdata, row as usize, col as usize);
-    // Transfer ownership to C++ side.
-    match value.try_into() {
-        Ok(raw_ptr) => raw_ptr,
-        Err(_) => std::ptr::null_mut(),
-    }
+        let callbacks = unsafe { &*(userdata as *const CustomModelCallbacks) };
+        let value = (callbacks.get_value)(&*callbacks.userdata, row as usize, col as usize);
+        // Transfer ownership to C++ side.
+        match value.try_into() {
+            Ok(raw_ptr) => raw_ptr,
+            Err(_) => std::ptr::null_mut(),
+        }
+    })
 }
 
 unsafe extern "C" fn set_value_callback(
@@ -1046,13 +1068,15 @@ unsafe extern "C" fn set_value_callback(
     row: u64,
     col: u64,
 ) -> bool {
-    let callbacks = unsafe { &*(userdata as *const CustomModelCallbacks) };
-    if let Some(set_value) = &callbacks.set_value {
-        let value = Variant::from(variant); // Here we just wrap the raw pointer, no ownership transfer
-        (set_value)(&*callbacks.userdata, row as usize, col as usize, &value)
-    } else {
-        false
-    }
+    crate::utils::guard_ffi_callback("set_value_callback", false, || {
+        let callbacks = unsafe { &*(userdata as *const CustomModelCallbacks) };
+        if let Some(set_value) = &callbacks.set_value {
+            let value = Variant::from(variant); // Here we just wrap the raw pointer, no ownership transfer
+            (set_value)(&*callbacks.userdata, row as usize, col as usize, &value)
+        } else {
+            false
+        }
+    })
 }
 
 unsafe extern "C" fn get_attr_callback(
@@ -1061,27 +1085,31 @@ unsafe extern "C" fn get_attr_callback(
     col: u64,
     attr: *mut ffi::wxd_DataViewItemAttr_t,
 ) -> bool {
-    let callbacks = unsafe { &*(userdata as *const CustomModelCallbacks) };
-    if let Some(get_attr) = &callbacks.get_attr {
-        if let Some(attrs) = (get_attr)(&*callbacks.userdata, row as usize, col as usize) {
-            // Copy the attributes to the provided struct
-            unsafe { *attr = attrs.to_raw() };
-            true
+    crate::utils::guard_ffi_callback("get_attr_callback", false, || {
+        let callbacks = unsafe { &*(userdata as *const CustomModelCallbacks) };
+        if let Some(get_attr) = &callbacks.get_attr {
+            if let Some(attrs) = (get_attr)(&*callbacks.userdata, row as usize, col as usize) {
+                // Copy the attributes to the provided struct
+                unsafe { *attr = attrs.to_raw() };
+                true
+            } else {
+                false
+            }
         } else {
             false
         }
-    } else {
-        false
-    }
+    })
 }
 
 unsafe extern "C" fn is_enabled_callback(userdata: *mut ::std::os::raw::c_void, row: u64, col: u64) -> bool {
-    let callbacks = unsafe { &*(userdata as *const CustomModelCallbacks) };
-    if let Some(is_enabled) = &callbacks.is_enabled {
-        (is_enabled)(&*callbacks.userdata, row as usize, col as usize)
-    } else {
-        true
-    }
+    crate::utils::guard_ffi_callback("is_enabled_callback", false, || {
+        let callbacks = unsafe { &*(userdata as *const CustomModelCallbacks) };
+        if let Some(is_enabled) = &callbacks.is_enabled {
+            (is_enabled)(&*callbacks.userdata, row as usize, col as usize)
+        } else {
+            true
+        }
+    })
 }
 
 /// Function called by C++ to properly drop CustomModelCallbacks that were allocated with Box::into_raw().
@@ -1093,12 +1121,14 @@ unsafe extern "C" fn is_enabled_callback(userdata: *mut ::std::os::raw::c_void, 
 #[unsafe(no_mangle)]
 #[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub extern "C" fn wxd_Drop_Rust_CustomModelCallbacks(ptr: *mut c_void) {
-    if !ptr.is_null() {
-        // Reconstitute the Box and let it drop, properly freeing the memory
-        // and running any destructors for the contained data
-        unsafe {
-            let _callback_box = Box::from_raw(ptr as *mut CustomModelCallbacks);
-            // Drop happens automatically when `_callback_box` goes out of scope here.
+    crate::utils::guard_ffi_callback("wxd_Drop_Rust_CustomModelCallbacks", (), || {
+        if !ptr.is_null() {
+            // Reconstitute the Box and let it drop, properly freeing the memory
+            // and running any destructors for the contained data
+            unsafe {
+                let _callback_box = Box::from_raw(ptr as *mut CustomModelCallbacks);
+                // Drop happens automatically when `_callback_box` goes out of scope here.
+            }
         }
-    }
+    })
 }

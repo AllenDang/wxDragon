@@ -142,24 +142,26 @@ unsafe extern "C" fn on_execute_trampoline(
     size: usize,
     format: ffi::wxd_IPCFormat,
 ) -> bool {
-    if user_data.is_null() {
-        return false;
-    }
-    let callbacks = &mut *(user_data as *mut ConnectionCallbacks);
-    if let Some(ref mut cb) = callbacks.on_execute {
-        let topic_str = if topic.is_null() {
-            ""
-        } else {
-            CStr::from_ptr(topic).to_str().unwrap_or("")
-        };
-        let data_slice = if data.is_null() || size == 0 {
-            &[]
-        } else {
-            std::slice::from_raw_parts(data as *const u8, size)
-        };
-        return cb(topic_str, data_slice, IPCFormat::from(format));
-    }
-    false
+    crate::utils::guard_ffi_callback("on_execute_trampoline", false, || {
+        if user_data.is_null() {
+            return false;
+        }
+        let callbacks = &mut *(user_data as *mut ConnectionCallbacks);
+        if let Some(ref mut cb) = callbacks.on_execute {
+            let topic_str = if topic.is_null() {
+                ""
+            } else {
+                CStr::from_ptr(topic).to_str().unwrap_or("")
+            };
+            let data_slice = if data.is_null() || size == 0 {
+                &[]
+            } else {
+                std::slice::from_raw_parts(data as *const u8, size)
+            };
+            return cb(topic_str, data_slice, IPCFormat::from(format));
+        }
+        false
+    })
 }
 
 #[allow(unsafe_op_in_unsafe_fn)]
@@ -170,34 +172,36 @@ unsafe extern "C" fn on_request_trampoline(
     out_size: *mut usize,
     format: ffi::wxd_IPCFormat,
 ) -> *const c_void {
-    if user_data.is_null() {
-        return ptr::null();
-    }
-    let callbacks = &mut *(user_data as *mut ConnectionCallbacks);
-    if let Some(ref mut cb) = callbacks.on_request {
-        let topic_str = if topic.is_null() {
-            ""
-        } else {
-            CStr::from_ptr(topic).to_str().unwrap_or("")
-        };
-        let item_str = if item.is_null() {
-            ""
-        } else {
-            CStr::from_ptr(item).to_str().unwrap_or("")
-        };
-        if let Some(data) = cb(topic_str, item_str, IPCFormat::from(format)) {
-            // Store in buffer so it outlives this function
-            callbacks.request_buffer = data;
-            if !out_size.is_null() {
-                *out_size = callbacks.request_buffer.len();
-            }
-            return callbacks.request_buffer.as_ptr() as *const c_void;
+    crate::utils::guard_ffi_callback("on_request_trampoline", std::ptr::null(), || {
+        if user_data.is_null() {
+            return ptr::null();
         }
-    }
-    if !out_size.is_null() {
-        *out_size = 0;
-    }
-    ptr::null()
+        let callbacks = &mut *(user_data as *mut ConnectionCallbacks);
+        if let Some(ref mut cb) = callbacks.on_request {
+            let topic_str = if topic.is_null() {
+                ""
+            } else {
+                CStr::from_ptr(topic).to_str().unwrap_or("")
+            };
+            let item_str = if item.is_null() {
+                ""
+            } else {
+                CStr::from_ptr(item).to_str().unwrap_or("")
+            };
+            if let Some(data) = cb(topic_str, item_str, IPCFormat::from(format)) {
+                // Store in buffer so it outlives this function
+                callbacks.request_buffer = data;
+                if !out_size.is_null() {
+                    *out_size = callbacks.request_buffer.len();
+                }
+                return callbacks.request_buffer.as_ptr() as *const c_void;
+            }
+        }
+        if !out_size.is_null() {
+            *out_size = 0;
+        }
+        ptr::null()
+    })
 }
 
 #[allow(unsafe_op_in_unsafe_fn)]
@@ -209,29 +213,31 @@ unsafe extern "C" fn on_poke_trampoline(
     size: usize,
     format: ffi::wxd_IPCFormat,
 ) -> bool {
-    if user_data.is_null() {
-        return false;
-    }
-    let callbacks = &mut *(user_data as *mut ConnectionCallbacks);
-    if let Some(ref mut cb) = callbacks.on_poke {
-        let topic_str = if topic.is_null() {
-            ""
-        } else {
-            CStr::from_ptr(topic).to_str().unwrap_or("")
-        };
-        let item_str = if item.is_null() {
-            ""
-        } else {
-            CStr::from_ptr(item).to_str().unwrap_or("")
-        };
-        let data_slice = if data.is_null() || size == 0 {
-            &[]
-        } else {
-            std::slice::from_raw_parts(data as *const u8, size)
-        };
-        return cb(topic_str, item_str, data_slice, IPCFormat::from(format));
-    }
-    false
+    crate::utils::guard_ffi_callback("on_poke_trampoline", false, || {
+        if user_data.is_null() {
+            return false;
+        }
+        let callbacks = &mut *(user_data as *mut ConnectionCallbacks);
+        if let Some(ref mut cb) = callbacks.on_poke {
+            let topic_str = if topic.is_null() {
+                ""
+            } else {
+                CStr::from_ptr(topic).to_str().unwrap_or("")
+            };
+            let item_str = if item.is_null() {
+                ""
+            } else {
+                CStr::from_ptr(item).to_str().unwrap_or("")
+            };
+            let data_slice = if data.is_null() || size == 0 {
+                &[]
+            } else {
+                std::slice::from_raw_parts(data as *const u8, size)
+            };
+            return cb(topic_str, item_str, data_slice, IPCFormat::from(format));
+        }
+        false
+    })
 }
 
 #[allow(unsafe_op_in_unsafe_fn)]
@@ -240,24 +246,26 @@ unsafe extern "C" fn on_start_advise_trampoline(
     topic: *const core::ffi::c_char,
     item: *const core::ffi::c_char,
 ) -> bool {
-    if user_data.is_null() {
-        return false;
-    }
-    let callbacks = &mut *(user_data as *mut ConnectionCallbacks);
-    if let Some(ref mut cb) = callbacks.on_start_advise {
-        let topic_str = if topic.is_null() {
-            ""
-        } else {
-            CStr::from_ptr(topic).to_str().unwrap_or("")
-        };
-        let item_str = if item.is_null() {
-            ""
-        } else {
-            CStr::from_ptr(item).to_str().unwrap_or("")
-        };
-        return cb(topic_str, item_str);
-    }
-    false
+    crate::utils::guard_ffi_callback("on_start_advise_trampoline", false, || {
+        if user_data.is_null() {
+            return false;
+        }
+        let callbacks = &mut *(user_data as *mut ConnectionCallbacks);
+        if let Some(ref mut cb) = callbacks.on_start_advise {
+            let topic_str = if topic.is_null() {
+                ""
+            } else {
+                CStr::from_ptr(topic).to_str().unwrap_or("")
+            };
+            let item_str = if item.is_null() {
+                ""
+            } else {
+                CStr::from_ptr(item).to_str().unwrap_or("")
+            };
+            return cb(topic_str, item_str);
+        }
+        false
+    })
 }
 
 #[allow(unsafe_op_in_unsafe_fn)]
@@ -266,24 +274,26 @@ unsafe extern "C" fn on_stop_advise_trampoline(
     topic: *const core::ffi::c_char,
     item: *const core::ffi::c_char,
 ) -> bool {
-    if user_data.is_null() {
-        return false;
-    }
-    let callbacks = &mut *(user_data as *mut ConnectionCallbacks);
-    if let Some(ref mut cb) = callbacks.on_stop_advise {
-        let topic_str = if topic.is_null() {
-            ""
-        } else {
-            CStr::from_ptr(topic).to_str().unwrap_or("")
-        };
-        let item_str = if item.is_null() {
-            ""
-        } else {
-            CStr::from_ptr(item).to_str().unwrap_or("")
-        };
-        return cb(topic_str, item_str);
-    }
-    false
+    crate::utils::guard_ffi_callback("on_stop_advise_trampoline", false, || {
+        if user_data.is_null() {
+            return false;
+        }
+        let callbacks = &mut *(user_data as *mut ConnectionCallbacks);
+        if let Some(ref mut cb) = callbacks.on_stop_advise {
+            let topic_str = if topic.is_null() {
+                ""
+            } else {
+                CStr::from_ptr(topic).to_str().unwrap_or("")
+            };
+            let item_str = if item.is_null() {
+                ""
+            } else {
+                CStr::from_ptr(item).to_str().unwrap_or("")
+            };
+            return cb(topic_str, item_str);
+        }
+        false
+    })
 }
 
 #[allow(unsafe_op_in_unsafe_fn)]
@@ -295,48 +305,54 @@ unsafe extern "C" fn on_advise_trampoline(
     size: usize,
     format: ffi::wxd_IPCFormat,
 ) -> bool {
-    if user_data.is_null() {
-        return false;
-    }
-    let callbacks = &mut *(user_data as *mut ConnectionCallbacks);
-    if let Some(ref mut cb) = callbacks.on_advise {
-        let topic_str = if topic.is_null() {
-            ""
-        } else {
-            CStr::from_ptr(topic).to_str().unwrap_or("")
-        };
-        let item_str = if item.is_null() {
-            ""
-        } else {
-            CStr::from_ptr(item).to_str().unwrap_or("")
-        };
-        let data_slice = if data.is_null() || size == 0 {
-            &[]
-        } else {
-            std::slice::from_raw_parts(data as *const u8, size)
-        };
-        return cb(topic_str, item_str, data_slice, IPCFormat::from(format));
-    }
-    false
+    crate::utils::guard_ffi_callback("on_advise_trampoline", false, || {
+        if user_data.is_null() {
+            return false;
+        }
+        let callbacks = &mut *(user_data as *mut ConnectionCallbacks);
+        if let Some(ref mut cb) = callbacks.on_advise {
+            let topic_str = if topic.is_null() {
+                ""
+            } else {
+                CStr::from_ptr(topic).to_str().unwrap_or("")
+            };
+            let item_str = if item.is_null() {
+                ""
+            } else {
+                CStr::from_ptr(item).to_str().unwrap_or("")
+            };
+            let data_slice = if data.is_null() || size == 0 {
+                &[]
+            } else {
+                std::slice::from_raw_parts(data as *const u8, size)
+            };
+            return cb(topic_str, item_str, data_slice, IPCFormat::from(format));
+        }
+        false
+    })
 }
 
 #[allow(unsafe_op_in_unsafe_fn)]
 unsafe extern "C" fn on_disconnect_trampoline(user_data: *mut c_void) -> bool {
-    if user_data.is_null() {
-        return true;
-    }
-    let callbacks = &mut *(user_data as *mut ConnectionCallbacks);
-    if let Some(ref mut cb) = callbacks.on_disconnect {
-        return cb();
-    }
-    true
+    crate::utils::guard_ffi_callback("on_disconnect_trampoline", false, || {
+        if user_data.is_null() {
+            return true;
+        }
+        let callbacks = &mut *(user_data as *mut ConnectionCallbacks);
+        if let Some(ref mut cb) = callbacks.on_disconnect {
+            return cb();
+        }
+        true
+    })
 }
 
 #[allow(unsafe_op_in_unsafe_fn)]
 unsafe extern "C" fn free_connection_callbacks(user_data: *mut c_void) {
-    if !user_data.is_null() {
-        let _ = Box::from_raw(user_data as *mut ConnectionCallbacks);
-    }
+    crate::utils::guard_ffi_callback("free_connection_callbacks", (), || {
+        if !user_data.is_null() {
+            let _ = Box::from_raw(user_data as *mut ConnectionCallbacks);
+        }
+    })
 }
 
 // =============================================================================
@@ -629,30 +645,34 @@ unsafe extern "C" fn on_accept_connection_trampoline(
     user_data: *mut c_void,
     topic: *const core::ffi::c_char,
 ) -> *mut ffi::wxd_IPCConnection_t {
-    if user_data.is_null() {
-        return ptr::null_mut();
-    }
-    let callbacks = &mut *(user_data as *mut ServerCallbacks);
-    let topic_str = if topic.is_null() {
-        ""
-    } else {
-        CStr::from_ptr(topic).to_str().unwrap_or("")
-    };
-    if let Some(conn) = (callbacks.on_accept)(topic_str) {
-        // Transfer ownership to C++ - it will manage the connection
-        let ptr = conn.ptr;
-        std::mem::forget(conn);
-        ptr
-    } else {
-        ptr::null_mut()
-    }
+    crate::utils::guard_ffi_callback("on_accept_connection_trampoline", std::ptr::null_mut(), || {
+        if user_data.is_null() {
+            return ptr::null_mut();
+        }
+        let callbacks = &mut *(user_data as *mut ServerCallbacks);
+        let topic_str = if topic.is_null() {
+            ""
+        } else {
+            CStr::from_ptr(topic).to_str().unwrap_or("")
+        };
+        if let Some(conn) = (callbacks.on_accept)(topic_str) {
+            // Transfer ownership to C++ - it will manage the connection
+            let ptr = conn.ptr;
+            std::mem::forget(conn);
+            ptr
+        } else {
+            ptr::null_mut()
+        }
+    })
 }
 
 #[allow(unsafe_op_in_unsafe_fn)]
 unsafe extern "C" fn free_server_callbacks(user_data: *mut c_void) {
-    if !user_data.is_null() {
-        let _ = Box::from_raw(user_data as *mut ServerCallbacks);
-    }
+    crate::utils::guard_ffi_callback("free_server_callbacks", (), || {
+        if !user_data.is_null() {
+            let _ = Box::from_raw(user_data as *mut ServerCallbacks);
+        }
+    })
 }
 
 /// An IPC server that listens for client connections.

@@ -86,11 +86,13 @@ pub fn process_main_thread_queue() -> bool {
 // Returns 1 if callbacks were processed, 0 if not
 #[unsafe(no_mangle)]
 pub extern "C" fn process_rust_callbacks() -> i32 {
-    if process_main_thread_queue() {
-        1 // Callbacks were processed
-    } else {
-        0 // No callbacks processed
-    }
+    crate::utils::guard_ffi_callback("process_rust_callbacks", 0, || {
+        if process_main_thread_queue() {
+            1 // Callbacks were processed
+        } else {
+            0 // No callbacks processed
+        }
+    })
 }
 
 // Function to manually trigger callback processing (useful for tests)
@@ -536,23 +538,25 @@ unsafe extern "C" fn mac_open_files_trampoline<F>(user_data: *mut c_void, files:
 where
     F: Fn(Vec<String>) + Send + 'static,
 {
-    if user_data.is_null() || files.is_null() {
-        return;
-    }
-
-    let callback = unsafe { &*(user_data as *const F) };
-
-    let mut file_list = Vec::new();
-    for i in 0..count as isize {
-        let file_ptr = unsafe { *files.offset(i) };
-        if !file_ptr.is_null()
-            && let Ok(file_str) = unsafe { CStr::from_ptr(file_ptr) }.to_str()
-        {
-            file_list.push(file_str.to_string());
+    crate::utils::guard_ffi_callback("mac_open_files_trampoline", (), || {
+        if user_data.is_null() || files.is_null() {
+            return;
         }
-    }
 
-    callback(file_list);
+        let callback = unsafe { &*(user_data as *const F) };
+
+        let mut file_list = Vec::new();
+        for i in 0..count as isize {
+            let file_ptr = unsafe { *files.offset(i) };
+            if !file_ptr.is_null()
+                && let Ok(file_str) = unsafe { CStr::from_ptr(file_ptr) }.to_str()
+            {
+                file_list.push(file_str.to_string());
+            }
+        }
+
+        callback(file_list);
+    })
 }
 
 #[cfg(target_os = "macos")]
@@ -560,14 +564,16 @@ unsafe extern "C" fn mac_open_url_trampoline<F>(user_data: *mut c_void, url: *co
 where
     F: Fn(String) + Send + 'static,
 {
-    if user_data.is_null() || url.is_null() {
-        return;
-    }
+    crate::utils::guard_ffi_callback("mac_open_url_trampoline", (), || {
+        if user_data.is_null() || url.is_null() {
+            return;
+        }
 
-    let callback = unsafe { &*(user_data as *const F) };
-    if let Ok(url_str) = unsafe { CStr::from_ptr(url) }.to_str() {
-        callback(url_str.to_string());
-    }
+        let callback = unsafe { &*(user_data as *const F) };
+        if let Ok(url_str) = unsafe { CStr::from_ptr(url) }.to_str() {
+            callback(url_str.to_string());
+        }
+    })
 }
 
 #[cfg(target_os = "macos")]
@@ -575,12 +581,14 @@ unsafe extern "C" fn mac_new_file_trampoline<F>(user_data: *mut c_void)
 where
     F: Fn() + Send + 'static,
 {
-    if user_data.is_null() {
-        return;
-    }
+    crate::utils::guard_ffi_callback("mac_new_file_trampoline", (), || {
+        if user_data.is_null() {
+            return;
+        }
 
-    let callback = unsafe { &*(user_data as *const F) };
-    callback();
+        let callback = unsafe { &*(user_data as *const F) };
+        callback();
+    })
 }
 
 #[cfg(target_os = "macos")]
@@ -588,12 +596,14 @@ unsafe extern "C" fn mac_reopen_app_trampoline<F>(user_data: *mut c_void)
 where
     F: Fn() + Send + 'static,
 {
-    if user_data.is_null() {
-        return;
-    }
+    crate::utils::guard_ffi_callback("mac_reopen_app_trampoline", (), || {
+        if user_data.is_null() {
+            return;
+        }
 
-    let callback = unsafe { &*(user_data as *const F) };
-    callback();
+        let callback = unsafe { &*(user_data as *const F) };
+        callback();
+    })
 }
 
 #[cfg(target_os = "macos")]
@@ -601,23 +611,25 @@ unsafe extern "C" fn mac_print_files_trampoline<F>(user_data: *mut c_void, files
 where
     F: Fn(Vec<String>) + Send + 'static,
 {
-    if user_data.is_null() || files.is_null() {
-        return;
-    }
-
-    let callback = unsafe { &*(user_data as *const F) };
-
-    let mut file_list = Vec::new();
-    for i in 0..count as isize {
-        let file_ptr = unsafe { *files.offset(i) };
-        if !file_ptr.is_null()
-            && let Ok(file_str) = unsafe { CStr::from_ptr(file_ptr) }.to_str()
-        {
-            file_list.push(file_str.to_string());
+    crate::utils::guard_ffi_callback("mac_print_files_trampoline", (), || {
+        if user_data.is_null() || files.is_null() {
+            return;
         }
-    }
 
-    callback(file_list);
+        let callback = unsafe { &*(user_data as *const F) };
+
+        let mut file_list = Vec::new();
+        for i in 0..count as isize {
+            let file_ptr = unsafe { *files.offset(i) };
+            if !file_ptr.is_null()
+                && let Ok(file_str) = unsafe { CStr::from_ptr(file_ptr) }.to_str()
+            {
+                file_list.push(file_str.to_string());
+            }
+        }
+
+        callback(file_list);
+    })
 }
 
 #[cfg(target_os = "macos")]
@@ -625,12 +637,14 @@ unsafe extern "C" fn mac_should_terminate_trampoline<F>(user_data: *mut c_void) 
 where
     F: Fn() -> bool + Send + 'static,
 {
-    if user_data.is_null() {
-        return true;
-    }
+    crate::utils::guard_ffi_callback("mac_should_terminate_trampoline", true, || {
+        if user_data.is_null() {
+            return true;
+        }
 
-    let callback = unsafe { &*(user_data as *const F) };
-    callback()
+        let callback = unsafe { &*(user_data as *const F) };
+        callback()
+    })
 }
 
 #[cfg(target_os = "macos")]
@@ -638,12 +652,14 @@ unsafe extern "C" fn mac_will_terminate_trampoline<F>(user_data: *mut c_void)
 where
     F: Fn() + Send + 'static,
 {
-    if user_data.is_null() {
-        return;
-    }
+    crate::utils::guard_ffi_callback("mac_will_terminate_trampoline", (), || {
+        if user_data.is_null() {
+            return;
+        }
 
-    let callback = unsafe { &*(user_data as *const F) };
-    callback();
+        let callback = unsafe { &*(user_data as *const F) };
+        callback();
+    })
 }
 
 /// Runs the wxWidgets application main loop, providing a safe entry point.
