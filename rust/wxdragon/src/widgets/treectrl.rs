@@ -1299,6 +1299,20 @@ impl TreeCtrl {
         true
     }
 
+    /// Gets custom data directly from a TreeItemId without converting its address through u64.
+    ///
+    /// This is the read counterpart to [`set_custom_data_direct`](Self::set_custom_data_direct).
+    /// Use it when the caller already has a concrete TreeItemId, especially from an event.
+    pub fn get_custom_data_direct(&self, item_id: &TreeItemId) -> Option<Arc<dyn Any + Send + Sync>> {
+        let ptr = self.treectrl_ptr();
+        if ptr.is_null() {
+            return None;
+        }
+
+        let data_id = unsafe { ffi::wxd_TreeCtrl_GetItemData(ptr, item_id.as_ptr()) as u64 };
+        (data_id != 0).then(|| get_item_data(data_id)).flatten()
+    }
+
     /// Direct method to set custom data on a TreeItemId without going through u64 conversion.
     /// This is safer than the trait method when you have a direct TreeItemId reference.
     pub fn set_custom_data_direct<T: Any + Send + Sync + 'static>(&self, item_id: &TreeItemId, data: T) -> u64 {
