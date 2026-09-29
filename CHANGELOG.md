@@ -11,6 +11,7 @@
 ### Bug Fixes
 
 - **TaskBarIcon**: Fixed tray icon events never firing on Windows and Linux. When the taskbar event types moved from `event.cpp` into `taskbar.cpp`, the mapper and its registrar landed inside the existing `#ifdef __WXOSX__` block that only guarded `wx/osx/private.h`, so they were compiled on macOS alone. Everywhere else `on_left_up`, `on_left_down`, `on_left_double_click` and the other taskbar handlers bound to `wxEVT_NULL` and silently never ran. The guard now covers just the macOS header again
+- **AuiManager**: Fixed every `AuiManager` leaking its `wxAuiManager`. `AuiManagerBuilder::build` allocated the manager and the destroy handler on the managed window only removed its handle from the registry, so nothing ever deleted it. The handler now frees it through `wxd_AuiManager_Delete`, which defers the delete until the next idle: floating pane frames are children of the managed window, are destroyed after its destroy event, and use the manager from their destructor
 
 ## 0.9.22
 

@@ -145,11 +145,18 @@ wxd_AuiManager_Delete(wxd_AuiManager_t* self)
         return;
 
     if (self->manager) {
-        // UnInit the manager first to ensure proper cleanup
-        if (self->manager->GetManagedWindow()) {
-            self->manager->UnInit();
+        // Detach from the managed window (a no-op if wx already did so)
+        self->manager->UnInit();
+
+        // Floating pane frames are children of the managed window and use the
+        // manager from their destructor. When called from the window's destroy
+        // event they are only destroyed after it, so delete the manager later.
+        if (wxTheApp) {
+            wxTheApp->ScheduleForDestruction(self->manager);
         }
-        delete self->manager;
+        else {
+            delete self->manager;
+        }
     }
 
     delete self;
