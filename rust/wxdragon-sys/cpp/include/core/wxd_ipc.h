@@ -189,10 +189,6 @@ wxd_IPCConnection_Advise(
 WXD_EXPORTED bool
 wxd_IPCConnection_Disconnect(wxd_IPCConnection_t* conn);
 
-// Get the topic of the connection
-WXD_EXPORTED size_t
-wxd_IPCConnection_GetTopic(wxd_IPCConnection_t* conn, char* buffer, size_t buffer_size);
-
 // Check if connection is connected
 WXD_EXPORTED bool
 wxd_IPCConnection_IsConnected(wxd_IPCConnection_t* conn);

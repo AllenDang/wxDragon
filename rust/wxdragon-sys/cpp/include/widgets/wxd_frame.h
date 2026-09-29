@@ -9,9 +9,6 @@ wxd_Frame_Create(wxd_Window_t* parent, wxd_Id id, const char* title, wxd_Point p
                  wxd_Style_t style);
 
 WXD_EXPORTED void
-wxd_Frame_Destroy(wxd_Frame_t* frame);
-
-WXD_EXPORTED void
 wxd_Frame_Show(wxd_Frame_t* frame, bool show);
 
 WXD_EXPORTED void

@@ -30,8 +30,6 @@ WXD_EXPORTED wxd_FileDataObject_t*
 wxd_FileDataObject_Create();
 WXD_EXPORTED void
 wxd_FileDataObject_Destroy(wxd_FileDataObject_t* obj);
-WXD_EXPORTED int
-wxd_FileDataObject_GetFilenames(wxd_FileDataObject_t* obj, wxd_ArrayString_t* filenames);
 WXD_EXPORTED void
 wxd_FileDataObject_AddFile(wxd_FileDataObject_t* obj, const char* filename);
 
@@ -44,23 +42,5 @@ WXD_EXPORTED void
 wxd_DropSource_SetData(wxd_DropSource_t* source, wxd_DataObject_t* data);
 WXD_EXPORTED WXDDragResultCEnum
 wxd_DropSource_DoDragDrop(wxd_DropSource_t* source, bool allow_move);
-
-// --- Drop Target Functions ---
-// Base TextDropTarget
-WXD_EXPORTED wxd_TextDropTarget_t*
-wxd_TextDropTarget_Create(wxd_Window_t* window, void* rust_on_drop_text_fn, void* rust_closure_ptr);
-WXD_EXPORTED void
-wxd_TextDropTarget_Destroy(wxd_TextDropTarget_t* target);
-
-// FileDropTarget
-WXD_EXPORTED wxd_FileDropTarget_t*
-wxd_FileDropTarget_Create(wxd_Window_t* window, void* rust_on_drop_files_fn,
-                          void* rust_closure_ptr);
-WXD_EXPORTED void
-wxd_FileDropTarget_Destroy(wxd_FileDropTarget_t* target);
-
-// Window association
-WXD_EXPORTED void
-wxd_Window_SetDropTarget(wxd_Window_t* window, wxd_DropTarget_t* target);
 
 #endif // WXD_DND_H

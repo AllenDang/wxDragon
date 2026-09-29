@@ -1650,54 +1650,6 @@ wxd_IsKeyboardEvent(wxd_Event_t* event)
     return (type == wxEVT_KEY_DOWN || type == wxEVT_KEY_UP || type == wxEVT_CHAR || type == wxEVT_CHAR_HOOK) ? 1 : 0;
 }
 
-extern "C" int
-wxd_IsSizeEvent(wxd_Event_t* event)
-{
-    if (!event)
-        return 0;
-    wxEvent* wx_event = reinterpret_cast<wxEvent*>(event);
-
-    // Check if it's a size event
-    return (wx_event->GetEventType() == wxEVT_SIZE) ? 1 : 0;
-}
-
-extern "C" int
-wxd_Event_GetRawType(wxd_Event_t* event)
-{
-    if (!event)
-        return -1;
-    wxEvent* wx_event = reinterpret_cast<wxEvent*>(event);
-    return static_cast<int>(wx_event->GetEventType());
-}
-
-// --- CommandEvent specific ---
-WXD_EXPORTED void*
-wxd_CommandEvent_GetClientData(wxd_Event_t* self)
-{
-    if (!self)
-        return nullptr;
-    wxEvent* baseEvent = reinterpret_cast<wxEvent*>(self);
-    wxCommandEvent* cmdEvent = wxDynamicCast(baseEvent, wxCommandEvent);
-    if (!cmdEvent)
-        return nullptr;
-    return cmdEvent->GetClientData();
-}
-
-// --- CheckListBox specific ---
-WXD_EXPORTED int32_t
-wxd_CheckListBoxEvent_GetSelection(wxd_Event_t* self)
-{
-    if (!self)
-        return -1;
-    wxEvent* baseEvent = reinterpret_cast<wxEvent*>(self);
-    wxCommandEvent* cmdEvent = wxDynamicCast(baseEvent, wxCommandEvent);
-    if (!cmdEvent)
-        return -1;
-    // For list-like controls, GetInt() often returns the selection index.
-    // wxCheckListBox emits wxEVT_LISTBOX, which uses GetInt() for selection.
-    return cmdEvent->GetInt();
-}
-
 // --- Notebook specific ---
 // This is already implemented in notebook.cpp
 /*

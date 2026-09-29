@@ -29,18 +29,6 @@ wxd_Frame_Create(wxd_Window_t* parent, wxd_Id id, const char* title, wxd_Point p
 }
 
 void
-wxd_Frame_Destroy(wxd_Frame_t* frame)
-{
-    // This function tells wxWidgets to destroy the window.
-    // The actual deletion of the C++ object and our WxdEventHandler
-    // happens later in the event loop after the wxEVT_DESTROY event.
-    if (!frame)
-        return;
-    wxFrame* wx_frame = reinterpret_cast<wxFrame*>(frame);
-    wx_frame->Destroy();
-}
-
-void
 wxd_Frame_Show(wxd_Frame_t* frame, bool show)
 {
     if (!frame)

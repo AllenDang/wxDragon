@@ -20,8 +20,6 @@ WXD_EXPORTED int
 wxd_ListCtrl_GetColumnWidth(wxd_ListCtrl_t* self, int64_t col);
 WXD_EXPORTED int
 wxd_ListCtrl_GetColumnCount(wxd_ListCtrl_t* self);
-WXD_EXPORTED int32_t
-wxd_ListCtrl_InsertItem_Simple(wxd_ListCtrl_t* self, int64_t index, const char* label);
 WXD_EXPORTED void
 wxd_ListCtrl_SetItemText(wxd_ListCtrl_t* self, int64_t index, const char* text);
 WXD_EXPORTED bool
@@ -64,12 +62,8 @@ wxd_ListCtrl_EditLabel(wxd_ListCtrl_t* self, int64_t item);
 // Item Data Functions
 WXD_EXPORTED bool
 wxd_ListCtrl_SetItemData(wxd_ListCtrl_t* self, int64_t item, int64_t data);
-WXD_EXPORTED bool
-wxd_ListCtrl_SetItemPtrData(wxd_ListCtrl_t* self, int64_t item, void* data);
 WXD_EXPORTED int64_t
 wxd_ListCtrl_GetItemData(wxd_ListCtrl_t* self, int64_t item);
-WXD_EXPORTED void*
-wxd_ListCtrl_GetItemPtrData(wxd_ListCtrl_t* self, int64_t item);
 
 // Item Appearance
 WXD_EXPORTED void
@@ -112,9 +106,6 @@ wxd_ListCtrl_SortItems(wxd_ListCtrl_t* self, int (*cmpFunc)(void*, void*, void*)
 WXD_EXPORTED void
 wxd_ListCtrl_ShowSortIndicator(wxd_ListCtrl_t* self, int col, bool ascending);
 
-// Image List Support
-WXD_EXPORTED void
-wxd_ListCtrl_SetImageList(wxd_ListCtrl_t* self, wxd_ImageList_t* imageList, int which);
 WXD_EXPORTED void
 wxd_ListCtrl_AssignImageList(wxd_ListCtrl_t* self, wxd_ImageList_t* imageList, int which);
 WXD_EXPORTED wxd_ImageList_t*

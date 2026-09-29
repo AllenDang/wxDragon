@@ -22,16 +22,6 @@ wxd_Button_Create(wxd_Window_t* parent, wxd_Id id, const char* label, wxd_Point 
 }
 
 void
-wxd_Button_Destroy(wxd_Button_t* button)
-{
-    if (!button)
-        return;
-    wxButton* wx_button = reinterpret_cast<wxButton*>(button);
-    // Schedule for destruction. Cleanup happens via wxEVT_DESTROY.
-    wx_button->Destroy();
-}
-
-void
 wxd_Button_SetLabel(wxd_Button_t* button, const char* label)
 {
     if (!button)

@@ -58,15 +58,25 @@ public:
     virtual void
     OSXOnWillTerminate() override;
 
+    virtual ~WxdApp() override;
+
+    // A registered handler; `drop` frees `userData` when the app is destroyed
+    template <typename Callback>
+    struct MacHandler {
+        Callback callback;
+        wxd_MacHandlerDropCallback drop;
+        void* userData;
+    };
+
     // Store multiple callbacks for each event type
     struct MacCallbackList {
-        std::vector<std::pair<wxd_MacOpenFilesCallback, void*>> openFiles;
-        std::vector<std::pair<wxd_MacOpenURLCallback, void*>> openURL;
-        std::vector<std::pair<wxd_MacNewFileCallback, void*>> newFile;
-        std::vector<std::pair<wxd_MacReopenAppCallback, void*>> reopenApp;
-        std::vector<std::pair<wxd_MacPrintFilesCallback, void*>> printFiles;
-        std::vector<std::pair<wxd_MacShouldTerminateCallback, void*>> shouldTerminate;
-        std::vector<std::pair<wxd_MacWillTerminateCallback, void*>> willTerminate;
+        std::vector<MacHandler<wxd_MacOpenFilesCallback>> openFiles;
+        std::vector<MacHandler<wxd_MacOpenURLCallback>> openURL;
+        std::vector<MacHandler<wxd_MacNewFileCallback>> newFile;
+        std::vector<MacHandler<wxd_MacReopenAppCallback>> reopenApp;
+        std::vector<MacHandler<wxd_MacPrintFilesCallback>> printFiles;
+        std::vector<MacHandler<wxd_MacShouldTerminateCallback>> shouldTerminate;
+        std::vector<MacHandler<wxd_MacWillTerminateCallback>> willTerminate;
     } m_macCallbacks;
 #endif
 };
@@ -509,6 +519,30 @@ wxd_SystemAppearance_Destroy(wxd_SystemAppearance_t* appearance)
 
 #ifdef __WXOSX__
 
+// Free the user data of every handler in the list
+template <typename Handler>
+static void
+DropMacHandlers(std::vector<Handler>& handlers)
+{
+    for (const auto& handler : handlers) {
+        if (handler.drop) {
+            handler.drop(handler.userData);
+        }
+    }
+    handlers.clear();
+}
+
+WxdApp::~WxdApp()
+{
+    DropMacHandlers(m_macCallbacks.openFiles);
+    DropMacHandlers(m_macCallbacks.openURL);
+    DropMacHandlers(m_macCallbacks.newFile);
+    DropMacHandlers(m_macCallbacks.reopenApp);
+    DropMacHandlers(m_macCallbacks.printFiles);
+    DropMacHandlers(m_macCallbacks.shouldTerminate);
+    DropMacHandlers(m_macCallbacks.willTerminate);
+}
+
 // MacOpenFiles override - calls all registered handlers
 void
 WxdApp::MacOpenFiles(const wxArrayString& fileNames)
@@ -532,9 +566,9 @@ WxdApp::MacOpenFiles(const wxArrayString& fileNames)
     }
 
     // Call ALL registered Rust callbacks
-    for (const auto& pair : m_macCallbacks.openFiles) {
-        if (pair.first) {
-            pair.first(pair.second, cStrings.data(), static_cast<int>(count));
+    for (const auto& handler : m_macCallbacks.openFiles) {
+        if (handler.callback) {
+            handler.callback(handler.userData, cStrings.data(), static_cast<int>(count));
         }
     }
 }
@@ -551,9 +585,9 @@ WxdApp::MacOpenURL(const wxString& url)
     std::string urlStr = url.ToStdString();
 
     // Call ALL registered Rust callbacks
-    for (const auto& pair : m_macCallbacks.openURL) {
-        if (pair.first) {
-            pair.first(pair.second, urlStr.c_str());
+    for (const auto& handler : m_macCallbacks.openURL) {
+        if (handler.callback) {
+            handler.callback(handler.userData, urlStr.c_str());
         }
     }
 }
@@ -568,9 +602,9 @@ WxdApp::MacNewFile()
     }
 
     // Call ALL registered Rust callbacks
-    for (const auto& pair : m_macCallbacks.newFile) {
-        if (pair.first) {
-            pair.first(pair.second);
+    for (const auto& handler : m_macCallbacks.newFile) {
+        if (handler.callback) {
+            handler.callback(handler.userData);
         }
     }
 }
@@ -585,9 +619,9 @@ WxdApp::MacReopenApp()
     }
 
     // Call ALL registered Rust callbacks
-    for (const auto& pair : m_macCallbacks.reopenApp) {
-        if (pair.first) {
-            pair.first(pair.second);
+    for (const auto& handler : m_macCallbacks.reopenApp) {
+        if (handler.callback) {
+            handler.callback(handler.userData);
         }
     }
 }
@@ -614,9 +648,9 @@ WxdApp::MacPrintFiles(const wxArrayString& fileNames)
     }
 
     // Call ALL registered Rust callbacks
-    for (const auto& pair : m_macCallbacks.printFiles) {
-        if (pair.first) {
-            pair.first(pair.second, cStrings.data(), static_cast<int>(count));
+    for (const auto& handler : m_macCallbacks.printFiles) {
+        if (handler.callback) {
+            handler.callback(handler.userData, cStrings.data(), static_cast<int>(count));
         }
     }
 }
@@ -630,8 +664,8 @@ WxdApp::OSXOnShouldTerminate()
     }
 
     bool shouldTerminate = true;
-    for (const auto& pair : m_macCallbacks.shouldTerminate) {
-        if (pair.first && !pair.first(pair.second)) {
+    for (const auto& handler : m_macCallbacks.shouldTerminate) {
+        if (handler.callback && !handler.callback(handler.userData)) {
             shouldTerminate = false;
         }
     }
@@ -647,91 +681,121 @@ WxdApp::OSXOnWillTerminate()
         return;
     }
 
-    for (const auto& pair : m_macCallbacks.willTerminate) {
-        if (pair.first) {
-            pair.first(pair.second);
+    for (const auto& handler : m_macCallbacks.willTerminate) {
+        if (handler.callback) {
+            handler.callback(handler.userData);
         }
     }
 }
 
 #endif // __WXOSX__
 
+// A handler that is not stored will never be called, so free its data right away
+static void
+DropUnregisteredMacHandler(wxd_MacHandlerDropCallback drop, void* userData)
+{
+    if (drop) {
+        drop(userData);
+    }
+}
+
 // Registration functions - add handlers to the callback lists
 void
-wxd_App_AddMacOpenFilesHandler(wxd_App_t* app, wxd_MacOpenFilesCallback callback, void* userData)
+wxd_App_AddMacOpenFilesHandler(wxd_App_t* app, wxd_MacOpenFilesCallback callback,
+                               wxd_MacHandlerDropCallback drop, void* userData)
 {
 #ifdef __WXOSX__
-    if (!app || !callback)
+    if (app && callback) {
+        WxdApp* wx_app = reinterpret_cast<WxdApp*>(app);
+        wx_app->m_macCallbacks.openFiles.push_back({ callback, drop, userData });
         return;
-    WxdApp* wx_app = reinterpret_cast<WxdApp*>(app);
-    wx_app->m_macCallbacks.openFiles.push_back(std::make_pair(callback, userData));
+    }
 #endif
+    DropUnregisteredMacHandler(drop, userData);
 }
 
 void
-wxd_App_AddMacOpenURLHandler(wxd_App_t* app, wxd_MacOpenURLCallback callback, void* userData)
+wxd_App_AddMacOpenURLHandler(wxd_App_t* app, wxd_MacOpenURLCallback callback,
+                             wxd_MacHandlerDropCallback drop, void* userData)
 {
 #ifdef __WXOSX__
-    if (!app || !callback)
+    if (app && callback) {
+        WxdApp* wx_app = reinterpret_cast<WxdApp*>(app);
+        wx_app->m_macCallbacks.openURL.push_back({ callback, drop, userData });
         return;
-    WxdApp* wx_app = reinterpret_cast<WxdApp*>(app);
-    wx_app->m_macCallbacks.openURL.push_back(std::make_pair(callback, userData));
+    }
 #endif
+    DropUnregisteredMacHandler(drop, userData);
 }
 
 void
-wxd_App_AddMacNewFileHandler(wxd_App_t* app, wxd_MacNewFileCallback callback, void* userData)
+wxd_App_AddMacNewFileHandler(wxd_App_t* app, wxd_MacNewFileCallback callback,
+                             wxd_MacHandlerDropCallback drop, void* userData)
 {
 #ifdef __WXOSX__
-    if (!app || !callback)
+    if (app && callback) {
+        WxdApp* wx_app = reinterpret_cast<WxdApp*>(app);
+        wx_app->m_macCallbacks.newFile.push_back({ callback, drop, userData });
         return;
-    WxdApp* wx_app = reinterpret_cast<WxdApp*>(app);
-    wx_app->m_macCallbacks.newFile.push_back(std::make_pair(callback, userData));
+    }
 #endif
+    DropUnregisteredMacHandler(drop, userData);
 }
 
 void
-wxd_App_AddMacReopenAppHandler(wxd_App_t* app, wxd_MacReopenAppCallback callback, void* userData)
+wxd_App_AddMacReopenAppHandler(wxd_App_t* app, wxd_MacReopenAppCallback callback,
+                               wxd_MacHandlerDropCallback drop, void* userData)
 {
 #ifdef __WXOSX__
-    if (!app || !callback)
+    if (app && callback) {
+        WxdApp* wx_app = reinterpret_cast<WxdApp*>(app);
+        wx_app->m_macCallbacks.reopenApp.push_back({ callback, drop, userData });
         return;
-    WxdApp* wx_app = reinterpret_cast<WxdApp*>(app);
-    wx_app->m_macCallbacks.reopenApp.push_back(std::make_pair(callback, userData));
+    }
 #endif
+    DropUnregisteredMacHandler(drop, userData);
 }
 
 void
-wxd_App_AddMacPrintFilesHandler(wxd_App_t* app, wxd_MacPrintFilesCallback callback, void* userData)
+wxd_App_AddMacPrintFilesHandler(wxd_App_t* app, wxd_MacPrintFilesCallback callback,
+                                wxd_MacHandlerDropCallback drop, void* userData)
 {
 #ifdef __WXOSX__
-    if (!app || !callback)
+    if (app && callback) {
+        WxdApp* wx_app = reinterpret_cast<WxdApp*>(app);
+        wx_app->m_macCallbacks.printFiles.push_back({ callback, drop, userData });
         return;
-    WxdApp* wx_app = reinterpret_cast<WxdApp*>(app);
-    wx_app->m_macCallbacks.printFiles.push_back(std::make_pair(callback, userData));
+    }
 #endif
+    DropUnregisteredMacHandler(drop, userData);
 }
 
 void
-wxd_App_AddMacShouldTerminateHandler(wxd_App_t* app, wxd_MacShouldTerminateCallback callback, void* userData)
+wxd_App_AddMacShouldTerminateHandler(wxd_App_t* app, wxd_MacShouldTerminateCallback callback,
+                                     wxd_MacHandlerDropCallback drop, void* userData)
 {
 #ifdef __WXOSX__
-    if (!app || !callback)
+    if (app && callback) {
+        WxdApp* wx_app = reinterpret_cast<WxdApp*>(app);
+        wx_app->m_macCallbacks.shouldTerminate.push_back({ callback, drop, userData });
         return;
-    WxdApp* wx_app = reinterpret_cast<WxdApp*>(app);
-    wx_app->m_macCallbacks.shouldTerminate.push_back(std::make_pair(callback, userData));
+    }
 #endif
+    DropUnregisteredMacHandler(drop, userData);
 }
 
 void
-wxd_App_AddMacWillTerminateHandler(wxd_App_t* app, wxd_MacWillTerminateCallback callback, void* userData)
+wxd_App_AddMacWillTerminateHandler(wxd_App_t* app, wxd_MacWillTerminateCallback callback,
+                                   wxd_MacHandlerDropCallback drop, void* userData)
 {
 #ifdef __WXOSX__
-    if (!app || !callback)
+    if (app && callback) {
+        WxdApp* wx_app = reinterpret_cast<WxdApp*>(app);
+        wx_app->m_macCallbacks.willTerminate.push_back({ callback, drop, userData });
         return;
-    WxdApp* wx_app = reinterpret_cast<WxdApp*>(app);
-    wx_app->m_macCallbacks.willTerminate.push_back(std::make_pair(callback, userData));
+    }
 #endif
+    DropUnregisteredMacHandler(drop, userData);
 }
 
 // --- End of macOS-specific App Event Handlers Implementation ---

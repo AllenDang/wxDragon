@@ -171,26 +171,12 @@ WXD_EXPORTED int
 wxd_IsMouseMotionEvent(wxd_Event_t* event);
 WXD_EXPORTED int
 wxd_IsKeyboardEvent(wxd_Event_t* event);
-WXD_EXPORTED int
-wxd_IsSizeEvent(wxd_Event_t* event);
-
-// Gets the event's raw type (for debugging)
-WXD_EXPORTED int
-wxd_Event_GetRawType(wxd_Event_t* event);
 
 // The WXDEventTypeCEnum is defined in wxd_types.h, so it should NOT be redefined here.
 
 // --- Event Binding API ---
 
 /// Type for closure callbacks
-
-// Function to get the selected client data from a command event
-WXD_EXPORTED void*
-wxd_CommandEvent_GetClientData(wxd_Event_t* self);
-
-// CheckListBox specific event functions
-WXD_EXPORTED int32_t
-wxd_CheckListBoxEvent_GetSelection(wxd_Event_t* self);
 
 // Notebook specific event functions
 WXD_EXPORTED int32_t
