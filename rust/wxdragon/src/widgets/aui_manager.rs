@@ -394,15 +394,18 @@ impl<'a> AuiManagerBuilder<'a> {
             ffi::wxd_AuiManager_SetManagedWindow(ptr, self.parent_ptr);
         }
 
-        // Set up a destroy handler on the managed window to invalidate this manager
+        // Free the manager when the managed window is destroyed. wxAuiManager can forward the
+        // destroy event to the window a second time, so only the first call frees it.
         let handle_copy = handle;
         let managed_window_ptr = self.parent_ptr;
         let parent = unsafe { Window::from_ptr(self.parent_ptr) };
         parent.bind_internal(EventType::DESTROY, move |event| {
             if let Some(event_object) = event.get_event_object()
                 && event_object.as_ptr() == managed_window_ptr
+                && let Some(ptr) = handle_copy.get_ptr()
             {
                 handle_copy.invalidate();
+                unsafe { ffi::wxd_AuiManager_Delete(ptr) };
             }
         });
 

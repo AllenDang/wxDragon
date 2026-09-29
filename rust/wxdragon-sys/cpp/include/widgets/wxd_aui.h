@@ -31,6 +31,8 @@ wxd_AuiManager_AddPaneWithInfo(wxd_AuiManager_t* self, wxd_Window_t* window,
 WXD_EXPORTED bool
 wxd_AuiManager_Update(wxd_AuiManager_t* self);
 
+// Detaches the manager from its window and frees it. The wxAuiManager itself is
+// deleted on the next idle, after any floating pane frames that refer to it.
 WXD_EXPORTED void
 wxd_AuiManager_Delete(wxd_AuiManager_t* self);
 
