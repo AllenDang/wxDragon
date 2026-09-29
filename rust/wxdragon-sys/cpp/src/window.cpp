@@ -292,15 +292,6 @@ wxd_Window_GetParent(wxd_Window_t* self)
     return reinterpret_cast<wxd_Window_t*>(wx_window->GetParent());
 }
 
-WXD_EXPORTED wxd_Window_t*
-wxd_Window_GetGrandParent(wxd_Window_t* self)
-{
-    if (!self)
-        return NULL;
-    wxWindow* self_wnd = reinterpret_cast<wxWindow*>(self);
-    return reinterpret_cast<wxd_Window_t*>(self_wnd->GetGrandParent());
-}
-
 WXD_EXPORTED bool
 wxd_Window_IsEnabled(wxd_Window_t* self)
 {

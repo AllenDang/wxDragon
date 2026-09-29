@@ -32,9 +32,6 @@ wxd_SearchCtrl_SetValue(const wxd_SearchCtrl_t* self, const char* value);
 WXD_EXPORTED size_t
 wxd_SearchCtrl_GetValue(const wxd_SearchCtrl_t* self, char* buffer, size_t buffer_len);
 
-WXD_EXPORTED wxd_Control_t*
-wxd_SearchCtrl_GetCancelButton(wxd_SearchCtrl_t* self);
-
 WXD_EXPORTED void
 wxd_SearchCtrl_SetMenu(wxd_SearchCtrl_t* self, wxd_Menu_t* menu);
 

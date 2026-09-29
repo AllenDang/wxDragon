@@ -114,12 +114,4 @@ wxd_RichTextCtrl_SetBackgroundColor(wxd_RichTextCtrl_t* self, wxd_Long_t start, 
 WXD_EXPORTED bool
 wxd_RichTextCtrl_SetBackgroundColorSelection(wxd_RichTextCtrl_t* self, wxd_Colour_t color);
 
-// Scroll operations
-WXD_EXPORTED void
-wxd_RichTextCtrl_ShowPosition(wxd_RichTextCtrl_t* self, wxd_Long_t pos);
-WXD_EXPORTED bool
-wxd_RichTextCtrl_ScrollIntoView(wxd_RichTextCtrl_t* self, wxd_Long_t position, int keyCode);
-WXD_EXPORTED bool
-wxd_RichTextCtrl_IsPositionVisible(wxd_RichTextCtrl_t* self, wxd_Long_t pos);
-
 #endif // WXD_RICHTEXTCTRL_H

@@ -153,22 +153,6 @@ wxd_DataViewListCtrl_Create(wxd_Window_t* parent, int64_t id, const wxd_Point* p
     return reinterpret_cast<wxd_Window_t*>(ctrl);
 }
 
-WXD_EXPORTED wxd_Window_t*
-wxd_DataViewTreeCtrl_Create(wxd_Window_t* parent, int64_t id, const wxd_Point* pos,
-                            const wxd_Size* size, int64_t style)
-{
-    if (!parent)
-        return nullptr;
-
-    wxWindow* p = reinterpret_cast<wxWindow*>(parent);
-    wxPoint wxPos = pos ? wxPoint(pos->x, pos->y) : wxDefaultPosition;
-    wxSize wxSizeObj = size ? wxSize(size->width, size->height) : wxDefaultSize;
-
-    wxDataViewTreeCtrl* ctrl = new wxDataViewTreeCtrl(p, id, wxPos, wxSizeObj, style);
-    WXD_LOG_TRACEF("wxDataViewTreeCtrl created with pointer %p", ctrl);
-    return reinterpret_cast<wxd_Window_t*>(ctrl);
-}
-
 // Column management
 WXD_EXPORTED wxd_DataViewColumn_t*
 wxd_DataViewColumn_Create(const char* title, wxd_DataViewRenderer_t* renderer, int model_column,
@@ -558,140 +542,6 @@ wxd_DataViewCustomRenderer_Create(
     }
 }
 
-// Function to release callbacks by renderer ID (no longer needed with direct storage)
-WXD_EXPORTED void
-wxd_DataViewCustomRenderer_ReleaseCallbacksByKey(int32_t renderer_id)
-{
-    // No-op: callbacks are now cleaned up automatically when renderer is destroyed
-}
-
-// Function to release all callbacks for a specific dataview ID (no longer needed)
-WXD_EXPORTED void
-wxd_DataViewCustomRenderer_ReleaseAllCallbacksForDataView(int32_t dataview_id)
-{
-    // No-op: callbacks are now cleaned up automatically when renderers are destroyed
-}
-
-// Cleanup function for custom renderer callbacks (legacy - no longer needed)
-WXD_EXPORTED void
-wxd_DataViewCustomRenderer_ReleaseCallbacks(wxd_DataViewRenderer_t* renderer)
-{
-    // No-op: callbacks are now cleaned up automatically in destructor
-}
-
-// DataViewModel implementation
-class WxDDataViewModel : public wxDataViewModel {
-private:
-    wxd_DataViewModel_GetColumnCountCallback m_get_column_count;
-    wxd_DataViewModel_GetRowCountCallback m_get_row_count;
-    wxd_DataViewModel_GetValueCallback m_get_value;
-    wxd_DataViewModel_SetValueCallback m_set_value;
-    void* m_user_data;
-
-public:
-    WxDDataViewModel(wxd_DataViewModel_GetColumnCountCallback get_column_count,
-                     wxd_DataViewModel_GetRowCountCallback get_row_count,
-                     wxd_DataViewModel_GetValueCallback get_value,
-                     wxd_DataViewModel_SetValueCallback set_value, void* user_data)
-        : m_get_column_count(get_column_count), m_get_row_count(get_row_count),
-          m_get_value(get_value), m_set_value(set_value), m_user_data(user_data)
-    {
-        WXD_LOG_TRACEF("WxDDataViewModel created with pointer %p", this);
-    }
-
-    virtual ~WxDDataViewModel()
-    {
-        WXD_LOG_TRACEF("WxDDataViewModel destroyed with pointer %p", this);
-    }
-
-    // wxDataViewModel interface implementation
-    virtual unsigned int
-    GetColumnCount() const override
-    {
-        if (!m_get_column_count)
-            return 0;
-        return static_cast<unsigned int>(m_get_column_count(m_user_data));
-    }
-
-    virtual wxString
-    GetColumnType(unsigned int col) const override
-    {
-        // We'll need a way to get column types...
-        return wxS("string");
-    }
-
-    virtual void
-    GetValue(wxVariant& variant, const wxDataViewItem& item, unsigned int col) const override
-    {
-        if (!m_get_value)
-            return;
-
-        // Convert wxDataViewItem to row index
-        unsigned int row =
-            wxDataViewItem(item).GetID() ?
-                static_cast<unsigned int>(reinterpret_cast<uintptr_t>(item.GetID())) - 1 :
-                0;
-
-        // Create wxd_Variant_t for the callback
-        wxd_Variant_t* wxd_variant = m_get_value(m_user_data, row, col);
-        if (!wxd_variant)
-            return;
-        // Convert wxd_Variant_t to wxVariant
-        variant = *reinterpret_cast<wxVariant*>(wxd_variant);
-        delete reinterpret_cast<wxVariant*>(wxd_variant);
-    }
-
-    virtual bool
-    SetValue(const wxVariant& variant, const wxDataViewItem& item, unsigned int col) override
-    {
-        if (!m_set_value)
-            return false;
-
-        // Convert wxDataViewItem to row index
-        unsigned int row =
-            wxDataViewItem(item).GetID() ?
-                static_cast<unsigned int>(reinterpret_cast<uintptr_t>(item.GetID())) - 1 :
-                0;
-
-        const wxd_Variant_t* wxd_variant = reinterpret_cast<const wxd_Variant_t*>(&variant);
-        // Call the callback
-        return m_set_value(m_user_data, row, col, wxd_variant);
-    }
-
-    virtual wxDataViewItem
-    GetParent(const wxDataViewItem& item) const override
-    {
-        // For list models, items have no parent
-        return wxDataViewItem(nullptr);
-    }
-
-    virtual bool
-    IsContainer(const wxDataViewItem& item) const override
-    {
-        // For list models, only the invisible root is a container
-        return !item.IsOk();
-    }
-
-    virtual unsigned int
-    GetChildren(const wxDataViewItem& parent, wxDataViewItemArray& children) const override
-    {
-        if (!m_get_row_count)
-            return 0;
-
-        // For a list model, only the invisible root item has children
-        if (!parent.IsOk()) {
-            int count = static_cast<int>(m_get_row_count(m_user_data));
-            for (int i = 0; i < count; ++i) {
-                // Use index as the item ID
-                children.Add(
-                    wxDataViewItem(reinterpret_cast<void*>(static_cast<uintptr_t>(i + 1))));
-            }
-            return count;
-        }
-        return 0;
-    }
-};
-
 extern "C" void
 wxd_DataViewModel_AddRef(wxd_DataViewModel_t* model)
 {
@@ -718,22 +568,6 @@ wxd_DataViewModel_GetRefCount(const wxd_DataViewModel_t* model)
         return m->GetRefCount();
     }
     return 0;
-}
-
-// Model creation and attachment
-WXD_EXPORTED wxd_DataViewModel_t*
-wxd_DataViewModel_Create(wxd_DataViewModel_GetColumnCountCallback get_column_count,
-                         wxd_DataViewModel_GetRowCountCallback get_row_count,
-                         wxd_DataViewModel_GetValueCallback get_value,
-                         wxd_DataViewModel_SetValueCallback set_value, void* user_data)
-{
-    if (!get_column_count || !get_row_count || !get_value)
-        return nullptr;
-
-    WxDDataViewModel* model =
-        new WxDDataViewModel(get_column_count, get_row_count, get_value, set_value, user_data);
-
-    return reinterpret_cast<wxd_DataViewModel_t*>(model);
 }
 
 WXD_EXPORTED bool

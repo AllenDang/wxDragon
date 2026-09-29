@@ -965,16 +965,4 @@ wxd_TreeCtrl_SetItemHasChildren(wxd_TreeCtrl_t* self, wxd_TreeItemId_t* itemId, 
     treeCtrl->SetItemHasChildren(*wx_itemId, has);
 }
 
-// EnableItem - Note: This may not be available in all wxWidgets versions
-WXD_EXPORTED void
-wxd_TreeCtrl_EnableItem(wxd_TreeCtrl_t* self, wxd_TreeItemId_t* itemId, bool enable)
-{
-    wxTreeCtrl* treeCtrl = WXD_UNWRAP_TREE_CTRL(self);
-    wxTreeItemId* wx_itemId = WXD_UNWRAP_TREE_ITEM_ID(itemId);
-    if (!treeCtrl || !wx_itemId || !wx_itemId->IsOk()) return;
-    // EnableItem may not be available in older wxWidgets versions
-    // treeCtrl->EnableItem(*wx_itemId, enable);
-    (void)enable; // Suppress unused parameter warning for now
-}
-
 } // extern "C"

@@ -7,15 +7,6 @@
 
 extern "C" {
 
-void
-wxd_DataObject_Destroy(wxd_DataObject_t* data_object)
-{
-    if (!data_object)
-        return;
-    wxDataObject* wx_data_object = reinterpret_cast<wxDataObject*>(data_object);
-    delete wx_data_object;
-}
-
 // --- TextDataObject Functions ---
 
 wxd_TextDataObject_t*
@@ -103,25 +94,6 @@ wxd_FileDataObject_GetFile(wxd_FileDataObject_t* data_object, int index, char* b
 
     wxString file = filenames[index];
     return (int)wxd_cpp_utils::copy_wxstring_to_buffer(file, buffer, buffer_len);
-}
-
-int
-wxd_FileDataObject_GetFilenames(wxd_FileDataObject_t* obj, wxd_ArrayString_t* filenames)
-{
-    if (!obj || !filenames)
-        return 0;
-
-    wxFileDataObject* data_object = reinterpret_cast<wxFileDataObject*>(obj);
-    wxArrayString* array_string = reinterpret_cast<wxArrayString*>(filenames);
-
-    // Clear the existing array and copy new values
-    array_string->Clear();
-    const wxArrayString& wx_filenames = data_object->GetFilenames();
-    for (size_t i = 0; i < wx_filenames.GetCount(); i++) {
-        array_string->Add(wx_filenames[i]);
-    }
-
-    return wx_filenames.GetCount();
 }
 
 // --- BitmapDataObject Functions ---

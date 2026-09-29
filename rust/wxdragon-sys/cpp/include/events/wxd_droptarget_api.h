@@ -40,20 +40,6 @@ wxd_FileDropTarget_CreateFull(wxd_Window_t* window, wxd_OnEnter_Callback onEnter
                               wxd_OnDropFiles_Callback onDropFiles, void* userData,
                               wxd_FreeUserData_Callback freeUserData);
 
-// Create text drop target (simplified version)
-WXD_EXPORTED wxd_TextDropTarget_t*
-wxd_TextDropTarget_Create(wxd_Window_t* window, void* onDropTextCallback, void* userData);
-
-// Create file drop target (simplified version)
-WXD_EXPORTED wxd_FileDropTarget_t*
-wxd_FileDropTarget_Create(wxd_Window_t* window, void* onDropFilesCallback, void* userData);
-
-// Destroy drop targets
-WXD_EXPORTED void
-wxd_TextDropTarget_Destroy(wxd_TextDropTarget_t* dropTarget);
-WXD_EXPORTED void
-wxd_FileDropTarget_Destroy(wxd_FileDropTarget_t* dropTarget);
-
 #ifdef __cplusplus
 }
 #endif

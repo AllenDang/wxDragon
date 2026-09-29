@@ -18,10 +18,6 @@ wxd_Button_Create(wxd_Window_t* parent, wxd_Id id, const char* label, wxd_Point 
                   wxd_Style_t style);
 
 WXD_EXPORTED void
-wxd_Button_Destroy(
-    wxd_Button_t* button); // Note: Consider if needed, generic wxd_Window_Destroy might suffice
-
-WXD_EXPORTED void
 wxd_Button_SetLabel(wxd_Button_t* button, const char* label);
 
 WXD_EXPORTED int
