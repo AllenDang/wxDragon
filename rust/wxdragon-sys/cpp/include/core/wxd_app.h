@@ -85,25 +85,34 @@ wxd_SystemAppearance_Destroy(wxd_SystemAppearance_t* appearance);
 
 // --- macOS-specific App Event Handlers ---
 
-// Register handlers for macOS application events (supports multiple handlers per event)
+// Register handlers for macOS application events (supports multiple handlers per event).
+// `drop` is called with `userData` when the app is destroyed, or immediately if the
+// handler is not registered (null app/callback, or not running on macOS).
 WXD_EXPORTED void
-wxd_App_AddMacOpenFilesHandler(wxd_App_t* app, wxd_MacOpenFilesCallback callback, void* userData);
+wxd_App_AddMacOpenFilesHandler(wxd_App_t* app, wxd_MacOpenFilesCallback callback,
+                               wxd_MacHandlerDropCallback drop, void* userData);
 WXD_EXPORTED void
-wxd_App_AddMacOpenURLHandler(wxd_App_t* app, wxd_MacOpenURLCallback callback, void* userData);
+wxd_App_AddMacOpenURLHandler(wxd_App_t* app, wxd_MacOpenURLCallback callback,
+                             wxd_MacHandlerDropCallback drop, void* userData);
 WXD_EXPORTED void
-wxd_App_AddMacNewFileHandler(wxd_App_t* app, wxd_MacNewFileCallback callback, void* userData);
+wxd_App_AddMacNewFileHandler(wxd_App_t* app, wxd_MacNewFileCallback callback,
+                             wxd_MacHandlerDropCallback drop, void* userData);
 WXD_EXPORTED void
-wxd_App_AddMacReopenAppHandler(wxd_App_t* app, wxd_MacReopenAppCallback callback, void* userData);
+wxd_App_AddMacReopenAppHandler(wxd_App_t* app, wxd_MacReopenAppCallback callback,
+                               wxd_MacHandlerDropCallback drop, void* userData);
 WXD_EXPORTED void
-wxd_App_AddMacPrintFilesHandler(wxd_App_t* app, wxd_MacPrintFilesCallback callback, void* userData);
+wxd_App_AddMacPrintFilesHandler(wxd_App_t* app, wxd_MacPrintFilesCallback callback,
+                                wxd_MacHandlerDropCallback drop, void* userData);
 // Handler runs on Quit (Cmd-Q, dock menu Quit, System Shut Down/Log Out). Returning
 // false from any registered handler vetoes termination.
 WXD_EXPORTED void
-wxd_App_AddMacShouldTerminateHandler(wxd_App_t* app, wxd_MacShouldTerminateCallback callback, void* userData);
+wxd_App_AddMacShouldTerminateHandler(wxd_App_t* app, wxd_MacShouldTerminateCallback callback,
+                                     wxd_MacHandlerDropCallback drop, void* userData);
 // Handler runs once termination has been confirmed and is about to proceed; use it
 // for last-chance cleanup, not to veto (that's what ShouldTerminate is for).
 WXD_EXPORTED void
-wxd_App_AddMacWillTerminateHandler(wxd_App_t* app, wxd_MacWillTerminateCallback callback, void* userData);
+wxd_App_AddMacWillTerminateHandler(wxd_App_t* app, wxd_MacWillTerminateCallback callback,
+                                   wxd_MacHandlerDropCallback drop, void* userData);
 
 // --- End of macOS-specific App Event Handlers ---
 

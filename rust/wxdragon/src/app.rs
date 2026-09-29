@@ -419,7 +419,14 @@ impl crate::event::AppEvents for App {
             let callback = Box::new(callback);
             let user_data = Box::into_raw(callback) as *mut c_void;
 
-            unsafe { ffi::wxd_App_AddMacOpenFilesHandler(self.handle, Some(mac_open_files_trampoline::<F>), user_data) };
+            unsafe {
+                ffi::wxd_App_AddMacOpenFilesHandler(
+                    self.handle,
+                    Some(mac_open_files_trampoline::<F>),
+                    Some(mac_handler_drop::<F>),
+                    user_data,
+                )
+            };
         }
         #[cfg(not(target_os = "macos"))]
         {
@@ -436,7 +443,14 @@ impl crate::event::AppEvents for App {
             let callback = Box::new(callback);
             let user_data = Box::into_raw(callback) as *mut c_void;
 
-            unsafe { ffi::wxd_App_AddMacOpenURLHandler(self.handle, Some(mac_open_url_trampoline::<F>), user_data) };
+            unsafe {
+                ffi::wxd_App_AddMacOpenURLHandler(
+                    self.handle,
+                    Some(mac_open_url_trampoline::<F>),
+                    Some(mac_handler_drop::<F>),
+                    user_data,
+                )
+            };
         }
         #[cfg(not(target_os = "macos"))]
         {
@@ -453,7 +467,14 @@ impl crate::event::AppEvents for App {
             let callback = Box::new(callback);
             let user_data = Box::into_raw(callback) as *mut c_void;
 
-            unsafe { ffi::wxd_App_AddMacNewFileHandler(self.handle, Some(mac_new_file_trampoline::<F>), user_data) };
+            unsafe {
+                ffi::wxd_App_AddMacNewFileHandler(
+                    self.handle,
+                    Some(mac_new_file_trampoline::<F>),
+                    Some(mac_handler_drop::<F>),
+                    user_data,
+                )
+            };
         }
         #[cfg(not(target_os = "macos"))]
         {
@@ -470,7 +491,14 @@ impl crate::event::AppEvents for App {
             let callback = Box::new(callback);
             let user_data = Box::into_raw(callback) as *mut c_void;
 
-            unsafe { ffi::wxd_App_AddMacReopenAppHandler(self.handle, Some(mac_reopen_app_trampoline::<F>), user_data) };
+            unsafe {
+                ffi::wxd_App_AddMacReopenAppHandler(
+                    self.handle,
+                    Some(mac_reopen_app_trampoline::<F>),
+                    Some(mac_handler_drop::<F>),
+                    user_data,
+                )
+            };
         }
         #[cfg(not(target_os = "macos"))]
         {
@@ -487,7 +515,14 @@ impl crate::event::AppEvents for App {
             let callback = Box::new(callback);
             let user_data = Box::into_raw(callback) as *mut c_void;
 
-            unsafe { ffi::wxd_App_AddMacPrintFilesHandler(self.handle, Some(mac_print_files_trampoline::<F>), user_data) };
+            unsafe {
+                ffi::wxd_App_AddMacPrintFilesHandler(
+                    self.handle,
+                    Some(mac_print_files_trampoline::<F>),
+                    Some(mac_handler_drop::<F>),
+                    user_data,
+                )
+            };
         }
         #[cfg(not(target_os = "macos"))]
         {
@@ -505,7 +540,12 @@ impl crate::event::AppEvents for App {
             let user_data = Box::into_raw(callback) as *mut c_void;
 
             unsafe {
-                ffi::wxd_App_AddMacShouldTerminateHandler(self.handle, Some(mac_should_terminate_trampoline::<F>), user_data)
+                ffi::wxd_App_AddMacShouldTerminateHandler(
+                    self.handle,
+                    Some(mac_should_terminate_trampoline::<F>),
+                    Some(mac_handler_drop::<F>),
+                    user_data,
+                )
             };
         }
         #[cfg(not(target_os = "macos"))]
@@ -523,7 +563,14 @@ impl crate::event::AppEvents for App {
             let callback = Box::new(callback);
             let user_data = Box::into_raw(callback) as *mut c_void;
 
-            unsafe { ffi::wxd_App_AddMacWillTerminateHandler(self.handle, Some(mac_will_terminate_trampoline::<F>), user_data) };
+            unsafe {
+                ffi::wxd_App_AddMacWillTerminateHandler(
+                    self.handle,
+                    Some(mac_will_terminate_trampoline::<F>),
+                    Some(mac_handler_drop::<F>),
+                    user_data,
+                )
+            };
         }
         #[cfg(not(target_os = "macos"))]
         {
@@ -533,6 +580,17 @@ impl crate::event::AppEvents for App {
 }
 
 // Trampoline functions for macOS
+/// Frees a macOS handler closure. C++ calls this when the app is destroyed, or right away
+/// if the handler could not be registered.
+#[cfg(target_os = "macos")]
+unsafe extern "C" fn mac_handler_drop<F>(user_data: *mut c_void) {
+    crate::utils::guard_ffi_callback("mac_handler_drop", (), || {
+        if !user_data.is_null() {
+            let _ = unsafe { Box::from_raw(user_data as *mut F) };
+        }
+    })
+}
+
 #[cfg(target_os = "macos")]
 unsafe extern "C" fn mac_open_files_trampoline<F>(user_data: *mut c_void, files: *mut *const c_char, count: c_int)
 where
