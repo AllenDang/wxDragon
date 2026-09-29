@@ -95,8 +95,6 @@ wxd_Window_Enable(wxd_Window_t* self, bool enable);
 
 WXD_EXPORTED wxd_Window_t*
 wxd_Window_GetParent(wxd_Window_t* self);
-WXD_EXPORTED wxd_Window_t*
-wxd_Window_GetGrandParent(wxd_Window_t* self);
 
 WXD_EXPORTED void
 wxd_Window_SetFont(wxd_Window_t* self, const wxd_Font_t* font);

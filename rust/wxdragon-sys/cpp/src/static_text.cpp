@@ -33,19 +33,6 @@ wxd_StaticText_Create(wxd_Window_t* parent, wxd_Id id, const char* label, wxd_Po
 }
 
 WXD_EXPORTED void
-wxd_StaticText_Destroy(wxd_StaticText_t* stext)
-{
-    // Assumes stext is a top-level window, which is unlikely.
-    // Usually, child windows are destroyed by their parents.
-    // This function might not be needed if Drop logic handles parentage.
-    // For safety, we'll call Destroy() which is safe for children too.
-    if (!stext)
-        return;
-    wxStaticText* wx_stext = reinterpret_cast<wxStaticText*>(stext);
-    wx_stext->Destroy();
-}
-
-WXD_EXPORTED void
 wxd_StaticText_SetLabel(wxd_StaticText_t* stext, const char* label)
 {
     if (!stext)

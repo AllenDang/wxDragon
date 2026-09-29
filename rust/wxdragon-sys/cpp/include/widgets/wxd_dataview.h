@@ -31,10 +31,6 @@ WXD_EXPORTED wxd_Window_t*
 wxd_DataViewListCtrl_Create(wxd_Window_t* parent, int64_t id, const wxd_Point* pos,
                             const wxd_Size* size, int64_t style);
 
-WXD_EXPORTED wxd_Window_t*
-wxd_DataViewTreeCtrl_Create(wxd_Window_t* parent, int64_t id, const wxd_Point* pos,
-                            const wxd_Size* size, int64_t style);
-
 // Column management
 WXD_EXPORTED wxd_DataViewColumn_t*
 wxd_DataViewColumn_Create(
@@ -151,27 +147,12 @@ wxd_DataViewChoiceRenderer_Create(const char* varianttype, const char* choices, 
 WXD_EXPORTED wxd_DataViewRenderer_t*
 wxd_DataViewCheckIconTextRenderer_Create(const char* varianttype, int64_t mode, int64_t align);
 
-// Model callback types
-typedef uint64_t (*wxd_DataViewModel_GetColumnCountCallback)(void* user_data);
-typedef uint64_t (*wxd_DataViewModel_GetRowCountCallback)(void* user_data);
-typedef wxd_Variant_t* (*wxd_DataViewModel_GetValueCallback)(void* user_data, uint64_t row,
-                                                             uint64_t col);
-typedef bool (*wxd_DataViewModel_SetValueCallback)(void* user_data, uint64_t row, uint64_t col,
-                                                   const wxd_Variant_t* variant);
-
 WXD_EXPORTED void
 wxd_DataViewModel_AddRef(wxd_DataViewModel_t* model);
 WXD_EXPORTED void
 wxd_DataViewModel_Release(wxd_DataViewModel_t* model);
 WXD_EXPORTED int
 wxd_DataViewModel_GetRefCount(const wxd_DataViewModel_t* model);
-
-// Model creation and attachment
-WXD_EXPORTED wxd_DataViewModel_t*
-wxd_DataViewModel_Create(wxd_DataViewModel_GetColumnCountCallback get_column_count,
-                         wxd_DataViewModel_GetRowCountCallback get_row_count,
-                         wxd_DataViewModel_GetValueCallback get_value,
-                         wxd_DataViewModel_SetValueCallback set_value, void* user_data);
 
 WXD_EXPORTED bool
 wxd_DataViewCtrl_AssociateModel(wxd_Window_t* self, wxd_DataViewModel_t* model);
@@ -330,12 +311,6 @@ wxd_DataViewTreeModel_ItemsChanged(wxd_DataViewModel_t* model, const void* const
 WXD_EXPORTED void
 wxd_DataViewTreeModel_Cleared(wxd_DataViewModel_t* model);
 
-// DataViewCtrl functions
-WXD_EXPORTED wxd_DataViewColumn_t*
-wxd_DataViewCtrl_CreateTextColumn(wxd_Window_t* ctrl, const char* label, uint32_t model_column,
-                                  wxd_DataViewCellModeCEnum mode, int width,
-                                  wxd_AlignmentCEnum align, int flags);
-
 // Setting column properties after creation
 WXD_EXPORTED void
 wxd_DataViewColumn_SetTitle(wxd_DataViewColumn_t* self, const char* title);
@@ -391,18 +366,6 @@ wxd_DataViewCustomRenderer_Create(
     wxd_CustomRenderer_CreateEditorCtrlCallback create_editor_callback,
     wxd_CustomRenderer_GetValueFromEditorCtrlCallback get_value_from_editor_callback,
     wxd_CustomRenderer_ActivateCellCallback activate_cell_callback);
-
-// Function to release callbacks by renderer ID
-WXD_EXPORTED void
-wxd_DataViewCustomRenderer_ReleaseCallbacksByKey(int32_t renderer_id);
-
-// Function to release all callbacks for a specific dataview ID (deprecated - kept for compatibility)
-WXD_EXPORTED void
-wxd_DataViewCustomRenderer_ReleaseAllCallbacksForDataView(int32_t dataview_id);
-
-// Cleanup function for custom renderer callbacks (legacy)
-WXD_EXPORTED void
-wxd_DataViewCustomRenderer_ReleaseCallbacks(wxd_DataViewRenderer_t* renderer);
 
 // Helper function to free Rust custom renderer callbacks
 WXD_EXPORTED void

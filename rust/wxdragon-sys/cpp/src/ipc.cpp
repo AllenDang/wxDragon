@@ -415,17 +415,6 @@ wxd_IPCConnection_Disconnect(wxd_IPCConnection_t* conn)
     return wx_conn->Disconnect();
 }
 
-WXD_EXPORTED size_t
-wxd_IPCConnection_GetTopic(wxd_IPCConnection_t* conn, char* buffer, size_t buffer_size)
-{
-    if (!conn) return 0;
-    // wxConnection doesn't expose GetTopic() directly
-    // We would need to track it ourselves or access protected members
-    (void)buffer;
-    (void)buffer_size;
-    return 0;
-}
-
 WXD_EXPORTED bool
 wxd_IPCConnection_IsConnected(wxd_IPCConnection_t* conn)
 {

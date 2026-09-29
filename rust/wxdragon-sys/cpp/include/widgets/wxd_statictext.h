@@ -9,9 +9,6 @@ wxd_StaticText_Create(wxd_Window_t* parent, wxd_Id id, const char* label, wxd_Po
                       wxd_Size size, wxd_Style_t style);
 
 WXD_EXPORTED void
-wxd_StaticText_Destroy(wxd_StaticText_t* stext); // Generic might suffice
-
-WXD_EXPORTED void
 wxd_StaticText_SetLabel(wxd_StaticText_t* stext, const char* label);
 
 /**

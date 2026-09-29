@@ -3,10 +3,6 @@
 
 #include "../wxd_types.h"
 
-// --- DataObject Functions ---
-WXD_EXPORTED void
-wxd_DataObject_Destroy(wxd_DataObject_t* data_object);
-
 // --- TextDataObject Functions ---
 WXD_EXPORTED wxd_TextDataObject_t*
 wxd_TextDataObject_Create(const char* text);
@@ -37,8 +33,6 @@ wxd_FileDataObject_GetFileCount(wxd_FileDataObject_t* data_object);
 WXD_EXPORTED int
 wxd_FileDataObject_GetFile(wxd_FileDataObject_t* data_object, int index, char* buffer,
                            size_t buffer_len);
-WXD_EXPORTED int
-wxd_FileDataObject_GetFilenames(wxd_FileDataObject_t* obj, wxd_ArrayString_t* filenames);
 
 // --- BitmapDataObject Functions ---
 WXD_EXPORTED wxd_BitmapDataObject_t*

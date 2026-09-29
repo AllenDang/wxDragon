@@ -320,17 +320,6 @@ wxd_Cursor_GetHotSpot(wxd_Cursor_t* cursor)
     return result;
 }
 
-WXD_EXPORTED void
-wxd_Cursor_SetHotSpot(wxd_Cursor_t* cursor, int x, int y)
-{
-    // Note: wxWidgets doesn't provide a SetHotSpot method for cursors
-    // This is included for completeness but may not be implemented
-    // on all platforms
-    (void)cursor;
-    (void)x;
-    (void)y;
-}
-
 // --- Platform-specific Functions ---
 
 WXD_EXPORTED void*
@@ -378,14 +367,6 @@ wxd_SetCursor(wxd_Cursor_t* cursor)
     else {
         wxSetCursor(wxNullCursor);
     }
-}
-
-WXD_EXPORTED wxd_Cursor_t*
-wxd_GetCursor()
-{
-    // Note: wxWidgets doesn't have a global wxGetCursor function
-    // This would need to be implemented by tracking the current cursor
-    return nullptr;
 }
 
 WXD_EXPORTED void

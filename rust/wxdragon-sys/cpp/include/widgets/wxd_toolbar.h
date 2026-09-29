@@ -37,11 +37,6 @@ wxd_ToolBar_GetToolState(wxd_ToolBar_t* self, wxd_Id toolId);
 WXD_EXPORTED void
 wxd_ToolBar_SetToolShortHelp(wxd_ToolBar_t* self, wxd_Id toolId, const char* helpString);
 
-// BitmapBundle support
-WXD_EXPORTED bool
-wxd_ToolBar_AddToolWithBundle(wxd_ToolBar_t* toolbar, wxd_Id id, const char* label,
-                              wxd_BitmapBundle_t* bitmap);
-
 WXD_EXPORTED bool
 wxd_ToolBar_AddToolWithBundles(wxd_ToolBar_t* toolbar, wxd_Id id, const char* label,
                                wxd_BitmapBundle_t* bitmap, wxd_BitmapBundle_t* bitmapDisabled,

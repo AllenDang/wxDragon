@@ -127,19 +127,6 @@ wxd_ListCtrl_GetColumnCount(wxd_ListCtrl_t* self)
     return reinterpret_cast<wxListCtrl*>(self)->GetColumnCount();
 }
 
-WXD_EXPORTED int32_t
-wxd_ListCtrl_InsertItem_Simple(wxd_ListCtrl_t* self, int64_t index, const char* label)
-{
-    if (!self)
-        return -1;
-    wxListItem item;
-    item.SetId(index); // This sets the position where item is inserted
-    item.SetText(wxString::FromUTF8(label));
-    // For other views, you might set image, etc.
-    // item.SetMask(wxLIST_MASK_TEXT | wxLIST_MASK_IMAGE | wxLIST_MASK_DATA); // if using data/image
-    return static_cast<int32_t>(reinterpret_cast<wxListCtrl*>(self)->InsertItem(item));
-}
-
 WXD_EXPORTED void
 wxd_ListCtrl_SetItemText(wxd_ListCtrl_t* self, int64_t index, const char* text)
 {
@@ -311,29 +298,12 @@ wxd_ListCtrl_SetItemData(wxd_ListCtrl_t* self, int64_t item, int64_t data)
     return reinterpret_cast<wxListCtrl*>(self)->SetItemData(item, data);
 }
 
-WXD_EXPORTED bool
-wxd_ListCtrl_SetItemPtrData(wxd_ListCtrl_t* self, int64_t item, void* data)
-{
-    if (!self)
-        return false;
-    return reinterpret_cast<wxListCtrl*>(self)->SetItemPtrData(item, wxPtrToUInt(data));
-}
-
 WXD_EXPORTED int64_t
 wxd_ListCtrl_GetItemData(wxd_ListCtrl_t* self, int64_t item)
 {
     if (!self)
         return 0;
     return reinterpret_cast<wxListCtrl*>(self)->GetItemData(item);
-}
-
-WXD_EXPORTED void*
-wxd_ListCtrl_GetItemPtrData(wxd_ListCtrl_t* self, int64_t item)
-{
-    if (!self)
-        return nullptr;
-    wxUIntPtr data = reinterpret_cast<wxListCtrl*>(self)->GetItemData(item);
-    return wxUIntToPtr(data);
 }
 
 // Item Appearance
@@ -531,16 +501,6 @@ wxd_ListCtrl_ShowSortIndicator(wxd_ListCtrl_t* self, int col, bool ascending)
     if (!self)
         return;
     reinterpret_cast<wxListCtrl*>(self)->ShowSortIndicator(col, ascending);
-}
-
-// Image List Support
-WXD_EXPORTED void
-wxd_ListCtrl_SetImageList(wxd_ListCtrl_t* self, wxd_ImageList_t* imageList, int which)
-{
-    if (!self)
-        return;
-    reinterpret_cast<wxListCtrl*>(self)->SetImageList(reinterpret_cast<wxImageList*>(imageList),
-                                                      which);
 }
 
 WXD_EXPORTED void

@@ -12,6 +12,10 @@
 
 - **TaskBarIcon**: Fixed tray icon events never firing on Windows and Linux. When the taskbar event types moved from `event.cpp` into `taskbar.cpp`, the mapper and its registrar landed inside the existing `#ifdef __WXOSX__` block that only guarded `wx/osx/private.h`, so they were compiled on macOS alone. Everywhere else `on_left_up`, `on_left_down`, `on_left_double_click` and the other taskbar handlers bound to `wxEVT_NULL` and silently never ran. The guard now covers just the macOS header again
 
+### Refactoring
+
+- **wxdragon-sys**: Removed 39 C shim functions that nothing called. Nine were declared in a header with no definition, so any use failed to link (the `wxd_TreeItemData_*` functions, `wxd_RichTextCtrl_ShowPosition`/`ScrollIntoView`/`IsPositionVisible`, `wxd_SearchCtrl_GetCancelButton`, `wxd_DataViewCtrl_CreateTextColumn` ). Nine were stubs that did nothing or always returned null, such as `wxd_GetCursor`, `wxd_Cursor_SetHotSpot`, `wxd_TreeCtrl_EnableItem` and the `wxd_DataViewCustomRenderer_Release*` functions. The rest were superseded: the old drop target set in `dnd.cpp` (replaced by the `*_CreateFull` functions), per-type window `Destroy` functions, the flat-callback `wxd_DataViewModel_Create` and its model class, and duplicates of functions the Rust side already uses. The safe `wxdragon` API is unchanged; code calling these symbols through `wxdragon-sys` directly would need updating
+
 ## 0.9.22
 
 ### Breaking Changes

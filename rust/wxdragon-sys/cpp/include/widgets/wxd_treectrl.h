@@ -4,17 +4,6 @@
 #include <stdint.h>
 #include "../wxd_types.h"
 
-// --- TreeItemData functions ---
-// Create and manage TreeItemData objects
-WXD_EXPORTED wxd_TreeItemData_t*
-wxd_TreeItemData_Create(void* client_data);
-WXD_EXPORTED void
-wxd_TreeItemData_Free(wxd_TreeItemData_t* data);
-WXD_EXPORTED void*
-wxd_TreeItemData_GetClientData(wxd_TreeItemData_t* data);
-WXD_EXPORTED void
-wxd_TreeItemData_SetClientData(wxd_TreeItemData_t* data, void* client_data);
-
 // --- TreeCtrl Functions ---
 WXD_EXPORTED wxd_TreeCtrl_t*
 wxd_TreeCtrl_Create(wxd_Window_t* parent, wxd_Id id, wxd_Point pos, wxd_Size size,
@@ -300,10 +289,6 @@ wxd_TreeCtrl_GetItemState(wxd_TreeCtrl_t* self, wxd_TreeItemId_t* itemId);
 // Sets whether the item has a button (+/-) to expand/collapse
 WXD_EXPORTED void
 wxd_TreeCtrl_SetItemHasChildren(wxd_TreeCtrl_t* self, wxd_TreeItemId_t* itemId, bool has);
-
-// Enables or disables an item (grays it out when disabled)
-WXD_EXPORTED void
-wxd_TreeCtrl_EnableItem(wxd_TreeCtrl_t* self, wxd_TreeItemId_t* itemId, bool enable);
 
 // Tree hit test flags
 typedef enum : int32_t {

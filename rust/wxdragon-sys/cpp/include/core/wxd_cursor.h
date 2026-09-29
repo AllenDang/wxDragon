@@ -46,10 +46,6 @@ wxd_Cursor_IsOk(wxd_Cursor_t* cursor);
 WXD_EXPORTED wxd_Point
 wxd_Cursor_GetHotSpot(wxd_Cursor_t* cursor);
 
-/// Sets the hotspot coordinates of the cursor (if supported)
-WXD_EXPORTED void
-wxd_Cursor_SetHotSpot(wxd_Cursor_t* cursor, int x, int y);
-
 // --- Platform-specific Functions ---
 
 /// Gets the native handle of the cursor (platform-specific)
@@ -65,10 +61,6 @@ wxd_Cursor_SetHandle(wxd_Cursor_t* cursor, void* handle);
 /// Sets the global cursor for the application
 WXD_EXPORTED void
 wxd_SetCursor(wxd_Cursor_t* cursor);
-
-/// Gets the current global cursor
-WXD_EXPORTED wxd_Cursor_t*
-wxd_GetCursor();
 
 /// Begins busy cursor (shows wait cursor)
 WXD_EXPORTED void
