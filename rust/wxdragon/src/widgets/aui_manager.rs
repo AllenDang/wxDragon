@@ -287,6 +287,12 @@ impl PaneInfo {
         self
     }
 
+    /// Set the initial size of the dock containing this pane.
+    pub fn dock_size(self, size: i32) -> Self {
+        unsafe { ffi::wxd_AuiPaneInfo_DockSize(self.ptr, size) };
+        self
+    }
+
     /// Set the row position for this pane
     pub fn row(self, row: i32) -> Self {
         unsafe {

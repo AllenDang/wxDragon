@@ -130,6 +130,9 @@ WXD_EXPORTED wxd_AuiPaneInfo_t*
 wxd_AuiPaneInfo_MaxSize(wxd_AuiPaneInfo_t* self, int width, int height);
 
 WXD_EXPORTED wxd_AuiPaneInfo_t*
+wxd_AuiPaneInfo_DockSize(wxd_AuiPaneInfo_t* self, int size);
+
+WXD_EXPORTED wxd_AuiPaneInfo_t*
 wxd_AuiPaneInfo_Position(wxd_AuiPaneInfo_t* self, int pos);
 
 WXD_EXPORTED wxd_AuiPaneInfo_t*

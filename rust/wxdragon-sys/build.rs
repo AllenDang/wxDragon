@@ -270,10 +270,11 @@ fn build_wxdragon_wrapper(
         cmake_config.define("wxUSE_ARTPROVIDER_TANGO", "OFF");
     }
     if !cfg!(feature = "wx-extra-image-formats") {
-        for option in ["wxUSE_GIF", "wxUSE_PCX", "wxUSE_TGA", "wxUSE_IFF", "wxUSE_PNM", "wxUSE_XPM"] {
+        for option in ["wxUSE_GIF", "wxUSE_PCX", "wxUSE_TGA", "wxUSE_IFF", "wxUSE_PNM"] {
             cmake_config.define(option, "OFF");
         }
     }
+    cmake_config.define("wxUSE_XPM", if cfg!(feature = "wx-xpm") { "ON" } else { "OFF" });
     if !cfg!(feature = "wx-regex") {
         cmake_config.define("wxUSE_REGEX", "OFF");
     }
@@ -1344,11 +1345,11 @@ where
         let mut outfile = std::fs::File::create(&out_path)?;
         let method = entry.compression_method();
         match method {
-            CompressionMethod::Store => {
+            CompressionMethod::STORE => {
                 let mut verifier = zip_entry.verifying_reader(reader);
                 std::io::copy(&mut verifier, &mut outfile)?;
             }
-            CompressionMethod::Deflate => {
+            CompressionMethod::DEFLATE => {
                 let inflater = flate2::read::DeflateDecoder::new(reader);
                 let mut verifier = zip_entry.verifying_reader(inflater);
                 std::io::copy(&mut verifier, &mut outfile)?;

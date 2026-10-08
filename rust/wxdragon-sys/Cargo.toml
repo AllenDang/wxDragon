@@ -26,11 +26,12 @@ default = [
     "wx-regex",
 ]
 wx-printing = []
+wx-xpm = []
 # The Tango icons built into wxArtProvider, not needed by the applications
 # providing their own icons.
 wx-tango-icons = []
 # The GIF, PCX, TGA, IFF, PNM and XPM image handlers.
-wx-extra-image-formats = []
+wx-extra-image-formats = ["wx-xpm"]
 # wxRegEx and the PCRE2 library it uses.
 wx-regex = []
 wx-tiff = []
@@ -39,19 +40,19 @@ wx-asserts = []
 aui = []
 media-ctrl = []
 webview = []
-stc = []
+stc = ["wx-xpm"]
 xrc = []
 richtext = []
 
 [dependencies]
-log = "0.4"
+log = "0.4.34"
 # Sys crates typically have no runtime Rust dependencies
 
 [build-dependencies]
-bindgen = "0.72"    # For generating Rust bindings from C/C++ headers
-cmake = "0.1"
-flate2 = "1.1.4"
-pkg-config = "0.3"  # For finding libgtk and its dependencies (Linux only)
-rawzip = "0.4"
-reqwest = { version = "0.13.4", default-features = false, features = ["blocking", "native-tls"] }
+bindgen = { version = "0.73.2", default-features = false, features = ["logging", "runtime"] } # For generating Rust bindings from C/C++ headers
+cmake = "0.1.58"
+flate2 = "1.1.10"
+pkg-config = "0.3.34"  # For finding libgtk and its dependencies (Linux only)
+rawzip = "0.5.2"
+reqwest = { version = "0.13.5", default-features = false, features = ["blocking", "native-tls"] }
 sha2 = "0.11.0"

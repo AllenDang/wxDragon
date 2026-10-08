@@ -25,6 +25,7 @@ default = [
     "wx-regex",
 ]
 wx-printing = ["wxdragon-sys/wx-printing"]
+wx-xpm = ["wxdragon-sys/wx-xpm"]
 wx-tango-icons = ["wxdragon-sys/wx-tango-icons"]
 wx-extra-image-formats = ["wxdragon-sys/wx-extra-image-formats"]
 wx-regex = ["wxdragon-sys/wx-regex"]
@@ -40,8 +41,8 @@ xrc = ["wxdragon-sys/xrc"]
 richtext = ["wxdragon-sys/richtext"]
 
 [dependencies]
-bitflags = "2.13.0"
-log = "0.4.28"
+bitflags = "2.13.2"
+log = "0.4.34"
 paste = "1.0.15"
 wxdragon-macros = { path = "../../rust/wxdragon-macros" }
 wxdragon-sys = { path = "../../rust/wxdragon-sys", default-features = false } 
