@@ -1,0 +1,4 @@
+include wx/statline.h
+
+class StaticLine : wxStaticLine
+    create(Window parent, Id id, Point pos, Size size, Style style, string? name = wxStaticLineNameStr)

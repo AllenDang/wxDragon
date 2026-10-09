@@ -1,3 +1,5 @@
+mod shimgen;
+
 const WX_SRC_URL: &str = "https://github.com/wxWidgets/wxWidgets/releases/download/v3.3.3/wxWidgets-3.3.3.zip";
 const WX_VERSION: &str = "3.3.3";
 const WX_SRC_URL_SHA256: &str = "458a1ef598c90174ee43622e8e63bfa1eccb451ffc2258bb4f8edcb050c5feb1";
@@ -8,6 +10,7 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
     println!("cargo::rerun-if-changed=cpp");
     println!("cargo::rerun-if-changed=src");
     println!("cargo::rerun-if-changed=build.rs");
+    println!("cargo::rerun-if-changed=shimgen.rs");
     println!("cargo::rerun-if-env-changed=WXWIDGETS_DIR");
     println!("cargo::rerun-if-env-changed=WXWIDGETS_BUILD_DIR");
     println!("cargo::rerun-if-env-changed=WXDRAGON_SYS_BUILD_DIR");
@@ -18,10 +21,16 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
     let target = std::env::var("TARGET").unwrap();
     let profile = std::env::var("PROFILE").unwrap();
 
+    // Generate the mechanical shim functions described by cpp/spec/*.wxd.
+    let shimgen_dir = out_dir.join("shimgen");
+    shimgen::generate(std::path::Path::new("cpp/spec"), &shimgen_dir)?;
+    let shimgen_include_dir = shimgen_dir.join("include");
+
     let mut bindings_builder = bindgen::Builder::default()
         .header("cpp/include/wxdragon.h")
         .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
-        .clang_arg(format!("--target={target}"));
+        .clang_arg(format!("--target={target}"))
+        .clang_arg(format!("-I{}", shimgen_include_dir.display()));
 
     // Feature flags for conditional compilation in headers
     bindings_builder = bindings_builder
@@ -154,7 +163,7 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
     println!("info: Successfully generated FFI bindings");
 
     // --- 4. Build wxDragon Wrapper ---
-    build_wxdragon_wrapper(dest_bin_dir, &target, &wxwidgets_dir, &target_os, &target_env)
+    build_wxdragon_wrapper(dest_bin_dir, &target, &wxwidgets_dir, &target_os, &target_env, &shimgen_dir)
         .expect("Failed to build wxDragon wrapper library");
     Ok(())
 }
@@ -210,6 +219,7 @@ fn build_wxdragon_wrapper(
     wxwidgets_source_path: &std::path::Path,
     target_os: &str,
     target_env: &str,
+    shimgen_dir: &std::path::Path,
 ) -> std::io::Result<()> {
     // --- 3. Configure and Build libwxdragon (and wxWidgets) using CMake ---
     let libwxdragon_cmake_source_dir = std::path::PathBuf::from("cpp");
@@ -231,6 +241,7 @@ fn build_wxdragon_wrapper(
     cmake_config.out_dir(&wxdragon_sys_build_dir);
     cmake_config.define("WXWIDGETS_LIB_DIR", wxwidgets_source_path);
     cmake_config.define("WXWIDGETS_BUILD_DIR", &wxwidgets_build_dir);
+    cmake_config.define("WXD_GENERATED_DIR", shimgen_dir);
 
     // Handle CMAKE_TLS_VERIFY for SSL certificate verification during downloads
     // On Windows with webview feature, we need to download WebView2 SDK from NuGet

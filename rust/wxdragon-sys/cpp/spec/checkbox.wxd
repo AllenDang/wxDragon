@@ -1,0 +1,6 @@
+include wx/checkbox.h
+
+class CheckBox : wxCheckBox
+    create(Window parent, Id id, string label, Point pos, Size size, Style style)
+    bool IsChecked()
+    void SetValue(bool value)

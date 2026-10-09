@@ -138,7 +138,6 @@ set(WXDRAGON_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/bitmapcombobox.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/button.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/calendar_ctrl.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/checkbox.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/checklistbox.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/choice.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/clipboard.cpp
@@ -175,7 +174,6 @@ set(WXDRAGON_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/font_dialog.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/fontpickerctrl.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/frame.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/gauge.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/glcanvas.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/grid.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/hyperlink_ctrl.cpp
@@ -197,7 +195,6 @@ set(WXDRAGON_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/print.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/progressdialog.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/propertygrid.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/radio_button.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/radiobox.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/rearrangelist.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/scrollbar.cpp
@@ -206,16 +203,12 @@ set(WXDRAGON_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/single_choice_dialog.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/singleinstancechecker.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/sizer.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/slider.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/spinbutton.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/spinctrl.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/spinctrldouble.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/splitterwindow.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/static_bitmap.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/generic_static_bitmap.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/platform_aware_staticbitmap_handler.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/static_line.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/static_text.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/staticbox.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/statusbar.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/syssettings.cpp
@@ -223,7 +216,6 @@ set(WXDRAGON_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/text_entry_dialog.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/textctrl.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/timepickerctrl.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/togglebutton.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/bitmaptogglebutton.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/toolbar.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/translations.cpp
@@ -286,6 +278,10 @@ if (wxdUSE_RICHTEXT)
     list(APPEND WXDRAGON_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/richtextctrl.cpp)
 endif()
 
+# Shim functions generated from cpp/spec/*.wxd by build.rs (see shimgen.rs)
+file(GLOB WXD_GENERATED_SOURCES "${WXD_GENERATED_DIR}/src/*.cpp")
+list(APPEND WXDRAGON_SOURCES ${WXD_GENERATED_SOURCES})
+
 message(STATUS "wxDragon sources: ${WXDRAGON_SOURCES}")
 
 # --- Create wxDragon Static Library ---
@@ -294,6 +290,8 @@ add_library(wxdragon STATIC ${WXDRAGON_SOURCES})
 # --- Set Include Directories ---
 target_include_directories(wxdragon PRIVATE 
     ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${WXD_GENERATED_DIR}/include
 )
 
 # --- Set link libraries ---
