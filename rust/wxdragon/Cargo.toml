@@ -51,3 +51,8 @@ wxdragon-sys = { path = "../../rust/wxdragon-sys", default-features = false }
 name = "window_accessibility"
 # Cocoa must initialize on the OS main thread, not a Cargo test worker.
 harness = false
+
+[[test]]
+name = "event_reentrancy"
+# Exercise native event dispatch on the OS main thread, including on Cocoa.
+harness = false

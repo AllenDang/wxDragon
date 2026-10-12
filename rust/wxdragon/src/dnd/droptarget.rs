@@ -1,18 +1,26 @@
 //! Target for drop operations.
+//!
+//! # Callback re-entry
+//!
+//! Callbacks remain `FnMut`, but a nested invocation of the same callback is
+//! skipped with a warning. Drag-result callbacks return [`DragResult::None`],
+//! drop callbacks return `false`, and leave callbacks do nothing. Different
+//! callbacks may nest normally; skipped invocations are not queued.
 
 use crate::dnd::DragResult;
 use crate::prelude::WxWidget;
+use crate::utils::{FfiCallbackData, ReentrantCallback};
 use std::boxed::Box;
 use std::ffi::{CStr, c_void};
 use std::os::raw::c_char;
 use wxdragon_sys as ffi;
 
 // Type aliases to reduce complexity warnings
-type DragCallback = Box<dyn FnMut(i32, i32, DragResult) -> DragResult + 'static>;
-type LeaveCallback = Box<dyn FnMut() + 'static>;
-type DropCallback = Box<dyn FnMut(i32, i32) -> bool + 'static>;
-type DropTextCallback = Box<dyn FnMut(&str, i32, i32) -> bool + 'static>;
-type DropFilesCallback = Box<dyn FnMut(Vec<String>, i32, i32) -> bool + 'static>;
+type DragCallback = ReentrantCallback<Box<dyn FnMut(i32, i32, DragResult) -> DragResult + 'static>>;
+type LeaveCallback = ReentrantCallback<Box<dyn FnMut() + 'static>>;
+type DropCallback = ReentrantCallback<Box<dyn FnMut(i32, i32) -> bool + 'static>>;
+type DropTextCallback = ReentrantCallback<Box<dyn FnMut(&str, i32, i32) -> bool + 'static>>;
+type DropFilesCallback = ReentrantCallback<Box<dyn FnMut(Vec<String>, i32, i32) -> bool + 'static>>;
 
 /// Callback handlers for a text drop target.
 struct TextDropTargetCallbacks {
@@ -66,7 +74,7 @@ impl<'a, W: WxWidget> TextDropTargetBuilder<'a, W> {
     where
         F: FnMut(i32, i32, DragResult) -> DragResult + 'static,
     {
-        self.on_enter = Some(Box::new(callback));
+        self.on_enter = Some(ReentrantCallback::new(Box::new(callback)));
         self
     }
 
@@ -75,7 +83,7 @@ impl<'a, W: WxWidget> TextDropTargetBuilder<'a, W> {
     where
         F: FnMut(i32, i32, DragResult) -> DragResult + 'static,
     {
-        self.on_drag_over = Some(Box::new(callback));
+        self.on_drag_over = Some(ReentrantCallback::new(Box::new(callback)));
         self
     }
 
@@ -84,7 +92,7 @@ impl<'a, W: WxWidget> TextDropTargetBuilder<'a, W> {
     where
         F: FnMut() + 'static,
     {
-        self.on_leave = Some(Box::new(callback));
+        self.on_leave = Some(ReentrantCallback::new(Box::new(callback)));
         self
     }
 
@@ -93,7 +101,7 @@ impl<'a, W: WxWidget> TextDropTargetBuilder<'a, W> {
     where
         F: FnMut(i32, i32) -> bool + 'static,
     {
-        self.on_drop = Some(Box::new(callback));
+        self.on_drop = Some(ReentrantCallback::new(Box::new(callback)));
         self
     }
 
@@ -102,7 +110,7 @@ impl<'a, W: WxWidget> TextDropTargetBuilder<'a, W> {
     where
         F: FnMut(i32, i32, DragResult) -> DragResult + 'static,
     {
-        self.on_data = Some(Box::new(callback));
+        self.on_data = Some(ReentrantCallback::new(Box::new(callback)));
         self
     }
 
@@ -112,7 +120,7 @@ impl<'a, W: WxWidget> TextDropTargetBuilder<'a, W> {
     where
         F: FnMut(&str, i32, i32) -> bool + 'static,
     {
-        self.on_drop_text = Some(Box::new(callback));
+        self.on_drop_text = Some(ReentrantCallback::new(Box::new(callback)));
         self
     }
 
@@ -131,10 +139,8 @@ impl<'a, W: WxWidget> TextDropTargetBuilder<'a, W> {
             on_drop_text,
         };
 
-        // Create boxed data with callbacks
-        let data = Box::new(callbacks);
-        let data_ptr = Box::into_raw(data);
-        let user_data = data_ptr as *mut c_void;
+        // C++ owns one reference; active trampolines retain their own reference.
+        let user_data = FfiCallbackData::into_raw(callbacks);
 
         // Create the drop target with our callback trampolines
         let _obj = unsafe {
@@ -215,7 +221,7 @@ impl<'a, W: WxWidget> FileDropTargetBuilder<'a, W> {
     where
         F: FnMut(i32, i32, DragResult) -> DragResult + 'static,
     {
-        self.on_enter = Some(Box::new(callback));
+        self.on_enter = Some(ReentrantCallback::new(Box::new(callback)));
         self
     }
 
@@ -224,7 +230,7 @@ impl<'a, W: WxWidget> FileDropTargetBuilder<'a, W> {
     where
         F: FnMut(i32, i32, DragResult) -> DragResult + 'static,
     {
-        self.on_drag_over = Some(Box::new(callback));
+        self.on_drag_over = Some(ReentrantCallback::new(Box::new(callback)));
         self
     }
 
@@ -233,7 +239,7 @@ impl<'a, W: WxWidget> FileDropTargetBuilder<'a, W> {
     where
         F: FnMut() + 'static,
     {
-        self.on_leave = Some(Box::new(callback));
+        self.on_leave = Some(ReentrantCallback::new(Box::new(callback)));
         self
     }
 
@@ -242,7 +248,7 @@ impl<'a, W: WxWidget> FileDropTargetBuilder<'a, W> {
     where
         F: FnMut(i32, i32) -> bool + 'static,
     {
-        self.on_drop = Some(Box::new(callback));
+        self.on_drop = Some(ReentrantCallback::new(Box::new(callback)));
         self
     }
 
@@ -251,7 +257,7 @@ impl<'a, W: WxWidget> FileDropTargetBuilder<'a, W> {
     where
         F: FnMut(i32, i32, DragResult) -> DragResult + 'static,
     {
-        self.on_data = Some(Box::new(callback));
+        self.on_data = Some(ReentrantCallback::new(Box::new(callback)));
         self
     }
 
@@ -261,7 +267,7 @@ impl<'a, W: WxWidget> FileDropTargetBuilder<'a, W> {
     where
         F: FnMut(Vec<String>, i32, i32) -> bool + 'static,
     {
-        self.on_drop_files = Some(Box::new(callback));
+        self.on_drop_files = Some(ReentrantCallback::new(Box::new(callback)));
         self
     }
 
@@ -280,10 +286,8 @@ impl<'a, W: WxWidget> FileDropTargetBuilder<'a, W> {
             on_drop_files,
         };
 
-        // Create boxed data with callbacks
-        let data = Box::new(callbacks);
-        let data_ptr = Box::into_raw(data);
-        let user_data = data_ptr as *mut c_void;
+        // C++ owns one reference; active trampolines retain their own reference.
+        let user_data = FfiCallbackData::into_raw(callbacks);
 
         // Create the drop target with our callback trampolines
         let _obj = unsafe {
@@ -325,10 +329,12 @@ extern "C" fn text_on_enter_trampoline(
             return def_result;
         }
 
-        let callbacks = unsafe { &mut *(data_ptr as *mut TextDropTargetCallbacks) };
+        let callbacks = unsafe { FfiCallbackData::<TextDropTargetCallbacks>::retain(data_ptr) };
 
-        if let Some(ref mut callback) = callbacks.on_enter {
-            callback(x, y, DragResult::from(def_result)).into()
+        if let Some(ref callback) = callbacks.on_enter {
+            callback.call("text_on_enter_trampoline", ffi::wxd_DragResult_WXD_DRAG_NONE, |cb| {
+                cb(x, y, DragResult::from(def_result)).into()
+            })
         } else {
             def_result
         }
@@ -346,10 +352,12 @@ extern "C" fn text_on_drag_over_trampoline(
             return def_result;
         }
 
-        let callbacks = unsafe { &mut *(data_ptr as *mut TextDropTargetCallbacks) };
+        let callbacks = unsafe { FfiCallbackData::<TextDropTargetCallbacks>::retain(data_ptr) };
 
-        if let Some(ref mut callback) = callbacks.on_drag_over {
-            callback(x, y, DragResult::from(def_result)).into()
+        if let Some(ref callback) = callbacks.on_drag_over {
+            callback.call("text_on_drag_over_trampoline", ffi::wxd_DragResult_WXD_DRAG_NONE, |cb| {
+                cb(x, y, DragResult::from(def_result)).into()
+            })
         } else {
             def_result
         }
@@ -362,10 +370,10 @@ extern "C" fn text_on_leave_trampoline(data_ptr: *mut c_void) {
             return;
         }
 
-        let callbacks = unsafe { &mut *(data_ptr as *mut TextDropTargetCallbacks) };
+        let callbacks = unsafe { FfiCallbackData::<TextDropTargetCallbacks>::retain(data_ptr) };
 
-        if let Some(ref mut callback) = callbacks.on_leave {
-            callback();
+        if let Some(ref callback) = callbacks.on_leave {
+            callback.call("text_on_leave_trampoline", (), |cb| cb());
         }
     })
 }
@@ -376,10 +384,10 @@ extern "C" fn text_on_drop_trampoline(x: i32, y: i32, data_ptr: *mut c_void) -> 
             return false;
         }
 
-        let callbacks = unsafe { &mut *(data_ptr as *mut TextDropTargetCallbacks) };
+        let callbacks = unsafe { FfiCallbackData::<TextDropTargetCallbacks>::retain(data_ptr) };
 
-        if let Some(ref mut callback) = callbacks.on_drop {
-            callback(x, y)
+        if let Some(ref callback) = callbacks.on_drop {
+            callback.call("text_on_drop_trampoline", false, |cb| cb(x, y))
         } else {
             true // Default to accepting the drop
         }
@@ -397,10 +405,12 @@ extern "C" fn text_on_data_trampoline(
             return def_result;
         }
 
-        let callbacks = unsafe { &mut *(data_ptr as *mut TextDropTargetCallbacks) };
+        let callbacks = unsafe { FfiCallbackData::<TextDropTargetCallbacks>::retain(data_ptr) };
 
-        if let Some(ref mut callback) = callbacks.on_data {
-            callback(x, y, DragResult::from(def_result)).into()
+        if let Some(ref callback) = callbacks.on_data {
+            callback.call("text_on_data_trampoline", ffi::wxd_DragResult_WXD_DRAG_NONE, |cb| {
+                cb(x, y, DragResult::from(def_result)).into()
+            })
         } else {
             def_result
         }
@@ -414,9 +424,11 @@ extern "C" fn text_on_drop_text_trampoline(text: *const c_char, x: i32, y: i32, 
         }
 
         let text_str = unsafe { CStr::from_ptr(text).to_string_lossy().into_owned() };
-        let callbacks = unsafe { &mut *(data_ptr as *mut TextDropTargetCallbacks) };
+        let callbacks = unsafe { FfiCallbackData::<TextDropTargetCallbacks>::retain(data_ptr) };
 
-        (callbacks.on_drop_text)(&text_str, x, y)
+        callbacks
+            .on_drop_text
+            .call("text_on_drop_text_trampoline", false, |cb| cb(&text_str, x, y))
     })
 }
 
@@ -433,10 +445,12 @@ extern "C" fn file_on_enter_trampoline(
             return def_result;
         }
 
-        let callbacks = unsafe { &mut *(data_ptr as *mut FileDropTargetCallbacks) };
+        let callbacks = unsafe { FfiCallbackData::<FileDropTargetCallbacks>::retain(data_ptr) };
 
-        if let Some(ref mut callback) = callbacks.on_enter {
-            callback(x, y, DragResult::from(def_result)).into()
+        if let Some(ref callback) = callbacks.on_enter {
+            callback.call("file_on_enter_trampoline", ffi::wxd_DragResult_WXD_DRAG_NONE, |cb| {
+                cb(x, y, DragResult::from(def_result)).into()
+            })
         } else {
             def_result
         }
@@ -454,10 +468,12 @@ extern "C" fn file_on_drag_over_trampoline(
             return def_result;
         }
 
-        let callbacks = unsafe { &mut *(data_ptr as *mut FileDropTargetCallbacks) };
+        let callbacks = unsafe { FfiCallbackData::<FileDropTargetCallbacks>::retain(data_ptr) };
 
-        if let Some(ref mut callback) = callbacks.on_drag_over {
-            callback(x, y, DragResult::from(def_result)).into()
+        if let Some(ref callback) = callbacks.on_drag_over {
+            callback.call("file_on_drag_over_trampoline", ffi::wxd_DragResult_WXD_DRAG_NONE, |cb| {
+                cb(x, y, DragResult::from(def_result)).into()
+            })
         } else {
             def_result
         }
@@ -470,10 +486,10 @@ extern "C" fn file_on_leave_trampoline(data_ptr: *mut c_void) {
             return;
         }
 
-        let callbacks = unsafe { &mut *(data_ptr as *mut FileDropTargetCallbacks) };
+        let callbacks = unsafe { FfiCallbackData::<FileDropTargetCallbacks>::retain(data_ptr) };
 
-        if let Some(ref mut callback) = callbacks.on_leave {
-            callback();
+        if let Some(ref callback) = callbacks.on_leave {
+            callback.call("file_on_leave_trampoline", (), |cb| cb());
         }
     })
 }
@@ -484,10 +500,10 @@ extern "C" fn file_on_drop_trampoline(x: i32, y: i32, data_ptr: *mut c_void) -> 
             return false;
         }
 
-        let callbacks = unsafe { &mut *(data_ptr as *mut FileDropTargetCallbacks) };
+        let callbacks = unsafe { FfiCallbackData::<FileDropTargetCallbacks>::retain(data_ptr) };
 
-        if let Some(ref mut callback) = callbacks.on_drop {
-            callback(x, y)
+        if let Some(ref callback) = callbacks.on_drop {
+            callback.call("file_on_drop_trampoline", false, |cb| cb(x, y))
         } else {
             true // Default to accepting the drop
         }
@@ -505,10 +521,12 @@ extern "C" fn file_on_data_trampoline(
             return def_result;
         }
 
-        let callbacks = unsafe { &mut *(data_ptr as *mut FileDropTargetCallbacks) };
+        let callbacks = unsafe { FfiCallbackData::<FileDropTargetCallbacks>::retain(data_ptr) };
 
-        if let Some(ref mut callback) = callbacks.on_data {
-            callback(x, y, DragResult::from(def_result)).into()
+        if let Some(ref callback) = callbacks.on_data {
+            callback.call("file_on_data_trampoline", ffi::wxd_DragResult_WXD_DRAG_NONE, |cb| {
+                cb(x, y, DragResult::from(def_result)).into()
+            })
         } else {
             def_result
         }
@@ -544,9 +562,11 @@ extern "C" fn file_on_drop_files_trampoline(
             filenames.push(s);
         }
 
-        let callbacks = unsafe { &mut *(data_ptr as *mut FileDropTargetCallbacks) };
+        let callbacks = unsafe { FfiCallbackData::<FileDropTargetCallbacks>::retain(data_ptr) };
 
-        (callbacks.on_drop_files)(filenames, x, y)
+        callbacks
+            .on_drop_files
+            .call("file_on_drop_files_trampoline", false, |cb| cb(filenames, x, y))
     })
 }
 
@@ -557,7 +577,7 @@ extern "C" fn free_text_drop_target_userdata(ptr: *mut c_void) {
         if ptr.is_null() {
             return;
         }
-        let _ = unsafe { Box::from_raw(ptr as *mut TextDropTargetCallbacks) };
+        unsafe { FfiCallbackData::<TextDropTargetCallbacks>::release(ptr) };
     })
 }
 
@@ -566,6 +586,10 @@ extern "C" fn free_file_drop_target_userdata(ptr: *mut c_void) {
         if ptr.is_null() {
             return;
         }
-        let _ = unsafe { Box::from_raw(ptr as *mut FileDropTargetCallbacks) };
+        unsafe { FfiCallbackData::<FileDropTargetCallbacks>::release(ptr) };
     })
 }
+
+#[cfg(test)]
+#[path = "droptarget_tests.rs"]
+mod tests;
