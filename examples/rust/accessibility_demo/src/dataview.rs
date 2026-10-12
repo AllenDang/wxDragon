@@ -11,7 +11,7 @@ struct Node {
 
 impl Node {
     fn container(&self) -> bool {
-        self.index % 2 == 0
+        self.index.is_multiple_of(2)
     }
 }
 
@@ -62,11 +62,11 @@ pub fn add_tree(panel: &Panel, sizer: &BoxSizer) {
             }
         },
         Some(|_: &Tree, node: Option<&Node>, col, value: &Variant| {
-            if let (Some(node), Some(checked)) = (node, value.get_bool()) {
-                if col == 0 {
-                    node.checked.set(checked);
-                    return true;
-                }
+            if let (Some(node), Some(checked)) = (node, value.get_bool())
+                && col == 0
+            {
+                node.checked.set(checked);
+                return true;
             }
             false
         }),
