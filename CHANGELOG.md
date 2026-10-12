@@ -7,6 +7,7 @@
 - **Window**: Added `on_char_hook`, binding `wxEVT_CHAR_HOOK`. The hook runs on the focused window and every ancestor before the key reaches the control, which is the only way to act on combinations a control consumes itself: a multiline `TextCtrl` swallows Ctrl+Enter, and a `ListBox` answers Alt+Enter with a system beep, so neither ever reaches a `key_down` handler. Skip the event to let it carry on to the control. The C++ side already mapped `WXD_EVENT_TYPE_CHAR_HOOK` and `wxd_IsKeyboardEvent` already accepted it; only the Rust binding was missing. See `examples/rust/char_hook_demo`
 - **ListBox**: Added `append_items`, `insert_items` and `set_items`, wrapping the `wxItemContainer` overloads that take a `wxArrayString`, the same trio `ComboBox` got in 0.9.21. Filling a list one `append` at a time costs a Rust-to-C++ call, a string conversion and wxWidgets' own per-change bookkeeping for every row, and on MSW the native list box grows its storage a little at a time; the array overloads reserve room for every row up front (`LB_INITSTORAGE`) and update once. Loading 26,934 rows into a `ListBox` went from about 2.3 s to 1.3 s on Windows. The builder's `with_choices` now goes through `append_items` too
 - **Dialogs**: Added five style flags whose constants wxDragon already extracted on every platform but no style enum exposed, so the only way to use them was `from_bits_retain` with the raw value. `DialogStyle::NoParent` (`wxDIALOG_NO_PARENT`) makes a dialog a top-level window of its own, so one opened from a global hotkey while another application is in front comes forward instead of opening behind it. `MessageDialogStyle::NoDefault` and `CancelDefault` (`wxNO_DEFAULT`, `wxCANCEL_DEFAULT`) make the safe answer the default button, which matters for a question like "Do you want to exit?" where a stray Return should not be the answer that closes the app. `MessageDialogStyle::StayOnTop` (`wxSTAY_ON_TOP`) and `TextEntryDialogStyle::MultiLine` (`wxTE_MULTILINE`) complete what `wxMessageDialog` and `wxTextEntryDialog` document
+- **Accessibility**: Added `enable_focus_from_keyboard` and `disable_focus_from_keyboard` on `WxWidget`, including opt-in Tab access to single-line read-only text controls on Windows. See `examples/rust/accessibility_demo` (#229).
 
 ### Bug Fixes
 
@@ -17,6 +18,11 @@
 ### Refactoring
 
 - **wxdragon-sys**: Removed 39 C shim functions that nothing called. Nine were declared in a header with no definition, so any use failed to link (the `wxd_TreeItemData_*` functions, `wxd_RichTextCtrl_ShowPosition`/`ScrollIntoView`/`IsPositionVisible`, `wxd_SearchCtrl_GetCancelButton`, `wxd_DataViewCtrl_CreateTextColumn` ). Nine were stubs that did nothing or always returned null, such as `wxd_GetCursor`, `wxd_Cursor_SetHotSpot`, `wxd_TreeCtrl_EnableItem` and the `wxd_DataViewCustomRenderer_Release*` functions. The rest were superseded: the old drop target set in `dnd.cpp` (replaced by the `*_CreateFull` functions), per-type window `Destroy` functions, the flat-callback `wxd_DataViewModel_Create` and its model class, and duplicates of functions the Rust side already uses. The safe `wxdragon` API is unchanged; code calling these symbols through `wxdragon-sys` directly would need updating
+- **Accessibility**: Routed `set_accessibility_label` through wxWidgets 3.3.4's `SetAccessibleName` on Windows and macOS. Removed duplicate name storage and direct Cocoa label handling; retained the other property overrides and the legacy macOS C entry point as a forwarding alias. Empty labels now restore the default accessible name (#229).
+
+### Build
+
+- **wxWidgets**: Updated the bundled wxWidgets from 3.3.3 to 3.3.4 and refreshed its SHA256 checksum.
 
 ## 0.9.22
 

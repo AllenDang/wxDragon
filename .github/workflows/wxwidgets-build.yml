@@ -6,7 +6,7 @@ on:
       wx_version:
         description: "wxWidgets version to build"
         required: true
-        default: "3.3.0"
+        default: "3.3.4"
         type: string
       force_rebuild:
         description: "Force rebuild even if release exists"

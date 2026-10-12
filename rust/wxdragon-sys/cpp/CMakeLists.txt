@@ -363,3 +363,16 @@ target_link_directories(wxdragon PRIVATE ${WXWIDGETS_BUILD_DIR})
 
 message(STATUS "wxDragon wrapper library configured successfully for ${PLATFORM_NAME}")
 message(STATUS "CMake configuration for libwxdragon finished.")
+
+# Optional native regressions run on the OS main thread (including Cocoa).
+option(WXD_BUILD_TESTS "Build wxDragon native regression tests (requires a desktop)" OFF)
+if(WXD_BUILD_TESTS)
+    enable_testing()
+    if(PLATFORM_NAME STREQUAL "macos")
+        set_source_files_properties(tests/window_accessibility.cpp PROPERTIES LANGUAGE OBJCXX)
+    endif()
+    add_executable(window_accessibility_test tests/window_accessibility.cpp)
+    target_include_directories(window_accessibility_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+    target_link_libraries(window_accessibility_test PRIVATE wxdragon wx::core)
+    add_test(NAME window_accessibility COMMAND window_accessibility_test)
+endif()

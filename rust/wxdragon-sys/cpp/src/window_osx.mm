@@ -6,12 +6,8 @@
 void
 wxd_Window_SetAccessibilityLabel(wxd_Window_t* window, const char* label)
 {
-    if (!window || !label) return;
-    wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);
-    NSView* view = wx_window->GetHandle();
-    if (view) {
-        [view setAccessibilityLabel:[NSString stringWithUTF8String:label]];
-    }
+    // Compatibility alias for raw FFI callers. All naming uses wxWidgets now.
+    wxd_Window_SetAccessibleName(window, label);
 }
 
 void

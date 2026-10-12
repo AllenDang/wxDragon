@@ -179,12 +179,30 @@ jobs:
           submodules: recursive
       - name: Install deps
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y libgtk-3-dev libpng-dev libjpeg-dev libgl1-mesa-dev libglu1-mesa-dev libxkbcommon-dev libwayland-dev libexpat1-dev libtiff-dev libwebkit2gtk-4.1-dev libxtst-dev libsm-dev libice-dev
+        run: sudo apt-get update && sudo apt-get install -y libgtk-3-dev libpng-dev libjpeg-dev libgl1-mesa-dev libglu1-mesa-dev libxkbcommon-dev libwayland-dev libexpat1-dev libtiff-dev libwebkit2gtk-4.1-dev libxtst-dev libsm-dev libice-dev xvfb
 
       - run: rustup component add rustfmt clippy
 
       - name: Run tests
-        run: cargo test --features "aui,xrc,richtext,stc,webview" --all -- --nocapture
+        shell: bash
+        run: |
+          if [ "$RUNNER_OS" = "Linux" ]; then
+            xvfb-run -a cargo test --features "aui,xrc,richtext,stc,webview" --all -- --nocapture
+          else
+            cargo test --features "aui,xrc,richtext,stc,webview" --all -- --nocapture
+          fi
+
+      - name: Run native accessibility regressions
+        shell: bash
+        run: |
+          BUILD_DIR=target/debug/wxdragon_sys_cmake_build/build
+          cmake -S rust/wxdragon-sys/cpp -B "$BUILD_DIR" -DWXD_BUILD_TESTS=ON
+          cmake --build "$BUILD_DIR" --target window_accessibility_test --config Debug --parallel 2
+          if [ "$RUNNER_OS" = "Linux" ]; then
+            xvfb-run -a ctest --test-dir "$BUILD_DIR" -C Debug -R '^window_accessibility$' --output-on-failure
+          else
+            ctest --test-dir "$BUILD_DIR" -C Debug -R '^window_accessibility$' --output-on-failure
+          fi
 
   linux-to-windows-build:
     runs-on: ubuntu-latest

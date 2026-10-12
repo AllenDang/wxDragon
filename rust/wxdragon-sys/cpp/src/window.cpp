@@ -594,6 +594,22 @@ wxd_Window_AcceptsFocusFromKeyboard(wxd_Window_t* window)
 }
 
 WXD_EXPORTED void
+wxd_Window_EnableFocusFromKeyboard(wxd_Window_t* window)
+{
+    if (window) {
+        reinterpret_cast<wxWindow*>(window)->EnableFocusFromKeyboard();
+    }
+}
+
+WXD_EXPORTED void
+wxd_Window_DisableFocusFromKeyboard(wxd_Window_t* window)
+{
+    if (window) {
+        reinterpret_cast<wxWindow*>(window)->DisableFocusFromKeyboard();
+    }
+}
+
+WXD_EXPORTED void
 wxd_Window_SetCanFocus(wxd_Window_t* window, bool canFocus)
 {
     wxWindow* wx_window = reinterpret_cast<wxWindow*>(window);

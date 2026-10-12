@@ -207,15 +207,20 @@ wxd_Window_SetAccessible(wxd_Window_t* self, wxd_Accessible_t* accessible);
 WXD_EXPORTED wxd_Accessible_t*
 wxd_Window_GetAccessible(wxd_Window_t* self);
 
+// Sets the screen-reader name using wxWindow::SetAccessibleName(). Implemented
+// on macOS and MSW (with wxUSE_ACCESSIBILITY); a no-op on other platforms.
+// Passing NULL or an empty string restores the default name. Does not replace
+// an existing accessible object.
+
+WXD_EXPORTED void
+wxd_Window_SetAccessibleName(wxd_Window_t* self, const char* name);
+
 // --- Built-in Accessible Property Setters ---
 //
 // These attach a lightweight built-in wxAccessible to the window (created on first
 // use, owned by the window) and store the given property on it. Each setter updates
-// only its own property, leaving the others untouched. They are no-ops where
-// wxUSE_ACCESSIBILITY is not compiled in. Passing NULL for a string clears that property.
-
-WXD_EXPORTED void
-wxd_Window_SetAccessibleName(wxd_Window_t* self, const char* name);
+// only its own property, preserving the accessible name override. They are no-ops
+// where wxUSE_ACCESSIBILITY is not compiled in. Passing NULL clears a string property.
 
 WXD_EXPORTED void
 wxd_Window_SetAccessibleRole(wxd_Window_t* self, wxd_AccRole role);
