@@ -191,7 +191,14 @@ jobs:
 
       - run: rustup component add rustfmt clippy
 
-      - name: Run tests
+      # Git Bash prepends /usr/bin, whose link.exe shadows the MSVC linker.
+      - name: Run tests (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: cargo test --features "aui,xrc,richtext,stc,webview" --all -- --nocapture
+
+      - name: Run tests (Linux/macOS)
+        if: runner.os != 'Windows'
         shell: bash
         run: |
           if [ "$RUNNER_OS" = "Linux" ]; then
