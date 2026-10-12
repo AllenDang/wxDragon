@@ -1023,6 +1023,9 @@ fn build_wxdragon_wrapper(
         println!("cargo:rustc-link-lib=jpeg");
         println!("cargo:rustc-link-lib=expat");
         println!("cargo:rustc-link-lib=tiff");
+        // Static wxWidgets uses zlib directly (e.g. zstream.cpp's inflateEnd).
+        // Do not rely on libpng/libtiff's transitive shared-library dependencies.
+        println!("cargo:rustc-link-lib=z");
 
         if cmake_cache.contains("wxUSE_LIBNOTIFY:BOOL=ON") {
             println!("cargo:rustc-link-lib=notify");

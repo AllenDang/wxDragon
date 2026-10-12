@@ -38,9 +38,14 @@ macro_rules! drag_reentry_test {
             })));
             let ptr = FfiCallbackData::into_raw(callbacks);
             let data = unsafe { FfiCallbackData::<$container>::retain(ptr) };
-            let nested = data.$field.as_ref().unwrap().call("outer", u32::MAX, |_| {
-                $trampoline(1, 2, ffi::wxd_DragResult_WXD_DRAG_COPY, ptr)
-            });
+            // Bindgen's C enum representation can be signed or unsigned by target.
+            let nested = data
+                .$field
+                .as_ref()
+                .unwrap()
+                .call("outer", ffi::wxd_DragResult::MAX, |_| {
+                    $trampoline(1, 2, ffi::wxd_DragResult_WXD_DRAG_COPY, ptr)
+                });
             assert_eq!(nested, ffi::wxd_DragResult_WXD_DRAG_NONE);
             assert_eq!(calls.get(), 0);
             assert_eq!(
