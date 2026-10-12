@@ -1,10 +1,12 @@
 use wxdragon::prelude::*;
 
+mod dataview;
+
 fn main() {
     wxdragon::main(|_| {
         let frame = Frame::builder()
             .with_title("wxWidgets 3.3.4 accessibility")
-            .with_size(Size::new(520, 600))
+            .with_size(Size::new(560, 900))
             .build();
         wxdragon::app::set_top_window(&frame);
         let panel = Panel::builder(&frame).build();
@@ -67,6 +69,8 @@ fn main() {
             .build();
         clear_name.on_click(move |_| named_button.set_accessibility_label(""));
         sizer.add(&clear_name, 0, flags, 8);
+
+        dataview::add_tree(&panel, &sizer);
 
         panel.set_sizer(sizer, true);
         let frame_sizer = BoxSizer::builder(Orientation::Vertical).build();

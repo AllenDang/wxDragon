@@ -12,6 +12,21 @@ cmake --build target/debug/wxdragon_sys_cmake_build/build --target window_access
 ctest --test-dir target/debug/wxdragon_sys_cmake_build/build -C Debug -R '^window_accessibility$' --output-on-failure
 ```
 
+The DataView regression for #160 also runs on the OS main thread. It checks the
+default and opt-in container-column policies, shared-model refresh, label/state
+updates, sorting, expansion, deletion and callback cleanup. On macOS it queries
+the real `NSOutlineView` accessibility rows and their text/checkbox/disclosure
+elements (not just model values):
+
+```sh
+cmake --build target/debug/wxdragon_sys_cmake_build/build --target dataview_container_columns_test --config Debug
+ctest --test-dir target/debug/wxdragon_sys_cmake_build/build -C Debug -R '^dataview_container_columns$' --output-on-failure
+cargo test -p wxdragon --test dataview_container_columns
+```
+
+The Rust test verifies the safe API through rendering callbacks, cloned model
+handles, enabling/disabling after association, and release of model userdata.
+
 This reuses Cargo's CMake cache and downloaded wxWidgets source. Adjust the build
 path if using a custom `CARGO_TARGET_DIR` or `WXDRAGON_SYS_BUILD_DIR`.
 

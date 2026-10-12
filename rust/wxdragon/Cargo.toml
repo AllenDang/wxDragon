@@ -56,3 +56,8 @@ harness = false
 name = "event_reentrancy"
 # Exercise native event dispatch on the OS main thread, including on Cocoa.
 harness = false
+
+[[test]]
+name = "dataview_container_columns"
+# Cocoa rendering and model callbacks must run on the OS main thread.
+harness = false
