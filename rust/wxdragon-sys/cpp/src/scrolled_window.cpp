@@ -102,6 +102,23 @@ wxd_ScrolledWindow_GetScrollPixelsPerUnit(wxd_ScrolledWindow_t* self, int* xUnit
     }
 }
 
+WXD_EXPORTED void
+wxd_ScrolledWindow_GetViewStart(wxd_ScrolledWindow_t* self, int* x, int* y)
+{
+    int start_x = 0;
+    int start_y = 0;
+    wxScrolledWindow* scrolledWin = (wxScrolledWindow*)self;
+    if (scrolledWin) {
+        scrolledWin->GetViewStart(&start_x, &start_y);
+    }
+    if (x) {
+        *x = start_x;
+    }
+    if (y) {
+        *y = start_y;
+    }
+}
+
 // No wxd_ScrolledWindow_Destroy needed, parent manages lifetime.
 
 } // extern "C"
