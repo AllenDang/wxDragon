@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.9.23
 
 ### New Features
 
@@ -9,21 +9,31 @@
 - **Dialogs**: Added five style flags whose constants wxDragon already extracted on every platform but no style enum exposed, so the only way to use them was `from_bits_retain` with the raw value. `DialogStyle::NoParent` (`wxDIALOG_NO_PARENT`) makes a dialog a top-level window of its own, so one opened from a global hotkey while another application is in front comes forward instead of opening behind it. `MessageDialogStyle::NoDefault` and `CancelDefault` (`wxNO_DEFAULT`, `wxCANCEL_DEFAULT`) make the safe answer the default button, which matters for a question like "Do you want to exit?" where a stray Return should not be the answer that closes the app. `MessageDialogStyle::StayOnTop` (`wxSTAY_ON_TOP`) and `TextEntryDialogStyle::MultiLine` (`wxTE_MULTILINE`) complete what `wxMessageDialog` and `wxTextEntryDialog` document
 - **Accessibility**: Added `enable_focus_from_keyboard` and `disable_focus_from_keyboard` on `WxWidget`, including opt-in Tab access to single-line read-only text controls on Windows. See `examples/rust/accessibility_demo` (#229).
 - **DataView**: Added `CustomDataViewTreeModel::set_container_columns`, an opt-in for displaying all columns on container rows. This exposes group text to macOS accessibility when the first column is a toggle and the text/expander column is elsewhere. The default remains first-column-only; changing the setting rebuilds associated views and may reset selection/expansion (#160).
+- **TextValidator**: Added `TextValidator` and `TextValidatorStyle` for filtering text input by character class or include/exclude lists. Attach one with `WxWidget::set_text_validator` and validate a window and its children with `WxWidget::validate` (#226).
+- **TreeCtrl**: Added `get_custom_data_direct(&TreeItemId)` to read item data without converting the item ID through `u64`, matching `set_custom_data_direct` (#241).
+- **AUI**: Added `PaneInfo::dock_size` for setting dock dimensions.
 
 ### Bug Fixes
 
 - **TaskBarIcon**: Fixed tray icon events never firing on Windows and Linux. When the taskbar event types moved from `event.cpp` into `taskbar.cpp`, the mapper and its registrar landed inside the existing `#ifdef __WXOSX__` block that only guarded `wx/osx/private.h`, so they were compiled on macOS alone. Everywhere else `on_left_up`, `on_left_down`, `on_left_double_click` and the other taskbar handlers bound to `wxEVT_NULL` and silently never ran. The guard now covers just the macOS header again
 - **AuiManager**: Fixed every `AuiManager` leaking its `wxAuiManager`. `AuiManagerBuilder::build` allocated the manager and the destroy handler on the managed window only removed its handle from the registry, so nothing ever deleted it. The handler now frees it through `wxd_AuiManager_Delete`, which defers the delete until the next idle: floating pane frames are children of the managed window, are destroyed after its destroy event, and use the manager from their destructor
 - **App**: Fixed the macOS application handlers leaking their closures. `on_open_files`, `on_open_url`, `on_new_file`, `on_reopen_app`, `on_print_files`, `on_should_terminate` and `on_will_terminate` boxed the closure and handed it to `WxdApp`, which kept it in a `std::vector` that nothing ever freed, so every call leaked one closure. Each registration now carries a drop callback, `~WxdApp()` runs it for every stored handler, and a handler that is rejected (null app or callback) is freed right away (#239)
+- **Callbacks**: Prevented recursive invocation of the same `FnMut` callback in events, drag-and-drop and IPC. A re-entered callback is skipped with a warning and an appropriate fallback; other handlers and default event processing still run. Active drag-and-drop and IPC calls also retain their callback data until they return (#238).
+- **FFI callbacks**: Guarded Rust callbacks invoked from C++ against unwinding across the FFI boundary, including app, data view, event, drag-and-drop, IPC, printing, translations, list control and WebView callbacks (#231).
+- **Strings / accessibility**: Fixed truncation of long file paths, directory-dialog messages, dropped filenames and font face names by allocating FFI buffers to the reported length (#233). Zero-initialized native accessibility callback buffers so partially filled strings cannot read uninitialized memory (#232).
+- **Image lists / fonts / DataView**: Fixed image-list ownership leaks in `DataViewTreeCtrl`, `Notebook`, `TreeCtrl` and `ListCtrl` (#234); stopped leaking fonts passed to `set_font` and `FontPickerCtrl::set_selected_font` (#235); freed custom data-view renderer callbacks when the renderer is destroyed (#236).
 
 ### Refactoring
 
 - **wxdragon-sys**: Removed 39 C shim functions that nothing called. Nine were declared in a header with no definition, so any use failed to link (the `wxd_TreeItemData_*` functions, `wxd_RichTextCtrl_ShowPosition`/`ScrollIntoView`/`IsPositionVisible`, `wxd_SearchCtrl_GetCancelButton`, `wxd_DataViewCtrl_CreateTextColumn` ). Nine were stubs that did nothing or always returned null, such as `wxd_GetCursor`, `wxd_Cursor_SetHotSpot`, `wxd_TreeCtrl_EnableItem` and the `wxd_DataViewCustomRenderer_Release*` functions. The rest were superseded: the old drop target set in `dnd.cpp` (replaced by the `*_CreateFull` functions), per-type window `Destroy` functions, the flat-callback `wxd_DataViewModel_Create` and its model class, and duplicates of functions the Rust side already uses. The safe `wxdragon` API is unchanged; code calling these symbols through `wxdragon-sys` directly would need updating
 - **Accessibility**: Routed `set_accessibility_label` through wxWidgets 3.3.4's `SetAccessibleName` on Windows and macOS. Removed duplicate name storage and direct Cocoa label handling; retained the other property overrides and the legacy macOS C entry point as a forwarding alias. Empty labels now restore the default accessible name (#229).
+- **Events**: Moved event-type mapping out of `event.cpp` into the owning widget and grid implementation files, with a shared event-type registry (#224).
 
 ### Build
 
 - **wxWidgets**: Updated the bundled wxWidgets from 3.3.3 to 3.3.4 and refreshed its SHA256 checksum.
+- **Build features**: Added default-on `wx-printing`, `wx-tiff`, `wx-jpeg`, `wx-asserts`, `wx-tango-icons`, `wx-extra-image-formats` and `wx-regex` features, which can be disabled to reduce bundled wxWidgets builds. Printing wrappers are omitted when printing is disabled. Added `wx-xpm`, enabled when STC or extra image formats need XPM (#225).
+- **Linux / CI**: Linked zlib for static wxWidgets on Linux and installed its development package in CI; corrected Windows drag-result test types and initialized the MSVC environment for native tests. Windows Cargo tests now run in PowerShell.
 
 ## 0.9.22
 
