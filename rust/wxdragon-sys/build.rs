@@ -1248,24 +1248,40 @@ pub fn download_file_with_git_http_proxy<P: AsRef<std::path::Path>>(
         None => reqwest::blocking::Client::new(),
     };
 
-    // Perform GET request
-    let mut resp = client.get(url).send().map_err(Error::other)?;
-    if !resp.status().is_success() {
-        return Err(Error::other(format!("HTTP error: {}", resp.status())));
-    }
+    // Retry transient network failures and truncated or corrupt responses. Never
+    // leave a partial archive behind for the next invocation to mistake for a cache.
+    for attempt in 1..=3 {
+        let result = (|| -> std::io::Result<()> {
+            let mut resp = client.get(url).send().map_err(Error::other)?;
+            if !resp.status().is_success() {
+                return Err(Error::other(format!("HTTP error: {}", resp.status())));
+            }
 
-    // Stream to file to avoid loading the entire ZIP into memory.
-    if let Some(parent) = path.parent()
-        && !parent.as_os_str().is_empty()
-    {
-        std::fs::create_dir_all(parent)?;
-    }
-    let mut file = std::fs::File::create(path)?;
-    resp.copy_to(&mut file).map_err(Error::other)?;
+            // Stream to file to avoid loading the entire ZIP into memory.
+            if let Some(parent) = path.parent()
+                && !parent.as_os_str().is_empty()
+            {
+                std::fs::create_dir_all(parent)?;
+            }
+            let mut file = std::fs::File::create(path)?;
+            resp.copy_to(&mut file).map_err(Error::other)?;
 
-    // Verify SHA256 of the downloaded file before proceeding
-    verify_downloaded_file_sha256(path, expected_sha)?;
-    Ok(())
+            // Verify SHA256 before treating the archive as usable.
+            verify_downloaded_file_sha256(path, expected_sha)
+        })();
+        match result {
+            Ok(()) => return Ok(()),
+            Err(e) => {
+                std::fs::remove_file(path).ok();
+                if attempt == 3 {
+                    return Err(e);
+                }
+                eprintln!("wxWidgets download attempt {attempt} failed: {e}; retrying...");
+                std::thread::sleep(std::time::Duration::from_secs(attempt));
+            }
+        }
+    }
+    unreachable!()
 }
 
 fn verify_downloaded_file_sha256<P: AsRef<std::path::Path>>(path: P, expected_sha: &str) -> std::io::Result<()> {
