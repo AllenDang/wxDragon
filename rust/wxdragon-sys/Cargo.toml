@@ -24,6 +24,7 @@ default = [
     "wx-tango-icons",
     "wx-extra-image-formats",
     "wx-regex",
+    "appindicator",
 ]
 wx-printing = []
 wx-xpm = []
@@ -43,6 +44,7 @@ webview = []
 stc = ["wx-xpm"]
 xrc = []
 richtext = []
+appindicator = []
 
 [dependencies]
 log = "0.4.34"

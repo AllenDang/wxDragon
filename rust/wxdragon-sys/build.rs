@@ -1027,6 +1027,27 @@ fn build_wxdragon_wrapper(
         // Do not rely on libpng/libtiff's transitive shared-library dependencies.
         println!("cargo:rustc-link-lib=z");
 
+        // wxWidgets detects Ayatana AppIndicator for wxTaskBarIcon, but its
+        // CMake target's transitive dependency is not preserved by the manual
+        // Rust linker instructions above.
+        if cfg!(feature = "appindicator") || cmake_cache.contains("wxUSE_APPINDICATOR:BOOL=ON") {
+            match pkg_config::Config::new().probe("ayatana-appindicator3-0.1") {
+                Ok(appindicator) => {
+                    for path in appindicator.link_paths {
+                        println!("cargo:rustc-link-search=native={}", path.display());
+                    }
+                    for lib in appindicator.libs {
+                        println!("cargo:rustc-link-lib={lib}");
+                    }
+                }
+                Err(error) => {
+                    println!(
+                        "cargo::warning=Ayatana AppIndicator support is enabled but pkg-config could not find 'ayatana-appindicator3-0.1': {error}"
+                    );
+                }
+            }
+        }
+
         if cmake_cache.contains("wxUSE_LIBNOTIFY:BOOL=ON") {
             println!("cargo:rustc-link-lib=notify");
         }

@@ -3,6 +3,7 @@ use wxdragon::prelude::*;
 mod dataview;
 
 fn main() {
+    SystemOptions::set_option_by_int("msw.no-manifest-check", 1);
     wxdragon::main(|_| {
         let frame = Frame::builder()
             .with_title("wxWidgets 3.3.4 accessibility")
