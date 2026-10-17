@@ -1129,6 +1129,12 @@ get_wx_event_type_for_c_enum(WXDEventTypeCEnum c_enum_val)
         return wxEVT_MIDDLE_DOWN;
     case WXD_EVENT_TYPE_MIDDLE_UP:
         return wxEVT_MIDDLE_UP;
+    case WXD_EVENT_TYPE_LEFT_DCLICK:
+        return wxEVT_LEFT_DCLICK;
+    case WXD_EVENT_TYPE_RIGHT_DCLICK:
+        return wxEVT_RIGHT_DCLICK;
+    case WXD_EVENT_TYPE_MIDDLE_DCLICK:
+        return wxEVT_MIDDLE_DCLICK;
     case WXD_EVENT_TYPE_MOTION:
         return wxEVT_MOTION;
     case WXD_EVENT_TYPE_MOUSEWHEEL:
@@ -1621,7 +1627,8 @@ wxd_IsMouseButtonEvent(wxd_Event_t* event)
     // Check if it's any of the mouse button event types
     return (type == wxEVT_LEFT_DOWN || type == wxEVT_LEFT_UP || type == wxEVT_RIGHT_DOWN ||
             type == wxEVT_RIGHT_UP || type == wxEVT_MIDDLE_DOWN || type == wxEVT_MIDDLE_UP ||
-            type == wxEVT_MOUSEWHEEL) ?
+            type == wxEVT_LEFT_DCLICK || type == wxEVT_RIGHT_DCLICK ||
+            type == wxEVT_MIDDLE_DCLICK || type == wxEVT_MOUSEWHEEL) ?
                1 :
                0;
 }

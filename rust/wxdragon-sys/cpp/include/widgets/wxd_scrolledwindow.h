@@ -30,4 +30,7 @@ wxd_ScrolledWindow_GetVirtualSize(wxd_ScrolledWindow_t* self, int* w, int* h);
 WXD_EXPORTED void
 wxd_ScrolledWindow_GetScrollPixelsPerUnit(wxd_ScrolledWindow_t* self, int* xUnit, int* yUnit);
 
+WXD_EXPORTED void
+wxd_ScrolledWindow_GetViewStart(wxd_ScrolledWindow_t* self, int* x, int* y);
+
 #endif // WXD_SCROLLEDWINDOW_H

@@ -126,6 +126,9 @@ pub struct EventType: ffi::WXDEventTypeCEnum { // Use the generated C enum type
     const RIGHT_UP = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_RIGHT_UP;
     const MIDDLE_DOWN = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_MIDDLE_DOWN;
     const MIDDLE_UP = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_MIDDLE_UP;
+    const LEFT_DCLICK = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_LEFT_DCLICK;
+    const RIGHT_DCLICK = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_RIGHT_DCLICK;
+    const MIDDLE_DCLICK = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_MIDDLE_DCLICK;
     const MOTION = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_MOTION;
     const MOUSEWHEEL = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_MOUSEWHEEL;
     const MAGNIFY = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_MAGNIFY;
