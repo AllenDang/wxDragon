@@ -28,6 +28,7 @@ fn gl_string(f: GlGetString, name: u32) -> String {
 }
 
 fn main() {
+    SystemOptions::set_option_by_int("msw.no-manifest-check", 1);
     let hold = std::env::args().any(|a| a == "--hold");
 
     let _ = wxdragon::main(move |_| {
@@ -64,35 +65,6 @@ fn main() {
         };
         println!("context is_ok:   {}", ctx.is_ok());
 
-        if !canvas.set_current(&ctx) {
-            println!("FAIL: set_current refused");
-            frame.close(true);
-            return;
-        }
-
-        let p = GLContext::proc_address("glGetString");
-        if p.is_null() {
-            println!("FAIL: glGetString did not resolve");
-            frame.close(true);
-            return;
-        }
-        let get_string: GlGetString = unsafe { std::mem::transmute(p) };
-        println!("GL_VENDOR:       {}", gl_string(get_string, GL_VENDOR));
-        println!("GL_RENDERER:     {}", gl_string(get_string, GL_RENDERER));
-        println!("GL_VERSION:      {}", gl_string(get_string, GL_VERSION));
-
-        // The two sizes differ on a scaled display, which is the mistake pixel_size exists to stop.
-        println!("pixel size:      {:?}", canvas.pixel_size());
-        println!("logical size:    {:?}", canvas.get_size());
-        println!("swap interval:   {:?}", canvas.set_swap_interval(1));
-        println!(
-            "texture_storage: {}",
-            GLCanvas::is_extension_supported("GL_ARB_texture_storage")
-        );
-
-        let clear_colour: GlClearColor = unsafe { std::mem::transmute(GLContext::proc_address("glClearColor")) };
-        let clear: GlClear = unsafe { std::mem::transmute(GLContext::proc_address("glClear")) };
-
         // Drawing goes in the paint handler, not here. The EGL surface is created when the widget
         // is realized, which has not happened yet at this point in the same event-loop turn, so a
         // swap now has nothing to present to and reports false.
@@ -109,6 +81,30 @@ fn main() {
                 println!("FAIL: set_current refused in paint");
                 return;
             }
+
+            let p = GLContext::proc_address("glGetString");
+            if p.is_null() {
+                println!("FAIL: glGetString did not resolve");
+                done.set(true);
+                frame.close(true);
+                return;
+            }
+            let get_string: GlGetString = unsafe { std::mem::transmute(p) };
+            println!("GL_VENDOR:       {}", gl_string(get_string, GL_VENDOR));
+            println!("GL_RENDERER:     {}", gl_string(get_string, GL_RENDERER));
+            println!("GL_VERSION:      {}", gl_string(get_string, GL_VERSION));
+
+            // The two sizes differ on a scaled display, which is the mistake pixel_size exists to stop.
+            println!("pixel size:      {:?}", canvas.pixel_size());
+            println!("logical size:    {:?}", canvas.get_size());
+            println!("swap interval:   {:?}", canvas.set_swap_interval(1));
+            println!(
+                "texture_storage: {}",
+                GLCanvas::is_extension_supported("GL_ARB_texture_storage")
+            );
+
+            let clear_colour: GlClearColor = unsafe { std::mem::transmute(GLContext::proc_address("glClearColor")) };
+            let clear: GlClear = unsafe { std::mem::transmute(GLContext::proc_address("glClear")) };
             unsafe {
                 clear_colour(0.1, 0.2, 0.4, 1.0);
                 clear(GL_COLOR_BUFFER_BIT);

@@ -7,6 +7,10 @@
 - **Window**: Added `on_mouse_left_double_click`, `on_mouse_right_double_click` and `on_mouse_middle_double_click`, binding `wxEVT_LEFT_DCLICK`, `wxEVT_RIGHT_DCLICK` and `wxEVT_MIDDLE_DCLICK`. A custom-drawn control had no way to tell a double-click from two clicks, short of timing `LeftDown` events against the system double-click time and distance itself. The events carry the usual `MouseButtonEvent` data, and `wxd_IsMouseButtonEvent` now accepts them
 - **ScrolledWindow**: Added `get_view_start`, wrapping `wxScrolled::GetViewStart`. Without it a scrolled window drawn by hand couldn't find out where the user had scrolled to with the scroll bar or the mouse wheel, so it couldn't tell which part of its contents to paint
 
+### Bug Fixes
+
+- **Window**: Fixed `navigate` going the wrong way. The constant extractor hard-coded `wxNAVIGATION_NEXT` as 0 and `wxNAVIGATION_PREVIOUS` as 1, but `wxWindow::Navigate` takes `wxNavigationKeyEvent` flags, where 0 is `IsBackward` and 1 is `IsForward`. So `navigate(true)` moved focus to the previous control and `navigate(false)` to the next one. A control that handles Tab itself (with `wxWANTS_CHARS`) and passes it on with `navigate(!shift_down)` sent Tab backwards and Shift+Tab forwards. The extractor now takes the values from `wxNavigationKeyEvent`, and the generated constants are corrected
+
 ## 0.9.23
 
 ### New Features

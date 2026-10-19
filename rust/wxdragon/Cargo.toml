@@ -23,6 +23,7 @@ default = [
     "wx-tango-icons",
     "wx-extra-image-formats",
     "wx-regex",
+    "appindicator",
 ]
 wx-printing = ["wxdragon-sys/wx-printing"]
 wx-xpm = ["wxdragon-sys/wx-xpm"]
@@ -39,6 +40,7 @@ webview = ["wxdragon-sys/webview"]
 stc = ["wxdragon-sys/stc"]
 xrc = ["wxdragon-sys/xrc"]
 richtext = ["wxdragon-sys/richtext"]
+appindicator = ["wxdragon-sys/appindicator"]
 
 [dependencies]
 bitflags = "2.13.2"
