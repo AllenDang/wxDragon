@@ -41,3 +41,20 @@ cargo test -p wxdragon --test window_accessibility
 
 See `examples/rust/accessibility_demo/README.md` for screen-reader checks that
 cannot be established by these automated tests.
+
+## Printing (#246)
+
+The printing regression checks that the printout shim starts and ends the
+document through `wxPrintout`, which is what calls `StartDoc` and `EndDoc` on the
+printer DC, and that the begin-document callback's answer is passed on. It uses
+a DC that records those calls, so no printer is involved. It needs the CMake
+configure step and the notes above:
+
+```sh
+cmake --build target/debug/wxdragon_sys_cmake_build/build --target printout_document_test --config Debug
+ctest --test-dir target/debug/wxdragon_sys_cmake_build/build -C Debug -R '^printout_document$' --output-on-failure
+cargo test -p wxdragon --lib printing::
+```
+
+The Rust tests check that `Printout::on_begin_document`'s answer reaches the
+shim, and that a panic in it answers `false`.

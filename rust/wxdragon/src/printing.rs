@@ -11,6 +11,12 @@ pub trait Printout {
     fn on_prepare_printing(&mut self, _dc: &GenericDC) {}
     fn on_begin_printing(&mut self, _dc: &GenericDC) {}
     fn on_end_printing(&mut self) {}
+    /// Called once the print job has started, before the first page. On Windows it is called once per copy
+    /// when wxWidgets prints the copies itself.
+    ///
+    /// Return `false` to stop printing. wxWidgets treats this as an error, not a cancel: it reports
+    /// "Could not start printing.", `on_end_document` is not called, and on Windows and macOS
+    /// `Printer::print` returns `false`. A panic here stops printing the same way.
     fn on_begin_document(&mut self, _dc: &GenericDC, _start_page: i32, _end_page: i32) -> bool {
         true
     }
@@ -83,11 +89,11 @@ impl<T: Printout> PrintoutProxy<T> {
         })
     }
 
-    unsafe extern "C" fn on_begin_document_cb(user_data: *mut c_void, start_page: i32, end_page: i32) {
-        crate::utils::guard_ffi_callback("on_begin_document_cb", (), || {
+    unsafe extern "C" fn on_begin_document_cb(user_data: *mut c_void, start_page: i32, end_page: i32) -> bool {
+        crate::utils::guard_ffi_callback("on_begin_document_cb", false, || {
             let proxy = unsafe { &mut *(user_data as *mut Self) };
             let dc = proxy.get_dc();
-            proxy.inner.on_begin_document(&dc, start_page, end_page);
+            proxy.inner.on_begin_document(&dc, start_page, end_page)
         })
     }
 
@@ -432,5 +438,56 @@ impl<T: Printout> PrintoutProxy<T> {
     #[allow(dead_code)]
     pub fn is_preview(&self) -> bool {
         unsafe { ffi::wxd_Printout_IsPreview(self.ffi_ptr) }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// A printout whose `on_begin_document` gives the stored answer.
+    struct BeginAnswer(bool);
+
+    impl Printout for BeginAnswer {
+        fn on_begin_document(&mut self, _dc: &GenericDC, _start_page: i32, _end_page: i32) -> bool {
+            self.0
+        }
+
+        fn on_print_page(&mut self, _dc: &GenericDC, _page_num: i32) -> bool {
+            true
+        }
+    }
+
+    /// A printout whose `on_begin_document` panics.
+    struct BeginPanics;
+
+    impl Printout for BeginPanics {
+        fn on_begin_document(&mut self, _dc: &GenericDC, _start_page: i32, _end_page: i32) -> bool {
+            panic!("on_begin_document panicked");
+        }
+
+        fn on_print_page(&mut self, _dc: &GenericDC, _page_num: i32) -> bool {
+            true
+        }
+    }
+
+    /// Asks `printout` to begin the document, the way the C++ shim does.
+    fn begin_document<T: Printout>(printout: T) -> bool {
+        let mut proxy = PrintoutProxy::new("begin document", printout);
+        let user_data = &mut *proxy as *mut PrintoutProxy<T> as *mut c_void;
+        unsafe { PrintoutProxy::<T>::on_begin_document_cb(user_data, 1, 1) }
+    }
+
+    #[test]
+    fn begin_document_callback_returns_the_printouts_answer() {
+        assert_eq!(
+            (begin_document(BeginAnswer(true)), begin_document(BeginAnswer(false))),
+            (true, false)
+        );
+    }
+
+    #[test]
+    fn begin_document_callback_answers_false_when_the_printout_panics() {
+        assert!(!begin_document(BeginPanics));
     }
 }

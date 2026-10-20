@@ -49,17 +49,17 @@ public:
         else wxPrintout::OnEndPrinting();
     }
 
+    // The base class calls StartDoc and EndDoc on the printer DC, so it must run
+    // whether or not a callback is set, or no print job is ever started.
     virtual bool OnBeginDocument(int startPage, int endPage) override {
-        if (m_onBeginDocument) {
-            m_onBeginDocument(m_userData, startPage, endPage);
-            return true;
-        }
-        return wxPrintout::OnBeginDocument(startPage, endPage);
+        if (!wxPrintout::OnBeginDocument(startPage, endPage)) return false;
+        if (m_onBeginDocument) return m_onBeginDocument(m_userData, startPage, endPage);
+        return true;
     }
 
     virtual void OnEndDocument() override {
         if (m_onEndDocument) m_onEndDocument(m_userData);
-        else wxPrintout::OnEndDocument();
+        wxPrintout::OnEndDocument();
     }
 
     virtual bool OnPrintPage(int pageNum) override {
