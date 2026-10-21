@@ -1881,7 +1881,7 @@ pub trait WxWidget: std::any::Any {
 
     /// Sets the accessible state for the window.
     ///
-    /// The state is a bitmask of MSAA state flags ([`AccState`]), e.g.
+    /// The state is a bitmask of [`AccState`] flags, which wxWidgets converts to MSAA states, e.g.
     /// `AccState::FOCUSED | AccState::SELECTED`. This is **Windows-only** (stored on a
     /// built-in accessible object where `wxUSE_ACCESSIBILITY` is compiled in); the method
     /// is unavailable on macOS and GTK, which have no equivalent state bitmask.

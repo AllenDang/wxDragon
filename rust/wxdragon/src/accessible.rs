@@ -168,12 +168,13 @@ impl AccRole {
 }
 
 bitflags::bitflags! {
-    /// Accessibility state flags (the MSAA `STATE_SYSTEM_*` set).
+    /// Accessibility state flags, named after the MSAA `STATE_SYSTEM_*` states.
     ///
     /// A state is a bitmask, so values are combined with `|`, e.g.
     /// `AccState::FOCUSED | AccState::SELECTED`. Used by
     /// [`crate::window::WxWidget::set_accessibility_state`] and returned from
-    /// [`AccessibleImpl::get_state`].
+    /// [`AccessibleImpl::get_state`]. The bits are wxWidgets' `wxACC_STATE_SYSTEM_*` values, not
+    /// the `STATE_SYSTEM_*` values in `oleacc.h`: wxWidgets converts them to MSAA states itself.
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
     pub struct AccState: i64 {
         const UNAVAILABLE = ffi::WXD_ACC_STATE_SYSTEM_UNAVAILABLE as i64;
@@ -193,16 +194,11 @@ bitflags::bitflags! {
         const ANIMATED = ffi::WXD_ACC_STATE_SYSTEM_ANIMATED as i64;
         const INVISIBLE = ffi::WXD_ACC_STATE_SYSTEM_INVISIBLE as i64;
         const OFFSCREEN = ffi::WXD_ACC_STATE_SYSTEM_OFFSCREEN as i64;
-        const SIZEABLE = ffi::WXD_ACC_STATE_SYSTEM_SIZEABLE as i64;
-        const MOVEABLE = ffi::WXD_ACC_STATE_SYSTEM_MOVEABLE as i64;
         const SELFVOICING = ffi::WXD_ACC_STATE_SYSTEM_SELFVOICING as i64;
         const FOCUSABLE = ffi::WXD_ACC_STATE_SYSTEM_FOCUSABLE as i64;
         const SELECTABLE = ffi::WXD_ACC_STATE_SYSTEM_SELECTABLE as i64;
-        const LINKED = ffi::WXD_ACC_STATE_SYSTEM_LINKED as i64;
-        const TRAVERSED = ffi::WXD_ACC_STATE_SYSTEM_TRAVERSED as i64;
         const MULTISELECTABLE = ffi::WXD_ACC_STATE_SYSTEM_MULTISELECTABLE as i64;
         const EXTSELECTABLE = ffi::WXD_ACC_STATE_SYSTEM_EXTSELECTABLE as i64;
-        const HASPOPUP = ffi::WXD_ACC_STATE_SYSTEM_HASPOPUP as i64;
     }
 }
 
@@ -678,5 +674,57 @@ fn copy_string_to_c(s: String, out_buf: *mut c_char, max_len: usize) {
         } else {
             *out_buf.add(max_len - 1) = 0;
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::AccState;
+
+    /// The `wxACC_STATE_SYSTEM_*` values in `wx/access.h`. `wxAccessible::GetState` takes these
+    /// and converts them to the platform's states, so a flag carrying any other value reaches a
+    /// screen reader as another state (#250).
+    const WX_STATES: [(&str, i64); 26] = [
+        ("ALERT_HIGH", 0x0000_0001),
+        ("ALERT_MEDIUM", 0x0000_0002),
+        ("ALERT_LOW", 0x0000_0004),
+        ("ANIMATED", 0x0000_0008),
+        ("BUSY", 0x0000_0010),
+        ("CHECKED", 0x0000_0020),
+        ("COLLAPSED", 0x0000_0040),
+        ("DEFAULT", 0x0000_0080),
+        ("EXPANDED", 0x0000_0100),
+        ("EXTSELECTABLE", 0x0000_0200),
+        ("FLOATING", 0x0000_0400),
+        ("FOCUSABLE", 0x0000_0800),
+        ("FOCUSED", 0x0000_1000),
+        ("HOTTRACKED", 0x0000_2000),
+        ("INVISIBLE", 0x0000_4000),
+        ("MARQUEED", 0x0000_8000),
+        ("MIXED", 0x0001_0000),
+        ("MULTISELECTABLE", 0x0002_0000),
+        ("OFFSCREEN", 0x0004_0000),
+        ("PRESSED", 0x0008_0000),
+        ("PROTECTED", 0x0010_0000),
+        ("READONLY", 0x0020_0000),
+        ("SELECTABLE", 0x0040_0000),
+        ("SELECTED", 0x0080_0000),
+        ("SELFVOICING", 0x0100_0000),
+        ("UNAVAILABLE", 0x0200_0000),
+    ];
+
+    #[test]
+    fn every_state_flag_carries_the_wxwidgets_value_of_its_name() {
+        let flags: Vec<_> = AccState::all().iter_names().collect();
+        assert!(!flags.is_empty(), "AccState has no flags");
+        let mut wrong = Vec::new();
+        for (name, flag) in flags {
+            match WX_STATES.iter().find(|(wx_name, _)| *wx_name == name) {
+                Some(&(_, value)) if value == flag.bits() => {}
+                Some(&(_, value)) => wrong.push(format!("{name} is {:#x}, wxWidgets' is {value:#x}", flag.bits())),
+                None => wrong.push(format!("{name} has no wxWidgets counterpart")),
+            }
+        }
+        assert!(wrong.is_empty(), "{}", wrong.join("\n"));
     }
 }

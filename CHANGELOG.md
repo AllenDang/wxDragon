@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Breaking Changes
+
+- **Accessibility**: Fixed accessible states reaching screen readers as other states on Windows. The `WXD_ACC_STATE_SYSTEM_*` defines carried the `STATE_SYSTEM_*` values from `oleacc.h`, but `wxAccessible::GetState` takes wxWidgets' own `wxACC_STATE_SYSTEM_*` numbering and converts it, so no state given through `AccessibleImpl::get_state` or `set_accessibility_state` arrived as itself: `AccState::CHECKED` was reported as busy, `SELECTABLE` as read only, and `FOCUSED | SELECTED` as two alert levels. The defines now carry wxWidgets' values, and Windows builds check each one against wxWidgets. `AccState::SIZEABLE`, `MOVEABLE`, `LINKED`, `TRAVERSED` and `HASPOPUP` and their `WXD_ACC_STATE_SYSTEM_*` defines are removed: wxWidgets has no such states, so none of them ever reached a screen reader as itself, and code naming them has to drop them (#250)
+
 ### New Features
 
 - **Window**: Added `on_mouse_left_double_click`, `on_mouse_right_double_click` and `on_mouse_middle_double_click`, binding `wxEVT_LEFT_DCLICK`, `wxEVT_RIGHT_DCLICK` and `wxEVT_MIDDLE_DCLICK`. A custom-drawn control had no way to tell a double-click from two clicks, short of timing `LeftDown` events against the system double-click time and distance itself. The events carry the usual `MouseButtonEvent` data, and `wxd_IsMouseButtonEvent` now accepts them
