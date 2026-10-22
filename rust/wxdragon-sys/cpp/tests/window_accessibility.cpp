@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <iostream>
 #include <memory>
+#include <string>
 #include "wxdragon.h"
 
 #ifdef __WXOSX__
@@ -36,28 +37,54 @@ WxHandle(wxWindow* window)
 { return reinterpret_cast<wxd_Window_t*>(window); }
 
 #if wxUSE_ACCESSIBILITY
-static wxString
-AccessibleName(wxWindow* window)
+// The window's exposed COM object, not GetIAccessibleStd(), which is the
+// native fallback and intentionally bypasses wxWidgets' overrides.
+static IAccessible*
+ExposedAccessible(wxWindow* window)
 {
     Check(window->GetAccessible() != nullptr, "missing accessible object");
-    // Query the exposed COM object, not GetIAccessibleStd(), which is the
-    // native fallback and intentionally bypasses wxWidgets' overrides.
     IAccessible* object = nullptr;
     HRESULT result = AccessibleObjectFromWindow(reinterpret_cast<HWND>(window->GetHandle()),
                                                 static_cast<DWORD>(OBJID_CLIENT), IID_IAccessible,
                                                 reinterpret_cast<void**>(&object));
     Check(SUCCEEDED(result) && object, "AccessibleObjectFromWindow failed");
+    return object;
+}
+
+static VARIANT
+ChildId(long id)
+{
     VARIANT child;
     VariantInit(&child);
     child.vt = VT_I4;
-    child.lVal = CHILDID_SELF;
+    child.lVal = id;
+    return child;
+}
+
+static wxString
+AccessibleName(wxWindow* window)
+{
+    IAccessible* object = ExposedAccessible(window);
     BSTR name = nullptr;
-    result = object->get_accName(child, &name);
+    HRESULT result = object->get_accName(ChildId(CHILDID_SELF), &name);
     object->Release();
     wxString value = name ? wxString(name) : wxString();
     SysFreeString(name);
     Check(SUCCEEDED(result), "get_accName failed");
     return value;
+}
+
+// The MSAA state a screen reader reads for the window or one of its children.
+static long
+AccessibleState(wxWindow* window, long childId)
+{
+    IAccessible* object = ExposedAccessible(window);
+    VARIANT state;
+    VariantInit(&state);
+    HRESULT result = object->get_accState(ChildId(childId), &state);
+    object->Release();
+    Check(SUCCEEDED(result) && state.vt == VT_I4, "get_accState failed");
+    return state.lVal;
 }
 
 class CustomAccessible : public wxAccessible {
@@ -161,6 +188,105 @@ TestNames(wxWindow* parent)
     delete bitmap;
 }
 
+#if wxUSE_ACCESSIBILITY
+struct StateCase {
+    const char* name;
+    long state;
+    long msaa;
+};
+
+#define STATE_CASE(name) { #name, WXD_ACC_STATE_SYSTEM_##name, STATE_SYSTEM_##name }
+
+// Each state flag and the MSAA state a screen reader must read for it (#250).
+// wxIAccessible::get_accState converts wxWidgets' own state numbering, not
+// oleacc.h's. PROTECTED is left out: wxWidgets converts it to no MSAA state.
+static const StateCase kStateCases[] = {
+    STATE_CASE(ALERT_HIGH),
+    STATE_CASE(ALERT_MEDIUM),
+    STATE_CASE(ALERT_LOW),
+    STATE_CASE(ANIMATED),
+    STATE_CASE(BUSY),
+    STATE_CASE(CHECKED),
+    STATE_CASE(COLLAPSED),
+    STATE_CASE(DEFAULT),
+    STATE_CASE(EXPANDED),
+    STATE_CASE(EXTSELECTABLE),
+    STATE_CASE(FLOATING),
+    STATE_CASE(FOCUSABLE),
+    STATE_CASE(FOCUSED),
+    STATE_CASE(HOTTRACKED),
+    STATE_CASE(INVISIBLE),
+    STATE_CASE(MARQUEED),
+    STATE_CASE(MIXED),
+    STATE_CASE(MULTISELECTABLE),
+    STATE_CASE(OFFSCREEN),
+    STATE_CASE(PRESSED),
+    STATE_CASE(READONLY),
+    STATE_CASE(SELECTABLE),
+    STATE_CASE(SELECTED),
+    STATE_CASE(SELFVOICING),
+    STATE_CASE(UNAVAILABLE),
+};
+
+// The rows of a check list from an AccessibleImpl in #250: the current row is
+// ticked, and every row can take focus and be selected.
+static constexpr long kTickedCurrentRow =
+    WXD_ACC_STATE_SYSTEM_FOCUSABLE | WXD_ACC_STATE_SYSTEM_SELECTABLE |
+    WXD_ACC_STATE_SYSTEM_CHECKED | WXD_ACC_STATE_SYSTEM_FOCUSED | WXD_ACC_STATE_SYSTEM_SELECTED;
+static constexpr long kOtherRow = WXD_ACC_STATE_SYSTEM_FOCUSABLE | WXD_ACC_STATE_SYSTEM_SELECTABLE;
+
+static wxd_AccStatus
+CheckListRowState(void*, int childId, long* state)
+{
+    if (childId == 1)
+        *state = kTickedCurrentRow;
+    else if (childId == 2)
+        *state = kOtherRow;
+    else
+        return WXD_ACC_NOT_IMPLEMENTED;
+    return WXD_ACC_OK;
+}
+
+static void
+ExpectState(std::string& failures, const std::string& what, long answered, long expected)
+{
+    if (answered != expected)
+        failures += wxString::Format("\n  %s answered 0x%lx, expected 0x%lx", what.c_str(),
+                                     answered, expected)
+                        .ToStdString();
+}
+
+static void
+TestStates(wxWindow* parent)
+{
+    std::string failures;
+
+    // The path set_accessibility_state takes.
+    auto* check = new wxCheckBox(parent, wxID_ANY, "Keep");
+    for (const StateCase& state : kStateCases) {
+        wxd_Window_SetAccessibleState(WxHandle(check), state.state);
+        ExpectState(failures, std::string("set ") + state.name,
+                    AccessibleState(check, CHILDID_SELF), state.msaa);
+    }
+    delete check;
+
+    // The path AccessibleImpl::get_state takes.
+    auto* list = new wxWindow(parent, wxID_ANY);
+    wxd_AccessibleCallbacks callbacks = {};
+    callbacks.GetState = CheckListRowState;
+    wxd_Window_SetAccessible(WxHandle(list),
+                             wxd_Accessible_Create(WxHandle(list), callbacks, nullptr));
+    ExpectState(failures, "ticked current row", AccessibleState(list, 1),
+                STATE_SYSTEM_FOCUSABLE | STATE_SYSTEM_SELECTABLE | STATE_SYSTEM_CHECKED |
+                    STATE_SYSTEM_FOCUSED | STATE_SYSTEM_SELECTED);
+    ExpectState(failures, "other row", AccessibleState(list, 2),
+                STATE_SYSTEM_FOCUSABLE | STATE_SYSTEM_SELECTABLE);
+    delete list;
+
+    Check(failures.empty(), ("states reached MSAA as other states:" + failures).c_str());
+}
+#endif
+
 #ifdef __WXOSX__
 template <typename Control>
 static void
@@ -228,6 +354,9 @@ main(int argc, char** argv)
     int result = 0;
     try {
         TestNames(frame);
+#if wxUSE_ACCESSIBILITY
+        TestStates(frame);
+#endif
         TestKeyboardFocus(frame);
 #ifdef __WXOSX__
         TestAutomaticLabel<wxChoice>(frame);

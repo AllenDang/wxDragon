@@ -2,7 +2,10 @@
 
 These tests query the actual native accessibility name (MSAA on Windows, Cocoa on
 macOS), check property/name setter ordering and custom accessible preservation,
-and exercise keyboard-focus controls. They run on the OS main thread.
+and exercise keyboard-focus controls. On Windows they also check that each state
+flag wxWidgets maps to an MSAA state reaches MSAA as itself when set on a window,
+and that the states a custom accessible returns for two rows of a check list reach
+MSAA as themselves. They run on the OS main thread.
 
 From the repository root, after `cargo build -p wxdragon`:
 
