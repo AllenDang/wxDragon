@@ -10,6 +10,7 @@
 
 - **Window**: Added `on_mouse_left_double_click`, `on_mouse_right_double_click` and `on_mouse_middle_double_click`, binding `wxEVT_LEFT_DCLICK`, `wxEVT_RIGHT_DCLICK` and `wxEVT_MIDDLE_DCLICK`. A custom-drawn control had no way to tell a double-click from two clicks, short of timing `LeftDown` events against the system double-click time and distance itself. The events carry the usual `MouseButtonEvent` data, and `wxd_IsMouseButtonEvent` now accepts them
 - **ScrolledWindow**: Added `get_view_start`, wrapping `wxScrolled::GetViewStart`. Without it a scrolled window drawn by hand couldn't find out where the user had scrolled to with the scroll bar or the mouse wheel, so it couldn't tell which part of its contents to paint
+- **Notebook**: Added `set_page_text` and `get_page_text`, wrapping `wxNotebook::SetPageText` and `GetPageText`. Before, the text on a tab could only be set when the page was added, so an app that shows a count or a state in a tab had to remove the page and add it again to change the text. Both return `false` or `None` for an index with no page, instead of the wxWidgets assertion
 
 ### Bug Fixes
 
