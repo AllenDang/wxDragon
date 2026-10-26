@@ -189,3 +189,22 @@ wxd_Notebook_RemovePage(wxd_Notebook_t* self, size_t n)
         return false;
     return notebook->RemovePage(n);
 }
+
+WXD_EXPORTED bool
+wxd_Notebook_SetPageText(wxd_Notebook_t* self, size_t n, const char* text)
+{
+    wxNotebook* notebook = reinterpret_cast<wxNotebook*>(self);
+    if (!notebook || n >= notebook->GetPageCount())
+        return false;
+    return notebook->SetPageText(n, WXD_STR_TO_WX_STRING_UTF8_NULL_OK(text));
+}
+
+WXD_EXPORTED int
+wxd_Notebook_GetPageText(wxd_Notebook_t* self, size_t n, char* buffer, size_t buffer_len)
+{
+    wxNotebook* notebook = reinterpret_cast<wxNotebook*>(self);
+    if (!notebook || n >= notebook->GetPageCount())
+        return -1;
+    return (int)wxd_cpp_utils::copy_wxstring_to_buffer(notebook->GetPageText(n), buffer,
+                                                       buffer_len);
+}

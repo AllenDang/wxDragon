@@ -20,6 +20,13 @@ WXD_EXPORTED wxd_Window_t*
 wxd_Notebook_GetPage(wxd_Notebook_t* self, size_t n);
 WXD_EXPORTED bool
 wxd_Notebook_RemovePage(wxd_Notebook_t* self, size_t n);
+// Returns false if there is no page n.
+WXD_EXPORTED bool
+wxd_Notebook_SetPageText(wxd_Notebook_t* self, size_t n, const char* text);
+// Copies the tab text of page n into buffer, and returns its length in bytes without the null
+// terminator. Returns -1 if there is no page n.
+WXD_EXPORTED int
+wxd_Notebook_GetPageText(wxd_Notebook_t* self, size_t n, char* buffer, size_t buffer_len);
 
 // Event data accessors (if specific to Notebook events beyond general wxEvent)
 // Example: if wxNotebookEvent has specific data not in wxBookCtrlEvent

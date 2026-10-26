@@ -247,6 +247,35 @@ impl Notebook {
         unsafe { ffi::wxd_Notebook_RemovePage(ptr, index) }
     }
 
+    /// Sets the text on the tab of the page at the given index.
+    /// Returns `false` if there is no page at the index, or if the notebook has been destroyed.
+    pub fn set_page_text(&self, index: usize, text: &str) -> bool {
+        let ptr = self.notebook_ptr();
+        if ptr.is_null() {
+            return false;
+        }
+        let Ok(text) = CString::new(text) else {
+            return false;
+        };
+        unsafe { ffi::wxd_Notebook_SetPageText(ptr, index, text.as_ptr()) }
+    }
+
+    /// Returns the text on the tab of the page at the given index.
+    /// Returns `None` if there is no page at the index, or if the notebook has been destroyed.
+    /// On Windows, wxWidgets returns no more than the first 255 characters of the text.
+    pub fn get_page_text(&self, index: usize) -> Option<String> {
+        let ptr = self.notebook_ptr();
+        if ptr.is_null() {
+            return None;
+        }
+        let len = unsafe { ffi::wxd_Notebook_GetPageText(ptr, index, std::ptr::null_mut(), 0) };
+        let len = usize::try_from(len).ok()?;
+        let mut buf = vec![0u8; len + 1];
+        unsafe { ffi::wxd_Notebook_GetPageText(ptr, index, buf.as_mut_ptr().cast(), buf.len()) };
+        buf.truncate(len);
+        Some(String::from_utf8_lossy(&buf).into_owned())
+    }
+
     /// Returns the underlying WindowHandle for this notebook.
     pub fn window_handle(&self) -> WindowHandle {
         self.handle

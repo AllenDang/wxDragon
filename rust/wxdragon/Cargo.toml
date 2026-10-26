@@ -63,3 +63,8 @@ harness = false
 name = "dataview_container_columns"
 # Cocoa rendering and model callbacks must run on the OS main thread.
 harness = false
+
+[[test]]
+name = "notebook_page_text"
+# Cocoa must initialize on the OS main thread, not a Cargo test worker.
+harness = false
