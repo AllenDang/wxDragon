@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.9.24
 
 ### Breaking Changes
 
@@ -11,11 +11,17 @@
 - **Window**: Added `on_mouse_left_double_click`, `on_mouse_right_double_click` and `on_mouse_middle_double_click`, binding `wxEVT_LEFT_DCLICK`, `wxEVT_RIGHT_DCLICK` and `wxEVT_MIDDLE_DCLICK`. A custom-drawn control had no way to tell a double-click from two clicks, short of timing `LeftDown` events against the system double-click time and distance itself. The events carry the usual `MouseButtonEvent` data, and `wxd_IsMouseButtonEvent` now accepts them
 - **ScrolledWindow**: Added `get_view_start`, wrapping `wxScrolled::GetViewStart`. Without it a scrolled window drawn by hand couldn't find out where the user had scrolled to with the scroll bar or the mouse wheel, so it couldn't tell which part of its contents to paint
 - **Notebook**: Added `set_page_text` and `get_page_text`, wrapping `wxNotebook::SetPageText` and `GetPageText`. Before, the text on a tab could only be set when the page was added, so an app that shows a count or a state in a tab had to remove the page and add it again to change the text. Both return `false` or `None` for an index with no page, instead of the wxWidgets assertion
+- **WebView**: Added `WebViewEventData::get_url` and `get_target`, wrapping `wxWebViewEvent::GetURL` and `GetTarget`. A webview event keeps its URL and target frame in their own fields and not in the command string, which is empty for navigation events, so a handler for `on_navigating` had no way to tell where the navigation was going. The doc comment on `get_string` said it returned the URL and now says what it does return, the body of a script message or the title of a title change. `wxd_WebViewEvent_GetURL` and `wxd_WebViewEvent_GetTarget` return `-1` for an event that isn't a webview event (#249)
 
 ### Bug Fixes
 
 - **Window**: Fixed `navigate` going the wrong way. The constant extractor hard-coded `wxNAVIGATION_NEXT` as 0 and `wxNAVIGATION_PREVIOUS` as 1, but `wxWindow::Navigate` takes `wxNavigationKeyEvent` flags, where 0 is `IsBackward` and 1 is `IsForward`. So `navigate(true)` moved focus to the previous control and `navigate(false)` to the next one. A control that handles Tab itself (with `wxWANTS_CHARS`) and passes it on with `navigate(!shift_down)` sent Tab backwards and Shift+Tab forwards. The extractor now takes the values from `wxNavigationKeyEvent`, and the generated constants are corrected
 - **Printing**: Fixed `Printer::print` never starting a print job on Windows and macOS. The printout shim overrode `OnBeginDocument` and `OnEndDocument` to run the Rust callbacks and never called `wxPrintout`'s own versions, which are the only place `StartDoc` and `EndDoc` are called on the printer DC. Every page was drawn on a DC with no document open, so nothing was printed: Microsoft Print to PDF never asked where to save and wrote no file, and `print` still returned `true`. The shim now starts the document before `on_begin_document` runs and ends it after `on_end_document`. Returning `false` from `on_begin_document` now stops printing, which wxWidgets reports as an error ("Could not start printing.") without calling `on_end_document`; before, the C callback type returned nothing and the answer was dropped. A panic in `on_begin_document` now stops printing the same way instead of carrying on. Code passing its own begin-document callback to `wxd_Printout_CreateWithCallbacks` through `wxdragon-sys` must now return `bool` (#246)
+- **WebView / Events**: Fixed `veto` doing nothing on an event whose class info names a base it does not derive from. `wxWebViewEvent` derives from `wxNotifyEvent` but is registered with `wxIMPLEMENT_DYNAMIC_CLASS(wxWebViewEvent, wxCommandEvent)`, and `wxd_Event_Veto`, `wxd_Event_CanVeto`, `wxd_Event_SetCanVeto` and the dispatcher's `IsEventVetoed` looked for a `wxNotifyEvent` with `wxDynamicCast`, which follows that class info and never found one. So a `WEBVIEW_NAVIGATING` handler could not cancel a navigation and `can_veto` returned `false`. They use `dynamic_cast` now, which follows the real C++ hierarchy, as most other event types in that file already did (#249)
+
+### Build
+
+- **Linux / taskbar**: Added a default-on `appindicator` feature. wxWidgets detects Ayatana AppIndicator for `wxTaskBarIcon`, but the build links the bundled wxWidgets by hand and does not keep the CMake target's transitive dependencies, so a static build that detected AppIndicator failed to link. The build now probes `ayatana-appindicator3-0.1` with pkg-config when the feature is on or the cached wxWidgets configuration has `wxUSE_APPINDICATOR` enabled, and forwards its linker search paths and libraries. When pkg-config does not find it, the build warns instead of failing, so a wxWidgets with AppIndicator support can still be configured on a machine without it
 
 ## 0.9.23
 
