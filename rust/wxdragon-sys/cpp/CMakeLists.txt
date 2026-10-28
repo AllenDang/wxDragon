@@ -278,7 +278,7 @@ if (wxdUSE_RICHTEXT)
     list(APPEND WXDRAGON_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/richtextctrl.cpp)
 endif()
 
-# Shim functions generated from cpp/spec/*.wxd by build.rs (see shimgen.rs)
+# Shim functions generated from cpp/spec/*.wxd by build.rs (see shimgen/)
 file(GLOB WXD_GENERATED_SOURCES "${WXD_GENERATED_DIR}/src/*.cpp")
 list(APPEND WXDRAGON_SOURCES ${WXD_GENERATED_SOURCES})
 

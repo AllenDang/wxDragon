@@ -10,7 +10,7 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
     println!("cargo::rerun-if-changed=cpp");
     println!("cargo::rerun-if-changed=src");
     println!("cargo::rerun-if-changed=build.rs");
-    println!("cargo::rerun-if-changed=shimgen.rs");
+    println!("cargo::rerun-if-changed=shimgen");
     println!("cargo::rerun-if-env-changed=WXWIDGETS_DIR");
     println!("cargo::rerun-if-env-changed=WXWIDGETS_BUILD_DIR");
     println!("cargo::rerun-if-env-changed=WXDRAGON_SYS_BUILD_DIR");
