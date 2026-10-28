@@ -66,6 +66,23 @@ public:
         return m_cb->is_container(m_cb->userdata, (void*)item.GetID());
     }
 
+    bool
+    HasContainerColumns(const wxDataViewItem& WXUNUSED(item)) const override
+    {
+        return m_containerColumns;
+    }
+
+    void
+    SetContainerColumns(bool enabled)
+    {
+        if (m_containerColumns == enabled)
+            return;
+        m_containerColumns = enabled;
+        // All attached controls must re-query HasValue(), including on Cocoa.
+        // A model reset avoids depending on any backend's cached container cells.
+        Cleared();
+    }
+
     void
     GetValue(wxVariant& variant, const wxDataViewItem& item, unsigned int col) const override
     {
@@ -118,6 +135,7 @@ public:
 
 private:
     const wxd_DataViewTreeModel_Callbacks* m_cb;
+    bool m_containerColumns = false;
 };
 
 extern "C" wxd_DataViewModel_t*
@@ -127,6 +145,15 @@ wxd_DataViewTreeModel_CreateWithCallbacks(const wxd_DataViewTreeModel_Callbacks*
         return nullptr;
     Wxd_Callbacks_DataViewTreeModel* model = new Wxd_Callbacks_DataViewTreeModel(cb);
     return reinterpret_cast<wxd_DataViewModel_t*>(model);
+}
+
+extern "C" void
+wxd_DataViewTreeModel_SetContainerColumns(wxd_DataViewModel_t* model, bool enabled)
+{
+    if (!model)
+        return;
+    auto* m = reinterpret_cast<Wxd_Callbacks_DataViewTreeModel*>(model);
+    m->SetContainerColumns(enabled);
 }
 
 extern "C" void

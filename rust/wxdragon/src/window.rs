@@ -158,8 +158,6 @@ unsafe extern "C" {
     #[cfg(target_os = "windows")]
     unsafe fn wxd_Window_MSWDisableComposited(window: *mut ffi::wxd_Window_t);
     #[cfg(target_os = "macos")]
-    unsafe fn wxd_Window_SetAccessibilityLabel(window: *mut ffi::wxd_Window_t, label: *const std::os::raw::c_char);
-    #[cfg(target_os = "macos")]
     unsafe fn wxd_Window_SetAccessibilityHelp(window: *mut ffi::wxd_Window_t, help: *const std::os::raw::c_char);
     #[cfg(target_os = "macos")]
     unsafe fn wxd_Window_SetAccessibilityValue(window: *mut ffi::wxd_Window_t, value: *const std::os::raw::c_char);
@@ -171,7 +169,6 @@ unsafe extern "C" {
 
 /// Marshals `s` to a C string and passes it to a `(window, *const c_char)` FFI setter.
 /// Shared by the platform arms of the `set_accessibility_*` string setters.
-#[cfg(any(target_os = "macos", target_os = "windows"))]
 fn set_accessibility_string(
     handle: *mut ffi::wxd_Window_t,
     s: &str,
@@ -1117,6 +1114,30 @@ pub trait WxWidget: std::any::Any {
         }
     }
 
+    /// Allows this window to receive focus through keyboard navigation (Tab).
+    ///
+    /// In particular, single-line read-only `TextCtrl` controls on Windows do not
+    /// accept keyboard focus by default. Call this to make them reachable by
+    /// keyboard and screen-reader users. This undoes `disable_focus_from_keyboard`;
+    /// it does not enable a disabled window or make a non-focusable control focusable.
+    fn enable_focus_from_keyboard(&self) {
+        let handle = self.handle_ptr();
+        if !handle.is_null() {
+            unsafe { ffi::wxd_Window_EnableFocusFromKeyboard(handle) };
+        }
+    }
+
+    /// Skips this window during keyboard navigation (Tab).
+    ///
+    /// It can still receive focus by clicking if otherwise focusable. This undoes
+    /// `enable_focus_from_keyboard` without disabling the control itself.
+    fn disable_focus_from_keyboard(&self) {
+        let handle = self.handle_ptr();
+        if !handle.is_null() {
+            unsafe { ffi::wxd_Window_DisableFocusFromKeyboard(handle) };
+        }
+    }
+
     /// Sets whether this window can accept focus.
     ///
     /// This can be used to enable or disable focus for a window. When set to `false`,
@@ -1768,24 +1789,21 @@ pub trait WxWidget: std::any::Any {
     ///
     /// This is the primary string a screen reader announces for the control.
     ///
-    /// - **Windows:** stored on a built-in accessible object (active where
-    ///   `wxUSE_ACCESSIBILITY` is compiled in).
-    /// - **macOS:** applied via the native VoiceOver label. VoiceOver announces this
-    ///   before the control's value and role, e.g. "Language, English, pop up button".
-    ///   Use together with `hide_from_accessibility` on the adjacent `StaticText`
-    ///   label to avoid redundant announcements.
-    /// - **GTK/other:** currently a no-op.
+    /// Uses wxWidgets' native accessible-name API on Windows (where
+    /// `wxUSE_ACCESSIBILITY` is enabled) and macOS; a no-op on other platforms.
+    /// Pass an empty string to restore the default name.
+    ///
+    /// On macOS, native controls without their own label can automatically use
+    /// the immediately preceding label sibling created before them. Prefer that
+    /// association when it describes the control correctly; an explicit name is
+    /// useful for controls without a label or needing a different name. There is
+    /// no need to hide every adjacent `StaticText` from accessibility.
     fn set_accessibility_label(&self, label: &str) {
         let handle = self.handle_ptr();
         if handle.is_null() {
             return;
         }
-        #[cfg(target_os = "macos")]
-        set_accessibility_string(handle, label, wxd_Window_SetAccessibilityLabel);
-        #[cfg(target_os = "windows")]
         set_accessibility_string(handle, label, ffi::wxd_Window_SetAccessibleName);
-        #[cfg(not(any(target_os = "macos", target_os = "windows")))]
-        let _ = label;
     }
 
     /// Sets the accessible description for the window.
@@ -1863,7 +1881,7 @@ pub trait WxWidget: std::any::Any {
 
     /// Sets the accessible state for the window.
     ///
-    /// The state is a bitmask of MSAA state flags ([`AccState`]), e.g.
+    /// The state is a bitmask of [`AccState`] flags, which wxWidgets converts to MSAA states, e.g.
     /// `AccState::FOCUSED | AccState::SELECTED`. This is **Windows-only** (stored on a
     /// built-in accessible object where `wxUSE_ACCESSIBILITY` is compiled in); the method
     /// is unavailable on macOS and GTK, which have no equivalent state bitmask.

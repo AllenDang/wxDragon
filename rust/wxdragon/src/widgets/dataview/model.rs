@@ -570,6 +570,25 @@ impl CustomDataViewTreeModel {
         }
     }
 
+    /// Allow container rows to display values in all model columns.
+    ///
+    /// By default, wxWidgets only displays model column 0 for containers, even
+    /// when another column is the expander column. Enable this when, for example,
+    /// column 0 is a checkbox and column 1 contains the group label. On macOS this
+    /// also makes that text available to the native accessibility tree.
+    ///
+    /// This applies to every container in the model, including in cloned handles.
+    /// When the setting changes, associated views are rebuilt and their selection
+    /// and expansion state may reset. Prefer calling this before associating the
+    /// model with a control. Repeating the current setting does not rebuild views.
+    /// The default is `false`; leaf rows are unaffected.
+    pub fn set_container_columns(&self, enabled: bool) {
+        if self.model.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_DataViewTreeModel_SetContainerColumns(self.model, enabled) };
+    }
+
     /// Notify the view that a specific item's value has changed.
     /// Pass the item pointer (or null for root).
     pub fn item_value_changed<N>(&self, item: *const N, col: u32) {

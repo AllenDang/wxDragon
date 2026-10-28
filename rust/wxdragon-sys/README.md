@@ -16,7 +16,7 @@ This crate provides raw FFI (Foreign Function Interface) bindings to `libwxdrago
 
 The build process (`build.rs`) for this crate performs the following key steps:
 
-1.  **Downloads wxWidgets**: Fetches the wxWidgets 3.3.3 source archive.
+1.  **Downloads wxWidgets**: Fetches the wxWidgets 3.3.4 source archive.
 2.  **Extracts wxWidgets**: Decompresses and extracts the sources.
 3.  **Builds wxWidgets**: Compiles wxWidgets as a static library using CMake.
 4.  **Builds libwxdragon**: Compiles the `wxdragon` C++ wrapper code (found in the `src` directory of the main project) which links against the just-built wxWidgets. This also becomes a static library.
@@ -29,6 +29,9 @@ The directories involved can be moved through environment variables, for example
 - `WXDRAGON_SYS_BUILD_DIR`: the libwxdragon CMake build tree (default: `<target>/<profile>/wxdragon_sys_cmake_build`).
 
 Changing any of them re-runs the build script.
+
+Custom source trees must provide wxWidgets 3.3.4 or later: the window wrappers use
+its accessible-name and keyboard-focus APIs directly.
 
 ## Usage
 

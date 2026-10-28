@@ -5,6 +5,39 @@
 #if wxUSE_ACCESSIBILITY
 #include <wx/access.h>
 
+// The header's WXD_ACC_STATE_SYSTEM_* flags reach wxAccessible::GetState unchanged, and
+// wxWidgets converts its own numbering to the platform's states. Checked here so a value that
+// moves upstream is a build failure rather than a screen reader hearing another state (#250).
+#define WXD_ACC_STATE_CHECK(ours, theirs) \
+    static_assert((ours) == (theirs), #ours " does not match " #theirs)
+
+WXD_ACC_STATE_CHECK(WXD_ACC_STATE_SYSTEM_ALERT_HIGH, wxACC_STATE_SYSTEM_ALERT_HIGH);
+WXD_ACC_STATE_CHECK(WXD_ACC_STATE_SYSTEM_ALERT_MEDIUM, wxACC_STATE_SYSTEM_ALERT_MEDIUM);
+WXD_ACC_STATE_CHECK(WXD_ACC_STATE_SYSTEM_ALERT_LOW, wxACC_STATE_SYSTEM_ALERT_LOW);
+WXD_ACC_STATE_CHECK(WXD_ACC_STATE_SYSTEM_ANIMATED, wxACC_STATE_SYSTEM_ANIMATED);
+WXD_ACC_STATE_CHECK(WXD_ACC_STATE_SYSTEM_BUSY, wxACC_STATE_SYSTEM_BUSY);
+WXD_ACC_STATE_CHECK(WXD_ACC_STATE_SYSTEM_CHECKED, wxACC_STATE_SYSTEM_CHECKED);
+WXD_ACC_STATE_CHECK(WXD_ACC_STATE_SYSTEM_COLLAPSED, wxACC_STATE_SYSTEM_COLLAPSED);
+WXD_ACC_STATE_CHECK(WXD_ACC_STATE_SYSTEM_DEFAULT, wxACC_STATE_SYSTEM_DEFAULT);
+WXD_ACC_STATE_CHECK(WXD_ACC_STATE_SYSTEM_EXPANDED, wxACC_STATE_SYSTEM_EXPANDED);
+WXD_ACC_STATE_CHECK(WXD_ACC_STATE_SYSTEM_EXTSELECTABLE, wxACC_STATE_SYSTEM_EXTSELECTABLE);
+WXD_ACC_STATE_CHECK(WXD_ACC_STATE_SYSTEM_FLOATING, wxACC_STATE_SYSTEM_FLOATING);
+WXD_ACC_STATE_CHECK(WXD_ACC_STATE_SYSTEM_FOCUSABLE, wxACC_STATE_SYSTEM_FOCUSABLE);
+WXD_ACC_STATE_CHECK(WXD_ACC_STATE_SYSTEM_FOCUSED, wxACC_STATE_SYSTEM_FOCUSED);
+WXD_ACC_STATE_CHECK(WXD_ACC_STATE_SYSTEM_HOTTRACKED, wxACC_STATE_SYSTEM_HOTTRACKED);
+WXD_ACC_STATE_CHECK(WXD_ACC_STATE_SYSTEM_INVISIBLE, wxACC_STATE_SYSTEM_INVISIBLE);
+WXD_ACC_STATE_CHECK(WXD_ACC_STATE_SYSTEM_MARQUEED, wxACC_STATE_SYSTEM_MARQUEED);
+WXD_ACC_STATE_CHECK(WXD_ACC_STATE_SYSTEM_MIXED, wxACC_STATE_SYSTEM_MIXED);
+WXD_ACC_STATE_CHECK(WXD_ACC_STATE_SYSTEM_MULTISELECTABLE, wxACC_STATE_SYSTEM_MULTISELECTABLE);
+WXD_ACC_STATE_CHECK(WXD_ACC_STATE_SYSTEM_OFFSCREEN, wxACC_STATE_SYSTEM_OFFSCREEN);
+WXD_ACC_STATE_CHECK(WXD_ACC_STATE_SYSTEM_PRESSED, wxACC_STATE_SYSTEM_PRESSED);
+WXD_ACC_STATE_CHECK(WXD_ACC_STATE_SYSTEM_PROTECTED, wxACC_STATE_SYSTEM_PROTECTED);
+WXD_ACC_STATE_CHECK(WXD_ACC_STATE_SYSTEM_READONLY, wxACC_STATE_SYSTEM_READONLY);
+WXD_ACC_STATE_CHECK(WXD_ACC_STATE_SYSTEM_SELECTABLE, wxACC_STATE_SYSTEM_SELECTABLE);
+WXD_ACC_STATE_CHECK(WXD_ACC_STATE_SYSTEM_SELECTED, wxACC_STATE_SYSTEM_SELECTED);
+WXD_ACC_STATE_CHECK(WXD_ACC_STATE_SYSTEM_SELFVOICING, wxACC_STATE_SYSTEM_SELFVOICING);
+WXD_ACC_STATE_CHECK(WXD_ACC_STATE_SYSTEM_UNAVAILABLE, wxACC_STATE_SYSTEM_UNAVAILABLE);
+
 class WxdCustomAccessible : public wxAccessible {
 public:
     WxdCustomAccessible(wxWindow* win, wxd_AccessibleCallbacks callbacks, void* userData)
@@ -188,23 +221,17 @@ private:
 // to one of its children. (wxWidgets maps this onto MSAA's CHILDID_SELF on Windows.)
 static constexpr int ACC_ID_SELF = 0;
 
-// A lightweight built-in accessible that simply stores a handful of properties.
-// Used by the wxd_Window_SetAccessible* setters so callers can set an accessible
-// name/role/etc. without implementing the full callback interface.
+// Stores the property overrides not provided by wxWindow itself. Accessible
+// names are handled exclusively by wxWindow::SetAccessibleName().
 class WxdSimpleAccessible : public wxAccessible {
 public:
     explicit WxdSimpleAccessible(wxWindow* win) : wxAccessible(win) {}
 
-    void SetNameProp(const wxString& s, bool has)  { m_name = s;  m_hasName = has; }
     void SetRoleProp(wxAccRole r)                  { m_role = r;  m_hasRole = true; }
     void SetDescProp(const wxString& s, bool has)  { m_desc = s;  m_hasDesc = has; }
     void SetValueProp(const wxString& s, bool has) { m_value = s; m_hasValue = has; }
     void SetStateProp(long v)                      { m_state = v; m_hasState = true; }
 
-    wxAccStatus GetName(int childId, wxString* name) override {
-        if (childId == ACC_ID_SELF && m_hasName) { *name = m_name; return wxACC_OK; }
-        return wxACC_NOT_IMPLEMENTED;
-    }
     wxAccStatus GetRole(int childId, wxAccRole* role) override {
         if (childId == ACC_ID_SELF && m_hasRole) { *role = m_role; return wxACC_OK; }
         return wxACC_NOT_IMPLEMENTED;
@@ -223,10 +250,10 @@ public:
     }
 
 private:
-    wxString m_name, m_desc, m_value;
+    wxString m_desc, m_value;
     wxAccRole m_role = wxROLE_NONE;
     long m_state = 0;
-    bool m_hasName = false, m_hasRole = false, m_hasDesc = false, m_hasValue = false, m_hasState = false;
+    bool m_hasRole = false, m_hasDesc = false, m_hasValue = false, m_hasState = false;
 };
 
 // Returns the window's WxdSimpleAccessible, creating and attaching one if the window
@@ -235,6 +262,11 @@ static WxdSimpleAccessible* wxd_GetOrCreateSimpleAccessible(wxWindow* window) {
     WxdSimpleAccessible* simple = dynamic_cast<WxdSimpleAccessible*>(window->GetAccessible());
     if (!simple) {
         simple = new WxdSimpleAccessible(window);
+        // SetAccessible deletes the old object. Preserve the upstream name
+        // override when a later property setter installs our lightweight object.
+        if (wxAccessible* previous = window->GetAccessible()) {
+            simple->SetNameOverride(previous->GetNameOverride());
+        }
         window->SetAccessible(simple);
     }
     return simple;
@@ -299,15 +331,10 @@ wxd_Window_GetAccessible(wxd_Window_t* self)
 void
 wxd_Window_SetAccessibleName(wxd_Window_t* self, const char* name)
 {
-#if wxUSE_ACCESSIBILITY
     wxWindow* window = reinterpret_cast<wxWindow*>(self);
     if (window) {
-        wxd_GetOrCreateSimpleAccessible(window)
-            ->SetNameProp(WXD_STR_TO_WX_STRING_UTF8_NULL_OK(name), name != nullptr);
+        window->SetAccessibleName(WXD_STR_TO_WX_STRING_UTF8_NULL_OK(name));
     }
-#else
-    (void)self; (void)name;
-#endif
 }
 
 void

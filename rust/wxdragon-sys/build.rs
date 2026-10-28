@@ -1,8 +1,8 @@
 mod shimgen;
 
-const WX_SRC_URL: &str = "https://github.com/wxWidgets/wxWidgets/releases/download/v3.3.3/wxWidgets-3.3.3.zip";
-const WX_VERSION: &str = "3.3.3";
-const WX_SRC_URL_SHA256: &str = "458a1ef598c90174ee43622e8e63bfa1eccb451ffc2258bb4f8edcb050c5feb1";
+const WX_SRC_URL: &str = "https://github.com/wxWidgets/wxWidgets/releases/download/v3.3.4/wxWidgets-3.3.4.zip";
+const WX_VERSION: &str = "3.3.4";
+const WX_SRC_URL_SHA256: &str = "a604fe40a59e6515eac3efe58deca38b54b7ef7f3c1df0906559bde6de1e2f58";
 
 fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
     println!("Building wxdragon-sys...");
@@ -281,10 +281,11 @@ fn build_wxdragon_wrapper(
         cmake_config.define("wxUSE_ARTPROVIDER_TANGO", "OFF");
     }
     if !cfg!(feature = "wx-extra-image-formats") {
-        for option in ["wxUSE_GIF", "wxUSE_PCX", "wxUSE_TGA", "wxUSE_IFF", "wxUSE_PNM", "wxUSE_XPM"] {
+        for option in ["wxUSE_GIF", "wxUSE_PCX", "wxUSE_TGA", "wxUSE_IFF", "wxUSE_PNM"] {
             cmake_config.define(option, "OFF");
         }
     }
+    cmake_config.define("wxUSE_XPM", if cfg!(feature = "wx-xpm") { "ON" } else { "OFF" });
     if !cfg!(feature = "wx-regex") {
         cmake_config.define("wxUSE_REGEX", "OFF");
     }
@@ -1033,6 +1034,30 @@ fn build_wxdragon_wrapper(
         println!("cargo:rustc-link-lib=jpeg");
         println!("cargo:rustc-link-lib=expat");
         println!("cargo:rustc-link-lib=tiff");
+        // Static wxWidgets uses zlib directly (e.g. zstream.cpp's inflateEnd).
+        // Do not rely on libpng/libtiff's transitive shared-library dependencies.
+        println!("cargo:rustc-link-lib=z");
+
+        // wxWidgets detects Ayatana AppIndicator for wxTaskBarIcon, but its
+        // CMake target's transitive dependency is not preserved by the manual
+        // Rust linker instructions above.
+        if cfg!(feature = "appindicator") || cmake_cache.contains("wxUSE_APPINDICATOR:BOOL=ON") {
+            match pkg_config::Config::new().probe("ayatana-appindicator3-0.1") {
+                Ok(appindicator) => {
+                    for path in appindicator.link_paths {
+                        println!("cargo:rustc-link-search=native={}", path.display());
+                    }
+                    for lib in appindicator.libs {
+                        println!("cargo:rustc-link-lib={lib}");
+                    }
+                }
+                Err(error) => {
+                    println!(
+                        "cargo::warning=Ayatana AppIndicator support is enabled but pkg-config could not find 'ayatana-appindicator3-0.1': {error}"
+                    );
+                }
+            }
+        }
 
         if cmake_cache.contains("wxUSE_LIBNOTIFY:BOOL=ON") {
             println!("cargo:rustc-link-lib=notify");
@@ -1255,24 +1280,40 @@ pub fn download_file_with_git_http_proxy<P: AsRef<std::path::Path>>(
         None => reqwest::blocking::Client::new(),
     };
 
-    // Perform GET request
-    let mut resp = client.get(url).send().map_err(Error::other)?;
-    if !resp.status().is_success() {
-        return Err(Error::other(format!("HTTP error: {}", resp.status())));
-    }
+    // Retry transient network failures and truncated or corrupt responses. Never
+    // leave a partial archive behind for the next invocation to mistake for a cache.
+    for attempt in 1..=3 {
+        let result = (|| -> std::io::Result<()> {
+            let mut resp = client.get(url).send().map_err(Error::other)?;
+            if !resp.status().is_success() {
+                return Err(Error::other(format!("HTTP error: {}", resp.status())));
+            }
 
-    // Stream to file to avoid loading the entire ZIP into memory.
-    if let Some(parent) = path.parent()
-        && !parent.as_os_str().is_empty()
-    {
-        std::fs::create_dir_all(parent)?;
-    }
-    let mut file = std::fs::File::create(path)?;
-    resp.copy_to(&mut file).map_err(Error::other)?;
+            // Stream to file to avoid loading the entire ZIP into memory.
+            if let Some(parent) = path.parent()
+                && !parent.as_os_str().is_empty()
+            {
+                std::fs::create_dir_all(parent)?;
+            }
+            let mut file = std::fs::File::create(path)?;
+            resp.copy_to(&mut file).map_err(Error::other)?;
 
-    // Verify SHA256 of the downloaded file before proceeding
-    verify_downloaded_file_sha256(path, expected_sha)?;
-    Ok(())
+            // Verify SHA256 before treating the archive as usable.
+            verify_downloaded_file_sha256(path, expected_sha)
+        })();
+        match result {
+            Ok(()) => return Ok(()),
+            Err(e) => {
+                std::fs::remove_file(path).ok();
+                if attempt == 3 {
+                    return Err(e);
+                }
+                eprintln!("wxWidgets download attempt {attempt} failed: {e}; retrying...");
+                std::thread::sleep(std::time::Duration::from_secs(attempt));
+            }
+        }
+    }
+    unreachable!()
 }
 
 fn verify_downloaded_file_sha256<P: AsRef<std::path::Path>>(path: P, expected_sha: &str) -> std::io::Result<()> {
@@ -1355,11 +1396,11 @@ where
         let mut outfile = std::fs::File::create(&out_path)?;
         let method = entry.compression_method();
         match method {
-            CompressionMethod::Store => {
+            CompressionMethod::STORE => {
                 let mut verifier = zip_entry.verifying_reader(reader);
                 std::io::copy(&mut verifier, &mut outfile)?;
             }
-            CompressionMethod::Deflate => {
+            CompressionMethod::DEFLATE => {
                 let inflater = flate2::read::DeflateDecoder::new(reader);
                 let mut verifier = zip_entry.verifying_reader(inflater);
                 std::io::copy(&mut verifier, &mut outfile)?;

@@ -64,6 +64,41 @@ This guide maps wxWidgets’ event system to wxDragon (the Rust bindings), expla
 - Panic boundary
   - The trampoline uses `catch_unwind` to keep panics from crossing FFI. Avoid panics; prefer logging and early returns.
 
+### Callback re-entry
+
+- A single `FnMut` callback cannot run recursively. If synchronous dispatch
+  (for example, `process_menu_command()`) or a nested event loop (for example,
+  a modal dialog opened by a timer) would invoke an already-running callback,
+  wxDragon skips that callback invocation and logs a warning.
+- The nested **event is not discarded**: other eligible callbacks and default
+  processing can still run. A skipped callback does not consume or veto it.
+  Different callbacks can nest, including different callbacks on the same object.
+- Only the overlapping invocation is skipped. The callback is available again
+  after the outer invocation returns, including when it panics. Skipped calls
+  are not queued or replayed.
+- DnD and IPC use the same per-callback policy. DnD drag-result callbacks return
+  `DragResult::None`, drop callbacks return `false`, and leave callbacks do
+  nothing. IPC boolean callbacks return `false`, requests return no data
+  (null pointer and zero size at the FFI boundary), and acceptance returns no
+  connection.
+- If work must run later, extract owned data and schedule it with `call_after`.
+  Do not retain an `Event` or its native pointer for deferred processing.
+
+The borrow check protects against recursive mutable access, not access from
+multiple threads. GUI callbacks must still stay on the GUI thread. The existing
+deferred event-closure cleanup continues to protect handlers unbound while
+running; DnD/IPC callback data is retained until active Rust invocations return.
+
+Run the focused regressions with:
+
+```sh
+cargo test -p wxdragon --lib reentrant
+cargo test -p wxdragon --test event_reentrancy
+```
+
+The native integration test runs on the OS main thread, including on macOS.
+It requires a desktop session; use `xvfb-run -a` on headless Linux.
+
 ### Skip, propagation, and consumption
 
 - Handlers start with `Skip(true)` by default. Three common strategies:

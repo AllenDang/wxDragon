@@ -282,6 +282,12 @@ typedef struct wxd_DataViewTreeModel_Callbacks {
 WXD_EXPORTED wxd_DataViewModel_t*
 wxd_DataViewTreeModel_CreateWithCallbacks(const wxd_DataViewTreeModel_Callbacks* callbacks);
 
+// Allow all container columns (default false). Changing the setting rebuilds
+// associated views via Cleared(), which may reset selection/expansion state.
+// Only accepts custom tree models created by CreateWithCallbacks; null is a no-op.
+WXD_EXPORTED void
+wxd_DataViewTreeModel_SetContainerColumns(wxd_DataViewModel_t* model, bool enabled);
+
 // Notifications and helpers for custom tree models
 WXD_EXPORTED void
 wxd_DataViewTreeModel_ItemValueChanged(wxd_DataViewModel_t* model, void* item, unsigned int col);

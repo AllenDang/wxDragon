@@ -177,6 +177,21 @@ impl ScrolledWindow {
         unsafe { ffi::wxd_ScrolledWindow_GetScrollPixelsPerUnit(ptr, &mut x_unit, &mut y_unit) };
         (x_unit, y_unit)
     }
+
+    /// Gets the position of the top-left corner of the visible area, in scroll units.
+    ///
+    /// This is where the user has scrolled to, whether with the scroll bar, the mouse wheel
+    /// or `scroll_coords`. Multiply by `get_scroll_pixels_per_unit` for pixels.
+    pub fn get_view_start(&self) -> (i32, i32) {
+        let ptr = self.scrolled_window_ptr();
+        if ptr.is_null() {
+            return (0, 0);
+        }
+        let mut x: i32 = 0;
+        let mut y: i32 = 0;
+        unsafe { ffi::wxd_ScrolledWindow_GetViewStart(ptr, &mut x, &mut y) };
+        (x, y)
+    }
 }
 
 // Manual WxWidget implementation for ScrolledWindow (using WindowHandle)

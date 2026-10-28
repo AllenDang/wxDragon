@@ -119,39 +119,36 @@ typedef enum {
     WXD_ROLE_SYSTEM_WINDOW
 } wxd_AccRole;
 
-// Common States (subset of wxAccStatus)
-#define WXD_ACC_STATE_SYSTEM_UNAVAILABLE     0x00000001
-#define WXD_ACC_STATE_SYSTEM_SELECTED        0x00000002
-#define WXD_ACC_STATE_SYSTEM_FOCUSED         0x00000004
-#define WXD_ACC_STATE_SYSTEM_PRESSED         0x00000008
-#define WXD_ACC_STATE_SYSTEM_CHECKED         0x00000010
-#define WXD_ACC_STATE_SYSTEM_MIXED           0x00000020
+// States matching wxWidgets' wxACC_STATE_SYSTEM_* flags, which wxAccessible::GetState takes
+// and converts to the platform's own states, so they are passed through unchanged. They are not
+// oleacc.h's STATE_SYSTEM_* values. accessible.cpp static_asserts every one.
+#define WXD_ACC_STATE_SYSTEM_ALERT_HIGH      0x00000001
+#define WXD_ACC_STATE_SYSTEM_ALERT_MEDIUM    0x00000002
+#define WXD_ACC_STATE_SYSTEM_ALERT_LOW       0x00000004
+#define WXD_ACC_STATE_SYSTEM_ANIMATED        0x00000008
+#define WXD_ACC_STATE_SYSTEM_BUSY            0x00000010
+#define WXD_ACC_STATE_SYSTEM_CHECKED         0x00000020
+#define WXD_ACC_STATE_SYSTEM_COLLAPSED       0x00000040
+#define WXD_ACC_STATE_SYSTEM_DEFAULT         0x00000080
+#define WXD_ACC_STATE_SYSTEM_EXPANDED        0x00000100
+#define WXD_ACC_STATE_SYSTEM_EXTSELECTABLE   0x00000200
+#define WXD_ACC_STATE_SYSTEM_FLOATING        0x00000400
+#define WXD_ACC_STATE_SYSTEM_FOCUSABLE       0x00000800
+#define WXD_ACC_STATE_SYSTEM_FOCUSED         0x00001000
+#define WXD_ACC_STATE_SYSTEM_HOTTRACKED      0x00002000
+#define WXD_ACC_STATE_SYSTEM_INVISIBLE       0x00004000
+#define WXD_ACC_STATE_SYSTEM_MARQUEED        0x00008000
+#define WXD_ACC_STATE_SYSTEM_MIXED           0x00010000
 #define WXD_ACC_STATE_SYSTEM_INDETERMINATE   WXD_ACC_STATE_SYSTEM_MIXED
-#define WXD_ACC_STATE_SYSTEM_READONLY        0x00000040
-#define WXD_ACC_STATE_SYSTEM_HOTTRACKED      0x00000080
-#define WXD_ACC_STATE_SYSTEM_DEFAULT         0x00000100
-#define WXD_ACC_STATE_SYSTEM_EXPANDED        0x00000200
-#define WXD_ACC_STATE_SYSTEM_COLLAPSED       0x00000400
-#define WXD_ACC_STATE_SYSTEM_BUSY            0x00000800
-#define WXD_ACC_STATE_SYSTEM_FLOATING        0x00001000
-#define WXD_ACC_STATE_SYSTEM_MARQUEED        0x00002000
-#define WXD_ACC_STATE_SYSTEM_ANIMATED        0x00004000
-#define WXD_ACC_STATE_SYSTEM_INVISIBLE       0x00008000
-#define WXD_ACC_STATE_SYSTEM_OFFSCREEN       0x00010000
-#define WXD_ACC_STATE_SYSTEM_SIZEABLE        0x00020000
-#define WXD_ACC_STATE_SYSTEM_MOVEABLE        0x00040000
-#define WXD_ACC_STATE_SYSTEM_SELFVOICING     0x00080000
-#define WXD_ACC_STATE_SYSTEM_FOCUSABLE       0x00100000
-#define WXD_ACC_STATE_SYSTEM_SELECTABLE      0x00200000
-#define WXD_ACC_STATE_SYSTEM_LINKED          0x00400000
-#define WXD_ACC_STATE_SYSTEM_TRAVERSED       0x00800000
-#define WXD_ACC_STATE_SYSTEM_MULTISELECTABLE 0x01000000
-#define WXD_ACC_STATE_SYSTEM_EXTSELECTABLE   0x02000000
-#define WXD_ACC_STATE_SYSTEM_ALERT_LOW       0x04000000
-#define WXD_ACC_STATE_SYSTEM_ALERT_MEDIUM    0x08000000
-#define WXD_ACC_STATE_SYSTEM_ALERT_HIGH      0x10000000
-#define WXD_ACC_STATE_SYSTEM_PROTECTED       0x20000000
-#define WXD_ACC_STATE_SYSTEM_HASPOPUP        0x40000000
+#define WXD_ACC_STATE_SYSTEM_MULTISELECTABLE 0x00020000
+#define WXD_ACC_STATE_SYSTEM_OFFSCREEN       0x00040000
+#define WXD_ACC_STATE_SYSTEM_PRESSED         0x00080000
+#define WXD_ACC_STATE_SYSTEM_PROTECTED       0x00100000
+#define WXD_ACC_STATE_SYSTEM_READONLY        0x00200000
+#define WXD_ACC_STATE_SYSTEM_SELECTABLE      0x00400000
+#define WXD_ACC_STATE_SYSTEM_SELECTED        0x00800000
+#define WXD_ACC_STATE_SYSTEM_SELFVOICING     0x01000000
+#define WXD_ACC_STATE_SYSTEM_UNAVAILABLE     0x02000000
 
 // --- Callback Structure for Custom Accessible ---
 
@@ -207,15 +204,20 @@ wxd_Window_SetAccessible(wxd_Window_t* self, wxd_Accessible_t* accessible);
 WXD_EXPORTED wxd_Accessible_t*
 wxd_Window_GetAccessible(wxd_Window_t* self);
 
+// Sets the screen-reader name using wxWindow::SetAccessibleName(). Implemented
+// on macOS and MSW (with wxUSE_ACCESSIBILITY); a no-op on other platforms.
+// Passing NULL or an empty string restores the default name. Does not replace
+// an existing accessible object.
+
+WXD_EXPORTED void
+wxd_Window_SetAccessibleName(wxd_Window_t* self, const char* name);
+
 // --- Built-in Accessible Property Setters ---
 //
 // These attach a lightweight built-in wxAccessible to the window (created on first
 // use, owned by the window) and store the given property on it. Each setter updates
-// only its own property, leaving the others untouched. They are no-ops where
-// wxUSE_ACCESSIBILITY is not compiled in. Passing NULL for a string clears that property.
-
-WXD_EXPORTED void
-wxd_Window_SetAccessibleName(wxd_Window_t* self, const char* name);
+// only its own property, preserving the accessible name override. They are no-ops
+// where wxUSE_ACCESSIBILITY is not compiled in. Passing NULL clears a string property.
 
 WXD_EXPORTED void
 wxd_Window_SetAccessibleRole(wxd_Window_t* self, wxd_AccRole role);

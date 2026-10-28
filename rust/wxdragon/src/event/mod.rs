@@ -1,6 +1,7 @@
 //! Safe wrappers for wxWidgets events.
 
 use crate::geometry::Point;
+use crate::utils::ReentrantCallback;
 use crate::window::Window;
 use std::boxed::Box;
 use std::ffi::CStr;
@@ -125,6 +126,9 @@ pub struct EventType: ffi::WXDEventTypeCEnum { // Use the generated C enum type
     const RIGHT_UP = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_RIGHT_UP;
     const MIDDLE_DOWN = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_MIDDLE_DOWN;
     const MIDDLE_UP = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_MIDDLE_UP;
+    const LEFT_DCLICK = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_LEFT_DCLICK;
+    const RIGHT_DCLICK = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_RIGHT_DCLICK;
+    const MIDDLE_DCLICK = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_MIDDLE_DCLICK;
     const MOTION = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_MOTION;
     const MOUSEWHEEL = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_MOUSEWHEEL;
     const MAGNIFY = ffi::WXDEventTypeCEnum_WXD_EVENT_TYPE_MAGNIFY;
@@ -591,7 +595,7 @@ pub struct Event(pub(crate) *mut ffi::wxd_Event_t);
 impl Event {
     /// Creates a new Event wrapper from a raw pointer.
     /// # Safety
-    /// The pointer must be a valid `wxd_Event_t` pointer obtained from wxWidgets.
+    /// The pointer must be valid for the duration of use, or null for an empty event.
     pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_Event_t) -> Self {
         Event(ptr)
     }
@@ -865,8 +869,16 @@ impl Event {
     }
 }
 
+type EventCallback = ReentrantCallback<Box<dyn FnMut(Event) + 'static>>;
+
 // --- WxEvtHandler Trait ---
 
+/// Event binding and unbinding for wxWidgets objects.
+///
+/// Each `FnMut` callback runs at most once at a time. If synchronous dispatch or
+/// a nested event loop would re-enter the same callback, that invocation is
+/// skipped with a warning, without consuming the nested event. Other callbacks
+/// can still run, and the skipped invocation is not queued for later.
 pub trait WxEvtHandler {
     /// Returns the raw event handler pointer for this widget.
     ///
@@ -888,10 +900,8 @@ pub trait WxEvtHandler {
             return EventToken::INVALID_TOKEN;
         }
 
-        // Double-box the callback to match trampoline expectations
         let boxed_callback: Box<dyn FnMut(Event) + 'static> = Box::new(callback);
-        let double_boxed = Box::new(boxed_callback);
-        let user_data = Box::into_raw(double_boxed) as *mut c_void;
+        let user_data = Box::into_raw(Box::new(EventCallback::new(boxed_callback))) as *mut c_void;
 
         type TrampolineFn = unsafe extern "C" fn(*mut c_void, *mut c_void);
         let trampoline_ptr: TrampolineFn = rust_event_handler_trampoline;
@@ -949,10 +959,8 @@ pub trait WxEvtHandler {
             return EventToken::INVALID_TOKEN;
         }
 
-        // Double-box the callback to match trampoline expectations
         let boxed_callback: Box<dyn FnMut(Event) + 'static> = Box::new(callback);
-        let double_boxed = Box::new(boxed_callback);
-        let user_data = Box::into_raw(double_boxed) as *mut c_void;
+        let user_data = Box::into_raw(Box::new(EventCallback::new(boxed_callback))) as *mut c_void;
 
         type TrampolineFn = unsafe extern "C" fn(*mut c_void, *mut c_void);
         let trampoline_ptr: TrampolineFn = rust_event_handler_trampoline;
@@ -971,12 +979,12 @@ pub trait WxEvtHandler {
 // --- FFI Trampoline & Drop Functions (Updated for Simple Event) ---
 
 /// Trampoline function: Called by C++.
-/// `user_data` is a raw pointer to `Box<dyn FnMut(Event) + 'static>`.
+/// `user_data` points to checked, independently borrowed callback storage.
 ///
 /// # Safety
 /// This function is called from C++ code and must maintain the following invariants:
-/// - `user_data` must be a valid pointer to a `Box<Box<dyn FnMut(Event) + 'static>>`
-/// - `event_ptr_cvoid` must be a valid pointer to a `wxd_Event_t` object
+/// - `user_data` must be a valid pointer to the callback storage allocated by binding
+/// - `event_ptr_cvoid` must be valid during the call, or null for an empty event
 /// - The pointers must remain valid for the duration of this function call
 /// - This function must not be called from multiple threads simultaneously
 #[unsafe(no_mangle)]
@@ -986,35 +994,30 @@ pub unsafe extern "C" fn rust_event_handler_trampoline(user_data: *mut c_void, e
         return;
     }
 
-    // Cast to Box<dyn FnMut(Event)> directly
-    let closure_box = unsafe { &mut *(user_data as *mut Box<dyn FnMut(Event) + 'static>) };
-    let event_ptr = event_ptr_cvoid as *mut ffi::wxd_Event_t;
-
-    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        // UPDATED: Create simple Event
-        let safe_event = unsafe { Event::from_ptr(event_ptr) };
-        (*closure_box)(safe_event);
-    }));
-
-    if result.is_err() { /* ... error handling ... */ }
+    // Only shared access to the storage is allowed before checking for re-entry.
+    // C++ defers its drop until all nested dispatches have returned.
+    let callback = unsafe { &*(user_data as *const EventCallback) };
+    callback.call("rust_event_handler_trampoline", (), |closure| {
+        let safe_event = unsafe { Event::from_ptr(event_ptr_cvoid as *mut ffi::wxd_Event_t) };
+        closure(safe_event);
+    });
 }
 
 /// Function called by C++ to drop the Rust closure Box.
-/// `ptr` is a raw pointer to `Box<dyn FnMut(Event) + 'static>`.
+/// `ptr` points to the callback storage allocated by binding.
 ///
 /// # Safety
 /// This function is called from C++ code to clean up Rust callbacks.
-/// - `ptr` must be a valid pointer to a `Box<Box<dyn FnMut(Event) + 'static>>`
-///   that was previously allocated by Rust
+/// - `ptr` must be a valid pointer to callback storage previously allocated by binding
+/// - All invocations of the callback must have returned before it is dropped
 /// - The pointer must not be used after this function returns
 /// - This function must only be called once per pointer
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn drop_rust_event_closure_box(ptr: *mut c_void) {
     crate::utils::guard_ffi_callback("drop_rust_event_closure_box", (), || {
         if !ptr.is_null() {
-            // Drop the Box<dyn FnMut(Event)>
             log::trace!("Dropping Rust event closure box at ptr: {ptr:?}");
-            let _ = unsafe { Box::from_raw(ptr as *mut Box<dyn FnMut(Event) + 'static>) };
+            let _ = unsafe { Box::from_raw(ptr as *mut EventCallback) };
         }
     })
 }
@@ -1026,6 +1029,47 @@ mod tests {
     use crate::widgets::{Frame, Panel};
     use std::cell::{Cell, RefCell};
     use std::rc::Rc;
+
+    // These trampolines use empty events and never access native wx state.
+    #[test]
+    fn reentrant_event_trampoline_skips_only_the_nested_invocation() {
+        let calls = Rc::new(Cell::new(0));
+        let calls_in_callback = calls.clone();
+        let user_data = Rc::new(Cell::new(std::ptr::null_mut()));
+        let user_data_in_callback = user_data.clone();
+        let callback: Box<dyn FnMut(Event)> = Box::new(move |event| {
+            assert!(event.is_null());
+            calls_in_callback.set(calls_in_callback.get() + 1);
+            unsafe { rust_event_handler_trampoline(user_data_in_callback.get(), std::ptr::null_mut()) };
+        });
+        let ptr = Box::into_raw(Box::new(EventCallback::new(callback))) as *mut c_void;
+        user_data.set(ptr);
+        unsafe {
+            rust_event_handler_trampoline(ptr, std::ptr::null_mut());
+            rust_event_handler_trampoline(ptr, std::ptr::null_mut());
+            drop_rust_event_closure_box(ptr);
+        }
+        assert_eq!(calls.get(), 2);
+    }
+
+    #[test]
+    fn reentrant_event_trampoline_releases_the_borrow_after_panic() {
+        let calls = Rc::new(Cell::new(0));
+        let calls_in_callback = calls.clone();
+        let callback: Box<dyn FnMut(Event)> = Box::new(move |_| {
+            calls_in_callback.set(calls_in_callback.get() + 1);
+            if calls_in_callback.get() == 1 {
+                panic!("callback panic must not poison the borrow");
+            }
+        });
+        let ptr = Box::into_raw(Box::new(EventCallback::new(callback))) as *mut c_void;
+        unsafe {
+            rust_event_handler_trampoline(ptr, std::ptr::null_mut());
+            rust_event_handler_trampoline(ptr, std::ptr::null_mut());
+            drop_rust_event_closure_box(ptr);
+        }
+        assert_eq!(calls.get(), 2);
+    }
 
     const NOT_RUN: u8 = 0;
     const STARTED: u8 = 1;

@@ -423,6 +423,15 @@ wxd_AuiPaneInfo_MaxSize(wxd_AuiPaneInfo_t* self, int width, int height)
 }
 
 wxd_AuiPaneInfo_t*
+wxd_AuiPaneInfo_DockSize(wxd_AuiPaneInfo_t* self, int size)
+{
+    if (!self)
+        return self;
+    self->info.dock_size = size;
+    return self;
+}
+
+wxd_AuiPaneInfo_t*
 wxd_AuiPaneInfo_Position(wxd_AuiPaneInfo_t* self, int pos)
 {
     if (!self)

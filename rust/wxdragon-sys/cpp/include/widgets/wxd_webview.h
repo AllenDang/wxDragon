@@ -126,6 +126,11 @@ WXD_EXPORTED void wxd_WebView_RegisterHandler(wxd_WebView_t* self, const char* s
 WXD_EXPORTED void* wxd_WebView_GetNativeBackend(wxd_WebView_t* self);
 WXD_EXPORTED int wxd_WebView_GetBackend(wxd_WebView_t* self, char* buffer, int len);
 
+// Events. A wxWebViewEvent keeps its URL and target frame apart from the command string,
+// which is empty for navigation events. Both return -1 for an event that isn't one.
+WXD_EXPORTED int wxd_WebViewEvent_GetURL(const wxd_Event_t* event, char* buffer, size_t len);
+WXD_EXPORTED int wxd_WebViewEvent_GetTarget(const wxd_Event_t* event, char* buffer, size_t len);
+
 // Static utility functions
 WXD_EXPORTED bool wxd_WebView_IsBackendAvailable(const char* backend);
 

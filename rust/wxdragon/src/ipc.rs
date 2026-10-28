@@ -14,6 +14,13 @@
 //! - A **Client** connects to a server on a host/service/topic
 //! - A **Connection** is established between client and server for data exchange
 //!
+//! # Callback re-entry
+//!
+//! A nested invocation of the same `FnMut` callback is skipped with a warning,
+//! not queued. Boolean callbacks return `false`, requests return no data, and
+//! connection acceptance returns no connection. Different callbacks can nest
+//! normally. This also applies when a callback opens a nested event loop.
+//!
 //! # Example
 //!
 //! ```rust,no_run
@@ -38,6 +45,8 @@
 //! }
 //! ```
 
+use crate::utils::{FfiCallbackData, ReentrantCallback};
+use std::cell::RefCell;
 use std::ffi::{CStr, CString};
 use std::os::raw::c_void;
 use std::ptr;
@@ -93,13 +102,13 @@ impl From<IPCFormat> for ffi::wxd_IPCFormat {
 // =============================================================================
 
 // Type aliases for callback types to reduce complexity warnings
-type ExecuteCallback = Box<dyn FnMut(&str, &[u8], IPCFormat) -> bool>;
-type RequestCallback = Box<dyn FnMut(&str, &str, IPCFormat) -> Option<Vec<u8>>>;
-type PokeCallback = Box<dyn FnMut(&str, &str, &[u8], IPCFormat) -> bool>;
-type AdviseTopicCallback = Box<dyn FnMut(&str, &str) -> bool>;
-type AdviseDataCallback = Box<dyn FnMut(&str, &str, &[u8], IPCFormat) -> bool>;
-type DisconnectCallback = Box<dyn FnMut() -> bool>;
-type AcceptConnectionCallback = Box<dyn FnMut(&str) -> Option<IPCConnection>>;
+type ExecuteCallback = ReentrantCallback<Box<dyn FnMut(&str, &[u8], IPCFormat) -> bool>>;
+type RequestCallback = ReentrantCallback<Box<dyn FnMut(&str, &str, IPCFormat) -> Option<Vec<u8>>>>;
+type PokeCallback = ReentrantCallback<Box<dyn FnMut(&str, &str, &[u8], IPCFormat) -> bool>>;
+type AdviseTopicCallback = ReentrantCallback<Box<dyn FnMut(&str, &str) -> bool>>;
+type AdviseDataCallback = ReentrantCallback<Box<dyn FnMut(&str, &str, &[u8], IPCFormat) -> bool>>;
+type DisconnectCallback = ReentrantCallback<Box<dyn FnMut() -> bool>>;
+type AcceptConnectionCallback = ReentrantCallback<Box<dyn FnMut(&str) -> Option<IPCConnection>>>;
 
 /// Internal structure holding all connection callbacks.
 struct ConnectionCallbacks {
@@ -111,7 +120,7 @@ struct ConnectionCallbacks {
     on_advise: Option<AdviseDataCallback>,
     on_disconnect: Option<DisconnectCallback>,
     /// Buffer for OnRequest response data (must outlive the callback return)
-    request_buffer: Vec<u8>,
+    request_buffer: RefCell<Vec<u8>>,
 }
 
 impl ConnectionCallbacks {
@@ -124,7 +133,7 @@ impl ConnectionCallbacks {
             on_stop_advise: None,
             on_advise: None,
             on_disconnect: None,
-            request_buffer: Vec::new(),
+            request_buffer: RefCell::new(Vec::new()),
         }
     }
 }
@@ -146,8 +155,8 @@ unsafe extern "C" fn on_execute_trampoline(
         if user_data.is_null() {
             return false;
         }
-        let callbacks = &mut *(user_data as *mut ConnectionCallbacks);
-        if let Some(ref mut cb) = callbacks.on_execute {
+        let callbacks = FfiCallbackData::<ConnectionCallbacks>::retain(user_data);
+        if let Some(ref callback) = callbacks.on_execute {
             let topic_str = if topic.is_null() {
                 ""
             } else {
@@ -158,7 +167,9 @@ unsafe extern "C" fn on_execute_trampoline(
             } else {
                 std::slice::from_raw_parts(data as *const u8, size)
             };
-            return cb(topic_str, data_slice, IPCFormat::from(format));
+            return callback.call("on_execute_trampoline", false, |cb| {
+                cb(topic_str, data_slice, IPCFormat::from(format))
+            });
         }
         false
     })
@@ -173,11 +184,15 @@ unsafe extern "C" fn on_request_trampoline(
     format: ffi::wxd_IPCFormat,
 ) -> *const c_void {
     crate::utils::guard_ffi_callback("on_request_trampoline", std::ptr::null(), || {
+        // All failure paths, including re-entry and panic, return an empty response.
+        if !out_size.is_null() {
+            *out_size = 0;
+        }
         if user_data.is_null() {
             return ptr::null();
         }
-        let callbacks = &mut *(user_data as *mut ConnectionCallbacks);
-        if let Some(ref mut cb) = callbacks.on_request {
+        let callbacks = FfiCallbackData::<ConnectionCallbacks>::retain(user_data);
+        if let Some(ref callback) = callbacks.on_request {
             let topic_str = if topic.is_null() {
                 ""
             } else {
@@ -188,17 +203,22 @@ unsafe extern "C" fn on_request_trampoline(
             } else {
                 CStr::from_ptr(item).to_str().unwrap_or("")
             };
-            if let Some(data) = cb(topic_str, item_str, IPCFormat::from(format)) {
-                // Store in buffer so it outlives this function
-                callbacks.request_buffer = data;
-                if !out_size.is_null() {
-                    *out_size = callbacks.request_buffer.len();
+            return callback.call("on_request_trampoline", ptr::null(), |cb| {
+                let Some(data) = cb(topic_str, item_str, IPCFormat::from(format)) else {
+                    return ptr::null();
+                };
+                // A callback may have destroyed its connection. Do not return a
+                // pointer to storage that will die when this dispatch returns.
+                if !callbacks.is_owner_alive() {
+                    return ptr::null();
                 }
-                return callbacks.request_buffer.as_ptr() as *const c_void;
-            }
-        }
-        if !out_size.is_null() {
-            *out_size = 0;
+                let mut buffer = callbacks.request_buffer.borrow_mut();
+                *buffer = data;
+                if !out_size.is_null() {
+                    *out_size = buffer.len();
+                }
+                buffer.as_ptr() as *const c_void
+            });
         }
         ptr::null()
     })
@@ -217,8 +237,8 @@ unsafe extern "C" fn on_poke_trampoline(
         if user_data.is_null() {
             return false;
         }
-        let callbacks = &mut *(user_data as *mut ConnectionCallbacks);
-        if let Some(ref mut cb) = callbacks.on_poke {
+        let callbacks = FfiCallbackData::<ConnectionCallbacks>::retain(user_data);
+        if let Some(ref callback) = callbacks.on_poke {
             let topic_str = if topic.is_null() {
                 ""
             } else {
@@ -234,7 +254,9 @@ unsafe extern "C" fn on_poke_trampoline(
             } else {
                 std::slice::from_raw_parts(data as *const u8, size)
             };
-            return cb(topic_str, item_str, data_slice, IPCFormat::from(format));
+            return callback.call("on_poke_trampoline", false, |cb| {
+                cb(topic_str, item_str, data_slice, IPCFormat::from(format))
+            });
         }
         false
     })
@@ -250,8 +272,8 @@ unsafe extern "C" fn on_start_advise_trampoline(
         if user_data.is_null() {
             return false;
         }
-        let callbacks = &mut *(user_data as *mut ConnectionCallbacks);
-        if let Some(ref mut cb) = callbacks.on_start_advise {
+        let callbacks = FfiCallbackData::<ConnectionCallbacks>::retain(user_data);
+        if let Some(ref callback) = callbacks.on_start_advise {
             let topic_str = if topic.is_null() {
                 ""
             } else {
@@ -262,7 +284,7 @@ unsafe extern "C" fn on_start_advise_trampoline(
             } else {
                 CStr::from_ptr(item).to_str().unwrap_or("")
             };
-            return cb(topic_str, item_str);
+            return callback.call("on_start_advise_trampoline", false, |cb| cb(topic_str, item_str));
         }
         false
     })
@@ -278,8 +300,8 @@ unsafe extern "C" fn on_stop_advise_trampoline(
         if user_data.is_null() {
             return false;
         }
-        let callbacks = &mut *(user_data as *mut ConnectionCallbacks);
-        if let Some(ref mut cb) = callbacks.on_stop_advise {
+        let callbacks = FfiCallbackData::<ConnectionCallbacks>::retain(user_data);
+        if let Some(ref callback) = callbacks.on_stop_advise {
             let topic_str = if topic.is_null() {
                 ""
             } else {
@@ -290,7 +312,7 @@ unsafe extern "C" fn on_stop_advise_trampoline(
             } else {
                 CStr::from_ptr(item).to_str().unwrap_or("")
             };
-            return cb(topic_str, item_str);
+            return callback.call("on_stop_advise_trampoline", false, |cb| cb(topic_str, item_str));
         }
         false
     })
@@ -309,8 +331,8 @@ unsafe extern "C" fn on_advise_trampoline(
         if user_data.is_null() {
             return false;
         }
-        let callbacks = &mut *(user_data as *mut ConnectionCallbacks);
-        if let Some(ref mut cb) = callbacks.on_advise {
+        let callbacks = FfiCallbackData::<ConnectionCallbacks>::retain(user_data);
+        if let Some(ref callback) = callbacks.on_advise {
             let topic_str = if topic.is_null() {
                 ""
             } else {
@@ -326,7 +348,9 @@ unsafe extern "C" fn on_advise_trampoline(
             } else {
                 std::slice::from_raw_parts(data as *const u8, size)
             };
-            return cb(topic_str, item_str, data_slice, IPCFormat::from(format));
+            return callback.call("on_advise_trampoline", false, |cb| {
+                cb(topic_str, item_str, data_slice, IPCFormat::from(format))
+            });
         }
         false
     })
@@ -338,9 +362,9 @@ unsafe extern "C" fn on_disconnect_trampoline(user_data: *mut c_void) -> bool {
         if user_data.is_null() {
             return true;
         }
-        let callbacks = &mut *(user_data as *mut ConnectionCallbacks);
-        if let Some(ref mut cb) = callbacks.on_disconnect {
-            return cb();
+        let callbacks = FfiCallbackData::<ConnectionCallbacks>::retain(user_data);
+        if let Some(ref callback) = callbacks.on_disconnect {
+            return callback.call("on_disconnect_trampoline", false, |cb| cb());
         }
         true
     })
@@ -350,7 +374,7 @@ unsafe extern "C" fn on_disconnect_trampoline(user_data: *mut c_void) -> bool {
 unsafe extern "C" fn free_connection_callbacks(user_data: *mut c_void) {
     crate::utils::guard_ffi_callback("free_connection_callbacks", (), || {
         if !user_data.is_null() {
-            let _ = Box::from_raw(user_data as *mut ConnectionCallbacks);
+            FfiCallbackData::<ConnectionCallbacks>::release(user_data);
         }
     })
 }
@@ -544,7 +568,7 @@ impl IPCConnectionBuilder {
     where
         F: FnMut(&str, &[u8], IPCFormat) -> bool + 'static,
     {
-        self.callbacks.on_execute = Some(Box::new(callback));
+        self.callbacks.on_execute = Some(ReentrantCallback::new(Box::new(callback)));
         self
     }
 
@@ -553,7 +577,7 @@ impl IPCConnectionBuilder {
     where
         F: FnMut(&str, &str, IPCFormat) -> Option<Vec<u8>> + 'static,
     {
-        self.callbacks.on_request = Some(Box::new(callback));
+        self.callbacks.on_request = Some(ReentrantCallback::new(Box::new(callback)));
         self
     }
 
@@ -562,7 +586,7 @@ impl IPCConnectionBuilder {
     where
         F: FnMut(&str, &str, &[u8], IPCFormat) -> bool + 'static,
     {
-        self.callbacks.on_poke = Some(Box::new(callback));
+        self.callbacks.on_poke = Some(ReentrantCallback::new(Box::new(callback)));
         self
     }
 
@@ -571,7 +595,7 @@ impl IPCConnectionBuilder {
     where
         F: FnMut(&str, &str) -> bool + 'static,
     {
-        self.callbacks.on_start_advise = Some(Box::new(callback));
+        self.callbacks.on_start_advise = Some(ReentrantCallback::new(Box::new(callback)));
         self
     }
 
@@ -580,7 +604,7 @@ impl IPCConnectionBuilder {
     where
         F: FnMut(&str, &str) -> bool + 'static,
     {
-        self.callbacks.on_stop_advise = Some(Box::new(callback));
+        self.callbacks.on_stop_advise = Some(ReentrantCallback::new(Box::new(callback)));
         self
     }
 
@@ -589,7 +613,7 @@ impl IPCConnectionBuilder {
     where
         F: FnMut(&str, &str, &[u8], IPCFormat) -> bool + 'static,
     {
-        self.callbacks.on_advise = Some(Box::new(callback));
+        self.callbacks.on_advise = Some(ReentrantCallback::new(Box::new(callback)));
         self
     }
 
@@ -598,14 +622,13 @@ impl IPCConnectionBuilder {
     where
         F: FnMut() -> bool + 'static,
     {
-        self.callbacks.on_disconnect = Some(Box::new(callback));
+        self.callbacks.on_disconnect = Some(ReentrantCallback::new(Box::new(callback)));
         self
     }
 
     /// Build the connection.
     pub fn build(self) -> IPCConnection {
-        let callbacks_box = Box::new(self.callbacks);
-        let user_data = Box::into_raw(callbacks_box) as *mut c_void;
+        let user_data = FfiCallbackData::into_raw(self.callbacks);
 
         let ptr = unsafe {
             ffi::wxd_IPCConnection_Create(
@@ -649,20 +672,24 @@ unsafe extern "C" fn on_accept_connection_trampoline(
         if user_data.is_null() {
             return ptr::null_mut();
         }
-        let callbacks = &mut *(user_data as *mut ServerCallbacks);
+        let callbacks = FfiCallbackData::<ServerCallbacks>::retain(user_data);
         let topic_str = if topic.is_null() {
             ""
         } else {
             CStr::from_ptr(topic).to_str().unwrap_or("")
         };
-        if let Some(conn) = (callbacks.on_accept)(topic_str) {
-            // Transfer ownership to C++ - it will manage the connection
-            let ptr = conn.ptr;
-            std::mem::forget(conn);
-            ptr
-        } else {
-            ptr::null_mut()
-        }
+        callbacks
+            .on_accept
+            .call("on_accept_connection_trampoline", ptr::null_mut(), |cb| {
+                if let Some(conn) = cb(topic_str) {
+                    // Transfer ownership to C++ - it will manage the connection.
+                    let ptr = conn.ptr;
+                    std::mem::forget(conn);
+                    ptr
+                } else {
+                    ptr::null_mut()
+                }
+            })
     })
 }
 
@@ -670,7 +697,7 @@ unsafe extern "C" fn on_accept_connection_trampoline(
 unsafe extern "C" fn free_server_callbacks(user_data: *mut c_void) {
     crate::utils::guard_ffi_callback("free_server_callbacks", (), || {
         if !user_data.is_null() {
-            let _ = Box::from_raw(user_data as *mut ServerCallbacks);
+            FfiCallbackData::<ServerCallbacks>::release(user_data);
         }
     })
 }
@@ -716,9 +743,9 @@ impl IPCServer {
         F: FnMut(&str) -> Option<IPCConnection> + 'static,
     {
         let callbacks = ServerCallbacks {
-            on_accept: Box::new(on_accept_connection),
+            on_accept: ReentrantCallback::new(Box::new(on_accept_connection)),
         };
-        let user_data = Box::into_raw(Box::new(callbacks)) as *mut c_void;
+        let user_data = FfiCallbackData::into_raw(callbacks);
 
         let ptr =
             unsafe { ffi::wxd_IPCServer_Create(user_data, Some(on_accept_connection_trampoline), Some(free_server_callbacks)) };
@@ -826,8 +853,7 @@ impl IPCClient {
         let c_service = CString::new(service).ok()?;
         let c_topic = CString::new(topic).ok()?;
 
-        let callbacks_box = Box::new(builder.callbacks);
-        let user_data = Box::into_raw(callbacks_box) as *mut c_void;
+        let user_data = FfiCallbackData::into_raw(builder.callbacks);
 
         let conn_ptr = unsafe {
             ffi::wxd_IPCClient_MakeConnection(
@@ -871,3 +897,7 @@ impl Drop for IPCClient {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "ipc_tests.rs"]
+mod tests;

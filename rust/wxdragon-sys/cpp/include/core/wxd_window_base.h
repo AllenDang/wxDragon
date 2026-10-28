@@ -133,6 +133,10 @@ wxd_Window_CanAcceptFocus(wxd_Window_t* window);
 WXD_EXPORTED bool
 wxd_Window_AcceptsFocusFromKeyboard(wxd_Window_t* window);
 WXD_EXPORTED void
+wxd_Window_EnableFocusFromKeyboard(wxd_Window_t* window);
+WXD_EXPORTED void
+wxd_Window_DisableFocusFromKeyboard(wxd_Window_t* window);
+WXD_EXPORTED void
 wxd_Window_SetCanFocus(wxd_Window_t* window, bool canFocus);
 
 // Visibility functions
@@ -255,9 +259,8 @@ wxd_Window_MSWDisableComposited(wxd_Window_t* window);
 #endif
 
 #ifdef __WXOSX__
-/// Sets the VoiceOver accessibility label for the window (macOS only).
-/// VoiceOver announces this label before the control's value and role,
-/// e.g. "Language, English, pop up button".
+/// Compatibility alias for wxd_Window_SetAccessibleName (macOS only).
+/// Passing NULL or an empty string restores the default accessible name.
 WXD_EXPORTED void
 wxd_Window_SetAccessibilityLabel(wxd_Window_t* window, const char* label);
 

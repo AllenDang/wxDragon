@@ -1,5 +1,6 @@
 [workspace]
 members = [
+  "examples/rust/accessibility_demo",
   "examples/rust/char_hook_demo",
   "examples/rust/clipboard_test",
   "examples/rust/combobox_modifier_test",
@@ -51,7 +52,7 @@ resolver = "2" # Keep resolver = "2"
 
 [workspace.package]
 authors = ["Allen Dang <allengnr@gmail.com>"]
-version = "0.9.22"
+version = "0.9.24"
 edition = "2024"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/AllenDang/wxDragon"

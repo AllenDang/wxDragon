@@ -370,6 +370,9 @@ typedef enum {
     WXD_EVENT_TYPE_QUERY_END_SESSION = 409,     // wxEVT_QUERY_END_SESSION
     WXD_EVENT_TYPE_COMMAND_COMBOBOX_DROPDOWN = 410, // wxEVT_COMBOBOX_DROPDOWN
     WXD_EVENT_TYPE_COMMAND_COMBOBOX_CLOSEUP = 411, // wxEVT_COMBOBOX_CLOSEUP
+    WXD_EVENT_TYPE_LEFT_DCLICK = 412,               // wxEVT_LEFT_DCLICK
+    WXD_EVENT_TYPE_RIGHT_DCLICK = 413,              // wxEVT_RIGHT_DCLICK
+    WXD_EVENT_TYPE_MIDDLE_DCLICK = 414,             // wxEVT_MIDDLE_DCLICK
 
     WXD_EVENT_TYPE_MAX // Keep this last for count if needed, or remove if not used for iteration
 } WXDEventTypeCEnum;
@@ -787,7 +790,7 @@ typedef struct wxd_PageSetupDialog_t wxd_PageSetupDialog_t;
 typedef void (*wxd_Printout_OnPreparePrinting_Callback)(void* userData);
 typedef void (*wxd_Printout_OnBeginPrinting_Callback)(void* userData);
 typedef void (*wxd_Printout_OnEndPrinting_Callback)(void* userData);
-typedef void (*wxd_Printout_OnBeginDocument_Callback)(void* userData, int startPage, int endPage);
+typedef bool (*wxd_Printout_OnBeginDocument_Callback)(void* userData, int startPage, int endPage);
 typedef void (*wxd_Printout_OnEndDocument_Callback)(void* userData);
 typedef bool (*wxd_Printout_OnPrintPage_Callback)(void* userData, int pageNum);
 typedef bool (*wxd_Printout_HasPage_Callback)(void* userData, int pageNum);
