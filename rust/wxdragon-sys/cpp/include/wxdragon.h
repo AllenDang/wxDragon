@@ -34,22 +34,18 @@ extern "C" {
 #include "events/wxd_event_api.h"
 #include "events/wxd_droptarget_api.h" // Extended drop target callbacks
 
+// Shim functions generated from cpp/spec/*.wxd (see shimgen.rs)
+#include "wxd_generated.h"
+
 // Button and control widgets
 #include "widgets/wxd_button.h"
-#include "widgets/wxd_statictext.h"
 #include "widgets/wxd_textctrl.h"
 #if wxdUSE_RICHTEXT
 #include "widgets/wxd_richtextctrl.h"
 #endif
 #include "widgets/wxd_styledtextctrl.h"
-#include "widgets/wxd_checkbox.h"
-#include "widgets/wxd_radiobutton.h"
-#include "widgets/wxd_togglebutton.h"
 #include "widgets/wxd_bitmaptogglebutton.h"
-#include "widgets/wxd_gauge.h"
-#include "widgets/wxd_slider.h"
 #include "widgets/wxd_spinctrl.h"
-#include "widgets/wxd_spinbutton.h"
 #include "widgets/wxd_searchctrl.h"
 #include "widgets/wxd_hyperlinkctrl.h"
 #include "widgets/wxd_activityindicator.h"
@@ -60,7 +56,6 @@ extern "C" {
 #include "widgets/wxd_staticbitmap.h"
 #include "widgets/wxd_genericstaticbitmap.h"
 #include "widgets/wxd_platform_aware_staticbitmap_handler.h"
-#include "widgets/wxd_staticline.h"
 #include "widgets/wxd_scrollbar.h"
 #include "widgets/wxd_bitmapbutton.h"
 

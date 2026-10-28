@@ -1,0 +1,9 @@
+include wx/spinbutt.h
+
+class SpinButton : wxSpinButton
+    create(Window parent, Id id, Point pos, Size size, Style style)
+    int GetValue()
+    void SetValue(int value)
+    void SetRange(int minVal, int maxVal)
+    int GetMin()
+    int GetMax()
