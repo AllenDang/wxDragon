@@ -467,11 +467,16 @@ impl TreeCtrl {
 
         // Create a clone for the closure
         let tree_ctrl_clone = *self;
+        let tree_ptr = self.handle_ptr();
 
-        // Bind to the DESTROY event for proper cleanup when the window is destroyed
-        crate::event::bind_lifetime_internal(self, EventType::DESTROY, move |_event| {
-            // Clean up all custom data when the control is destroyed
-            tree_ctrl_clone.cleanup_all_custom_data();
+        // Bind to the DESTROY event for proper cleanup when the window is destroyed.
+        // wxEVT_DESTROY is a command event, so a child's destroy (such as the label
+        // editor wxWidgets deletes after every edit) propagates up to this handler.
+        // Only clean up when the tree control itself is being destroyed.
+        crate::event::bind_lifetime_internal(self, EventType::DESTROY, move |event| {
+            if event.event_object_ptr() == tree_ptr {
+                tree_ctrl_clone.cleanup_all_custom_data();
+            }
         });
     }
 
