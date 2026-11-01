@@ -919,6 +919,7 @@ pub trait WxEvtHandler {
     /// Unbind a specific event handler by token.
     ///
     /// Returns `true` if the handler was found and removed, `false` otherwise.
+    /// The handlers wxDragon binds for its own bookkeeping are never removed.
     ///
     /// # Example
     ///
@@ -938,7 +939,9 @@ pub trait WxEvtHandler {
 
     /// Unbind all event handlers currently attached to this handler.
     ///
-    /// Returns the number of handlers removed.
+    /// Returns the number of handlers removed. The handlers wxDragon binds for its
+    /// own bookkeeping, such as the one that tells [`crate::window::WindowHandle`]
+    /// the window was destroyed, stay bound and are not counted.
     fn unbind_all(&self) -> usize {
         let handler_ptr = unsafe { self.get_event_handler_ptr() };
         if handler_ptr.is_null() {
@@ -974,6 +977,31 @@ pub trait WxEvtHandler {
 
         token
     }
+}
+
+/// Binds a handler that wxDragon needs for as long as the window lives, such as the
+/// `DESTROY` handler that invalidates a [`crate::window::WindowHandle`] or frees
+/// per-widget data. [`WxEvtHandler::unbind`] and [`WxEvtHandler::unbind_all`] leave
+/// it in place: it is released with the rest when the window is destroyed.
+pub(crate) fn bind_lifetime_internal<H, F>(handler: &H, event_type: EventType, callback: F)
+where
+    H: WxEvtHandler + ?Sized,
+    F: FnMut(Event) + 'static,
+{
+    let handler_ptr = unsafe { handler.get_event_handler_ptr() };
+    if handler_ptr.is_null() {
+        return;
+    }
+
+    let boxed_callback: Box<dyn FnMut(Event) + 'static> = Box::new(callback);
+    let user_data = Box::into_raw(Box::new(EventCallback::new(boxed_callback))) as *mut c_void;
+
+    type TrampolineFn = unsafe extern "C" fn(*mut c_void, *mut c_void);
+    let trampoline_ptr: TrampolineFn = rust_event_handler_trampoline;
+    let token = EventToken::from(user_data as usize);
+
+    let et = event_type.bits();
+    unsafe { ffi::wxd_EvtHandler_BindInternal(handler_ptr, et, trampoline_ptr as *mut c_void, user_data, token.into()) };
 }
 
 // --- FFI Trampoline & Drop Functions (Updated for Simple Event) ---
