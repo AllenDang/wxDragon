@@ -40,7 +40,8 @@ pub fn handle_menu_command(frame: &Frame, model: &CustomDataViewTreeModel, id: i
                             let b = rc.borrow();
                             &*b as *const _
                         };
-                        model.item_changed::<server_node::ServerNode>(ptr);
+                        // SAFETY: the node is still in the server list.
+                        unsafe { model.item_changed::<server_node::ServerNode>(ptr) };
                     }
                 } else {
                     // Node no longer exists; open dialog without prefill (no commit target)
@@ -65,7 +66,8 @@ pub fn handle_menu_command(frame: &Frame, model: &CustomDataViewTreeModel, id: i
                         Some(ptr)
                     });
                 if let Some(Some(ptr)) = added {
-                    model.item_added::<server_node::ServerNode>(None, ptr);
+                    // SAFETY: the node was just added to the server list.
+                    unsafe { model.item_added::<server_node::ServerNode>(None, ptr) };
                 }
             }
         }
@@ -92,7 +94,8 @@ pub fn handle_menu_command(frame: &Frame, model: &CustomDataViewTreeModel, id: i
 
                     if let Some(true) = removed {
                         // Notify view
-                        model.item_deleted::<server_node::ServerNode>(None, child_ptr);
+                        // SAFETY: the parent is the root; the child was just removed from the list.
+                        unsafe { model.item_deleted::<server_node::ServerNode>(None, child_ptr) };
                         // Clear selection context as the item is gone
                         selection_ctx::set_pending_details(None);
                     } else {

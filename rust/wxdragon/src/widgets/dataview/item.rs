@@ -87,7 +87,17 @@ impl DataViewItem {
     /// so the returned item owns its own allocation and can safely coexist with
     /// other items naming the same node. Custom models use this to hand their
     /// node identities to the control.
-    pub fn from_id_ptr<T>(raw: *const T) -> Self {
+    ///
+    /// # Safety
+    ///
+    /// Making, inspecting and dropping the item is always fine. But a control
+    /// and its model turn an item's id back into a node or a row without
+    /// checking it, so before the item is passed to a control, `raw` must be an
+    /// id that control's model currently has: for a
+    /// [`CustomDataViewTreeModel`](super::CustomDataViewTreeModel), a live node
+    /// as its `new` requires; for a `DataViewTreeCtrl`, an item it returned
+    /// that hasn't been deleted; for the list models, the id of an existing row.
+    pub unsafe fn from_id_ptr<T>(raw: *const T) -> Self {
         let inner = unsafe { ffi::wxd_DataViewItem_CreateFromID(raw as *const std::ffi::c_void) };
         Self { inner }
     }
@@ -117,8 +127,9 @@ mod tests {
         // each one's Drop releases only its own. This is the safe way to build
         // a second handle to a node; adopting a borrowed pointer is not.
         let node = 0x1234_usize;
-        let a = DataViewItem::from_id_ptr(node as *const usize);
-        let b = DataViewItem::from_id_ptr(node as *const usize);
+        // SAFETY: the items are only inspected and dropped, never given to a control.
+        let a = unsafe { DataViewItem::from_id_ptr(node as *const usize) };
+        let b = unsafe { DataViewItem::from_id_ptr(node as *const usize) };
 
         assert!(a.is_ok());
         assert!(b.is_ok());

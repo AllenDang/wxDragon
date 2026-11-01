@@ -389,13 +389,35 @@ struct OwnedTreeCallbacks {
 
 impl CustomDataViewTreeModel {
     /// Typed constructor where node/item pointers are the concrete `N` type
-    /// instead of opaque `*mut c_void`. This prevents callers from working
-    /// with raw `*mut c_void` and makes the API safer and clearer.
+    /// instead of opaque `*mut c_void`.
     ///
     /// The supplied closures use `*mut N` for item pointers; a null pointer
     /// represents the root item (same convention as the C++ API).
+    ///
+    /// # Safety
+    ///
+    /// wxWidgets names items by the pointers this model hands out, keeps them,
+    /// and passes them back to the callbacks, which turn each one into `&N`
+    /// without any way to check it. So for as long as the model is alive:
+    ///
+    /// - Every pointer returned from `get_parent` or `get_children`, or passed
+    ///   to a notification method (`item_added`, `item_changed`, ...), must be
+    ///   null or point to a live `N`.
+    /// - A node must stay alive, at the same address, while a control can still
+    ///   ask about it. To remove one, take it out of what `get_children` and
+    ///   `get_parent` return, free it if you like, and then call `item_deleted`
+    ///   or `items_deleted` (or `cleared`) before anything else queries the
+    ///   model; wxWidgets doesn't look at the deleted item itself. A node
+    ///   freed without that notification is undefined behaviour the next time
+    ///   a control draws it.
+    /// - A node must not be mutated except through interior mutability while a
+    ///   callback holds a reference to it.
+    /// - A [`DataViewItem`](super::DataViewItem) naming a node, from an event,
+    ///   the selection or [`DataViewItem::from_id_ptr`](super::DataViewItem::from_id_ptr),
+    ///   must not be passed to a control using this model after the node has
+    ///   been deleted.
     #[allow(clippy::type_complexity, clippy::too_many_arguments)]
-    pub fn new<T, N, GP, IC, GC, GV, SV, IE, CMP>(
+    pub unsafe fn new<T, N, GP, IC, GC, GV, SV, IE, CMP>(
         data: T,
         get_parent: GP,
         is_container: IC,
@@ -448,33 +470,16 @@ impl CustomDataViewTreeModel {
             };
             is_container(t, item_opt)
         });
-        // Convert typed get_children into an Any-based callback. Note the
-        // conversions between `*mut N` and `*mut c_void` (opaque ids used by
-        // wxWidgets). We keep these casts explicit and document the invariant:
-        //
-        // Invariant: the model's callbacks and the control agree that item ids
-        // are actually raw pointers to `N` (or null for the root). These ids
-        // are treated as opaque by wxWidgets and are not mutated by C++ code.
-        // Therefore we only cast between pointer types for transport across the
-        // FFI boundary; we never dereference them here except when the caller
-        // explicitly provides an `N` reference via the typed `get_children`.
-        //
-        // The casts are performed inside `unsafe` blocks and are intentionally
-        // minimal and local to this closure so the unsafety surface is easy to
-        // review and reason about.
+        // Every closure below turns the opaque id wxWidgets passes back into
+        // `&N`. That is sound only because the caller of this `unsafe fn`
+        // promised that every id reaching the model is null or a live `N`.
         let any_get_children: Box<dyn Fn(&dyn Any, *mut std::ffi::c_void) -> Vec<*mut std::ffi::c_void>> =
             Box::new(move |any_data, item| {
                 let t = any_data.downcast_ref::<T>().unwrap();
                 let item_opt: Option<&N> = if item.is_null() {
                     None
                 } else {
-                    // SAFETY: We only cast the opaque id back to `*mut N` for the
-                    // purpose of calling the user's typed closure. This is safe
-                    // because the `new` constructor requires the caller to ensure
-                    // the ids actually originate from pointers to `N` (or null).
-                    // Dereferencing happens only to create a temporary `&N` which
-                    // the user's closure observes; we don't mutate through the
-                    // pointer here.
+                    // SAFETY: the caller of `new` guarantees a non-null id is a live `N`.
                     Some(unsafe { &*(item as *mut N) })
                 };
                 let vec_typed: Vec<*mut N> = get_children(t, item_opt);
@@ -591,7 +596,13 @@ impl CustomDataViewTreeModel {
 
     /// Notify the view that a specific item's value has changed.
     /// Pass the item pointer (or null for root).
-    pub fn item_value_changed<N>(&self, item: *const N, col: u32) {
+    ///
+    /// # Safety
+    ///
+    /// Each pointer must be null (the root) or point to a live node of this
+    /// model, as [`new`](Self::new) requires: wxWidgets passes it back to the
+    /// model callbacks, which turn it into `&N`.
+    pub unsafe fn item_value_changed<N>(&self, item: *const N, col: u32) {
         if self.model.is_null() {
             return;
         }
@@ -601,7 +612,13 @@ impl CustomDataViewTreeModel {
 
     /// Notify the view that an item has changed.
     /// Pass the item pointer (or null for root).
-    pub fn item_changed<N>(&self, item: *const N) {
+    ///
+    /// # Safety
+    ///
+    /// Each pointer must be null (the root) or point to a live node of this
+    /// model, as [`new`](Self::new) requires: wxWidgets passes it back to the
+    /// model callbacks, which turn it into `&N`.
+    pub unsafe fn item_changed<N>(&self, item: *const N) {
         if self.model.is_null() {
             return;
         }
@@ -611,7 +628,13 @@ impl CustomDataViewTreeModel {
 
     /// Notify the view that a child item was added under the given parent.
     /// Pass `None` for `parent` to indicate the (invisible) root.
-    pub fn item_added<N>(&self, parent: Option<*const N>, child: *const N) {
+    ///
+    /// # Safety
+    ///
+    /// Each pointer must be null (the root) or point to a live node of this
+    /// model, as [`new`](Self::new) requires: wxWidgets passes it back to the
+    /// model callbacks, which turn it into `&N`.
+    pub unsafe fn item_added<N>(&self, parent: Option<*const N>, child: *const N) {
         if self.model.is_null() {
             return;
         }
@@ -622,7 +645,13 @@ impl CustomDataViewTreeModel {
 
     /// Notify the view that a child item was deleted under the given parent.
     /// Pass `None` for `parent` to indicate the (invisible) root.
-    pub fn item_deleted<N>(&self, parent: Option<*const N>, child: *const N) {
+    ///
+    /// # Safety
+    ///
+    /// `parent` must be `None` or a live node of this model, as
+    /// [`new`](Self::new) requires. `child` may already have been freed, but it
+    /// must be the pointer the model handed out for it.
+    pub unsafe fn item_deleted<N>(&self, parent: Option<*const N>, child: *const N) {
         if self.model.is_null() {
             return;
         }
@@ -633,7 +662,13 @@ impl CustomDataViewTreeModel {
 
     /// Notify the view that multiple child items were added under the given parent.
     /// Pass `None` for `parent` to indicate the (invisible) root.
-    pub fn items_added<N>(&self, parent: Option<*const N>, children: &[*const N]) {
+    ///
+    /// # Safety
+    ///
+    /// Each pointer must be null (the root) or point to a live node of this
+    /// model, as [`new`](Self::new) requires: wxWidgets passes it back to the
+    /// model callbacks, which turn it into `&N`.
+    pub unsafe fn items_added<N>(&self, parent: Option<*const N>, children: &[*const N]) {
         if self.model.is_null() {
             return;
         }
@@ -646,7 +681,12 @@ impl CustomDataViewTreeModel {
 
     /// Notify the view that multiple child items were deleted under the given parent.
     /// Pass `None` for `parent` to indicate the (invisible) root.
-    pub fn items_deleted<N>(&self, parent: Option<*const N>, children: &[*const N]) {
+    ///
+    /// # Safety
+    ///
+    /// As for [`item_deleted`](Self::item_deleted): `parent` must be live, and
+    /// the children may already have been freed.
+    pub unsafe fn items_deleted<N>(&self, parent: Option<*const N>, children: &[*const N]) {
         if self.model.is_null() {
             return;
         }
@@ -658,8 +698,13 @@ impl CustomDataViewTreeModel {
     }
 
     /// Notify the view that multiple child items have changed.
-    /// Pass `None` for `parent` to indicate the (invisible) root.
-    pub fn items_changed<N>(&self, children: &[*const N]) {
+    ///
+    /// # Safety
+    ///
+    /// Each pointer must be null (the root) or point to a live node of this
+    /// model, as [`new`](Self::new) requires: wxWidgets passes it back to the
+    /// model callbacks, which turn it into `&N`.
+    pub unsafe fn items_changed<N>(&self, children: &[*const N]) {
         if self.model.is_null() {
             return;
         }

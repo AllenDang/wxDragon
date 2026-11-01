@@ -38,27 +38,30 @@ pub struct NodeFields : u32 {
 ///   7: TLS ("TLS"/"Plain", derived from `disable_tls`)
 ///   8: Dangerous ("Yes"/"No")
 pub fn create_server_tree_model(data: Rc<RefCell<ServerList>>) -> CustomDataViewTreeModel {
-    CustomDataViewTreeModel::new(
-        data,
-        // parent: top-level leaves have None (root) as parent
-        move |_data: &Rc<RefCell<ServerList>>, _item: Option<&ServerNode>| None,
-        // is_container: the virtual root (None) is a container; leaves are not
-        move |_data: &Rc<RefCell<ServerList>>, item: Option<&ServerNode>| item.is_none(),
-        // get_children: root returns all server nodes; leaves have no children
-        move |data: &Rc<RefCell<ServerList>>, item: Option<&ServerNode>| match item {
-            None => data
-                .borrow()
-                .nodes
-                .iter()
-                .map(|rc| &*rc.borrow() as *const ServerNode as *mut ServerNode)
-                .collect(),
-            Some(_leaf) => Vec::new(),
-        },
-        get_value_cb,
-        Some(set_value_cb),
-        Some(move |_: &Rc<RefCell<ServerList>>, _item: Option<&ServerNode>, _col: u32| true),
-        Some(compare_cb),
-    )
+    // SAFETY: every node lives in an Rc in the server list, so its address is stable while it is listed, and menu_actions.rs calls item_deleted right after removing one.
+    unsafe {
+        CustomDataViewTreeModel::new(
+            data,
+            // parent: top-level leaves have None (root) as parent
+            move |_data: &Rc<RefCell<ServerList>>, _item: Option<&ServerNode>| None,
+            // is_container: the virtual root (None) is a container; leaves are not
+            move |_data: &Rc<RefCell<ServerList>>, item: Option<&ServerNode>| item.is_none(),
+            // get_children: root returns all server nodes; leaves have no children
+            move |data: &Rc<RefCell<ServerList>>, item: Option<&ServerNode>| match item {
+                None => data
+                    .borrow()
+                    .nodes
+                    .iter()
+                    .map(|rc| &*rc.borrow() as *const ServerNode as *mut ServerNode)
+                    .collect(),
+                Some(_leaf) => Vec::new(),
+            },
+            get_value_cb,
+            Some(set_value_cb),
+            Some(move |_: &Rc<RefCell<ServerList>>, _item: Option<&ServerNode>, _col: u32| true),
+            Some(compare_cb),
+        )
+    }
 }
 
 fn get_value_cb(data: &Rc<RefCell<ServerList>>, item: Option<&ServerNode>, col: u32) -> Variant {

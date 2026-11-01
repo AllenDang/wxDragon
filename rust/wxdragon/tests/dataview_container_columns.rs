@@ -33,44 +33,47 @@ fn main() {
 
     wxdragon::main(move |app| {
         let reads = Rc::new(Cell::new(0));
-        let model = CustomDataViewTreeModel::new(
-            Tree {
-                group: Box::new(Node {
-                    container: true,
-                    label: "Group B — 支払い",
-                }),
-                leaf: Box::new(Node {
-                    container: false,
-                    label: "Leaf B",
-                }),
-                label_reads: reads.clone(),
-                dropped: dropped_in_loop,
-            },
-            |tree: &Tree, node: Option<&Node>| {
-                node.filter(|n| !n.container)
-                    .map(|_| &*tree.group as *const Node as *mut Node)
-            },
-            |_: &Tree, node: Option<&Node>| node.is_none_or(|n| n.container),
-            |tree: &Tree, node: Option<&Node>| match node {
-                None => vec![&*tree.group as *const Node as *mut Node],
-                Some(n) if n.container => vec![&*tree.leaf as *const Node as *mut Node],
-                _ => Vec::new(),
-            },
-            |tree: &Tree, node: Option<&Node>, col| {
-                let node = node.expect("invisible root must not request a value");
-                if col == 0 {
-                    Variant::from(true)
-                } else {
-                    if node.container {
-                        tree.label_reads.set(tree.label_reads.get() + 1);
+        // SAFETY: both nodes are boxed in the tree, which the model owns, and neither is ever removed.
+        let model = unsafe {
+            CustomDataViewTreeModel::new(
+                Tree {
+                    group: Box::new(Node {
+                        container: true,
+                        label: "Group B — 支払い",
+                    }),
+                    leaf: Box::new(Node {
+                        container: false,
+                        label: "Leaf B",
+                    }),
+                    label_reads: reads.clone(),
+                    dropped: dropped_in_loop,
+                },
+                |tree: &Tree, node: Option<&Node>| {
+                    node.filter(|n| !n.container)
+                        .map(|_| &*tree.group as *const Node as *mut Node)
+                },
+                |_: &Tree, node: Option<&Node>| node.is_none_or(|n| n.container),
+                |tree: &Tree, node: Option<&Node>| match node {
+                    None => vec![&*tree.group as *const Node as *mut Node],
+                    Some(n) if n.container => vec![&*tree.leaf as *const Node as *mut Node],
+                    _ => Vec::new(),
+                },
+                |tree: &Tree, node: Option<&Node>, col| {
+                    let node = node.expect("invisible root must not request a value");
+                    if col == 0 {
+                        Variant::from(true)
+                    } else {
+                        if node.container {
+                            tree.label_reads.set(tree.label_reads.get() + 1);
+                        }
+                        Variant::from(node.label)
                     }
-                    Variant::from(node.label)
-                }
-            },
-            None::<fn(&Tree, Option<&Node>, u32, &Variant) -> bool>,
-            None::<fn(&Tree, Option<&Node>, u32) -> bool>,
-            None::<fn(&Tree, &Node, &Node, u32, bool) -> i32>,
-        );
+                },
+                None::<fn(&Tree, Option<&Node>, u32, &Variant) -> bool>,
+                None::<fn(&Tree, Option<&Node>, u32) -> bool>,
+                None::<fn(&Tree, &Node, &Node, u32, bool) -> i32>,
+            )
+        };
         // Exercise setting the existing default before association, and cloning.
         model.set_container_columns(false);
         let cloned_model = model.clone();

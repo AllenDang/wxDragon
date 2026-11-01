@@ -27,52 +27,55 @@ pub fn add_tree(panel: &Panel, sizer: &BoxSizer) {
         .build();
     let flags = SizerFlag::Expand | SizerFlag::All;
     sizer.add(&instructions, 0, flags, 8);
-    let model = CustomDataViewTreeModel::new(
-        Tree {
-            nodes: std::array::from_fn(|index| {
-                Box::new(Node {
-                    index,
-                    label: RefCell::new(["Group A", "Leaf A", "Group B", "Leaf B"][index].into()),
-                    checked: Cell::new(true),
-                })
+    // SAFETY: the four nodes are boxed in the tree, which the model owns, and none is ever removed.
+    let model = unsafe {
+        CustomDataViewTreeModel::new(
+            Tree {
+                nodes: std::array::from_fn(|index| {
+                    Box::new(Node {
+                        index,
+                        label: RefCell::new(["Group A", "Leaf A", "Group B", "Leaf B"][index].into()),
+                        checked: Cell::new(true),
+                    })
+                }),
+                empty_toggle: false,
+            },
+            |tree: &Tree, node: Option<&Node>| {
+                node.filter(|n| !n.container())
+                    .map(|n| &*tree.nodes[n.index - 1] as *const Node as *mut Node)
+            },
+            |_: &Tree, node: Option<&Node>| node.is_none_or(Node::container),
+            |tree: &Tree, node: Option<&Node>| match node {
+                None => vec![
+                    &*tree.nodes[0] as *const Node as *mut Node,
+                    &*tree.nodes[2] as *const Node as *mut Node,
+                ],
+                Some(n) if n.container() => vec![&*tree.nodes[n.index + 1] as *const Node as *mut Node],
+                _ => Vec::new(),
+            },
+            |tree: &Tree, node: Option<&Node>, col| {
+                let Some(node) = node else { return Variant::new() };
+                if col == 1 {
+                    Variant::from(node.label.borrow().as_str())
+                } else if tree.empty_toggle && node.container() {
+                    Variant::new()
+                } else {
+                    Variant::from(node.checked.get())
+                }
+            },
+            Some(|_: &Tree, node: Option<&Node>, col, value: &Variant| {
+                if let (Some(node), Some(checked)) = (node, value.get_bool())
+                    && col == 0
+                {
+                    node.checked.set(checked);
+                    return true;
+                }
+                false
             }),
-            empty_toggle: false,
-        },
-        |tree: &Tree, node: Option<&Node>| {
-            node.filter(|n| !n.container())
-                .map(|n| &*tree.nodes[n.index - 1] as *const Node as *mut Node)
-        },
-        |_: &Tree, node: Option<&Node>| node.is_none_or(Node::container),
-        |tree: &Tree, node: Option<&Node>| match node {
-            None => vec![
-                &*tree.nodes[0] as *const Node as *mut Node,
-                &*tree.nodes[2] as *const Node as *mut Node,
-            ],
-            Some(n) if n.container() => vec![&*tree.nodes[n.index + 1] as *const Node as *mut Node],
-            _ => Vec::new(),
-        },
-        |tree: &Tree, node: Option<&Node>, col| {
-            let Some(node) = node else { return Variant::new() };
-            if col == 1 {
-                Variant::from(node.label.borrow().as_str())
-            } else if tree.empty_toggle && node.container() {
-                Variant::new()
-            } else {
-                Variant::from(node.checked.get())
-            }
-        },
-        Some(|_: &Tree, node: Option<&Node>, col, value: &Variant| {
-            if let (Some(node), Some(checked)) = (node, value.get_bool())
-                && col == 0
-            {
-                node.checked.set(checked);
-                return true;
-            }
-            false
-        }),
-        None::<fn(&Tree, Option<&Node>, u32) -> bool>,
-        None::<fn(&Tree, &Node, &Node, u32, bool) -> i32>,
-    );
+            None::<fn(&Tree, Option<&Node>, u32) -> bool>,
+            None::<fn(&Tree, &Node, &Node, u32, bool) -> i32>,
+        )
+    };
     model.set_container_columns(true);
     let view = DataViewCtrl::builder(panel).with_size(Size::new(-1, 180)).build();
     view.append_column(DataViewColumn::new(
@@ -119,7 +122,8 @@ pub fn add_tree(panel: &Panel, sizer: &BoxSizer) {
                 .replace(if renamed.get() { "Group B — 支払い" } else { "Group B" }.into());
             &*tree.nodes[2] as *const Node
         }) {
-            rename_model.item_value_changed(item, 1);
+            // SAFETY: the item is a node in the model's tree.
+            unsafe { rename_model.item_value_changed(item, 1) };
         }
     });
     sizer.add(&rename, 0, flags, 4);
@@ -132,7 +136,8 @@ pub fn add_tree(panel: &Panel, sizer: &BoxSizer) {
             tree.empty_toggle = !tree.empty_toggle;
             [&*tree.nodes[0] as *const Node, &*tree.nodes[2] as *const Node]
         }) {
-            model.items_changed(&items);
+            // SAFETY: both items are nodes in the model's tree.
+            unsafe { model.items_changed(&items) };
         }
     });
     sizer.add(&empty, 0, flags, 4);
