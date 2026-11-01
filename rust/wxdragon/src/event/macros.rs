@@ -116,9 +116,7 @@ macro_rules! implement_window_category_event_handlers {
 
                 let wrapper = move |event: $crate::event::Event| {
                     if matches!(event_type, $crate::event::$event_enum::Destroy)
-                        && event
-                            .get_event_object()
-                            .is_none_or(|object| object.as_ptr().cast::<std::ffi::c_void>() != handler_ptr)
+                        && event.event_object_ptr().cast::<std::ffi::c_void>() != handler_ptr
                     {
                         return;
                     }

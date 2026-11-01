@@ -96,6 +96,10 @@ wxd_Window_Enable(wxd_Window_t* self, bool enable);
 WXD_EXPORTED wxd_Window_t*
 wxd_Window_GetParent(wxd_Window_t* self);
 
+// Returns true once the window's destruction has started (wxWindow::IsBeingDeleted).
+WXD_EXPORTED bool
+wxd_Window_IsBeingDeleted(wxd_Window_t* self);
+
 WXD_EXPORTED void
 wxd_Window_SetFont(wxd_Window_t* self, const wxd_Font_t* font);
 WXD_EXPORTED wxd_Font_t*

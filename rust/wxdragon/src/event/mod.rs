@@ -620,15 +620,24 @@ impl Event {
 
     /// Gets the object (usually a window) that generated the event.
     pub fn get_event_object(&self) -> Option<Window> {
-        if self.0.is_null() {
-            return None;
-        }
-        let ptr = unsafe { ffi::wxd_Event_GetEventObject(self.0) };
+        let ptr = self.event_object_ptr();
         if ptr.is_null() {
             None
         } else {
             Some(unsafe { Window::from_ptr(ptr) })
         }
+    }
+
+    /// Raw pointer to the window that generated the event, or null.
+    ///
+    /// Only for identity comparisons (e.g. filtering `wxEVT_DESTROY` by source); unlike
+    /// [`Self::get_event_object`] this neither looks up nor registers a `WindowHandle`.
+    #[doc(hidden)]
+    pub fn event_object_ptr(&self) -> *mut ffi::wxd_Window_t {
+        if self.0.is_null() {
+            return std::ptr::null_mut();
+        }
+        unsafe { ffi::wxd_Event_GetEventObject(self.0) }
     }
 
     /// Gets the event type.
