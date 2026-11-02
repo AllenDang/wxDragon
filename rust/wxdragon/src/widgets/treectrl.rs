@@ -469,7 +469,7 @@ impl TreeCtrl {
         let tree_ctrl_clone = *self;
 
         // Bind to the DESTROY event for proper cleanup when the window is destroyed
-        self.bind_internal(EventType::DESTROY, move |_event| {
+        crate::event::bind_lifetime_internal(self, EventType::DESTROY, move |_event| {
             // Clean up all custom data when the control is destroyed
             tree_ctrl_clone.cleanup_all_custom_data();
         });

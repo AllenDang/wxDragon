@@ -72,7 +72,7 @@ impl WindowHandle {
         // filtering we would mistakenly invalidate the parent when any child is
         // destroyed.  Only invalidate the handle when the event's object matches the
         // tracked window pointer.
-        window.bind_internal(EventType::DESTROY, move |_event| {
+        crate::event::bind_lifetime_internal(&window, EventType::DESTROY, move |_event| {
             if let Some(obj) = _event.get_event_object() {
                 // Compare the raw pointer addresses
                 if obj.as_ptr() == ptr {
@@ -2301,5 +2301,53 @@ mod tests {
         if let Err(e) = res {
             log::warn!("Test failed with error: {:?}", e);
         }
+    }
+
+    // `unbind_all` must leave the DESTROY binding that keeps the handle registry
+    // honest. Before, it removed it too, and a child destroyed with its parent
+    // stayed "valid" with a pointer to the freed window.
+    #[cfg_attr(target_os = "macos", ignore)]
+    #[test]
+    fn unbind_all_keeps_handle_tracking_alive() {
+        use super::*;
+        use crate::prelude::*;
+        use crate::widgets::{Frame, Panel, StaticText};
+        use std::cell::{Cell, RefCell};
+        use std::rc::Rc;
+
+        let _gui_test = crate::app::GUI_TEST_LOCK.lock().unwrap();
+        SystemOptions::set_option_by_int("msw.no-manifest-check", 1);
+        let removed = Rc::new(Cell::new(None));
+        let valid_after_destroy = Rc::new(Cell::new(None));
+        let timer_store: Rc<RefCell<Option<Timer<Frame>>>> = Rc::new(RefCell::new(None));
+        let (removed_in_loop, valid_in_loop, timer_in_loop) = (removed.clone(), valid_after_destroy.clone(), timer_store.clone());
+
+        let res = crate::main(move |app| {
+            let frame = Frame::builder().with_title("test").build();
+            let panel = Panel::builder(&frame).build();
+            let label = StaticText::builder(&panel).with_label("temp").build();
+            label.bind_internal(EventType::DESTROY, |_| {});
+            removed_in_loop.set(Some(label.unbind_all()));
+            // Destroying the parent frees the label without going through the
+            // label's own handle, so only its DESTROY binding can invalidate it.
+            panel.destroy();
+
+            let timer = Timer::new(&frame);
+            let timer_cleanup = timer_in_loop.clone();
+            let valid_in_tick = valid_in_loop.clone();
+            timer.on_tick(move |_evt| {
+                valid_in_tick.set(Some(label.is_valid()));
+                timer_cleanup.borrow_mut().take();
+                app.exit_main_loop();
+            });
+            timer.start(100, true);
+            timer_in_loop.borrow_mut().replace(timer);
+        });
+        if let Err(e) = res {
+            log::warn!("Test failed with error: {e:?}");
+            return;
+        }
+        assert_eq!(removed.get(), Some(1), "unbind_all should count only the user's handler");
+        assert_eq!(valid_after_destroy.get(), Some(false), "a destroyed child still looked valid");
     }
 }

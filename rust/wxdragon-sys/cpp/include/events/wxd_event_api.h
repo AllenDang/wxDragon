@@ -14,18 +14,26 @@ WXD_EXPORTED void
 wxd_EvtHandler_Bind(wxd_EvtHandler_t* handler, WXDEventTypeCEnum event_type,
                     void* rust_trampoline_fn, void* rust_closure_ptr, size_t token);
 
+// Bind an event handler that wxDragon needs for the handler's whole life, such as the
+// DESTROY binding that invalidates a WindowHandle. wxd_EvtHandler_Unbind and
+// wxd_EvtHandler_UnbindAll leave it in place; it is removed when the window is destroyed.
+WXD_EXPORTED void
+wxd_EvtHandler_BindInternal(wxd_EvtHandler_t* handler, WXDEventTypeCEnum event_type,
+                            void* rust_trampoline_fn, void* rust_closure_ptr, size_t token);
+
 // Bind event handler with ID and token
 WXD_EXPORTED void
 wxd_EvtHandler_BindWithId(wxd_EvtHandler_t* handler, WXDEventTypeCEnum event_type, int id,
                           void* rust_trampoline_fn, void* rust_closure_ptr, size_t token);
 
 // Unbind event handler by token
-// Returns true if handler was found and removed, false otherwise
+// Returns true if handler was found and removed, false otherwise.
+// Bindings made with wxd_EvtHandler_BindInternal are never removed.
 WXD_EXPORTED bool
 wxd_EvtHandler_Unbind(wxd_EvtHandler_t* handler, size_t token);
 
-// Unbind all event handlers currently bound to this handler.
-// Returns the number of handlers removed.
+// Unbind all event handlers currently bound to this handler, except those made with
+// wxd_EvtHandler_BindInternal. Returns the number of handlers removed.
 WXD_EXPORTED size_t
 wxd_EvtHandler_UnbindAll(wxd_EvtHandler_t* handler);
 

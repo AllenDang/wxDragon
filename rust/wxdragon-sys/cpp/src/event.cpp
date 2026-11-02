@@ -195,7 +195,7 @@ public:
     virtual ~WxdHandlerClientData(); // Defined after WxdEventHandler
 
     bool
-    UnbindClosure(size_t token);
+    UnbindClosure(size_t token, bool allow_internal);
 };
 
 // Custom Event Handler class to connect wx events to Rust closures
@@ -206,9 +206,12 @@ public:
         closureMap;
 
     // NEW: Fast lookup - token -> location of closure
-    // Location = (eventType, widgetId, closure_ptr)
-    // Note: We store closure_ptr instead of index because indices become stale after removals
-    std::unordered_map<size_t, std::tuple<wxEventType, wxd_Id, void*>> tokenMap;
+    // Location = (eventType, widgetId, closure_ptr, internal)
+    // Note: We store closure_ptr instead of index because indices become stale after removals.
+    // `internal` marks a binding wxDragon itself made to track the window's lifetime (the
+    // WindowHandle registry, per-widget data cleanup). Only the final DESTROY cleanup removes
+    // those: if user code could, the handle registry would keep a pointer to a deleted window.
+    std::unordered_map<size_t, std::tuple<wxEventType, wxd_Id, void*, bool>> tokenMap;
 
     // Track whether we've already bound DispatchEvent to wxWidgets for each event key
     std::unordered_map<std::pair<wxEventType, wxd_Id>, bool, PairHash> wx_bindings_made;
@@ -232,11 +235,14 @@ public:
 
     void
     BindClosure(wxEventType wx_event_type, wxd_Id actual_id, void* rust_trampoline_fn,
-                void* rust_closure_ptr, size_t token);
+                void* rust_closure_ptr, size_t token, bool internal = false);
+    // Internal bindings are only removed when allow_internal is true.
     bool
-    UnbindClosure(size_t token);
+    UnbindClosure(size_t token, bool allow_internal);
+    // Returns the number of closures removed. Internal bindings are kept unless
+    // include_internal is true.
     size_t
-    UnbindAll();
+    UnbindAll(bool include_internal);
 
     // Hands a closure box back to Rust, or queues it if a dispatch is in flight.
     void
@@ -294,10 +300,10 @@ WxdHandlerClientData::~WxdHandlerClientData()
 }
 
 bool
-WxdHandlerClientData::UnbindClosure(size_t token)
+WxdHandlerClientData::UnbindClosure(size_t token, bool allow_internal)
 {
     if (handler) {
-        return handler->UnbindClosure(token);
+        return handler->UnbindClosure(token, allow_internal);
     }
     return false;
 }
@@ -352,12 +358,15 @@ WxdEventHandler::FlushPendingDrops()
 }
 
 bool
-WxdEventHandler::UnbindClosure(size_t token)
+WxdEventHandler::UnbindClosure(size_t token, bool allow_internal)
 {
     // Look up token in map
     auto token_it = this->tokenMap.find(token);
     if (token_it == this->tokenMap.end()) {
         return false; // Token doesn't exist or already unbound
+    }
+    if (std::get<3>(token_it->second) && !allow_internal) {
+        return false; // wxDragon's own lifetime binding, kept until DESTROY
     }
 
     // Extract location info (C++11 compatible)
@@ -428,7 +437,7 @@ WxdEventHandler::UnbindClosure(size_t token)
 }
 
 size_t
-WxdEventHandler::UnbindAll()
+WxdEventHandler::UnbindAll(bool include_internal)
 {
     // Copy tokens to avoid iterator invalidation
     std::vector<size_t> tokens;
@@ -438,7 +447,7 @@ WxdEventHandler::UnbindAll()
     }
     size_t removed = 0;
     for (size_t t : tokens) {
-        if (this->UnbindClosure(t)) {
+        if (this->UnbindClosure(t, include_internal)) {
             ++removed;
         }
     }
@@ -562,8 +571,9 @@ WxdEventHandler::DispatchEvent(wxEvent& event)
     // the frame's callbacks.
     if (eventType == wxEVT_DESTROY && event.GetEventObject() == ownerHandler) {
         // Intentionally ignore the return value of UnbindAll() as we do not need to know
-        // how many handlers were unbound; this is a final cleanup step.
-        (void)this->UnbindAll();
+        // how many handlers were unbound; this is a final cleanup step, so it removes
+        // wxDragon's internal bindings as well.
+        (void)this->UnbindAll(true);
     }
 }
 
@@ -696,7 +706,7 @@ public:
 
 void
 WxdEventHandler::BindClosure(wxEventType wx_event_type, wxd_Id actual_id, void* rust_trampoline_fn,
-                             void* rust_closure_ptr, size_t token)
+                             void* rust_closure_ptr, size_t token, bool internal)
 {
     std::pair<wxEventType, wxd_Id> map_key = { wx_event_type, actual_id };
 
@@ -734,15 +744,15 @@ WxdEventHandler::BindClosure(wxEventType wx_event_type, wxd_Id actual_id, void* 
     this->closureMap[map_key].push_back(new_info);
 
     // Store token mapping for fast lookup
-    this->tokenMap[token] = std::make_tuple(wx_event_type, actual_id, rust_closure_ptr);
+    this->tokenMap[token] = std::make_tuple(wx_event_type, actual_id, rust_closure_ptr, internal);
 }
 
 // --- C API Implementation ---
 
-// NEW: Token-based event binding implementation
-extern "C" void
-wxd_EvtHandler_Bind(wxd_EvtHandler_t* handler, WXDEventTypeCEnum eventTypeC,
-                    void* rust_trampoline_fn, void* rust_closure_ptr, size_t token)
+// Shared by wxd_EvtHandler_Bind and wxd_EvtHandler_BindInternal.
+static void
+BindTokenClosure(wxd_EvtHandler_t* handler, WXDEventTypeCEnum eventTypeC, void* rust_trampoline_fn,
+                 void* rust_closure_ptr, size_t token, bool internal)
 {
     wxEvtHandler* wx_handler = reinterpret_cast<wxEvtHandler*>(handler);
     if (!wx_handler) {
@@ -782,7 +792,22 @@ wxd_EvtHandler_Bind(wxd_EvtHandler_t* handler, WXDEventTypeCEnum eventTypeC,
     }
 
     customHandler->BindClosure(wx_event_type, wxID_ANY, rust_trampoline_fn, rust_closure_ptr,
-                               token);
+                               token, internal);
+}
+
+// NEW: Token-based event binding implementation
+extern "C" void
+wxd_EvtHandler_Bind(wxd_EvtHandler_t* handler, WXDEventTypeCEnum eventTypeC,
+                    void* rust_trampoline_fn, void* rust_closure_ptr, size_t token)
+{
+    BindTokenClosure(handler, eventTypeC, rust_trampoline_fn, rust_closure_ptr, token, false);
+}
+
+extern "C" void
+wxd_EvtHandler_BindInternal(wxd_EvtHandler_t* handler, WXDEventTypeCEnum eventTypeC,
+                            void* rust_trampoline_fn, void* rust_closure_ptr, size_t token)
+{
+    BindTokenClosure(handler, eventTypeC, rust_trampoline_fn, rust_closure_ptr, token, true);
 }
 
 // NEW: ID-specific event binding with token
@@ -857,7 +882,7 @@ wxd_EvtHandler_Unbind(wxd_EvtHandler_t* handler, size_t token)
         return false; // No handlers bound yet
     }
 
-    return clientData->UnbindClosure(token);
+    return clientData->UnbindClosure(token, false);
 }
 
 // NEW: Unbind all closures for the given handler. Returns count removed.
@@ -875,7 +900,7 @@ wxd_EvtHandler_UnbindAll(wxd_EvtHandler_t* handler)
         return 0; // Nothing to unbind
     }
 
-    return clientData->handler->UnbindAll();
+    return clientData->handler->UnbindAll(false);
 }
 
 // --- Event Accessors (Unchanged) ---
