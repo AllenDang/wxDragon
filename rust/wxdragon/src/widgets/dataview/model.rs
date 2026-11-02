@@ -37,27 +37,60 @@ pub mod tree_helpers {
     }
 
     /// Consume a Vec of node pointers and return a pointer/count pair that C++
-    /// can iterate. The function intentionally leaks the Vec; call
+    /// can iterate. The function intentionally leaks the array; call
     /// `free_children_array` from C/Rust later to reclaim the memory.
+    ///
+    /// The array is leaked as a boxed slice so its allocation is exactly `count`
+    /// elements long, which is what `free_children_array` relies on.
     pub fn leak_children_vec<T>(children: Vec<*mut T>) -> (*mut *mut c_void, i32) {
-        let mut arr: Vec<*mut c_void> = children.into_iter().map(|p| p as *mut c_void).collect();
-        let ptr = arr.as_mut_ptr();
+        let arr: Box<[*mut c_void]> = children.into_iter().map(|p| p as *mut c_void).collect();
         let count = arr.len() as i32;
-        std::mem::forget(arr);
+        let ptr = Box::into_raw(arr) as *mut *mut c_void;
         (ptr, count)
     }
 
     /// # Safety
     /// Reclaim a leaked children array previously produced by `leak_children_vec`.
-    /// Safety: ptr and count must match a previous call that leaked a Vec with the
-    /// same length and pointer value.
+    /// Safety: ptr and count must be exactly the pair returned by a previous call
+    /// to `leak_children_vec`, and the array must not have been freed already.
     pub unsafe fn free_children_array(ptr: *mut *mut c_void, count: i32) {
-        if ptr.is_null() || count == 0 {
+        if ptr.is_null() || count <= 0 {
             return;
         }
-        // Recreate the Vec from raw parts and drop it so memory is freed.
-        let slice = unsafe { std::slice::from_raw_parts_mut(ptr, count as usize) };
-        let _ = unsafe { Vec::from_raw_parts(slice.as_mut_ptr(), count as usize, count as usize) };
+        // Rebuild the boxed slice from raw parts and drop it so memory is freed.
+        let slice = std::ptr::slice_from_raw_parts_mut(ptr, count as usize);
+        drop(unsafe { Box::from_raw(slice) });
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn leak_and_free_vec_with_spare_capacity() {
+            let mut nodes = [0u32; 3];
+            let mut children: Vec<*mut u32> = Vec::with_capacity(64);
+            for n in nodes.iter_mut() {
+                children.push(n as *mut u32);
+            }
+            assert!(children.capacity() > children.len());
+
+            let (ptr, count) = leak_children_vec(children);
+            assert_eq!(count, 3);
+            let ids = unsafe { std::slice::from_raw_parts(ptr, count as usize) };
+            for (id, n) in ids.iter().zip(nodes.iter_mut()) {
+                assert_eq!(*id, n as *mut u32 as *mut c_void);
+            }
+            unsafe { free_children_array(ptr, count) };
+        }
+
+        #[test]
+        fn leak_and_free_empty_vec_with_capacity() {
+            let children: Vec<*mut u32> = Vec::with_capacity(16);
+            let (ptr, count) = leak_children_vec(children);
+            assert_eq!(count, 0);
+            unsafe { free_children_array(ptr, count) };
+        }
     }
 }
 
