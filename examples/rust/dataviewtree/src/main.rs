@@ -178,7 +178,8 @@ fn main() {
                                             }
                                         });
                                     if let Some(Some(child_ptr)) = created {
-                                        mtm_for_selected.item_added::<MusicNode>(Some(parent_ptr), child_ptr);
+                                        // SAFETY: both nodes are in the tree; the child was just added to it.
+                                        unsafe { mtm_for_selected.item_added::<MusicNode>(Some(parent_ptr), child_ptr) };
                                         dv_for_actions.expand(&item_for_actions);
                                         dv_for_actions.ensure_visible(&item_for_actions);
                                     }
@@ -220,7 +221,8 @@ fn main() {
                                             },
                                         );
                                     if let Some(Some(child_ptr)) = created {
-                                        mtm_for_selected.item_added::<MusicNode>(Some(parent_ptr), child_ptr);
+                                        // SAFETY: both nodes are in the tree; the child was just added to it.
+                                        unsafe { mtm_for_selected.item_added::<MusicNode>(Some(parent_ptr), child_ptr) };
                                         dv_for_actions.expand(&item_for_actions);
                                         dv_for_actions.ensure_visible(&item_for_actions);
                                     }
@@ -267,7 +269,8 @@ fn main() {
                                 });
                             if let Some(Some(parent_ptr)) = parent_opt {
                                 // Notify view about deletion
-                                mtm_for_selected.item_deleted::<MusicNode>(Some(parent_ptr), child_ptr);
+                                // SAFETY: the parent is still in the tree; the child was just removed from it.
+                                unsafe { mtm_for_selected.item_deleted::<MusicNode>(Some(parent_ptr), child_ptr) };
                             }
                         }
                     }
@@ -398,7 +401,8 @@ fn edit_item_with_dialog(parent: &dyn WxWidget, model: &CustomDataViewTreeModel,
                 }
             });
             // Notify that this item's values changed so the row re-renders.
-            model.item_changed::<MusicNode>(ptr); // or call `model.items_changed::<MusicNode>(&[ptr]);`
+            // SAFETY: the node is in the tree. Or call `model.items_changed::<MusicNode>(&[ptr])`.
+            unsafe { model.item_changed::<MusicNode>(ptr) };
         }
     }
 }

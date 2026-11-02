@@ -3,34 +3,37 @@ use std::{cell::RefCell, rc::Rc};
 use wxdragon::prelude::*;
 
 pub fn create_music_tree_model(data: Rc<RefCell<MusicTree>>) -> CustomDataViewTreeModel {
-    CustomDataViewTreeModel::new(
-        data,
-        move |data: &Rc<RefCell<MusicTree>>, item: Option<&MusicNode>| match item {
-            None => None,
-            Some(node) => data
-                .borrow()
-                .parent_of(node)
-                .map(|rc| &*rc.borrow() as *const MusicNode as *mut MusicNode),
-        },
-        move |_data, item: Option<&MusicNode>| match item {
-            None => true,
-            Some(node) => matches!(node.node_type, NodeType::Branch),
-        },
-        move |data: &Rc<RefCell<MusicTree>>, item: Option<&MusicNode>| match item {
-            None => vec![&*data.borrow().root.borrow() as *const MusicNode as *mut MusicNode],
-            Some(node) => node
-                .children
-                .as_ref()
-                .into_iter()
-                .flat_map(|v| v.iter())
-                .map(|b| &*b.borrow() as *const MusicNode as *mut MusicNode)
-                .collect(),
-        },
-        get_value_cb,
-        Some(set_value_cb),
-        Some(move |_: &Rc<RefCell<MusicTree>>, _: Option<&MusicNode>, _: u32| true),
-        Some(compare_cb),
-    )
+    // SAFETY: every node lives in an Rc in the tree, so its address is stable while it is in the tree, and the menu handlers in main.rs call item_deleted right after taking a node out of it.
+    unsafe {
+        CustomDataViewTreeModel::new(
+            data,
+            move |data: &Rc<RefCell<MusicTree>>, item: Option<&MusicNode>| match item {
+                None => None,
+                Some(node) => data
+                    .borrow()
+                    .parent_of(node)
+                    .map(|rc| &*rc.borrow() as *const MusicNode as *mut MusicNode),
+            },
+            move |_data, item: Option<&MusicNode>| match item {
+                None => true,
+                Some(node) => matches!(node.node_type, NodeType::Branch),
+            },
+            move |data: &Rc<RefCell<MusicTree>>, item: Option<&MusicNode>| match item {
+                None => vec![&*data.borrow().root.borrow() as *const MusicNode as *mut MusicNode],
+                Some(node) => node
+                    .children
+                    .as_ref()
+                    .into_iter()
+                    .flat_map(|v| v.iter())
+                    .map(|b| &*b.borrow() as *const MusicNode as *mut MusicNode)
+                    .collect(),
+            },
+            get_value_cb,
+            Some(set_value_cb),
+            Some(move |_: &Rc<RefCell<MusicTree>>, _: Option<&MusicNode>, _: u32| true),
+            Some(compare_cb),
+        )
+    }
 }
 
 fn get_value_cb(data: &Rc<RefCell<MusicTree>>, item: Option<&MusicNode>, col: u32) -> Variant {
