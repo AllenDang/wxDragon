@@ -289,8 +289,8 @@ fn add_dnd_demo(panel: &Panel, sizer: &BoxSizer) {
         let data = TextDataObject::new("Text dragged from wxDragon!");
 
         // Create the drop source
-        let drop_source = DropSource::new(&source_panel);
-        drop_source.set_data(&data);
+        let mut drop_source = DropSource::new(&source_panel);
+        drop_source.set_data(data);
 
         // Start the drag operation
         let result = drop_source.do_drag_drop(true);
