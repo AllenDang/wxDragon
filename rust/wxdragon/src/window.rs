@@ -49,13 +49,29 @@ thread_local! {
 pub struct WindowHandle(u64);
 
 impl WindowHandle {
-    /// Creates a new handle for a window pointer and registers for destroy notification.
+    /// Returns the handle for a window pointer, registering it for destroy notification
+    /// the first time the pointer is seen.
+    ///
+    /// Every live window has at most one registry entry and one destroy callback, so
+    /// calling this repeatedly for the same pointer (for example from
+    /// `Event::get_event_object` or `MenuItem::from_ptr`) returns the same handle instead
+    /// of growing the registry. A window whose destruction has already started is not
+    /// registered: its `wxEVT_DESTROY` has already been sent, so the entry could never be
+    /// removed. The returned handle is invalid in that case.
     ///
     /// # Safety
     /// The caller must ensure `ptr` points to a valid wxWindow that hasn't been destroyed.
     pub(crate) fn new(ptr: *mut ffi::wxd_Window_t) -> Self {
         if ptr.is_null() {
             return WindowHandle(0); // Invalid handle for null pointers
+        }
+
+        if let Some(existing) = Self::from_ptr(ptr) {
+            return existing;
+        }
+
+        if unsafe { ffi::wxd_Window_IsBeingDeleted(ptr) } {
+            return WindowHandle(0);
         }
 
         let handle_id = NEXT_HANDLE_ID.fetch_add(1, Ordering::SeqCst);
@@ -66,20 +82,16 @@ impl WindowHandle {
 
         // Bind destroy event using existing event infrastructure
         // This closure runs when wxWidgets destroys the window (by any cause)
-        let window = unsafe { Window::from_ptr(ptr) };
+        let window = Window(WindowHandle(handle_id));
         // Bind a destroy event handler _on the window itself_.
         // wxWidgets bubbles destroy events from children up to parents, so without
         // filtering we would mistakenly invalidate the parent when any child is
         // destroyed.  Only invalidate the handle when the event's object matches the
-        // tracked window pointer.
-        crate::event::bind_lifetime_internal(&window, EventType::DESTROY, move |_event| {
-            if let Some(obj) = _event.get_event_object() {
-                // Compare the raw pointer addresses
-                if obj.as_ptr() == ptr {
-                    Self::invalidate(handle_id);
-                } else {
-                    // ignore destroys from child windows
-                }
+        // tracked window pointer. The raw event object is compared directly rather than
+        // through `get_event_object()` so this runs no registry lookups during teardown.
+        crate::event::bind_lifetime_internal(&window, EventType::DESTROY, move |event| {
+            if event.event_object_ptr() == ptr {
+                Self::invalidate(handle_id);
             }
         });
 
@@ -139,7 +151,6 @@ impl WindowHandle {
 
     /// Look up an existing handle by pointer address.
     /// Returns None if no handle exists for this pointer.
-    #[allow(dead_code)]
     pub(crate) fn from_ptr(ptr: *mut ffi::wxd_Window_t) -> Option<Self> {
         if ptr.is_null() {
             return None;
@@ -274,36 +285,44 @@ impl BackgroundStyle {
     }
 }
 
-/// Represents a pointer to any wxDragon window object.
-/// This is typically used as a base struct or in trait objects.
-/// Note: Deliberately NOT Copy or Clone, as it represents unique FFI resource ownership.
+/// A non-owning, `Copy` reference to any wxWidgets window.
+///
+/// This is what APIs such as [`Event::get_event_object`](crate::event::Event::get_event_object),
+/// [`WxWidget::get_parent`] or `Notebook::get_page` return. Like the concrete widget types it is
+/// backed by a [`WindowHandle`], so once the underlying window is destroyed every method becomes a
+/// no-op (and [`Window::as_ptr`] returns null) instead of touching freed memory.
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
-pub struct Window(pub(crate) *mut ffi::wxd_Window_t);
+pub struct Window(WindowHandle);
 
 impl std::fmt::Debug for Window {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Window").field("ptr", &self.0).finish()
+        f.debug_struct("Window").field("ptr", &self.as_ptr()).finish()
     }
 }
 
 impl Window {
     /// Creates a new Window wrapper from a raw pointer.
     /// # Safety
-    /// The caller must ensure the pointer is valid and manages its lifetime correctly.
+    /// The caller must ensure the pointer is null or points to a live wxWindow.
     /// This is typically called internally by concrete widget constructors.
     pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
-        Self(ptr)
+        Self(WindowHandle::new(ptr))
     }
 
-    /// Returns the raw underlying pointer.
+    /// Returns the raw underlying pointer, or null if the window has been destroyed.
     /// Temporary: Made public for FFI callbacks until safe event handling is done.
     pub fn as_ptr(&self) -> *mut ffi::wxd_Window_t {
+        self.0.get_ptr().unwrap_or(std::ptr::null_mut())
+    }
+
+    /// Returns the [`WindowHandle`] backing this window.
+    pub fn window_handle(&self) -> WindowHandle {
         self.0
     }
 
-    /// Checks if the underlying pointer is null.
+    /// Checks if the window is null or has been destroyed.
     pub fn is_null(&self) -> bool {
-        self.0.is_null()
+        !self.0.is_valid()
     }
 
     /// Sets the window's sizer.
@@ -2231,7 +2250,11 @@ impl WxWidgetDowncast for dyn WxWidget {
 // Implement the trait for the base Window struct itself.
 impl WxWidget for Window {
     fn handle_ptr(&self) -> *mut ffi::wxd_Window_t {
-        self.0 // Return the raw pointer directly
+        self.as_ptr()
+    }
+
+    fn is_valid(&self) -> bool {
+        self.0.is_valid()
     }
     // get_id, show use the default trait implementation.
     // set_sizer and set_sizer_and_fit REMOVED from trait
@@ -2241,7 +2264,7 @@ impl WxWidget for Window {
 
 impl WxEvtHandler for Window {
     unsafe fn get_event_handler_ptr(&self) -> *mut ffi::wxd_EvtHandler_t {
-        self.0 as *mut ffi::wxd_EvtHandler_t
+        self.as_ptr() as *mut ffi::wxd_EvtHandler_t
     }
 }
 

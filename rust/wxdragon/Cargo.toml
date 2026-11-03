@@ -78,3 +78,8 @@ harness = false
 name = "dataview_get_column_bounds"
 # Cocoa must initialize on the OS main thread, not a Cargo test worker.
 harness = false
+
+[[test]]
+name = "window_after_destroy"
+# Cocoa must initialize on the OS main thread, not a Cargo test worker.
+harness = false

@@ -406,8 +406,7 @@ impl<'a> AuiManagerBuilder<'a> {
         let managed_window_ptr = self.parent_ptr;
         let parent = unsafe { Window::from_ptr(self.parent_ptr) };
         crate::event::bind_lifetime_internal(&parent, EventType::DESTROY, move |event| {
-            if let Some(event_object) = event.get_event_object()
-                && event_object.as_ptr() == managed_window_ptr
+            if event.event_object_ptr() == managed_window_ptr
                 && let Some(ptr) = handle_copy.get_ptr()
             {
                 handle_copy.invalidate();
