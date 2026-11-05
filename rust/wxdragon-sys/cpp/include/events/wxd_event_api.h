@@ -63,6 +63,10 @@ WXD_EXPORTED int
 wxd_KeyEvent_GetKeyCode(wxd_Event_t* event);
 WXD_EXPORTED int
 wxd_KeyEvent_GetUnicodeKey(wxd_Event_t* event);
+WXD_EXPORTED uint32_t
+wxd_KeyEvent_GetRawKeyCode(wxd_Event_t* event);
+WXD_EXPORTED uint32_t
+wxd_KeyEvent_GetRawKeyFlags(wxd_Event_t* event);
 
 // Modifier key functions for keyboard events
 WXD_EXPORTED bool
