@@ -249,6 +249,16 @@ impl KeyboardEvent {
         self.event.get_unicode_key()
     }
 
+    /// See [`Event::get_raw_key_code`](crate::event::Event::get_raw_key_code).
+    pub fn get_raw_key_code(&self) -> Option<u32> {
+        self.event.get_raw_key_code()
+    }
+
+    /// See [`Event::get_raw_key_flags`](crate::event::Event::get_raw_key_flags).
+    pub fn get_raw_key_flags(&self) -> Option<u32> {
+        self.event.get_raw_key_flags()
+    }
+
     /// Check if the Control key is pressed during this key event
     pub fn control_down(&self) -> bool {
         self.event.control_down()

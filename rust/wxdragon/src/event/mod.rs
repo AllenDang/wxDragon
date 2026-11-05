@@ -760,6 +760,31 @@ impl Event {
         if key_code == 0 { None } else { Some(key_code) }
     }
 
+    /// Gets the platform's own code for the key of a key event, wrapping
+    /// `wxKeyEvent::GetRawKeyCode`: the virtual key code on Windows, the GDK
+    /// key value on GTK and the key code on macOS. `None` if this isn't a key
+    /// event or the platform gave no code.
+    pub fn get_raw_key_code(&self) -> Option<u32> {
+        if self.0.is_null() {
+            return None;
+        }
+        let key_code = unsafe { ffi::wxd_KeyEvent_GetRawKeyCode(self.0) };
+        if key_code == 0 { None } else { Some(key_code) }
+    }
+
+    /// Gets the platform's own flags for a key event, wrapping
+    /// `wxKeyEvent::GetRawKeyFlags`: `lParam` on Windows, whose bits 16 to 23
+    /// hold the scan code, and the hardware key code on GTK. Unlike the key
+    /// code, these identify a physical key whatever the keyboard layout.
+    /// `None` only for a null event; any other event that isn't a key event
+    /// gives `Some(0)`, since 0 is also valid flags for a key event.
+    pub fn get_raw_key_flags(&self) -> Option<u32> {
+        if self.0.is_null() {
+            return None;
+        }
+        Some(unsafe { ffi::wxd_KeyEvent_GetRawKeyFlags(self.0) })
+    }
+
     /// Gets the integer value associated with a command event.
     pub fn get_int(&self) -> Option<i32> {
         if self.0.is_null() {

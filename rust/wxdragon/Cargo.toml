@@ -70,6 +70,11 @@ name = "dataview_container_columns"
 harness = false
 
 [[test]]
+name = "key_event_raw_codes"
+# Cocoa must initialize on the OS main thread, not a Cargo test worker.
+harness = false
+
+[[test]]
 name = "notebook_page_text"
 # Cocoa must initialize on the OS main thread, not a Cargo test worker.
 harness = false
