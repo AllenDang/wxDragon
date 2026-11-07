@@ -1,0 +1,8 @@
+include wx/tglbtn.h
+
+class ToggleButton : wxToggleButton
+    create(Window parent, Id id, string label, Point pos, Size size, Style style)
+    bool GetValue()
+    void SetValue(bool state)
+    void SetLabel(string label)
+    string GetLabel() const
