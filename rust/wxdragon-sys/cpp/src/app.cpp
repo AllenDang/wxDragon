@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <wx/private/safecall.h>
 #include <wx/scopeguard.h>
+#include <wx/thread.h>
 #include <vector>
 #include <utility>
 
@@ -283,6 +284,12 @@ void
 wxd_WakeUpIdle()
 {
     wxWakeUpIdle();
+}
+
+bool
+wxd_IsMainThread()
+{
+    return wxIsMainThread();
 }
 
 bool
