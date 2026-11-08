@@ -47,6 +47,21 @@ widget_style_enum!(
 /// frame.destroy();
 /// assert!(!slider.is_valid());
 /// ```
+///
+/// # Natural keys
+///
+/// On Windows a slider is a native trackbar, which lowers the value for Up and Page Up, as if
+/// every slider stood upright with its minimum at the top. A screen reader user pressing Up to
+/// raise a volume or a speech rate gets the opposite. `SliderBuilder::with_natural_keys(true)`
+/// makes the keys work the same on every platform: Up and Right add one, Down and Left take one
+/// away, Page Up and Page Down move a tenth of the range, and Home and End go to the minimum and
+/// maximum. Each change sends the `wxEVT_SCROLL_CHANGED` and `wxEVT_SLIDER` events that dragging
+/// the thumb sends, so `on_slider` handlers see it. Keys held with Ctrl, Alt or Meta are left to
+/// other handlers.
+///
+/// ```ignore
+/// let rate = Slider::builder(&dialog).with_value(50).with_natural_keys(true).build();
+/// ```
 #[derive(Clone, Copy)]
 pub struct Slider {
     /// Safe handle to the underlying wxSlider - automatically invalidated on destroy
@@ -172,7 +187,8 @@ widget_builder!(
     fields: {
         value: i32 = 0,
         min_value: i32 = 0,
-        max_value: i32 = 100
+        max_value: i32 = 100,
+        natural_keys: bool = false
     },
     build_impl: |slf| {
         let slider_ptr = unsafe {
@@ -190,6 +206,10 @@ widget_builder!(
 
         if slider_ptr.is_null() {
             panic!("Failed to create Slider");
+        }
+
+        if slf.natural_keys {
+            unsafe { ffi::wxd_Slider_UseNaturalKeys(slider_ptr) };
         }
 
         unsafe { Slider::from_ptr(slider_ptr) }
