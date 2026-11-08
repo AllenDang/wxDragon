@@ -108,6 +108,34 @@ wxd_Dialog_GetReturnCode(wxd_Dialog* self)
     return ((wxDialog*)self)->GetReturnCode();
 }
 
+void
+wxd_Dialog_SetLayoutAdaptationMode(wxd_Dialog* self, int mode)
+{
+    if (!self || mode < wxDIALOG_ADAPTATION_MODE_DEFAULT || mode > wxDIALOG_ADAPTATION_MODE_DISABLED)
+        return;
+    ((wxDialog*)self)->SetLayoutAdaptationMode(static_cast<wxDialogLayoutAdaptationMode>(mode));
+}
+
+int
+wxd_Dialog_GetLayoutAdaptationMode(wxd_Dialog* self)
+{
+    if (!self)
+        return wxDIALOG_ADAPTATION_MODE_DEFAULT;
+    return ((wxDialog*)self)->GetLayoutAdaptationMode();
+}
+
+void
+wxd_Dialog_EnableLayoutAdaptation(bool enable)
+{
+    wxDialog::EnableLayoutAdaptation(enable);
+}
+
+bool
+wxd_Dialog_IsLayoutAdaptationEnabled()
+{
+    return wxDialog::IsLayoutAdaptationEnabled();
+}
+
 // Note: wxDialog itself is usually not created directly with a simple 'Create' function in this C API.
 // Derived dialogs (like wxMessageDialog) will have their own creation functions that return a wxd_Dialog* or wxd_SpecificDialog* castable to wxd_Dialog*.
 // Destruction is handled by wxd_Window_Destroy, as wxDialog inherits from wxWindow.

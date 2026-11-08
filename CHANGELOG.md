@@ -5,6 +5,7 @@
 ### New Features
 
 - **Events**: Added `get_raw_key_code` and `get_raw_key_flags` to key events, wrapping `wxKeyEvent::GetRawKeyCode` and `GetRawKeyFlags`. The flags hold the scan code on Windows and the hardware key code on GTK, so an app can tell which physical key was pressed whatever the keyboard layout, which `get_key_code` and `get_unicode_key` can't.
+- **Dialogs**: Added `Dialog::set_layout_adaptation_mode`, `get_layout_adaptation_mode`, `enable_layout_adaptation` and `is_layout_adaptation_enabled`, with the `DialogLayoutAdaptation` enum, wrapping wxWidgets' dialog layout adaptation. A dialog with it on moves its contents into a scrolled window when it's too big for the display, such as with large fonts or a low resolution, and keeps its standard buttons outside it.
 
 ## 0.9.24
 
