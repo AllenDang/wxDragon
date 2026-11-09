@@ -91,6 +91,11 @@ name = "slider_natural_keys"
 harness = false
 
 [[test]]
+name = "dialog_layout_adaptation"
+# Cocoa must initialize on the OS main thread, not a Cargo test worker.
+harness = false
+
+[[test]]
 name = "dataview_get_column_bounds"
 # Cocoa must initialize on the OS main thread, not a Cargo test worker.
 harness = false
