@@ -19,6 +19,8 @@ wxd_App_ExitMainLoop(wxd_App_t* app);
 WXD_EXPORTED void
 wxd_WakeUpIdle();
 WXD_EXPORTED bool
+wxd_IsMainThread();
+WXD_EXPORTED bool
 wxd_App_GetExitOnFrameDelete(wxd_App_t* app);
 WXD_EXPORTED void
 wxd_App_SetExitOnFrameDelete(wxd_App_t* app, bool exitOnFrameDelete);
