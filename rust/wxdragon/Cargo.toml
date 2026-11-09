@@ -80,6 +80,11 @@ name = "notebook_page_text"
 harness = false
 
 [[test]]
+name = "slider_natural_keys"
+# Cocoa must initialize on the OS main thread, not a Cargo test worker.
+harness = false
+
+[[test]]
 name = "dialog_layout_adaptation"
 # Cocoa must initialize on the OS main thread, not a Cargo test worker.
 harness = false
