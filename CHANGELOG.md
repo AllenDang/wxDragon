@@ -6,6 +6,7 @@
 
 - **Events**: Added `get_raw_key_code` and `get_raw_key_flags` to key events, wrapping `wxKeyEvent::GetRawKeyCode` and `GetRawKeyFlags`. The flags hold the scan code on Windows and the hardware key code on GTK, so an app can tell which physical key was pressed whatever the keyboard layout, which `get_key_code` and `get_unicode_key` can't.
 - **App**: Added `is_main_thread`, wrapping `wxIsMainThread`, so code that can run on any thread can tell whether it may touch widgets directly or has to go through `call_after`.
+- **Slider**: Added `SliderBuilder::with_natural_keys`. The Windows trackbar lowers a slider's value for Up and Page Up; with natural keys, Up and Right raise it, Down and Left lower it, Page Up and Page Down move a tenth of the range, and Home and End go to the ends, on every platform. Each change sends `wxEVT_SCROLL_CHANGED` and `wxEVT_SLIDER`, so `on_slider` handlers see it.
 
 ## 0.9.24
 

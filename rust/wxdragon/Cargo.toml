@@ -82,6 +82,12 @@ harness = false
 [[test]]
 name = "is_main_thread"
 # wxWidgets must run on the OS main thread for it to count as the main thread.
+# Cocoa must initialize on the OS main thread, not a Cargo test worker.
+harness = false
+
+[[test]]
+name = "slider_natural_keys"
+# Cocoa must initialize on the OS main thread, not a Cargo test worker.
 harness = false
 
 [[test]]
