@@ -23,4 +23,9 @@ wxd_Slider_GetMin(wxd_Slider_t* self);
 WXD_EXPORTED int
 wxd_Slider_GetMax(wxd_Slider_t* self);
 
+// Makes Up, Right and Page Up raise the value and Down, Left and Page Down lower it, on every
+// platform. The native Windows trackbar lowers it for Up and Page Up.
+WXD_EXPORTED void
+wxd_Slider_UseNaturalKeys(wxd_Slider_t* self);
+
 #endif // WXD_SLIDER_H
