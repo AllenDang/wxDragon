@@ -75,8 +75,11 @@ fn setup(frame: &Frame) -> (Pending, DroppedDialog) {
 
     // A dialog destroyed by dropping it, as wx-utils' progress window is, still sees itself in
     // its destroy handler, although its deletion is deferred. Two clones dropped back to back
-    // still delete it only once.
-    let dialog = ProgressDialog::builder(frame, "Progress", "Working...", 100).build();
+    // still delete it only once. A choice dialog drops the same way as a progress dialog, and
+    // shown without being modal its deletion is deferred too, but a progress dialog disables
+    // the application as it is created, which hung the test on the Linux and Windows runners.
+    let dialog = SingleChoiceDialog::builder(frame, "Pick one", "Choice", &["One", "Two"]).build();
+    dialog.show(true);
     let dialog_ptr = dialog.handle_ptr();
     let dialog_handle = unsafe { Dialog::from_ptr(dialog_ptr.cast()) }.window_handle();
     let dialog_destroy_seen = Rc::new(Cell::new(false));
