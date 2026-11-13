@@ -3,6 +3,7 @@
 #include "../include/wxdragon.h"
 #include "../include/events/wxd_event_type_registry.h"
 // #include "../include/events/wxd_event_api.h" // No longer needed, wxd_Event_t defined in wxd_types.h (via wxdragon.h)
+#include <algorithm>  // For std::stable_partition
 #include <unordered_map>
 #include <vector>     // For std::vector used in closureMap
 #include <memory>     // For std::unique_ptr if we want safer memory management
@@ -265,6 +266,14 @@ private:
     bool
     RunClosures(const std::vector<RustClosureInfo>& snapshot, wxEvent& event,
                 bool keep_dispatching_after_consume);
+
+    // Whether the closure bound with `token` is one of wxDragon's own lifetime bindings.
+    bool
+    IsInternal(size_t token) const
+    {
+        auto it = tokenMap.find(token);
+        return it != tokenMap.end() && std::get<3>(it->second);
+    }
 };
 
 // RAII guard that keeps closure-box drops deferred for the duration of a
@@ -528,6 +537,27 @@ WxdEventHandler::DispatchEvent(wxEvent& event)
         }
     }
 
+    // On the owning window's own DESTROY, wxDragon's internal bindings (the one that
+    // invalidates the window's WindowHandle among them) run after the application's, so
+    // an application handler still sees its window as valid and can compare the event
+    // object with it. They run even if an application handler consumed the event, or the
+    // handle registry would keep a pointer to the deleted window.
+    const bool owner_destroy = eventType == wxEVT_DESTROY && event.GetEventObject() == ownerHandler;
+    std::vector<RustClosureInfo> internal_closures;
+    if (owner_destroy) {
+        auto is_application = [this](const RustClosureInfo& info) {
+            return !this->IsInternal(info.token);
+        };
+        auto set_aside_internal = [&](std::vector<RustClosureInfo>& closures) {
+            auto first_internal =
+                std::stable_partition(closures.begin(), closures.end(), is_application);
+            internal_closures.insert(internal_closures.end(), first_internal, closures.end());
+            closures.erase(first_internal, closures.end());
+        };
+        set_aside_internal(specific_closures);
+        set_aside_internal(any_closures);
+    }
+
     // Keep closure-box drops queued until this dispatch (and any nested one)
     // has unwound, so a self-unbinding handler is not freed mid-call. The
     // guard outlives the DESTROY cleanup at the bottom of this function.
@@ -540,6 +570,10 @@ WxdEventHandler::DispatchEvent(wxEvent& event)
     // Process wxID_ANY handlers only when they are distinct from the specific-ID lookup.
     if (!event_consumed && !specific_key_is_any) {
         event_consumed = this->RunClosures(any_closures, event, keep_dispatching_after_consume);
+    }
+
+    if (owner_destroy) {
+        (void)this->RunClosures(internal_closures, event, true);
     }
 
     // Set final event state
@@ -569,7 +603,7 @@ WxdEventHandler::DispatchEvent(wxEvent& event)
     // wxAUI destroys temporary floating windows while re-docking panes; their
     // DESTROY events can reach the managed frame's handler, but must not release
     // the frame's callbacks.
-    if (eventType == wxEVT_DESTROY && event.GetEventObject() == ownerHandler) {
+    if (owner_destroy) {
         // Intentionally ignore the return value of UnbindAll() as we do not need to know
         // how many handlers were unbound; this is a final cleanup step, so it removes
         // wxDragon's internal bindings as well.

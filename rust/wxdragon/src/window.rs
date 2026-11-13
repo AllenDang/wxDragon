@@ -5,7 +5,7 @@ use crate::font::Font;
 use crate::geometry::{Point, Size};
 use crate::sizers::WxSizer;
 use std::cell::RefCell;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::ffi::CStr;
 use std::sync::atomic::{AtomicU64, Ordering};
 use wxdragon_sys as ffi;
@@ -24,6 +24,9 @@ thread_local! {
     /// Reverse mapping: pointer address to handle ID (for destroy callback lookup)
     static REVERSE_REGISTRY: RefCell<HashMap<usize, u64>> =
         RefCell::new(HashMap::new());
+    /// Handles whose window has been asked to destroy itself and is waiting for wxWidgets
+    /// to delete it. They stay valid until then, but are not destroyed a second time.
+    static DESTROY_REQUESTED: RefCell<HashSet<u64>> = RefCell::new(HashSet::new());
 }
 
 /// A safe, Copy-able handle to a wxWidgets window.
@@ -123,22 +126,26 @@ impl WindowHandle {
     /// back-to-back), the underlying pointer would be queued for deletion
     /// twice - a double-free once wxWidgets processes its pending-delete list.
     ///
-    /// This method closes that race by invalidating the registry entry
-    /// immediately, before issuing the deferred destroy, so any other handle
-    /// sharing this id sees it as already-destroyed right away rather than
-    /// waiting for the async wx event. Returns `false` (no-op) if the handle
-    /// was already invalidated by a previous call.
+    /// This method closes that race by recording the request, so a second call
+    /// through any handle sharing this id does nothing. The handle itself stays
+    /// valid until the window's `wxEVT_DESTROY` has been handled, since the
+    /// window is still alive until then: a destroy handler can still compare
+    /// its event object with the window. Returns `false` (no-op) if the window
+    /// is already gone or already asked to destroy itself.
     pub(crate) fn destroy(&self) -> bool {
         let Some(ptr) = self.get_ptr() else {
             return false;
         };
-        Self::invalidate(self.0);
+        if !DESTROY_REQUESTED.with(|requested| requested.borrow_mut().insert(self.0)) {
+            return false;
+        }
         unsafe { ffi::wxd_Window_Destroy(ptr) };
         true
     }
 
     /// Internal: Remove handle from registry (called when window is destroyed)
     fn invalidate(handle_id: u64) {
+        DESTROY_REQUESTED.with(|requested| requested.borrow_mut().remove(&handle_id));
         WINDOW_REGISTRY.with(|r| {
             if let Some(ptr) = r.borrow_mut().remove(&handle_id) {
                 log::trace!("WindowHandle::invalidate id={handle_id} ptr={ptr:p}");
