@@ -212,6 +212,41 @@ wxd_Window_GetAccessible(wxd_Window_t* self);
 WXD_EXPORTED void
 wxd_Window_SetAccessibleName(wxd_Window_t* self, const char* name);
 
+// --- Parts of Windows That Draw Themselves ---
+
+// A part of a window that draws itself, read by screen readers as static text, such as a status
+// bar field or one cell of a row. `rect` is in the window's client coordinates.
+typedef struct wxd_AccessibleElement {
+    const char* label;
+    wxd_Rect rect;
+} wxd_AccessibleElement;
+
+// A row of a window that draws itself as a list or a table. `index` is the row's position among
+// all the rows, not only the ones given. `cells` holds one element per column, or one for a list.
+typedef struct wxd_AccessibleRow {
+    int64_t index;
+    wxd_Rect rect;
+    const wxd_AccessibleElement* cells;
+    size_t cell_count;
+    bool selected;
+} wxd_AccessibleRow;
+
+// These wrap wxPrivate::SetAccessibleElements, SetAccessibleTable and SetAccessibleCurrentRow,
+// which wxWidgets implements for macOS and GTK 3, and which do nothing on other platforms.
+// Each call replaces what the previous one set, and does nothing if it didn't change.
+
+WXD_EXPORTED void
+wxd_Window_SetAccessibleElements(wxd_Window_t* self, const wxd_AccessibleElement* elements, size_t count);
+
+// Only the rows shown should be given; `total` is the number of rows in all.
+WXD_EXPORTED void
+wxd_Window_SetAccessibleTable(wxd_Window_t* self, const wxd_AccessibleRow* rows, size_t count,
+                              int64_t total);
+
+// `row` is the index of one of the rows last given to wxd_Window_SetAccessibleTable, or -1.
+WXD_EXPORTED void
+wxd_Window_SetAccessibleCurrentRow(wxd_Window_t* self, int64_t row);
+
 // --- Built-in Accessible Property Setters ---
 //
 // These attach a lightweight built-in wxAccessible to the window (created on first

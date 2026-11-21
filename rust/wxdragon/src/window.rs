@@ -1,5 +1,6 @@
 #[cfg(target_os = "windows")]
 use crate::accessible::{AccRole, AccState, Accessible};
+use crate::accessible_table::{AccessibleElement, AccessibleRow, FfiElements, to_ffi_index};
 use crate::event::{EventType, WxEvtHandler};
 use crate::font::Font;
 use crate::geometry::{Point, Size};
@@ -1830,6 +1831,69 @@ pub trait WxWidget: std::any::Any {
             return;
         }
         set_accessibility_string(handle, label, ffi::wxd_Window_SetAccessibleName);
+    }
+
+    /// Lets screen readers see the parts of a window that draws itself, each read as static text, the way
+    /// wxWidgets describes the fields of its generic status bar.
+    ///
+    /// Calling it again replaces the elements given before, and does nothing if they didn't change, so it's fine
+    /// to call whenever they might have. An empty slice removes them.
+    ///
+    /// wxWidgets implements this on macOS and GTK 3, and it does nothing on other platforms. On Windows, a custom
+    /// `Accessible` set with `set_accessible` can describe the window instead.
+    fn set_accessible_elements(&self, elements: &[AccessibleElement]) {
+        let handle = self.handle_ptr();
+        if handle.is_null() {
+            return;
+        }
+        let elements = FfiElements::new(elements);
+        unsafe { ffi::wxd_Window_SetAccessibleElements(handle, elements.elements.as_ptr(), elements.elements.len()) };
+    }
+
+    /// Lets screen readers see a window that draws itself as a table, or as a list if each row has one cell, the
+    /// way wxWidgets describes its generic list control.
+    ///
+    /// Give only the rows that are shown, since there may be too many to describe, and the number of rows in all
+    /// as `row_count`. Call it again whenever the rows, or which of them are shown, change: it updates what
+    /// screen readers already see rather than starting over where it can.
+    ///
+    /// Screen readers follow the focus, but can't tell where it is inside a window that draws itself, so call
+    /// [`set_accessible_current_row`](WxWidget::set_accessible_current_row) as well when the current row changes.
+    ///
+    /// wxWidgets implements this on macOS and GTK 3, and it does nothing on other platforms. On Windows, a custom
+    /// `Accessible` set with `set_accessible` can describe the window instead.
+    fn set_accessible_table(&self, rows: &[AccessibleRow], row_count: usize) {
+        let handle = self.handle_ptr();
+        if handle.is_null() {
+            return;
+        }
+        let cells: Vec<FfiElements> = rows.iter().map(|row| FfiElements::new(&row.cells)).collect();
+        let rows: Vec<ffi::wxd_AccessibleRow> = rows
+            .iter()
+            .zip(&cells)
+            .map(|(row, cells)| ffi::wxd_AccessibleRow {
+                index: to_ffi_index(row.index),
+                rect: row.rect.into(),
+                cells: cells.elements.as_ptr(),
+                cell_count: cells.elements.len(),
+                selected: row.selected,
+            })
+            .collect();
+        unsafe { ffi::wxd_Window_SetAccessibleTable(handle, rows.as_ptr(), rows.len(), to_ffi_index(row_count)) };
+    }
+
+    /// Tells screen readers which row of a window described by
+    /// [`set_accessible_table`](WxWidget::set_accessible_table) is the current one, by its
+    /// [`AccessibleRow::index`], or that none is. They announce it when it changes. A row that isn't among those
+    /// last given is ignored.
+    ///
+    /// wxWidgets implements this on macOS and GTK 3, and it does nothing on other platforms.
+    fn set_accessible_current_row(&self, row: Option<usize>) {
+        let handle = self.handle_ptr();
+        if handle.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_Window_SetAccessibleCurrentRow(handle, row.map_or(-1, to_ffi_index)) };
     }
 
     /// Sets the accessible description for the window.
