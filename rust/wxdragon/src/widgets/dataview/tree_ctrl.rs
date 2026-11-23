@@ -149,9 +149,12 @@ impl DataViewTreeCtrl {
     }
 
     /// Gets the column at the given position (0-indexed).
+    ///
+    /// Returns `None` if `pos` is out of bounds.
     pub fn get_column(&self, pos: usize) -> Option<DataViewColumn> {
+        let pos = u32::try_from(pos).ok()?;
         unsafe {
-            let col_ptr = ffi::wxd_DataViewCtrl_GetColumn(self.dvtc_ptr(), pos as u32);
+            let col_ptr = ffi::wxd_DataViewCtrl_GetColumn(self.dvtc_ptr(), pos);
             if col_ptr.is_null() {
                 None
             } else {

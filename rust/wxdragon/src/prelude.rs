@@ -1,7 +1,10 @@
 // --- Core Types & Traits ---
 #[cfg(target_os = "windows")]
 pub use crate::accessible::Accessible;
-pub use crate::app::{App, call_after, get_app, get_app_instance, main, set_appearance, set_top_window, wake_up_idle};
+pub use crate::accessible_table::{AccessibleElement, AccessibleRow};
+pub use crate::app::{
+    App, call_after, get_app, get_app_instance, is_main_thread, main, set_appearance, set_top_window, wake_up_idle,
+};
 pub use crate::appearance::{
     AppAppearance, Appearance, AppearanceResult, SystemAppearance, get_app as get_app_for_appearance, get_system_appearance,
     is_system_dark_mode,
@@ -215,7 +218,7 @@ pub use crate::dialogs::multi_choice_dialog::{MultiChoiceDialog, MultiChoiceDial
 pub use crate::dialogs::progress_dialog::{ProgressDialog, ProgressDialogBuilder, ProgressDialogStyle}; // Added Builder
 pub use crate::dialogs::single_choice_dialog::{SingleChoiceDialog, SingleChoiceDialogBuilder}; // Added SingleChoiceDialog
 pub use crate::dialogs::text_entry_dialog::{TextEntryDialog, TextEntryDialogBuilder, TextEntryDialogStyle};
-pub use crate::dialogs::{Dialog, DialogBuilder, DialogStyle}; // Base Dialog struct and builder
+pub use crate::dialogs::{Dialog, DialogBuilder, DialogLayoutAdaptation, DialogStyle}; // Base Dialog struct and builder
 
 // --- Fonts ---
 pub use crate::font::{Font, FontBuilder, FontFamily, FontStyle, FontWeight}; // Added FontBuilder

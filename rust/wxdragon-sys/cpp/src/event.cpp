@@ -3,6 +3,7 @@
 #include "../include/wxdragon.h"
 #include "../include/events/wxd_event_type_registry.h"
 // #include "../include/events/wxd_event_api.h" // No longer needed, wxd_Event_t defined in wxd_types.h (via wxdragon.h)
+#include <algorithm>  // For std::stable_partition
 #include <unordered_map>
 #include <vector>     // For std::vector used in closureMap
 #include <memory>     // For std::unique_ptr if we want safer memory management
@@ -195,7 +196,7 @@ public:
     virtual ~WxdHandlerClientData(); // Defined after WxdEventHandler
 
     bool
-    UnbindClosure(size_t token);
+    UnbindClosure(size_t token, bool allow_internal);
 };
 
 // Custom Event Handler class to connect wx events to Rust closures
@@ -206,9 +207,12 @@ public:
         closureMap;
 
     // NEW: Fast lookup - token -> location of closure
-    // Location = (eventType, widgetId, closure_ptr)
-    // Note: We store closure_ptr instead of index because indices become stale after removals
-    std::unordered_map<size_t, std::tuple<wxEventType, wxd_Id, void*>> tokenMap;
+    // Location = (eventType, widgetId, closure_ptr, internal)
+    // Note: We store closure_ptr instead of index because indices become stale after removals.
+    // `internal` marks a binding wxDragon itself made to track the window's lifetime (the
+    // WindowHandle registry, per-widget data cleanup). Only the final DESTROY cleanup removes
+    // those: if user code could, the handle registry would keep a pointer to a deleted window.
+    std::unordered_map<size_t, std::tuple<wxEventType, wxd_Id, void*, bool>> tokenMap;
 
     // Track whether we've already bound DispatchEvent to wxWidgets for each event key
     std::unordered_map<std::pair<wxEventType, wxd_Id>, bool, PairHash> wx_bindings_made;
@@ -232,11 +236,14 @@ public:
 
     void
     BindClosure(wxEventType wx_event_type, wxd_Id actual_id, void* rust_trampoline_fn,
-                void* rust_closure_ptr, size_t token);
+                void* rust_closure_ptr, size_t token, bool internal = false);
+    // Internal bindings are only removed when allow_internal is true.
     bool
-    UnbindClosure(size_t token);
+    UnbindClosure(size_t token, bool allow_internal);
+    // Returns the number of closures removed. Internal bindings are kept unless
+    // include_internal is true.
     size_t
-    UnbindAll();
+    UnbindAll(bool include_internal);
 
     // Hands a closure box back to Rust, or queues it if a dispatch is in flight.
     void
@@ -259,6 +266,14 @@ private:
     bool
     RunClosures(const std::vector<RustClosureInfo>& snapshot, wxEvent& event,
                 bool keep_dispatching_after_consume);
+
+    // Whether the closure bound with `token` is one of wxDragon's own lifetime bindings.
+    bool
+    IsInternal(size_t token) const
+    {
+        auto it = tokenMap.find(token);
+        return it != tokenMap.end() && std::get<3>(it->second);
+    }
 };
 
 // RAII guard that keeps closure-box drops deferred for the duration of a
@@ -294,10 +309,10 @@ WxdHandlerClientData::~WxdHandlerClientData()
 }
 
 bool
-WxdHandlerClientData::UnbindClosure(size_t token)
+WxdHandlerClientData::UnbindClosure(size_t token, bool allow_internal)
 {
     if (handler) {
-        return handler->UnbindClosure(token);
+        return handler->UnbindClosure(token, allow_internal);
     }
     return false;
 }
@@ -352,12 +367,15 @@ WxdEventHandler::FlushPendingDrops()
 }
 
 bool
-WxdEventHandler::UnbindClosure(size_t token)
+WxdEventHandler::UnbindClosure(size_t token, bool allow_internal)
 {
     // Look up token in map
     auto token_it = this->tokenMap.find(token);
     if (token_it == this->tokenMap.end()) {
         return false; // Token doesn't exist or already unbound
+    }
+    if (std::get<3>(token_it->second) && !allow_internal) {
+        return false; // wxDragon's own lifetime binding, kept until DESTROY
     }
 
     // Extract location info (C++11 compatible)
@@ -428,7 +446,7 @@ WxdEventHandler::UnbindClosure(size_t token)
 }
 
 size_t
-WxdEventHandler::UnbindAll()
+WxdEventHandler::UnbindAll(bool include_internal)
 {
     // Copy tokens to avoid iterator invalidation
     std::vector<size_t> tokens;
@@ -438,7 +456,7 @@ WxdEventHandler::UnbindAll()
     }
     size_t removed = 0;
     for (size_t t : tokens) {
-        if (this->UnbindClosure(t)) {
+        if (this->UnbindClosure(t, include_internal)) {
             ++removed;
         }
     }
@@ -519,6 +537,27 @@ WxdEventHandler::DispatchEvent(wxEvent& event)
         }
     }
 
+    // On the owning window's own DESTROY, wxDragon's internal bindings (the one that
+    // invalidates the window's WindowHandle among them) run after the application's, so
+    // an application handler still sees its window as valid and can compare the event
+    // object with it. They run even if an application handler consumed the event, or the
+    // handle registry would keep a pointer to the deleted window.
+    const bool owner_destroy = eventType == wxEVT_DESTROY && event.GetEventObject() == ownerHandler;
+    std::vector<RustClosureInfo> internal_closures;
+    if (owner_destroy) {
+        auto is_application = [this](const RustClosureInfo& info) {
+            return !this->IsInternal(info.token);
+        };
+        auto set_aside_internal = [&](std::vector<RustClosureInfo>& closures) {
+            auto first_internal =
+                std::stable_partition(closures.begin(), closures.end(), is_application);
+            internal_closures.insert(internal_closures.end(), first_internal, closures.end());
+            closures.erase(first_internal, closures.end());
+        };
+        set_aside_internal(specific_closures);
+        set_aside_internal(any_closures);
+    }
+
     // Keep closure-box drops queued until this dispatch (and any nested one)
     // has unwound, so a self-unbinding handler is not freed mid-call. The
     // guard outlives the DESTROY cleanup at the bottom of this function.
@@ -531,6 +570,10 @@ WxdEventHandler::DispatchEvent(wxEvent& event)
     // Process wxID_ANY handlers only when they are distinct from the specific-ID lookup.
     if (!event_consumed && !specific_key_is_any) {
         event_consumed = this->RunClosures(any_closures, event, keep_dispatching_after_consume);
+    }
+
+    if (owner_destroy) {
+        (void)this->RunClosures(internal_closures, event, true);
     }
 
     // Set final event state
@@ -560,10 +603,11 @@ WxdEventHandler::DispatchEvent(wxEvent& event)
     // wxAUI destroys temporary floating windows while re-docking panes; their
     // DESTROY events can reach the managed frame's handler, but must not release
     // the frame's callbacks.
-    if (eventType == wxEVT_DESTROY && event.GetEventObject() == ownerHandler) {
+    if (owner_destroy) {
         // Intentionally ignore the return value of UnbindAll() as we do not need to know
-        // how many handlers were unbound; this is a final cleanup step.
-        (void)this->UnbindAll();
+        // how many handlers were unbound; this is a final cleanup step, so it removes
+        // wxDragon's internal bindings as well.
+        (void)this->UnbindAll(true);
     }
 }
 
@@ -696,7 +740,7 @@ public:
 
 void
 WxdEventHandler::BindClosure(wxEventType wx_event_type, wxd_Id actual_id, void* rust_trampoline_fn,
-                             void* rust_closure_ptr, size_t token)
+                             void* rust_closure_ptr, size_t token, bool internal)
 {
     std::pair<wxEventType, wxd_Id> map_key = { wx_event_type, actual_id };
 
@@ -734,15 +778,15 @@ WxdEventHandler::BindClosure(wxEventType wx_event_type, wxd_Id actual_id, void* 
     this->closureMap[map_key].push_back(new_info);
 
     // Store token mapping for fast lookup
-    this->tokenMap[token] = std::make_tuple(wx_event_type, actual_id, rust_closure_ptr);
+    this->tokenMap[token] = std::make_tuple(wx_event_type, actual_id, rust_closure_ptr, internal);
 }
 
 // --- C API Implementation ---
 
-// NEW: Token-based event binding implementation
-extern "C" void
-wxd_EvtHandler_Bind(wxd_EvtHandler_t* handler, WXDEventTypeCEnum eventTypeC,
-                    void* rust_trampoline_fn, void* rust_closure_ptr, size_t token)
+// Shared by wxd_EvtHandler_Bind and wxd_EvtHandler_BindInternal.
+static void
+BindTokenClosure(wxd_EvtHandler_t* handler, WXDEventTypeCEnum eventTypeC, void* rust_trampoline_fn,
+                 void* rust_closure_ptr, size_t token, bool internal)
 {
     wxEvtHandler* wx_handler = reinterpret_cast<wxEvtHandler*>(handler);
     if (!wx_handler) {
@@ -782,7 +826,22 @@ wxd_EvtHandler_Bind(wxd_EvtHandler_t* handler, WXDEventTypeCEnum eventTypeC,
     }
 
     customHandler->BindClosure(wx_event_type, wxID_ANY, rust_trampoline_fn, rust_closure_ptr,
-                               token);
+                               token, internal);
+}
+
+// NEW: Token-based event binding implementation
+extern "C" void
+wxd_EvtHandler_Bind(wxd_EvtHandler_t* handler, WXDEventTypeCEnum eventTypeC,
+                    void* rust_trampoline_fn, void* rust_closure_ptr, size_t token)
+{
+    BindTokenClosure(handler, eventTypeC, rust_trampoline_fn, rust_closure_ptr, token, false);
+}
+
+extern "C" void
+wxd_EvtHandler_BindInternal(wxd_EvtHandler_t* handler, WXDEventTypeCEnum eventTypeC,
+                            void* rust_trampoline_fn, void* rust_closure_ptr, size_t token)
+{
+    BindTokenClosure(handler, eventTypeC, rust_trampoline_fn, rust_closure_ptr, token, true);
 }
 
 // NEW: ID-specific event binding with token
@@ -857,7 +916,7 @@ wxd_EvtHandler_Unbind(wxd_EvtHandler_t* handler, size_t token)
         return false; // No handlers bound yet
     }
 
-    return clientData->UnbindClosure(token);
+    return clientData->UnbindClosure(token, false);
 }
 
 // NEW: Unbind all closures for the given handler. Returns count removed.
@@ -875,7 +934,7 @@ wxd_EvtHandler_UnbindAll(wxd_EvtHandler_t* handler)
         return 0; // Nothing to unbind
     }
 
-    return clientData->handler->UnbindAll();
+    return clientData->handler->UnbindAll(false);
 }
 
 // --- Event Accessors (Unchanged) ---
@@ -978,6 +1037,32 @@ wxd_KeyEvent_GetUnicodeKey(wxd_Event_t* event)
         return 0; // Not a key event or derived
 
     return keyEvent->GetUnicodeKey();
+}
+
+WXD_EXPORTED uint32_t
+wxd_KeyEvent_GetRawKeyCode(wxd_Event_t* event)
+{
+    if (!event)
+        return 0;
+    wxEvent* baseEvent = static_cast<wxEvent*>(static_cast<void*>(event)); // Cast via void*
+    wxKeyEvent* keyEvent = dynamic_cast<wxKeyEvent*>(baseEvent);
+    if (!keyEvent)
+        return 0; // Not a key event or derived
+
+    return keyEvent->GetRawKeyCode();
+}
+
+WXD_EXPORTED uint32_t
+wxd_KeyEvent_GetRawKeyFlags(wxd_Event_t* event)
+{
+    if (!event)
+        return 0;
+    wxEvent* baseEvent = static_cast<wxEvent*>(static_cast<void*>(event)); // Cast via void*
+    wxKeyEvent* keyEvent = dynamic_cast<wxKeyEvent*>(baseEvent);
+    if (!keyEvent)
+        return 0; // Not a key event or derived
+
+    return keyEvent->GetRawKeyFlags();
 }
 
 // ADDED: Implementation for wxd_CommandEvent_GetInt

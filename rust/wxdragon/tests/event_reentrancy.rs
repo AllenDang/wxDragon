@@ -34,7 +34,7 @@ fn verify_id_binding(panel: Panel) {
             ]
         );
     }
-    panel.unbind_all(); // Also removes the widget's internal lifecycle binding.
+    panel.unbind_all(); // Leaves the widget's internal lifecycle binding in place.
 }
 
 fn verify_any_id_binding(panel: Panel) {

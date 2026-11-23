@@ -1,11 +1,12 @@
 #[cfg(target_os = "windows")]
 use crate::accessible::{AccRole, AccState, Accessible};
+use crate::accessible_table::{AccessibleElement, AccessibleRow, FfiElements, to_ffi_index};
 use crate::event::{EventType, WxEvtHandler};
 use crate::font::Font;
 use crate::geometry::{Point, Size};
 use crate::sizers::WxSizer;
 use std::cell::RefCell;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::ffi::CStr;
 use std::sync::atomic::{AtomicU64, Ordering};
 use wxdragon_sys as ffi;
@@ -24,6 +25,9 @@ thread_local! {
     /// Reverse mapping: pointer address to handle ID (for destroy callback lookup)
     static REVERSE_REGISTRY: RefCell<HashMap<usize, u64>> =
         RefCell::new(HashMap::new());
+    /// Handles whose window has been asked to destroy itself and is waiting for wxWidgets
+    /// to delete it. They stay valid until then, but are not destroyed a second time.
+    static DESTROY_REQUESTED: RefCell<HashSet<u64>> = RefCell::new(HashSet::new());
 }
 
 /// A safe, Copy-able handle to a wxWidgets window.
@@ -49,13 +53,29 @@ thread_local! {
 pub struct WindowHandle(u64);
 
 impl WindowHandle {
-    /// Creates a new handle for a window pointer and registers for destroy notification.
+    /// Returns the handle for a window pointer, registering it for destroy notification
+    /// the first time the pointer is seen.
+    ///
+    /// Every live window has at most one registry entry and one destroy callback, so
+    /// calling this repeatedly for the same pointer (for example from
+    /// `Event::get_event_object` or `MenuItem::from_ptr`) returns the same handle instead
+    /// of growing the registry. A window whose destruction has already started is not
+    /// registered: its `wxEVT_DESTROY` has already been sent, so the entry could never be
+    /// removed. The returned handle is invalid in that case.
     ///
     /// # Safety
     /// The caller must ensure `ptr` points to a valid wxWindow that hasn't been destroyed.
     pub(crate) fn new(ptr: *mut ffi::wxd_Window_t) -> Self {
         if ptr.is_null() {
             return WindowHandle(0); // Invalid handle for null pointers
+        }
+
+        if let Some(existing) = Self::from_ptr(ptr) {
+            return existing;
+        }
+
+        if unsafe { ffi::wxd_Window_IsBeingDeleted(ptr) } {
+            return WindowHandle(0);
         }
 
         let handle_id = NEXT_HANDLE_ID.fetch_add(1, Ordering::SeqCst);
@@ -66,20 +86,16 @@ impl WindowHandle {
 
         // Bind destroy event using existing event infrastructure
         // This closure runs when wxWidgets destroys the window (by any cause)
-        let window = unsafe { Window::from_ptr(ptr) };
+        let window = Window(WindowHandle(handle_id));
         // Bind a destroy event handler _on the window itself_.
         // wxWidgets bubbles destroy events from children up to parents, so without
         // filtering we would mistakenly invalidate the parent when any child is
         // destroyed.  Only invalidate the handle when the event's object matches the
-        // tracked window pointer.
-        window.bind_internal(EventType::DESTROY, move |_event| {
-            if let Some(obj) = _event.get_event_object() {
-                // Compare the raw pointer addresses
-                if obj.as_ptr() == ptr {
-                    Self::invalidate(handle_id);
-                } else {
-                    // ignore destroys from child windows
-                }
+        // tracked window pointer. The raw event object is compared directly rather than
+        // through `get_event_object()` so this runs no registry lookups during teardown.
+        crate::event::bind_lifetime_internal(&window, EventType::DESTROY, move |event| {
+            if event.event_object_ptr() == ptr {
+                Self::invalidate(handle_id);
             }
         });
 
@@ -111,22 +127,26 @@ impl WindowHandle {
     /// back-to-back), the underlying pointer would be queued for deletion
     /// twice - a double-free once wxWidgets processes its pending-delete list.
     ///
-    /// This method closes that race by invalidating the registry entry
-    /// immediately, before issuing the deferred destroy, so any other handle
-    /// sharing this id sees it as already-destroyed right away rather than
-    /// waiting for the async wx event. Returns `false` (no-op) if the handle
-    /// was already invalidated by a previous call.
+    /// This method closes that race by recording the request, so a second call
+    /// through any handle sharing this id does nothing. The handle itself stays
+    /// valid until the window's `wxEVT_DESTROY` has been handled, since the
+    /// window is still alive until then: a destroy handler can still compare
+    /// its event object with the window. Returns `false` (no-op) if the window
+    /// is already gone or already asked to destroy itself.
     pub(crate) fn destroy(&self) -> bool {
         let Some(ptr) = self.get_ptr() else {
             return false;
         };
-        Self::invalidate(self.0);
+        if !DESTROY_REQUESTED.with(|requested| requested.borrow_mut().insert(self.0)) {
+            return false;
+        }
         unsafe { ffi::wxd_Window_Destroy(ptr) };
         true
     }
 
     /// Internal: Remove handle from registry (called when window is destroyed)
     fn invalidate(handle_id: u64) {
+        DESTROY_REQUESTED.with(|requested| requested.borrow_mut().remove(&handle_id));
         WINDOW_REGISTRY.with(|r| {
             if let Some(ptr) = r.borrow_mut().remove(&handle_id) {
                 log::trace!("WindowHandle::invalidate id={handle_id} ptr={ptr:p}");
@@ -139,7 +159,6 @@ impl WindowHandle {
 
     /// Look up an existing handle by pointer address.
     /// Returns None if no handle exists for this pointer.
-    #[allow(dead_code)]
     pub(crate) fn from_ptr(ptr: *mut ffi::wxd_Window_t) -> Option<Self> {
         if ptr.is_null() {
             return None;
@@ -274,36 +293,44 @@ impl BackgroundStyle {
     }
 }
 
-/// Represents a pointer to any wxDragon window object.
-/// This is typically used as a base struct or in trait objects.
-/// Note: Deliberately NOT Copy or Clone, as it represents unique FFI resource ownership.
+/// A non-owning, `Copy` reference to any wxWidgets window.
+///
+/// This is what APIs such as [`Event::get_event_object`](crate::event::Event::get_event_object),
+/// [`WxWidget::get_parent`] or `Notebook::get_page` return. Like the concrete widget types it is
+/// backed by a [`WindowHandle`], so once the underlying window is destroyed every method becomes a
+/// no-op (and [`Window::as_ptr`] returns null) instead of touching freed memory.
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
-pub struct Window(pub(crate) *mut ffi::wxd_Window_t);
+pub struct Window(WindowHandle);
 
 impl std::fmt::Debug for Window {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Window").field("ptr", &self.0).finish()
+        f.debug_struct("Window").field("ptr", &self.as_ptr()).finish()
     }
 }
 
 impl Window {
     /// Creates a new Window wrapper from a raw pointer.
     /// # Safety
-    /// The caller must ensure the pointer is valid and manages its lifetime correctly.
+    /// The caller must ensure the pointer is null or points to a live wxWindow.
     /// This is typically called internally by concrete widget constructors.
     pub(crate) unsafe fn from_ptr(ptr: *mut ffi::wxd_Window_t) -> Self {
-        Self(ptr)
+        Self(WindowHandle::new(ptr))
     }
 
-    /// Returns the raw underlying pointer.
+    /// Returns the raw underlying pointer, or null if the window has been destroyed.
     /// Temporary: Made public for FFI callbacks until safe event handling is done.
     pub fn as_ptr(&self) -> *mut ffi::wxd_Window_t {
+        self.0.get_ptr().unwrap_or(std::ptr::null_mut())
+    }
+
+    /// Returns the [`WindowHandle`] backing this window.
+    pub fn window_handle(&self) -> WindowHandle {
         self.0
     }
 
-    /// Checks if the underlying pointer is null.
+    /// Checks if the window is null or has been destroyed.
     pub fn is_null(&self) -> bool {
-        self.0.is_null()
+        !self.0.is_valid()
     }
 
     /// Sets the window's sizer.
@@ -1806,6 +1833,69 @@ pub trait WxWidget: std::any::Any {
         set_accessibility_string(handle, label, ffi::wxd_Window_SetAccessibleName);
     }
 
+    /// Lets screen readers see the parts of a window that draws itself, each read as static text, the way
+    /// wxWidgets describes the fields of its generic status bar.
+    ///
+    /// Calling it again replaces the elements given before, and does nothing if they didn't change, so it's fine
+    /// to call whenever they might have. An empty slice removes them.
+    ///
+    /// wxWidgets implements this on macOS and GTK 3, and it does nothing on other platforms. On Windows, a custom
+    /// `Accessible` set with `set_accessible` can describe the window instead.
+    fn set_accessible_elements(&self, elements: &[AccessibleElement]) {
+        let handle = self.handle_ptr();
+        if handle.is_null() {
+            return;
+        }
+        let elements = FfiElements::new(elements);
+        unsafe { ffi::wxd_Window_SetAccessibleElements(handle, elements.elements.as_ptr(), elements.elements.len()) };
+    }
+
+    /// Lets screen readers see a window that draws itself as a table, or as a list if each row has one cell, the
+    /// way wxWidgets describes its generic list control.
+    ///
+    /// Give only the rows that are shown, since there may be too many to describe, and the number of rows in all
+    /// as `row_count`. Call it again whenever the rows, or which of them are shown, change: it updates what
+    /// screen readers already see rather than starting over where it can.
+    ///
+    /// Screen readers follow the focus, but can't tell where it is inside a window that draws itself, so call
+    /// [`set_accessible_current_row`](WxWidget::set_accessible_current_row) as well when the current row changes.
+    ///
+    /// wxWidgets implements this on macOS and GTK 3, and it does nothing on other platforms. On Windows, a custom
+    /// `Accessible` set with `set_accessible` can describe the window instead.
+    fn set_accessible_table(&self, rows: &[AccessibleRow], row_count: usize) {
+        let handle = self.handle_ptr();
+        if handle.is_null() {
+            return;
+        }
+        let cells: Vec<FfiElements> = rows.iter().map(|row| FfiElements::new(&row.cells)).collect();
+        let rows: Vec<ffi::wxd_AccessibleRow> = rows
+            .iter()
+            .zip(&cells)
+            .map(|(row, cells)| ffi::wxd_AccessibleRow {
+                index: to_ffi_index(row.index),
+                rect: row.rect.into(),
+                cells: cells.elements.as_ptr(),
+                cell_count: cells.elements.len(),
+                selected: row.selected,
+            })
+            .collect();
+        unsafe { ffi::wxd_Window_SetAccessibleTable(handle, rows.as_ptr(), rows.len(), to_ffi_index(row_count)) };
+    }
+
+    /// Tells screen readers which row of a window described by
+    /// [`set_accessible_table`](WxWidget::set_accessible_table) is the current one, by its
+    /// [`AccessibleRow::index`], or that none is. They announce it when it changes. A row that isn't among those
+    /// last given is ignored.
+    ///
+    /// wxWidgets implements this on macOS and GTK 3, and it does nothing on other platforms.
+    fn set_accessible_current_row(&self, row: Option<usize>) {
+        let handle = self.handle_ptr();
+        if handle.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_Window_SetAccessibleCurrentRow(handle, row.map_or(-1, to_ffi_index)) };
+    }
+
     /// Sets the accessible description for the window.
     ///
     /// - **Windows:** stored on a built-in accessible object (active where
@@ -2231,7 +2321,11 @@ impl WxWidgetDowncast for dyn WxWidget {
 // Implement the trait for the base Window struct itself.
 impl WxWidget for Window {
     fn handle_ptr(&self) -> *mut ffi::wxd_Window_t {
-        self.0 // Return the raw pointer directly
+        self.as_ptr()
+    }
+
+    fn is_valid(&self) -> bool {
+        self.0.is_valid()
     }
     // get_id, show use the default trait implementation.
     // set_sizer and set_sizer_and_fit REMOVED from trait
@@ -2241,7 +2335,7 @@ impl WxWidget for Window {
 
 impl WxEvtHandler for Window {
     unsafe fn get_event_handler_ptr(&self) -> *mut ffi::wxd_EvtHandler_t {
-        self.0 as *mut ffi::wxd_EvtHandler_t
+        self.as_ptr() as *mut ffi::wxd_EvtHandler_t
     }
 }
 
@@ -2301,5 +2395,53 @@ mod tests {
         if let Err(e) = res {
             log::warn!("Test failed with error: {:?}", e);
         }
+    }
+
+    // `unbind_all` must leave the DESTROY binding that keeps the handle registry
+    // honest. Before, it removed it too, and a child destroyed with its parent
+    // stayed "valid" with a pointer to the freed window.
+    #[cfg_attr(target_os = "macos", ignore)]
+    #[test]
+    fn unbind_all_keeps_handle_tracking_alive() {
+        use super::*;
+        use crate::prelude::*;
+        use crate::widgets::{Frame, Panel, StaticText};
+        use std::cell::{Cell, RefCell};
+        use std::rc::Rc;
+
+        let _gui_test = crate::app::GUI_TEST_LOCK.lock().unwrap();
+        SystemOptions::set_option_by_int("msw.no-manifest-check", 1);
+        let removed = Rc::new(Cell::new(None));
+        let valid_after_destroy = Rc::new(Cell::new(None));
+        let timer_store: Rc<RefCell<Option<Timer<Frame>>>> = Rc::new(RefCell::new(None));
+        let (removed_in_loop, valid_in_loop, timer_in_loop) = (removed.clone(), valid_after_destroy.clone(), timer_store.clone());
+
+        let res = crate::main(move |app| {
+            let frame = Frame::builder().with_title("test").build();
+            let panel = Panel::builder(&frame).build();
+            let label = StaticText::builder(&panel).with_label("temp").build();
+            label.bind_internal(EventType::DESTROY, |_| {});
+            removed_in_loop.set(Some(label.unbind_all()));
+            // Destroying the parent frees the label without going through the
+            // label's own handle, so only its DESTROY binding can invalidate it.
+            panel.destroy();
+
+            let timer = Timer::new(&frame);
+            let timer_cleanup = timer_in_loop.clone();
+            let valid_in_tick = valid_in_loop.clone();
+            timer.on_tick(move |_evt| {
+                valid_in_tick.set(Some(label.is_valid()));
+                timer_cleanup.borrow_mut().take();
+                app.exit_main_loop();
+            });
+            timer.start(100, true);
+            timer_in_loop.borrow_mut().replace(timer);
+        });
+        if let Err(e) = res {
+            log::warn!("Test failed with error: {e:?}");
+            return;
+        }
+        assert_eq!(removed.get(), Some(1), "unbind_all should count only the user's handler");
+        assert_eq!(valid_after_destroy.get(), Some(false), "a destroyed child still looked valid");
     }
 }

@@ -293,6 +293,14 @@ wxd_Window_GetParent(wxd_Window_t* self)
 }
 
 WXD_EXPORTED bool
+wxd_Window_IsBeingDeleted(wxd_Window_t* self)
+{
+    if (!self)
+        return true;
+    return reinterpret_cast<wxWindow*>(self)->IsBeingDeleted();
+}
+
+WXD_EXPORTED bool
 wxd_Window_IsEnabled(wxd_Window_t* self)
 {
     if (!self)

@@ -746,6 +746,10 @@ wxd_DataViewCtrl_GetColumn(wxd_Window_t* self, uint32_t pos)
     wxDataViewCtrl* ctrl = reinterpret_cast<wxDataViewCtrl*>(self);
     if (!ctrl)
         return nullptr;
+    // The generic wxDataViewCtrl::GetColumn indexes its column vector without
+    // checking, so an out-of-range position would read past it.
+    if (pos >= ctrl->GetColumnCount())
+        return nullptr;
     return reinterpret_cast<wxd_DataViewColumn_t*>(ctrl->GetColumn(pos));
 }
 

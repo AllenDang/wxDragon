@@ -57,6 +57,7 @@ extern "C" {
 #include "widgets/wxd_genericstaticbitmap.h"
 #include "widgets/wxd_platform_aware_staticbitmap_handler.h"
 #include "widgets/wxd_scrollbar.h"
+#include "widgets/wxd_slider.h"
 #include "widgets/wxd_bitmapbutton.h"
 
 #if wxdUSE_WEBVIEW

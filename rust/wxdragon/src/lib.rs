@@ -5,6 +5,7 @@ pub use wxdragon_sys as ffi;
 pub mod macros;
 #[cfg(target_os = "windows")]
 pub mod accessible;
+pub mod accessible_table;
 pub mod app;
 pub mod appearance;
 pub mod appprogress;

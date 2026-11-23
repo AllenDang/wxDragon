@@ -34,6 +34,31 @@ widget_style_enum!(
     default_variant: DefaultDialogStyle
 );
 
+/// Whether a dialog scrolls its contents when it's too big for the screen.
+///
+/// See [`Dialog::set_layout_adaptation_mode`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+#[repr(i32)]
+pub enum DialogLayoutAdaptation {
+    /// Follow [`Dialog::enable_layout_adaptation`].
+    #[default]
+    Default = 0,
+    /// Scroll when too big, whatever the global setting.
+    Enabled = 1,
+    /// Never scroll, whatever the global setting.
+    Disabled = 2,
+}
+
+impl DialogLayoutAdaptation {
+    fn from_raw(value: i32) -> Self {
+        match value {
+            1 => Self::Enabled,
+            2 => Self::Disabled,
+            _ => Self::Default,
+        }
+    }
+}
+
 // --- Dialog --- (Base struct for dialogs)
 /// Represents a wxDialog.
 ///
@@ -225,6 +250,42 @@ impl Dialog {
             return 0;
         }
         unsafe { ffi::wxd_Dialog_GetReturnCode(ptr) }
+    }
+
+    /// Sets whether this dialog scrolls its contents when it's too big for the screen.
+    ///
+    /// With layout adaptation, wxWidgets checks the dialog's size when it's shown. If it doesn't
+    /// fit on the display, for example with large fonts or a low resolution, the contents move
+    /// into a scrolled window and the standard buttons stay outside it. A dialog that fits isn't
+    /// changed. The dialog needs a sizer for this to work.
+    ///
+    /// [`DialogLayoutAdaptation::Default`] follows [`Dialog::enable_layout_adaptation`], which is
+    /// off unless the application turns it on.
+    pub fn set_layout_adaptation_mode(&self, mode: DialogLayoutAdaptation) {
+        let ptr = self.dialog_ptr();
+        if ptr.is_null() {
+            return;
+        }
+        unsafe { ffi::wxd_Dialog_SetLayoutAdaptationMode(ptr, mode as i32) }
+    }
+
+    /// Gets this dialog's layout adaptation mode, set by [`Dialog::set_layout_adaptation_mode`].
+    pub fn get_layout_adaptation_mode(&self) -> DialogLayoutAdaptation {
+        let ptr = self.dialog_ptr();
+        if ptr.is_null() {
+            return DialogLayoutAdaptation::Default;
+        }
+        DialogLayoutAdaptation::from_raw(unsafe { ffi::wxd_Dialog_GetLayoutAdaptationMode(ptr) })
+    }
+
+    /// Turns layout adaptation on or off for every dialog left at [`DialogLayoutAdaptation::Default`].
+    pub fn enable_layout_adaptation(enable: bool) {
+        unsafe { ffi::wxd_Dialog_EnableLayoutAdaptation(enable) }
+    }
+
+    /// Returns whether layout adaptation is on for dialogs left at [`DialogLayoutAdaptation::Default`].
+    pub fn is_layout_adaptation_enabled() -> bool {
+        unsafe { ffi::wxd_Dialog_IsLayoutAdaptationEnabled() }
     }
 
     /// Returns the raw underlying dialog pointer.

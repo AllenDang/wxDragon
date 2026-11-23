@@ -40,6 +40,19 @@ wxd_Dialog_SetReturnCode(wxd_Dialog_t* self, int retCode);
 WXD_EXPORTED int
 wxd_Dialog_GetReturnCode(wxd_Dialog_t* self);
 
+// Layout adaptation: 0 follows the global setting, 1 enables it, 2 disables it.
+WXD_EXPORTED void
+wxd_Dialog_SetLayoutAdaptationMode(wxd_Dialog_t* self, int mode);
+
+WXD_EXPORTED int
+wxd_Dialog_GetLayoutAdaptationMode(wxd_Dialog_t* self);
+
+WXD_EXPORTED void
+wxd_Dialog_EnableLayoutAdaptation(bool enable);
+
+WXD_EXPORTED bool
+wxd_Dialog_IsLayoutAdaptationEnabled();
+
 // --- MessageDialog ---
 WXD_EXPORTED wxd_MessageDialog_t*
 wxd_MessageDialog_Create(wxd_Window_t* parent, const char* message, const char* caption,

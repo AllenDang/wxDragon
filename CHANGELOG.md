@@ -1,5 +1,34 @@
 # Changelog
 
+## Unreleased
+
+### New Features
+
+- **Accessibility**: Added `set_accessible_elements`, `set_accessible_table` and `set_accessible_current_row` to `WxWidget`, with the `AccessibleElement` and `AccessibleRow` types, wrapping wxWidgets' `wxPrivate::SetAccessibleElements`, `SetAccessibleTable` and `SetAccessibleCurrentRow`. A window that draws itself, such as a custom list or a status bar, can show screen readers its rows or parts, and tell them which row is current, so VoiceOver and Orca can read it. wxWidgets implements them on macOS and GTK 3; on Windows they do nothing, and a custom `Accessible` describes such a window instead.
+
+## 0.9.25
+
+### Breaking Changes
+
+- **DropSource**: `set_data` now takes `&mut self` and a data object by value with a `'static` bound, rather than borrowing it. `wxDropSource` only stores the object's address, so passing a temporary or dropping the object before `do_drag_drop` left it pointing at freed memory. `DropSource` now owns the data until it is replaced or the source is dropped. Migration: make the source mutable and use `source.set_data(data)` instead of `source.set_data(&data)` (#263).
+- **DataView**: `CustomDataViewTreeModel::new`, its notification methods (`item_added`, `items_added`, `item_deleted`, `items_deleted`, `item_changed`, `items_changed` and `item_value_changed`), and `DataViewItem::from_id_ptr` are now `unsafe`. The model turns item IDs back into node references without checking them, so previously safe code could trigger undefined behaviour by supplying a made-up pointer or freeing a node while a control could still query it. Migration: audit pointer validity, stable node addresses and deletion notifications against the methods' safety contracts, then wrap calls in `unsafe` blocks. Examples now demonstrate these requirements (#261).
+
+### New Features
+
+- **Events**: Added `get_raw_key_code` and `get_raw_key_flags` to key events, wrapping `wxKeyEvent::GetRawKeyCode` and `GetRawKeyFlags`. The flags hold the scan code on Windows and the hardware key code on GTK, so an app can tell which physical key was pressed whatever the keyboard layout, which `get_key_code` and `get_unicode_key` can't.
+- **Dialogs**: Added `Dialog::set_layout_adaptation_mode`, `get_layout_adaptation_mode`, `enable_layout_adaptation` and `is_layout_adaptation_enabled`, with the `DialogLayoutAdaptation` enum, wrapping wxWidgets' dialog layout adaptation. A dialog with it on moves its contents into a scrolled window when it's too big for the display, such as with large fonts or a low resolution, and keeps its standard buttons outside it.
+- **App**: Added `is_main_thread`, wrapping `wxIsMainThread`, so code that can run on any thread can tell whether it may touch widgets directly or has to go through `call_after`.
+- **Slider**: Added `SliderBuilder::with_natural_keys`. The Windows trackbar lowers a slider's value for Up and Page Up; with natural keys, Up and Right raise it, Down and Left lower it, Page Up and Page Down move a tenth of the range, and Home and End go to the ends, on every platform. Each change sends `wxEVT_SCROLL_CHANGED` and `wxEVT_SLIDER`, so `on_slider` handlers see it.
+
+### Bug Fixes
+
+- **Window**: Fixed `Window` values returned by `get_page`, `get_parent`, `get_event_object` and other getters accessing freed windows after destruction. They now use `WindowHandle`, like concrete widgets: `as_ptr` returns null and widget methods become no-ops once the window is destroyed. Added `Window::window_handle`. Repeatedly wrapping the same live window now reuses its registration instead of adding another registry entry and destroy callback, and windows already being deleted are not registered again (#258).
+- **Window / Events**: Kept windows valid during their own destroy handlers, so `get_event_object().as_ptr()` can still be compared with the window to distinguish its destruction from a child's. Application destroy handlers now run before internal cleanup, which still runs if a handler consumes the event. A deferred destroy request no longer invalidates the handle before the event arrives, while repeated requests through cloned handles remain no-ops (#268).
+- **Events**: Fixed `unbind_all` removing wxDragon's internal destroy handlers, which left freed windows registered as valid and prevented `TreeCtrl`, `ListCtrl` and `AuiManager` cleanup. Internal lifetime bindings now survive both `unbind` and `unbind_all`, and `unbind_all` counts only application handlers it removes (#257).
+- **TreeCtrl / ListCtrl**: Fixed a child's destroy event freeing all custom item data while the control was still alive. Destroy events propagate to parents, so deleting the in-place label editor after an edit triggered the control's cleanup. Cleanup now runs only when the event object is the control itself (#259).
+- **DataView**: Fixed custom tree-model child arrays being freed with the wrong allocation layout when `get_children` returned a vector whose capacity exceeded its length. The FFI array now uses a boxed slice instead of rebuilding a vector with an assumed capacity; empty vectors with spare capacity no longer leak either (#260).
+- **DataView**: Fixed `DataViewTreeCtrl::get_column` reading beyond the column vector for an out-of-range position. The shared C shim now checks the column count, and the Rust getter returns `None` for positions that do not fit in `u32` rather than truncating them (#262).
+
 ## 0.9.24
 
 ### Breaking Changes

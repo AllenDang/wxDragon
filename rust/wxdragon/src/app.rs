@@ -323,6 +323,16 @@ pub fn wake_up_idle() {
     unsafe { ffi::wxd_WakeUpIdle() };
 }
 
+/// Returns `true` when called on the thread that runs the wxWidgets event loop.
+///
+/// Widgets may only be touched from that thread. Code that can run on either, such as a
+/// helper that hands work to the GUI thread with [`call_after`] and waits for the result,
+/// can check this first and run the work directly when already on the GUI thread, where
+/// waiting would deadlock.
+pub fn is_main_thread() -> bool {
+    unsafe { ffi::wxd_IsMainThread() }
+}
+
 /// Gets the current wxWidgets app instance.
 pub fn get_app_instance() -> Option<App> {
     App::new()

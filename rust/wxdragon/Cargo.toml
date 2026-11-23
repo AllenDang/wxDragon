@@ -50,6 +50,11 @@ wxdragon-macros = { path = "../../rust/wxdragon-macros" }
 wxdragon-sys = { path = "../../rust/wxdragon-sys", default-features = false } 
 
 [[test]]
+name = "tree_list_child_destroy"
+# Cocoa must initialize on the OS main thread, not a Cargo test worker.
+harness = false
+
+[[test]]
 name = "window_accessibility"
 # Cocoa must initialize on the OS main thread, not a Cargo test worker.
 harness = false
@@ -65,6 +70,37 @@ name = "dataview_container_columns"
 harness = false
 
 [[test]]
+name = "key_event_raw_codes"
+# Cocoa must initialize on the OS main thread, not a Cargo test worker.
+harness = false
+
+[[test]]
 name = "notebook_page_text"
+# Cocoa must initialize on the OS main thread, not a Cargo test worker.
+harness = false
+
+[[test]]
+name = "is_main_thread"
+# wxWidgets must run on the OS main thread for it to count as the main thread.
+# Cocoa must initialize on the OS main thread, not a Cargo test worker.
+harness = false
+
+[[test]]
+name = "slider_natural_keys"
+# Cocoa must initialize on the OS main thread, not a Cargo test worker.
+harness = false
+
+[[test]]
+name = "dialog_layout_adaptation"
+# Cocoa must initialize on the OS main thread, not a Cargo test worker.
+harness = false
+
+[[test]]
+name = "dataview_get_column_bounds"
+# Cocoa must initialize on the OS main thread, not a Cargo test worker.
+harness = false
+
+[[test]]
+name = "window_after_destroy"
 # Cocoa must initialize on the OS main thread, not a Cargo test worker.
 harness = false

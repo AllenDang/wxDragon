@@ -203,6 +203,7 @@ set(WXDRAGON_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/single_choice_dialog.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/singleinstancechecker.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/sizer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/slider.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/spinctrl.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/spinctrldouble.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/splitterwindow.cpp
@@ -279,6 +280,9 @@ if (wxdUSE_RICHTEXT)
 endif()
 
 # Shim functions generated from cpp/spec/*.wxd by build.rs (see shimgen/)
+if(NOT WXD_GENERATED_DIR)
+    message(FATAL_ERROR "WXD_GENERATED_DIR is not set. Configure through cargo build, which generates the shim and passes its directory.")
+endif()
 file(GLOB WXD_GENERATED_SOURCES "${WXD_GENERATED_DIR}/src/*.cpp")
 list(APPEND WXDRAGON_SOURCES ${WXD_GENERATED_SOURCES})
 
@@ -291,8 +295,9 @@ add_library(wxdragon STATIC ${WXDRAGON_SOURCES})
 target_include_directories(wxdragon PRIVATE 
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/src
-    ${WXD_GENERATED_DIR}/include
 )
+# wxdragon.h includes wxd_generated.h, so anything that includes wxdragon.h needs this too.
+target_include_directories(wxdragon PUBLIC ${WXD_GENERATED_DIR}/include)
 
 # --- Set link libraries ---
 target_link_libraries(wxdragon PRIVATE wx::base)
