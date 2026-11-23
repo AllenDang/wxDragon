@@ -3,25 +3,7 @@
 
 #include "../wxd_types.h"
 
-// --- Slider Functions ---
-WXD_EXPORTED wxd_Slider_t*
-wxd_Slider_Create(wxd_Window_t* parent, wxd_Id id, int value, int minValue, int maxValue,
-                  wxd_Point pos, wxd_Size size, wxd_Style_t style);
-
-WXD_EXPORTED int
-wxd_Slider_GetValue(wxd_Slider_t* self);
-
-WXD_EXPORTED void
-wxd_Slider_SetValue(wxd_Slider_t* self, int value);
-
-WXD_EXPORTED void
-wxd_Slider_SetRange(wxd_Slider_t* self, int minValue, int maxValue);
-
-WXD_EXPORTED int
-wxd_Slider_GetMin(wxd_Slider_t* self);
-
-WXD_EXPORTED int
-wxd_Slider_GetMax(wxd_Slider_t* self);
+// The other wxSlider functions are generated from cpp/spec/slider.wxd.
 
 // Makes Up, Right and Page Up raise the value and Down, Left and Page Down lower it, on every
 // platform. The native Windows trackbar lowers it for Up and Page Up.

@@ -1,0 +1,7 @@
+include wx/stattext.h
+
+class StaticText : wxStaticText
+    create(Window parent, Id id, string label, Point pos, Size size, Style style)
+    void SetLabel(string label)
+    string GetLabel() const
+    void Wrap(int width)

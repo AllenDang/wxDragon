@@ -1,0 +1,8 @@
+include wx/gauge.h
+
+class Gauge : wxGauge
+    # wxGA_HORIZONTAL is the default if no orientation flag is given
+    create(Window parent, Id id, int range, int x, int y, int w, int h, Style style) => new wxGauge(parent, id, range, wxPoint(x, y), wxSize(w, h), style | wxGA_HORIZONTAL)
+    void SetRange(int range)
+    void SetValue(int value)
+    int GetValue() const

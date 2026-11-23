@@ -1,0 +1,9 @@
+include wx/slider.h
+
+class Slider : wxSlider
+    create(Window parent, Id id, int value, int minValue, int maxValue, Point pos, Size size, Style style)
+    int GetValue()
+    void SetValue(int value)
+    void SetRange(int minValue, int maxValue)
+    int GetMin()
+    int GetMax()
