@@ -1,6 +1,8 @@
 #include <wx/wxprec.h>
 #include <wx/wx.h>
 #include "../../include/wxdragon.h"
+// wxWidgets' helpers for its own generic controls, implemented for macOS and GTK 3.
+#include <wx/private/access.h>
 
 #if wxUSE_ACCESSIBILITY
 #include <wx/access.h>
@@ -393,3 +395,60 @@ wxd_Window_SetAccessibleState(wxd_Window_t* self, long state)
 }
 
 } // extern "C"
+
+static wxPrivate::AccessibleElements
+wxd_ToAccessibleElements(const wxd_AccessibleElement* elements, size_t count)
+{
+    wxPrivate::AccessibleElements converted;
+    if (!elements) {
+        return converted;
+    }
+    converted.reserve(count);
+    for (size_t i = 0; i < count; ++i) {
+        const wxd_Rect& rect = elements[i].rect;
+        converted.emplace_back(WXD_STR_TO_WX_STRING_UTF8_NULL_OK(elements[i].label),
+                               wxRect(rect.x, rect.y, rect.width, rect.height));
+    }
+    return converted;
+}
+
+void
+wxd_Window_SetAccessibleElements(wxd_Window_t* self, const wxd_AccessibleElement* elements, size_t count)
+{
+    wxWindow* window = reinterpret_cast<wxWindow*>(self);
+    if (window) {
+        wxPrivate::SetAccessibleElements(window, wxd_ToAccessibleElements(elements, count));
+    }
+}
+
+void
+wxd_Window_SetAccessibleTable(wxd_Window_t* self, const wxd_AccessibleRow* rows, size_t count,
+                              int64_t total)
+{
+    wxWindow* window = reinterpret_cast<wxWindow*>(self);
+    if (!window) {
+        return;
+    }
+    wxPrivate::AccessibleRows table;
+    if (rows) {
+        table.reserve(count);
+        for (size_t i = 0; i < count; ++i) {
+            const wxd_AccessibleRow& row = rows[i];
+            wxPrivate::AccessibleRow& added = table.emplace_back(
+                static_cast<long>(row.index),
+                wxRect(row.rect.x, row.rect.y, row.rect.width, row.rect.height));
+            added.cells = wxd_ToAccessibleElements(row.cells, row.cell_count);
+            added.selected = row.selected;
+        }
+    }
+    wxPrivate::SetAccessibleTable(window, table, static_cast<long>(total));
+}
+
+void
+wxd_Window_SetAccessibleCurrentRow(wxd_Window_t* self, int64_t row)
+{
+    wxWindow* window = reinterpret_cast<wxWindow*>(self);
+    if (window) {
+        wxPrivate::SetAccessibleCurrentRow(window, static_cast<long>(row));
+    }
+}

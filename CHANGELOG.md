@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### New Features
+
+- **Accessibility**: Added `set_accessible_elements`, `set_accessible_table` and `set_accessible_current_row` to `WxWidget`, with the `AccessibleElement` and `AccessibleRow` types, wrapping wxWidgets' `wxPrivate::SetAccessibleElements`, `SetAccessibleTable` and `SetAccessibleCurrentRow`. A window that draws itself, such as a custom list or a status bar, can show screen readers its rows or parts, and tell them which row is current, so VoiceOver and Orca can read it. wxWidgets implements them on macOS and GTK 3; on Windows they do nothing, and a custom `Accessible` describes such a window instead.
+
 ## 0.9.25
 
 ### Breaking Changes
