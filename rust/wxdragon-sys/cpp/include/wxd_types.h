@@ -772,6 +772,9 @@ typedef struct wxd_PropertyGrid_t wxd_PropertyGrid_t;
 // AboutDialogInfo type
 typedef struct wxd_AboutDialogInfo_t wxd_AboutDialogInfo_t;
 
+// PreferencesEditor type
+typedef struct wxd_PreferencesEditor_t wxd_PreferencesEditor_t;
+
 // IPC (Inter-Process Communication) types
 typedef struct wxd_IPCConnection_t wxd_IPCConnection_t;
 typedef struct wxd_IPCServer_t wxd_IPCServer_t;

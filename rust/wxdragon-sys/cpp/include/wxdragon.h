@@ -140,6 +140,7 @@ extern "C" {
 #include "sizers/wxd_sizers.h"
 #include "dialogs/wxd_dialogs.h"
 #include "dialogs/wxd_about.h"
+#include "dialogs/wxd_preferences.h"
 #include "dnd/wxd_dnd.h"     // Drag and drop functionality
 #include "graphics/wxd_dc.h" // Device context functionality
 
