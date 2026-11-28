@@ -12,6 +12,7 @@ pub mod file_dialog;
 pub mod font_dialog;
 pub mod message_dialog;
 pub mod multi_choice_dialog;
+pub mod preferences_editor;
 pub mod progress_dialog;
 pub mod single_choice_dialog;
 pub mod text_entry_dialog;

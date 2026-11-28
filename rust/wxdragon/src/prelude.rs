@@ -215,6 +215,7 @@ pub use crate::dialogs::file_dialog::{FileDialog, FileDialogBuilder, FileDialogS
 pub use crate::dialogs::font_dialog::{FontDialog, FontDialogBuilder}; // Added Builder
 pub use crate::dialogs::message_dialog::{MessageDialog, MessageDialogBuilder, MessageDialogStyle};
 pub use crate::dialogs::multi_choice_dialog::{MultiChoiceDialog, MultiChoiceDialogBuilder}; // Added MultiChoiceDialog
+pub use crate::dialogs::preferences_editor::{PreferencesEditor, StockPreferencesPage};
 pub use crate::dialogs::progress_dialog::{ProgressDialog, ProgressDialogBuilder, ProgressDialogStyle}; // Added Builder
 pub use crate::dialogs::single_choice_dialog::{SingleChoiceDialog, SingleChoiceDialogBuilder}; // Added SingleChoiceDialog
 pub use crate::dialogs::text_entry_dialog::{TextEntryDialog, TextEntryDialogBuilder, TextEntryDialogStyle};
